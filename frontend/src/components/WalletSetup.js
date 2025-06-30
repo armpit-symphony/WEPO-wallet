@@ -46,13 +46,14 @@ const WalletSetup = ({ onSetupComplete }) => {
 
     setIsLoading(true);
     try {
-      // Generate mnemonic
-      const { generateMnemonic } = await import('bip39');
-      const newMnemonic = generateMnemonic(128);
+      // Generate mnemonic using bip39
+      const bip39 = await import('bip39');
+      const newMnemonic = bip39.generateMnemonic(128); // 12 words
       setMnemonic(newMnemonic);
       setStep(2);
     } catch (error) {
-      setError('Failed to generate wallet');
+      console.error('Wallet generation error:', error);
+      setError('Failed to generate wallet: ' + error.message);
     } finally {
       setIsLoading(false);
     }
