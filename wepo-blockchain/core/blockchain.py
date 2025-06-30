@@ -75,15 +75,24 @@ class Transaction:
     
     def calculate_txid(self) -> str:
         """Calculate transaction hash"""
-        tx_data = {
-            'version': self.version,
-            'inputs': [asdict(inp) for inp in self.inputs],
-            'outputs': [asdict(out) for out in self.outputs],
-            'lock_time': self.lock_time,
-            'timestamp': self.timestamp
-        }
-        tx_bytes = json.dumps(tx_data, sort_keys=True).encode()
-        return hashlib.sha256(tx_bytes).hexdigest()
+        # Create a string representation for hashing that avoids bytes serialization
+        tx_string = f"{self.version}"
+        
+        # Add inputs
+        for inp in self.inputs:
+            tx_string += f"{inp.prev_txid}{inp.prev_vout}{inp.sequence}"
+            if inp.script_sig:
+                tx_string += inp.script_sig.hex()
+        
+        # Add outputs
+        for out in self.outputs:
+            tx_string += f"{out.value}{out.address}"
+            if out.script_pubkey:
+                tx_string += out.script_pubkey.hex()
+        
+        tx_string += f"{self.lock_time}{self.timestamp}"
+        
+        return hashlib.sha256(tx_string.encode()).hexdigest()
     
     def is_coinbase(self) -> bool:
         """Check if this is a coinbase transaction"""
