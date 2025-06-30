@@ -157,34 +157,38 @@ export const WalletProvider = ({ children }) => {
   const loadWalletData = async (address) => {
     setIsLoading(true);
     try {
-      // Simulate API call to get balance and transactions
-      // In real implementation, this would call the WEPO blockchain API
-      const mockBalance = 1000.5; // Mock balance
-      const mockTransactions = [
-        {
-          id: '1',
-          type: 'receive',
-          amount: 100,
-          from: 'wepo1abc...def',
-          to: address,
-          timestamp: new Date().toISOString(),
-          status: 'confirmed'
-        },
-        {
-          id: '2',
-          type: 'send',
-          amount: 50,
-          from: address,
-          to: 'wepo1xyz...123',
-          timestamp: new Date(Date.now() - 86400000).toISOString(),
-          status: 'confirmed'
-        }
-      ];
+      // Check if we have a real backend connection
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
       
-      setBalance(mockBalance);
-      setTransactions(mockTransactions);
+      try {
+        // Try to get real balance from blockchain
+        const response = await fetch(`${backendUrl}/api/wallet/${address}`);
+        if (response.ok) {
+          const data = await response.json();
+          setBalance(data.balance || 0);
+          
+          // Get real transaction history
+          const txResponse = await fetch(`${backendUrl}/api/wallet/${address}/transactions`);
+          if (txResponse.ok) {
+            const txData = await txResponse.json();
+            setTransactions(txData || []);
+          }
+        } else {
+          // If blockchain not available, start with zero balance
+          setBalance(0);
+          setTransactions([]);
+        }
+      } catch (error) {
+        console.log('Blockchain not connected, starting with zero balance');
+        // Real cryptocurrency behavior - zero balance until actual transactions
+        setBalance(0);
+        setTransactions([]);
+      }
+      
     } catch (error) {
       console.error('Failed to load wallet data:', error);
+      setBalance(0);
+      setTransactions([]);
     } finally {
       setIsLoading(false);
     }
