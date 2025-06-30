@@ -47,31 +47,14 @@ const Dashboard = () => {
         try {
           const walletData = JSON.parse(sessionWallet);
           setWallet(walletData);
-          setBalance(walletData.balance || 1000.5);
           
-          // Mock transactions
-          setTransactions([
-            {
-              id: '1',
-              type: 'receive',
-              amount: 100,
-              from: 'wepo1abc...def',
-              to: walletData.address,
-              timestamp: new Date().toISOString(),
-              status: 'confirmed'
-            },
-            {
-              id: '2',
-              type: 'send',
-              amount: 50,
-              from: walletData.address,
-              to: 'wepo1xyz...123',
-              timestamp: new Date(Date.now() - 86400000).toISOString(),
-              status: 'confirmed'
-            }
-          ]);
+          // Load real balance from blockchain instead of hardcoded value
+          await loadWalletData(walletData.address);
         } catch (error) {
           console.error('Failed to load wallet data:', error);
+          // Set zero balance if loading fails
+          setBalance(0);
+          setTransactions([]);
         }
       }
     }
