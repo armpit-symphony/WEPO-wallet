@@ -96,7 +96,7 @@ const WalletSetup = ({ onSetupComplete }) => {
         address: address,
         encryptedMnemonic: mnemonic, // Simplified encryption for demo
         createdAt: new Date().toISOString(),
-        balance: 1000.5 // Demo balance
+        balance: 0.0 // Real wallets start with zero balance
       };
       
       // Store wallet data
