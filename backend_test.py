@@ -81,6 +81,7 @@ def run_tests():
     # 1. Test Network Status API
     try:
         response = requests.get(f"{API_URL}/network/status")
+        print(f"  Network Status response: {response.status_code} - {response.text}")
         passed = response.status_code == 200 and "block_height" in response.json()
         log_test("Network Status API", passed, response)
         if passed:
