@@ -33,9 +33,15 @@ const WalletLogin = ({ onLoginSuccess }) => {
         throw new Error('Invalid username');
       }
 
-      // For demo purposes, we'll simulate login
-      // In real implementation, this would verify the password against encrypted wallet
+      // Get wallet data (simplified for demo)
+      const walletData = localStorage.getItem('wepo_wallet');
+      if (!walletData) {
+        throw new Error('Wallet not found');
+      }
+
+      // For demo purposes, accept any password
       sessionStorage.setItem('wepo_session_active', 'true');
+      sessionStorage.setItem('wepo_current_wallet', walletData);
       onLoginSuccess();
     } catch (error) {
       setError(error.message || 'Login failed');
