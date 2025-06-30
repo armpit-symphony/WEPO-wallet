@@ -370,12 +370,31 @@ class WepoBlockchain:
     
     def serialize_block(self, block: Block) -> str:
         """Serialize block to JSON"""
-        return json.dumps({
+        # Convert bytes to hex strings for JSON serialization
+        def bytes_to_hex(obj):
+            if isinstance(obj, bytes):
+                return obj.hex()
+            elif isinstance(obj, dict):
+                return {k: bytes_to_hex(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [bytes_to_hex(item) for item in obj]
+            else:
+                return obj
+        
+        block_dict = {
             'header': asdict(block.header),
-            'transactions': [asdict(tx) for tx in block.transactions],
+            'transactions': [],
             'height': block.height,
             'size': block.size
-        })
+        }
+        
+        # Serialize transactions with bytes conversion
+        for tx in block.transactions:
+            tx_dict = asdict(tx)
+            tx_dict = bytes_to_hex(tx_dict)
+            block_dict['transactions'].append(tx_dict)
+        
+        return json.dumps(block_dict)
     
     def deserialize_block(self, data: dict) -> Block:
         """Deserialize block from JSON"""
