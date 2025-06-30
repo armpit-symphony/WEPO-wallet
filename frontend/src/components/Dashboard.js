@@ -30,11 +30,52 @@ const Dashboard = () => {
     transactions, 
     posEnabled, 
     masternodesEnabled,
-    logout 
+    logout,
+    setWallet,
+    setBalance,
+    setTransactions
   } = useWallet();
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showBalance, setShowBalance] = useState(true);
+
+  useEffect(() => {
+    // Load wallet data if not already loaded
+    if (!wallet) {
+      const sessionWallet = sessionStorage.getItem('wepo_current_wallet');
+      if (sessionWallet) {
+        try {
+          const walletData = JSON.parse(sessionWallet);
+          setWallet(walletData);
+          setBalance(walletData.balance || 1000.5);
+          
+          // Mock transactions
+          setTransactions([
+            {
+              id: '1',
+              type: 'receive',
+              amount: 100,
+              from: 'wepo1abc...def',
+              to: walletData.address,
+              timestamp: new Date().toISOString(),
+              status: 'confirmed'
+            },
+            {
+              id: '2',
+              type: 'send',
+              amount: 50,
+              from: walletData.address,
+              to: 'wepo1xyz...123',
+              timestamp: new Date(Date.now() - 86400000).toISOString(),
+              status: 'confirmed'
+            }
+          ]);
+        } catch (error) {
+          console.error('Failed to load wallet data:', error);
+        }
+      }
+    }
+  }, [wallet, setWallet, setBalance, setTransactions]);
 
   const formatBalance = (amount) => {
     return new Intl.NumberFormat('en-US', {
