@@ -73,15 +73,44 @@ const WalletSetup = ({ onSetupComplete }) => {
 
     setIsLoading(true);
     try {
+      // Import the wallet context hook
       const { useWallet } = await import('../contexts/WalletContext');
-      // This would normally be handled by the context
-      // For now, we'll store the wallet data
+      
+      // Generate WEPO address from mnemonic
+      const bip39 = await import('bip39');
+      const CryptoJS = await import('crypto-js');
+      
+      const seed = bip39.mnemonicToSeedSync(mnemonic);
+      const hash = CryptoJS.SHA256(seed.toString('hex')).toString();
+      const address = `wepo1${hash.substring(0, 32)}`;
+      
+      // Encrypt the mnemonic with password
+      const encryptedMnemonic = CryptoJS.AES.encrypt(mnemonic, formData.password).toString();
+      
+      // Create wallet data
+      const walletData = {
+        username: formData.username,
+        address: address,
+        encryptedMnemonic: encryptedMnemonic,
+        createdAt: new Date().toISOString(),
+        balance: 0
+      };
+      
+      // Store wallet data
+      const encryptedWallet = CryptoJS.AES.encrypt(JSON.stringify(walletData), formData.password).toString();
+      localStorage.setItem('wepo_wallet', encryptedWallet);
       localStorage.setItem('wepo_wallet_exists', 'true');
       localStorage.setItem('wepo_wallet_username', formData.username);
       
+      // Set launch date for demo
+      if (!localStorage.getItem('wepo_launch_date')) {
+        localStorage.setItem('wepo_launch_date', new Date().toISOString());
+      }
+      
       onSetupComplete();
     } catch (error) {
-      setError('Failed to create wallet');
+      console.error('Wallet finalization error:', error);
+      setError('Failed to create wallet: ' + error.message);
     } finally {
       setIsLoading(false);
     }
