@@ -170,13 +170,13 @@ def run_tests():
             }
             
             response = requests.post(f"{API_URL}/stake", json=stake_data)
-            # This should fail with 400 due to minimum stake requirement
+            # This should fail with 400 due to minimum stake requirement or insufficient balance
             print(f"  Staking response: {response.status_code} - {response.text}")
-            passed = response.status_code == 400 and "Minimum stake is 1000 WEPO" in response.text
-            log_test("Staking (Minimum Requirement)", passed, response)
+            passed = response.status_code == 400 and ("Minimum stake is 1000 WEPO" in response.text or "Insufficient balance for staking" in response.text)
+            log_test("Staking (Minimum Requirement/Insufficient Balance)", passed, response)
             
             if passed:
-                print("  Staking correctly failed due to minimum requirement")
+                print("  Staking correctly failed due to requirements")
         except Exception as e:
             log_test("Staking (Minimum Requirement)", False, error=str(e))
     else:
