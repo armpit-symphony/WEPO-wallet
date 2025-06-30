@@ -398,19 +398,66 @@ class WepoBlockchain:
     
     def deserialize_block(self, data: dict) -> Block:
         """Deserialize block from JSON"""
+        # Convert hex strings back to bytes
+        def hex_to_bytes(obj):
+            if isinstance(obj, str) and len(obj) % 2 == 0:
+                try:
+                    return bytes.fromhex(obj)
+                except ValueError:
+                    return obj
+            elif isinstance(obj, dict):
+                return {k: hex_to_bytes(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [hex_to_bytes(item) for item in obj]
+            else:
+                return obj
+        
         header = BlockHeader(**data['header'])
         transactions = []
         for tx_data in data['transactions']:
-            inputs = [TransactionInput(**inp) for inp in tx_data['inputs']]
-            outputs = [TransactionOutput(**out) for out in tx_data['outputs']]
+            # Convert hex back to bytes where needed
+            if 'script_sig' in str(tx_data):
+                tx_data = hex_to_bytes(tx_data)
+            
+            inputs = []
+            for inp_data in tx_data['inputs']:
+                script_sig = inp_data.get('script_sig', b'')
+                if isinstance(script_sig, str):
+                    script_sig = script_sig.encode() if script_sig else b''
+                inputs.append(TransactionInput(
+                    prev_txid=inp_data['prev_txid'],
+                    prev_vout=inp_data['prev_vout'],
+                    script_sig=script_sig,
+                    sequence=inp_data.get('sequence', 0xffffffff)
+                ))
+            
+            outputs = []
+            for out_data in tx_data['outputs']:
+                script_pubkey = out_data.get('script_pubkey', b'')
+                if isinstance(script_pubkey, str):
+                    script_pubkey = script_pubkey.encode() if script_pubkey else b''
+                outputs.append(TransactionOutput(
+                    value=out_data['value'],
+                    script_pubkey=script_pubkey,
+                    address=out_data.get('address', '')
+                ))
+            
+            privacy_proof = tx_data.get('privacy_proof')
+            if isinstance(privacy_proof, str):
+                privacy_proof = privacy_proof.encode() if privacy_proof else None
+                
+            ring_signature = tx_data.get('ring_signature')
+            if isinstance(ring_signature, str):
+                ring_signature = ring_signature.encode() if ring_signature else None
+            
             tx = Transaction(
                 version=tx_data['version'],
                 inputs=inputs,
                 outputs=outputs,
                 lock_time=tx_data['lock_time'],
                 fee=tx_data.get('fee', 0),
-                privacy_proof=tx_data.get('privacy_proof'),
-                ring_signature=tx_data.get('ring_signature'),
+                privacy_proof=privacy_proof,
+                ring_signature=ring_signature,
                 timestamp=tx_data.get('timestamp', 0)
             )
             transactions.append(tx)
