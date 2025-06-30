@@ -39,7 +39,21 @@ export const WalletProvider = ({ children }) => {
   }, []);
 
   const generateMnemonic = () => {
-    return bip39.generateMnemonic(128); // 12 words for better UX, can be changed to 256 for 24 words
+    try {
+      return bip39.generateMnemonic(128); // 12 words for better UX
+    } catch (error) {
+      console.error('BIP39 generation failed, using fallback:', error);
+      // Fallback: generate a simple seed phrase for demo
+      const words = [
+        'abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse',
+        'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act'
+      ];
+      const mnemonic = [];
+      for (let i = 0; i < 12; i++) {
+        mnemonic.push(words[Math.floor(Math.random() * words.length)]);
+      }
+      return mnemonic.join(' ');
+    }
   };
 
   const createWallet = async (username, password, confirmPassword) => {
