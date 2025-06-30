@@ -102,24 +102,23 @@ export const WalletProvider = ({ children }) => {
       throw new Error('Invalid username');
     }
 
-    const encryptedWallet = localStorage.getItem('wepo_wallet');
-    if (!encryptedWallet) {
+    const walletData = localStorage.getItem('wepo_wallet');
+    if (!walletData) {
       throw new Error('Wallet not found');
     }
 
     try {
-      const decryptedWallet = CryptoJS.AES.decrypt(encryptedWallet, password).toString(CryptoJS.enc.Utf8);
-      const walletData = JSON.parse(decryptedWallet);
-      
-      setWallet(walletData);
+      const parsedWallet = JSON.parse(walletData);
+      setWallet(parsedWallet);
       sessionStorage.setItem('wepo_session_active', 'true');
+      sessionStorage.setItem('wepo_current_wallet', walletData);
       
       // Load balance and transactions
-      await loadWalletData(walletData.address);
+      await loadWalletData(parsedWallet.address);
       
-      return walletData;
+      return parsedWallet;
     } catch (error) {
-      throw new Error('Invalid password');
+      throw new Error('Invalid wallet data');
     }
   };
 
