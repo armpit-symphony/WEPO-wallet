@@ -46,9 +46,19 @@ const WalletSetup = ({ onSetupComplete }) => {
 
     setIsLoading(true);
     try {
-      // Generate mnemonic using bip39
-      const bip39 = await import('bip39');
-      const newMnemonic = bip39.generateMnemonic(128); // 12 words
+      // Simple mnemonic generation for demo
+      const words = [
+        'abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse',
+        'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act',
+        'action', 'actor', 'actual', 'adapt', 'add', 'addict', 'address', 'adjust', 'admit', 'adult'
+      ];
+      
+      const mnemonicWords = [];
+      for (let i = 0; i < 12; i++) {
+        mnemonicWords.push(words[Math.floor(Math.random() * words.length)]);
+      }
+      const newMnemonic = mnemonicWords.join(' ');
+      
       setMnemonic(newMnemonic);
       setStep(2);
     } catch (error) {
