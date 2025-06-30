@@ -1,0 +1,477 @@
+#!/usr/bin/env python3
+"""
+WEPO Full Node
+Complete blockchain node with P2P networking, mining, and API
+"""
+
+import asyncio
+import time
+import threading
+import signal
+import sys
+import argparse
+from typing import Optional, Dict, Any
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+from blockchain import WepoBlockchain, Transaction, Block
+from p2p_network import WepoP2PNode
+
+class WepoFullNode:
+    """WEPO Full Blockchain Node"""
+    
+    def __init__(self, data_dir: str = "/tmp/wepo", p2p_port: int = 22567, 
+                 api_port: int = 8001, enable_mining: bool = True):
+        self.data_dir = data_dir
+        self.p2p_port = p2p_port
+        self.api_port = api_port
+        self.enable_mining = enable_mining
+        
+        # Initialize blockchain
+        self.blockchain = WepoBlockchain(data_dir)
+        
+        # Initialize P2P network
+        self.p2p_node = WepoP2PNode(port=p2p_port)
+        
+        # Connect blockchain and P2P
+        self.p2p_node.on_new_block = self.handle_new_block
+        self.p2p_node.on_new_transaction = self.handle_new_transaction
+        self.p2p_node.get_block_callback = self.get_block_data
+        
+        # FastAPI app for RPC/API
+        self.app = FastAPI(title="WEPO Full Node API", version="1.0.0")
+        self.setup_api_routes()
+        
+        # Mining state
+        self.mining_enabled = enable_mining
+        self.mining_thread: Optional[threading.Thread] = None
+        self.miner_address = "wepo1node00000000000000000000000000"
+        
+        # Node state
+        self.running = False
+        
+        print(f"WEPO Full Node initialized:")
+        print(f"  Data directory: {data_dir}")
+        print(f"  P2P port: {p2p_port}")
+        print(f"  API port: {api_port}")
+        print(f"  Mining enabled: {enable_mining}")
+    
+    def setup_api_routes(self):
+        """Setup API routes"""
+        
+        # Add CORS middleware
+        self.app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        
+        @self.app.get("/")
+        async def root():
+            return {"message": "WEPO Full Node", "version": "1.0.0"}
+        
+        @self.app.get("/api/")
+        async def api_root():
+            return {"message": "WEPO Node API", "version": "1.0.0"}
+        
+        # Network status
+        @self.app.get("/api/network/status")
+        async def get_network_status():
+            """Get network status"""
+            blockchain_info = self.blockchain.get_blockchain_info()
+            p2p_info = self.p2p_node.get_network_info()
+            
+            return {
+                **blockchain_info,
+                "peers": p2p_info['peer_count'],
+                "connections": p2p_info['connected_peers'],
+                "node_id": p2p_info['node_id'],
+                "mining_enabled": self.mining_enabled
+            }
+        
+        # Blockchain info
+        @self.app.get("/api/blockchain/info")
+        async def get_blockchain_info():
+            """Get blockchain information"""
+            return self.blockchain.get_blockchain_info()
+        
+        # Block operations
+        @self.app.get("/api/blocks/latest")
+        async def get_latest_blocks(limit: int = 10):
+            """Get latest blocks"""
+            latest_blocks = []
+            chain_length = len(self.blockchain.chain)
+            
+            for i in range(min(limit, chain_length)):
+                block = self.blockchain.chain[-(i+1)]
+                latest_blocks.append({
+                    'height': block.height,
+                    'hash': block.get_block_hash(),
+                    'timestamp': block.header.timestamp,
+                    'tx_count': len(block.transactions),
+                    'size': block.size,
+                    'consensus_type': block.header.consensus_type
+                })
+            
+            return latest_blocks
+        
+        @self.app.get("/api/block/{block_hash}")
+        async def get_block(block_hash: str):
+            """Get block by hash"""
+            for block in self.blockchain.chain:
+                if block.get_block_hash() == block_hash:
+                    return {
+                        'height': block.height,
+                        'hash': block.get_block_hash(),
+                        'prev_hash': block.header.prev_hash,
+                        'merkle_root': block.header.merkle_root,
+                        'timestamp': block.header.timestamp,
+                        'bits': block.header.bits,
+                        'nonce': block.header.nonce,
+                        'consensus_type': block.header.consensus_type,
+                        'size': block.size,
+                        'transactions': [tx.calculate_txid() for tx in block.transactions]
+                    }
+            
+            raise HTTPException(status_code=404, detail="Block not found")
+        
+        @self.app.get("/api/block/height/{height}")
+        async def get_block_by_height(height: int):
+            """Get block by height"""
+            if 0 <= height < len(self.blockchain.chain):
+                block = self.blockchain.chain[height]
+                return await get_block(block.get_block_hash())
+            
+            raise HTTPException(status_code=404, detail="Block not found")
+        
+        # Transaction operations
+        @self.app.get("/api/tx/{txid}")
+        async def get_transaction(txid: str):
+            """Get transaction by ID"""
+            # Search in blockchain
+            for block in self.blockchain.chain:
+                for tx in block.transactions:
+                    if tx.calculate_txid() == txid:
+                        return {
+                            'txid': txid,
+                            'version': tx.version,
+                            'lock_time': tx.lock_time,
+                            'fee': tx.fee,
+                            'timestamp': tx.timestamp,
+                            'block_height': block.height,
+                            'confirmations': len(self.blockchain.chain) - block.height,
+                            'inputs': [{'prev_txid': inp.prev_txid, 'prev_vout': inp.prev_vout} 
+                                     for inp in tx.inputs],
+                            'outputs': [{'value': out.value, 'address': out.address} 
+                                      for out in tx.outputs],
+                            'privacy_proof': bool(tx.privacy_proof),
+                            'ring_signature': bool(tx.ring_signature)
+                        }
+            
+            # Search in mempool
+            if txid in self.blockchain.mempool:
+                tx = self.blockchain.mempool[txid]
+                return {
+                    'txid': txid,
+                    'version': tx.version,
+                    'lock_time': tx.lock_time,
+                    'fee': tx.fee,
+                    'timestamp': tx.timestamp,
+                    'confirmations': 0,
+                    'inputs': [{'prev_txid': inp.prev_txid, 'prev_vout': inp.prev_vout} 
+                             for inp in tx.inputs],
+                    'outputs': [{'value': out.value, 'address': out.address} 
+                              for out in tx.outputs],
+                    'privacy_proof': bool(tx.privacy_proof),
+                    'ring_signature': bool(tx.ring_signature)
+                }
+            
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        
+        @self.app.post("/api/transaction/send")
+        async def send_transaction(request: dict):
+            """Submit transaction to network"""
+            try:
+                # Create transaction object (simplified)
+                from_address = request.get('from_address')
+                to_address = request.get('to_address')
+                amount = int(request.get('amount', 0) * 100000000)  # Convert to satoshis
+                fee = int(request.get('fee', 0.0001) * 100000000)
+                
+                # Create transaction
+                tx = Transaction(
+                    version=1,
+                    inputs=[],  # TODO: Create proper inputs
+                    outputs=[],  # TODO: Create proper outputs
+                    lock_time=0,
+                    fee=fee,
+                    timestamp=int(time.time())
+                )
+                
+                # Add to mempool
+                if self.blockchain.add_transaction_to_mempool(tx):
+                    txid = tx.calculate_txid()
+                    
+                    # Broadcast to P2P network
+                    self.p2p_node.broadcast_transaction({'txid': txid})
+                    
+                    return {
+                        'transaction_id': txid,
+                        'status': 'submitted',
+                        'privacy_protected': True
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="Invalid transaction")
+                    
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+        
+        # Mining operations
+        @self.app.get("/api/mining/info")
+        async def get_mining_info():
+            """Get mining information"""
+            height = self.blockchain.get_block_height()
+            current_reward = self.blockchain.calculate_block_reward(height + 1)
+            
+            return {
+                'current_block_height': height,
+                'current_reward': current_reward / 100000000,  # Convert to WEPO
+                'difficulty': self.blockchain.current_difficulty,
+                'algorithm': 'Argon2',
+                'block_time': '10 minutes' if height <= 52560 else '2 minutes',
+                'mining_enabled': self.mining_enabled,
+                'mempool_size': len(self.blockchain.mempool)
+            }
+        
+        @self.app.get("/api/mining/getwork")
+        async def get_work():
+            """Get mining work"""
+            if not self.mining_enabled:
+                raise HTTPException(status_code=503, detail="Mining disabled")
+            
+            # Create new block template
+            new_block = self.blockchain.create_new_block(self.miner_address)
+            
+            return {
+                'job_id': f"job_{new_block.height}_{int(time.time())}",
+                'prev_hash': new_block.header.prev_hash,
+                'merkle_root': new_block.header.merkle_root,
+                'timestamp': new_block.header.timestamp,
+                'bits': new_block.header.bits,
+                'height': new_block.height,
+                'target_difficulty': self.blockchain.current_difficulty
+            }
+        
+        @self.app.post("/api/mining/submit")
+        async def submit_work(request: dict):
+            """Submit mining solution"""
+            try:
+                job_id = request.get('job_id')
+                nonce = request.get('nonce')
+                miner_address = request.get('miner_address', self.miner_address)
+                
+                # Create block with submitted nonce
+                new_block = self.blockchain.create_new_block(miner_address)
+                new_block.header.nonce = nonce
+                
+                # Validate and add block
+                if self.blockchain.add_block(new_block):
+                    # Broadcast to P2P network
+                    block_data = {
+                        'height': new_block.height,
+                        'hash': new_block.get_block_hash()
+                    }
+                    self.p2p_node.broadcast_block(block_data)
+                    
+                    return {
+                        'accepted': True,
+                        'height': new_block.height,
+                        'hash': new_block.get_block_hash()
+                    }
+                else:
+                    return {
+                        'accepted': False,
+                        'reason': 'Invalid proof of work'
+                    }
+                    
+            except Exception as e:
+                return {
+                    'accepted': False,
+                    'reason': str(e)
+                }
+        
+        # Wallet operations (basic)
+        @self.app.get("/api/wallet/{address}")
+        async def get_wallet_info(address: str):
+            """Get wallet information"""
+            # Calculate balance (simplified)
+            balance = 0
+            for block in self.blockchain.chain:
+                for tx in block.transactions:
+                    for output in tx.outputs:
+                        if output.address == address:
+                            balance += output.value
+            
+            return {
+                'address': address,
+                'balance': balance / 100000000,  # Convert to WEPO
+                'transaction_count': 0  # TODO: Calculate actual count
+            }
+        
+        # P2P network info
+        @self.app.get("/api/network/peers")
+        async def get_peers():
+            """Get connected peers"""
+            return self.p2p_node.get_network_info()
+    
+    def handle_new_block(self, block_data: dict):
+        """Handle new block from P2P network"""
+        print(f"Received new block from network: {block_data.get('hash', 'unknown')}")
+        # TODO: Validate and add block to chain
+    
+    def handle_new_transaction(self, tx_data: dict):
+        """Handle new transaction from P2P network"""
+        print(f"Received new transaction from network: {tx_data.get('txid', 'unknown')}")
+        # TODO: Validate and add to mempool
+    
+    def get_block_data(self, block_hash: str) -> Optional[dict]:
+        """Get block data for P2P requests"""
+        for block in self.blockchain.chain:
+            if block.get_block_hash() == block_hash:
+                return {
+                    'height': block.height,
+                    'hash': block.get_block_hash(),
+                    'prev_hash': block.header.prev_hash,
+                    'merkle_root': block.header.merkle_root,
+                    'timestamp': block.header.timestamp,
+                    'transactions': [tx.calculate_txid() for tx in block.transactions]
+                }
+        return None
+    
+    def start_mining(self):
+        """Start mining in background thread"""
+        if not self.mining_enabled:
+            return
+        
+        def mining_worker():
+            print("Starting WEPO mining...")
+            while self.running and self.mining_enabled:
+                try:
+                    mined_block = self.blockchain.mine_next_block(self.miner_address)
+                    if mined_block:
+                        print(f"Mined new block {mined_block.height}: {mined_block.get_block_hash()}")
+                        
+                        # Broadcast to P2P network
+                        block_data = {
+                            'height': mined_block.height,
+                            'hash': mined_block.get_block_hash()
+                        }
+                        self.p2p_node.broadcast_block(block_data)
+                    
+                except Exception as e:
+                    print(f"Mining error: {e}")
+                    time.sleep(5)
+        
+        self.mining_thread = threading.Thread(target=mining_worker, daemon=True)
+        self.mining_thread.start()
+    
+    def start(self):
+        """Start the full node"""
+        print("Starting WEPO Full Node...")
+        self.running = True
+        
+        # Start P2P network
+        self.p2p_node.start_server()
+        
+        # Discover peers
+        time.sleep(2)
+        self.p2p_node.discover_peers()
+        
+        # Start mining if enabled
+        if self.enable_mining:
+            self.start_mining()
+        
+        print(f"WEPO Full Node started successfully!")
+        print(f"Blockchain height: {self.blockchain.get_block_height()}")
+        print(f"P2P port: {self.p2p_port}")
+        print(f"API port: {self.api_port}")
+        
+        # Run API server
+        uvicorn.run(
+            self.app,
+            host="0.0.0.0",
+            port=self.api_port,
+            log_level="info"
+        )
+    
+    def stop(self):
+        """Stop the full node"""
+        print("Stopping WEPO Full Node...")
+        self.running = False
+        self.mining_enabled = False
+        
+        # Stop P2P network
+        self.p2p_node.stop_server()
+        
+        print("WEPO Full Node stopped")
+
+def signal_handler(signum, frame):
+    """Handle shutdown signals"""
+    print("\nReceived shutdown signal...")
+    global node
+    if 'node' in globals():
+        node.stop()
+    sys.exit(0)
+
+def main():
+    """Main function"""
+    parser = argparse.ArgumentParser(description='WEPO Full Node')
+    parser.add_argument('--data-dir', default='/tmp/wepo',
+                       help='Data directory for blockchain storage')
+    parser.add_argument('--p2p-port', type=int, default=22567,
+                       help='P2P network port')
+    parser.add_argument('--api-port', type=int, default=8001,
+                       help='API server port')
+    parser.add_argument('--no-mining', action='store_true',
+                       help='Disable mining')
+    parser.add_argument('--miner-address',
+                       help='Miner address for block rewards')
+    
+    args = parser.parse_args()
+    
+    # Set up signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    print("=" * 60)
+    print("🚀 WEPO Full Node - Revolutionary Cryptocurrency")
+    print("=" * 60)
+    print(f"Version: 1.0.0")
+    print(f"Data directory: {args.data_dir}")
+    print(f"P2P port: {args.p2p_port}")
+    print(f"API port: {args.api_port}")
+    print(f"Mining: {'Disabled' if args.no_mining else 'Enabled'}")
+    print("=" * 60)
+    
+    # Create and start node
+    global node
+    node = WepoFullNode(
+        data_dir=args.data_dir,
+        p2p_port=args.p2p_port,
+        api_port=args.api_port,
+        enable_mining=not args.no_mining
+    )
+    
+    if args.miner_address:
+        node.miner_address = args.miner_address
+    
+    try:
+        node.start()
+    except KeyboardInterrupt:
+        node.stop()
+
+if __name__ == "__main__":
+    main()
