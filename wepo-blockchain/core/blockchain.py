@@ -127,8 +127,18 @@ class Block:
     
     def calculate_size(self) -> int:
         """Calculate block size in bytes"""
-        # Simplified size calculation
-        return sum(len(json.dumps(asdict(tx))) for tx in self.transactions)
+        # Simplified size calculation avoiding JSON serialization of bytes
+        total_size = 0
+        for tx in self.transactions:
+            # Count transaction components
+            total_size += 100  # Base transaction overhead
+            total_size += len(tx.inputs) * 50  # Input overhead
+            total_size += len(tx.outputs) * 50  # Output overhead
+            for inp in tx.inputs:
+                total_size += len(inp.script_sig) if inp.script_sig else 0
+            for out in tx.outputs:
+                total_size += len(out.script_pubkey) if out.script_pubkey else 0
+        return total_size
     
     def calculate_merkle_root(self) -> str:
         """Calculate Merkle root of transactions"""
