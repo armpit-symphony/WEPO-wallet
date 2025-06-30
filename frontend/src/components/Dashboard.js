@@ -41,23 +41,26 @@ const Dashboard = () => {
 
   useEffect(() => {
     // Load wallet data if not already loaded
-    if (!wallet) {
-      const sessionWallet = sessionStorage.getItem('wepo_current_wallet');
-      if (sessionWallet) {
-        try {
-          const walletData = JSON.parse(sessionWallet);
-          setWallet(walletData);
-          
-          // Load real balance from blockchain instead of hardcoded value
-          await loadWalletData(walletData.address);
-        } catch (error) {
-          console.error('Failed to load wallet data:', error);
-          // Set zero balance if loading fails
-          setBalance(0);
-          setTransactions([]);
+    const loadData = async () => {
+      if (!wallet) {
+        const sessionWallet = sessionStorage.getItem('wepo_current_wallet');
+        if (sessionWallet) {
+          try {
+            const walletData = JSON.parse(sessionWallet);
+            setWallet(walletData);
+            
+            // Load real balance from blockchain instead of hardcoded value
+            await loadWalletData(walletData.address);
+          } catch (error) {
+            console.error('Failed to load wallet data:', error);
+            // Set zero balance if loading fails
+            setBalance(0);
+            setTransactions([]);
+          }
         }
       }
-    }
+    };
+    loadData();
   }, [wallet, setWallet, setBalance, setTransactions]);
 
   const formatBalance = (amount) => {
