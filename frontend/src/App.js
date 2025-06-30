@@ -1,53 +1,67 @@
-import { useEffect } from "react";
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import WalletSetup from './components/WalletSetup';
+import WalletLogin from './components/WalletLogin';
+import Dashboard from './components/Dashboard';
+import { WalletProvider } from './contexts/WalletContext';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+function App() {
+  const [isWalletSetup, setIsWalletSetup] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    helloWorldApi();
+    // Check if wallet exists in localStorage
+    const walletExists = localStorage.getItem('wepo_wallet_exists');
+    const sessionActive = sessionStorage.getItem('wepo_session_active');
+    
+    setIsWalletSetup(!!walletExists);
+    setIsLoggedIn(!!sessionActive);
   }, []);
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
-
-function App() {
-  return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <WalletProvider>
+      <div className="App">
+        <Router>
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                !isWalletSetup ? (
+                  <WalletSetup onSetupComplete={() => setIsWalletSetup(true)} />
+                ) : !isLoggedIn ? (
+                  <WalletLogin onLoginSuccess={() => setIsLoggedIn(true)} />
+                ) : (
+                  <Dashboard />
+                )
+              } 
+            />
+            <Route 
+              path="/setup" 
+              element={
+                isWalletSetup ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <WalletSetup onSetupComplete={() => setIsWalletSetup(true)} />
+                )
+              } 
+            />
+            <Route 
+              path="/login" 
+              element={
+                !isWalletSetup ? (
+                  <Navigate to="/setup" replace />
+                ) : isLoggedIn ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <WalletLogin onLoginSuccess={() => setIsLoggedIn(true)} />
+                )
+              } 
+            />
+          </Routes>
+        </Router>
+      </div>
+    </WalletProvider>
   );
 }
 
