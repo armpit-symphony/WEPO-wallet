@@ -33,7 +33,8 @@ const Dashboard = () => {
     logout,
     setWallet,
     setBalance,
-    setTransactions
+    setTransactions,
+    loadWalletData
   } = useWallet();
   
   const [activeTab, setActiveTab] = useState('dashboard');
