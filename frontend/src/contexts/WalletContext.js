@@ -47,34 +47,39 @@ export const WalletProvider = ({ children }) => {
       throw new Error('Passwords do not match');
     }
 
-    const mnemonic = generateMnemonic();
-    const seed = bip39.mnemonicToSeedSync(mnemonic);
-    
-    // Encrypt the mnemonic with the password
-    const encryptedMnemonic = CryptoJS.AES.encrypt(mnemonic, password).toString();
-    
-    // Create wallet object
-    const walletData = {
-      username,
-      address: generateWepoAddress(seed),
-      encryptedMnemonic,
-      createdAt: new Date().toISOString(),
-      balance: 0
-    };
+    try {
+      const mnemonic = generateMnemonic();
+      const seed = bip39.mnemonicToSeedSync(mnemonic);
+      
+      // Encrypt the mnemonic with the password
+      const encryptedMnemonic = CryptoJS.AES.encrypt(mnemonic, password).toString();
+      
+      // Create wallet object
+      const walletData = {
+        username,
+        address: generateWepoAddress(seed),
+        encryptedMnemonic,
+        createdAt: new Date().toISOString(),
+        balance: 0
+      };
 
-    // Store wallet data (encrypted)
-    const encryptedWallet = CryptoJS.AES.encrypt(JSON.stringify(walletData), password).toString();
-    localStorage.setItem('wepo_wallet', encryptedWallet);
-    localStorage.setItem('wepo_wallet_exists', 'true');
-    localStorage.setItem('wepo_wallet_username', username);
-    
-    // Set launch date for demo purposes
-    if (!localStorage.getItem('wepo_launch_date')) {
-      localStorage.setItem('wepo_launch_date', new Date().toISOString());
+      // Store wallet data (encrypted)
+      const encryptedWallet = CryptoJS.AES.encrypt(JSON.stringify(walletData), password).toString();
+      localStorage.setItem('wepo_wallet', encryptedWallet);
+      localStorage.setItem('wepo_wallet_exists', 'true');
+      localStorage.setItem('wepo_wallet_username', username);
+      
+      // Set launch date for demo purposes
+      if (!localStorage.getItem('wepo_launch_date')) {
+        localStorage.setItem('wepo_launch_date', new Date().toISOString());
+      }
+
+      setWallet(walletData);
+      return { mnemonic, address: walletData.address };
+    } catch (error) {
+      console.error('Wallet creation error:', error);
+      throw new Error('Failed to create wallet: ' + error.message);
     }
-
-    setWallet(walletData);
-    return { mnemonic, address: walletData.address };
   };
 
   const loginWallet = async (username, password) => {
