@@ -255,7 +255,10 @@ export const WalletProvider = ({ children }) => {
     changePassword,
     sendWepo,
     logout,
-    loadWalletData
+    loadWalletData,
+    setWallet,
+    setBalance,
+    setTransactions
   };
 
   return (
