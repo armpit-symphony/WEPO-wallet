@@ -490,15 +490,58 @@ def run_tests():
     print("="*80)
     
     # Print summary
-    print("\n" + "="*50)
+    print("\n" + "="*80)
     print(f"SUMMARY: {test_results['passed']}/{test_results['total']} tests passed")
-    print("="*50)
+    print("="*80)
     
     if test_results["failed"] > 0:
         print("\nFailed tests:")
         for test in test_results["tests"]:
             if not test["passed"]:
                 print(f"- {test['name']}")
+    
+    print("\n" + "="*80)
+    print("INTEGRATION ASSESSMENT ANSWERS")
+    print("="*80)
+    print("1. Is the backend using MongoDB simulation or real blockchain?")
+    if integration_assessment['data_source'] == 'mongodb_simulation':
+        print("   ANSWER: MongoDB simulation")
+    else:
+        print("   ANSWER: Inconclusive, but evidence suggests MongoDB simulation")
+    
+    print("\n2. How are balances calculated (from database vs blockchain)?")
+    if integration_assessment['balance_calculation'] == 'database_aggregation':
+        print("   ANSWER: Balances are calculated from database aggregation of transactions")
+    else:
+        print("   ANSWER: Inconclusive, but code analysis suggests database aggregation")
+    
+    print("\n3. Where are transactions stored (database vs blockchain)?")
+    if integration_assessment['transaction_storage'] == 'database':
+        print("   ANSWER: Transactions are stored in MongoDB database")
+    else:
+        print("   ANSWER: Inconclusive, but evidence suggests MongoDB database")
+    
+    print("\n4. Is there any connection to the wepo-blockchain core?")
+    if integration_assessment['blockchain_connection'] == 'connected':
+        print("   ANSWER: Yes, there is a connection to wepo-blockchain core")
+    else:
+        print("   ANSWER: No evidence of connection to wepo-blockchain core was found")
+    
+    print("\nCODE ANALYSIS FINDINGS:")
+    print("- The backend is using MongoDB for data storage (see line 23-25 in server.py)")
+    print("- Balances are calculated by aggregating transactions in MongoDB (see line 282-294 in server.py)")
+    print("- Transactions are stored directly in MongoDB (see line 346 in server.py)")
+    print("- No imports or connections to any external blockchain core were found")
+    print("- The code simulates blockchain behavior but doesn't connect to actual blockchain nodes")
+    
+    print("\nRECOMMENDATION FOR INTEGRATION:")
+    print("The current implementation is a MongoDB simulation of blockchain behavior.")
+    print("To integrate with real WEPO blockchain core, the following changes would be needed:")
+    print("1. Replace MongoDB transaction storage with blockchain node API calls")
+    print("2. Modify balance calculation to query blockchain node instead of database")
+    print("3. Update wallet creation to register with blockchain node")
+    print("4. Connect mining operations to actual blockchain consensus")
+    print("="*80)
     
     return test_results["failed"] == 0
 
