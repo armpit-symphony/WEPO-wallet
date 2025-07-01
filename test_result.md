@@ -186,6 +186,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested wallet setup, login flow, and dashboard functionality. Wallet creation with username/password works correctly, seed phrase generation displays 12 words, and the dashboard shows the correct balance (1000.5 WEPO) and wallet address."
+      - working: true
+        agent: "testing"
+        comment: "Successfully verified integration with real blockchain. Wallet creation works correctly, seed phrase generation displays 12 words, and the dashboard now shows 0.0 WEPO balance (real blockchain) instead of 1000.5 WEPO (mock data). API calls to /api/wallet/ endpoints confirmed."
 
   - task: "Privacy & Security Features"
     implemented: true
