@@ -327,7 +327,7 @@ class WepoBlockchain:
                 sequence=0xffffffff
             )],
             outputs=[TransactionOutput(
-                value=REWARD_YEAR1,
+                value=REWARD_Q1,
                 script_pubkey=b"genesis_output",
                 address="wepo1genesis0000000000000000000000"
             )],
