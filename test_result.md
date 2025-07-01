@@ -207,6 +207,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested privacy and security features. Seed phrase backup with security warnings is displayed correctly, password validation works properly, and the login system maintains session state. Privacy notices are displayed in the Send WEPO interface."
+      - working: true
+        agent: "testing"
+        comment: "Successfully verified privacy and security features with real blockchain integration. Seed phrase backup shows 12 words with security warnings, password validation works properly, and the login system maintains session state. Privacy notices about zk-STARKs and ring signatures are displayed in the Send WEPO interface."
 
   - task: "PoS and Masternode Interface"
     implemented: true
