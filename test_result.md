@@ -290,7 +290,8 @@ backend:
         comment: "Successfully verified that the WEPO blockchain integration bridge is connecting the frontend to the real blockchain. The blockchain is still initializing with genesis block mining in progress, which is expected during initial setup. All API endpoints (/api/network/status, /api/wallet/create, /api/wallet/{address}, /api/wallet/{address}/transactions, /api/mining/info) correctly indicate the blockchain initialization status and return appropriate responses. No MongoDB dependency was found in the responses. The bridge provides API compatibility while the blockchain initializes, ensuring a smooth transition from the MongoDB simulation to the real blockchain."
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Frontend-Blockchain Integration"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
