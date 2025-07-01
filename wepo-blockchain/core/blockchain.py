@@ -487,15 +487,27 @@ class WepoBlockchain:
         return len(self.chain) - 1 if self.chain else -1
     
     def calculate_block_reward(self, height: int) -> int:
-        """Calculate block reward based on height"""
+        """Calculate block reward based on height with aggressive Year 1 schedule"""
+        # Year 1: Quarterly halvings starting at 1000 WEPO
         if height <= POW_BLOCKS_YEAR1:
-            return REWARD_YEAR1
+            # Calculate quarter within year 1 (10-minute blocks)
+            blocks_per_quarter = POW_BLOCKS_YEAR1 // 4  # 13,140 blocks per quarter
+            quarter = height // blocks_per_quarter
+            
+            if quarter == 0:      # Q1: Months 1-3
+                return 1000 * COIN
+            elif quarter == 1:    # Q2: Months 4-6  
+                return 500 * COIN
+            elif quarter == 2:    # Q3: Months 7-9
+                return 250 * COIN
+            else:                 # Q4: Months 10-12
+                return 125 * COIN
         
-        # After year 1: 12.4 WEPO base with halvings every 4 years
+        # After year 1: Standard schedule with 4-year halvings
         years_since_year2 = (height - POW_BLOCKS_YEAR1) // HALVING_INTERVAL
         reward = REWARD_YEAR2_BASE
         
-        # Apply halvings
+        # Apply halvings every 4 years
         for _ in range(years_since_year2):
             reward //= 2
         
