@@ -50,8 +50,20 @@ class WepoIntegrationBridge:
             
             # Create blockchain with lower initial difficulty
             self.blockchain = WepoBlockchain("/tmp/wepo")
-            # Temporarily lower difficulty for faster startup
-            self.blockchain.current_difficulty = 2  # 2 leading zeros instead of 4
+            
+            # Override difficulty for faster startup
+            original_difficulty = self.blockchain.current_difficulty
+            self.blockchain.current_difficulty = 1  # 1 leading zero for super fast mining
+            
+            # If no genesis block exists, mine it quickly
+            if len(self.blockchain.chain) == 0:
+                print("⚡ Mining genesis block with reduced difficulty...")
+                # The genesis block will be mined during blockchain initialization
+                pass
+            
+            # Restore normal difficulty after genesis
+            if len(self.blockchain.chain) > 0:
+                self.blockchain.current_difficulty = 2  # Still easier than default 4
             
             print(f"✅ WEPO blockchain initialized with {len(self.blockchain.chain)} blocks")
             self.blockchain_ready = True
