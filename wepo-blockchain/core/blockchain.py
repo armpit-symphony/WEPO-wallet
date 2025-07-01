@@ -32,10 +32,10 @@ COIN = 100000000  # 1 WEPO = 100,000,000 satoshis
 
 # Consensus Parameters
 POW_BLOCKS_YEAR1 = 52560      # 10-min blocks for 1 year
-REWARD_Q1 = 1000 * COIN       # 1000 WEPO per block Q1 (MEGA REWARDS!)
-REWARD_Q2 = 500 * COIN        # 500 WEPO per block Q2
-REWARD_Q3 = 250 * COIN        # 250 WEPO per block Q3  
-REWARD_Q4 = 125 * COIN        # 125 WEPO per block Q4
+REWARD_Q1 = 400 * COIN        # 400 WEPO per block Q1 (MEGA REWARDS!)
+REWARD_Q2 = 200 * COIN        # 200 WEPO per block Q2
+REWARD_Q3 = 100 * COIN        # 100 WEPO per block Q3  
+REWARD_Q4 = 50 * COIN         # 50 WEPO per block Q4
 REWARD_YEAR2_BASE = 12.4 * COIN # 12.4 WEPO per block year 2+
 HALVING_INTERVAL = 1051200    # Blocks between halvings (4 years)
 POS_ACTIVATION_HEIGHT = int(POW_BLOCKS_YEAR1 * 1.5)  # 18 months
