@@ -236,14 +236,23 @@ class WepoFullNode:
             height = self.blockchain.get_block_height()
             current_reward = self.blockchain.calculate_block_reward(height + 1)
             
+            # Determine which quarter we're in for Year 1
+            quarter_info = ""
+            if height <= 52560:  # Year 1
+                blocks_per_quarter = 52560 // 4
+                quarter = (height // blocks_per_quarter) + 1
+                quarter_info = f" (Q{quarter} rewards)"
+            
             return {
                 'current_block_height': height,
                 'current_reward': current_reward / 100000000,  # Convert to WEPO
+                'quarter_info': quarter_info,
                 'difficulty': self.blockchain.current_difficulty,
                 'algorithm': 'Argon2',
                 'block_time': '10 minutes' if height <= 52560 else '2 minutes',
                 'mining_enabled': self.mining_enabled,
-                'mempool_size': len(self.blockchain.mempool)
+                'mempool_size': len(self.blockchain.mempool),
+                'reward_schedule': 'Quarterly halvings in Year 1: 1000→500→250→125 WEPO'
             }
         
         @self.app.get("/api/mining/getwork")
