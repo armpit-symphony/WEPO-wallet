@@ -228,6 +228,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully verified that both staking and masternode features show as locked with the 18-month countdown message displayed correctly."
+      - working: true
+        agent: "testing"
+        comment: "Successfully verified that both staking and masternode features continue to show as locked with the 18-month countdown message displayed correctly after blockchain integration."
 
   - task: "Built-in BTC-to-WEPO DEX"
     implemented: true
