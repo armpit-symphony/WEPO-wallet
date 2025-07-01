@@ -252,7 +252,7 @@ class WepoFullNode:
                 'block_time': '10 minutes' if height <= 52560 else '2 minutes',
                 'mining_enabled': self.mining_enabled,
                 'mempool_size': len(self.blockchain.mempool),
-                'reward_schedule': 'Quarterly halvings in Year 1: 1000→500→250→125 WEPO'
+                'reward_schedule': 'Balanced Year 1: 400→200→100→50 WEPO, then 12.4 with 4yr halvings'
             }
         
         @self.app.get("/api/mining/getwork")
