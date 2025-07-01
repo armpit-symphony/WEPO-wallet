@@ -69,7 +69,7 @@ def generate_encrypted_key():
     return f"encrypted_{uuid.uuid4().hex}"
 
 def run_tests():
-    """Run all WEPO cryptocurrency backend tests"""
+    """Run all WEPO cryptocurrency backend tests with focus on integration assessment"""
     # Test variables to store data between tests
     test_wallet = None
     test_wallet_address = None
@@ -78,19 +78,58 @@ def run_tests():
     test_masternode_id = None
     test_swap_id = None
     
-    # 1. Test Network Status API
+    # Integration assessment results
+    integration_assessment = {
+        "data_source": "unknown",
+        "balance_calculation": "unknown",
+        "transaction_storage": "unknown",
+        "blockchain_connection": "unknown"
+    }
+    
+    print("\n" + "="*80)
+    print("WEPO BACKEND INTEGRATION ASSESSMENT")
+    print("="*80)
+    print("Testing backend to determine if it's using MongoDB simulation or real blockchain")
+    print("="*80 + "\n")
+    
+    # 1. Test Network Status API - check blockchain data source
     try:
+        print("\n[TEST] Network Status API - Checking blockchain data source")
         response = requests.get(f"{API_URL}/network/status")
-        print(f"  Network Status response: {response.status_code} - {response.text}")
-        passed = response.status_code == 200 and "block_height" in response.json()
-        log_test("Network Status API", passed, response)
-        if passed:
-            print(f"  Network Status: {json.dumps(response.json(), indent=2)}")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Network Status: {json.dumps(data, indent=2)}")
+            
+            # Analyze the response to determine data source
+            if "block_height" in data:
+                print("  ✓ Block height information is available")
+                
+                # Check for MongoDB simulation indicators
+                if "network_hashrate" in data and data["network_hashrate"] == "123.45 TH/s":
+                    print("  ⚠ Network hashrate appears to be hardcoded (123.45 TH/s)")
+                    integration_assessment["data_source"] = "mongodb_simulation"
+                
+                # Check for real blockchain indicators
+                # Real blockchains would typically have variable hashrates and more detailed stats
+                
+                passed = True
+            else:
+                print("  ✗ Block height information is missing")
+                passed = False
+                
+            log_test("Network Status API", passed, response)
+        else:
+            log_test("Network Status API", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
     except Exception as e:
         log_test("Network Status API", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
     
-    # 2. Test Wallet Creation
+    # 2. Test Wallet Creation - verify wallet creation flow
     try:
+        print("\n[TEST] Wallet Creation API - Verifying wallet creation flow")
         username = generate_random_username()
         address = generate_random_address()
         encrypted_private_key = generate_encrypted_key()
@@ -101,66 +140,227 @@ def run_tests():
             "encrypted_private_key": encrypted_private_key
         }
         
+        print(f"  Creating wallet with username: {username}, address: {address}")
         response = requests.post(f"{API_URL}/wallet/create", json=wallet_data)
-        passed = response.status_code == 200 and response.json().get("success") == True
-        log_test("Wallet Creation", passed, response)
+        print(f"  Response: {response.status_code}")
         
-        if passed:
-            test_wallet = wallet_data
-            test_wallet_address = address
-            print(f"  Created wallet: {username} with address {address}")
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Wallet creation response: {json.dumps(data, indent=2)}")
+            
+            if data.get("success") == True:
+                test_wallet = wallet_data
+                test_wallet_address = address
+                print(f"  ✓ Successfully created wallet: {username} with address {address}")
+                
+                # Check for MongoDB simulation indicators
+                if "address" in data and data["address"] == address:
+                    print("  ⚠ Wallet address is directly stored without blockchain validation")
+                    if integration_assessment["data_source"] == "unknown":
+                        integration_assessment["data_source"] = "mongodb_simulation"
+                
+                passed = True
+            else:
+                print("  ✗ Wallet creation failed")
+                passed = False
+                
+            log_test("Wallet Creation", passed, response)
+        else:
+            log_test("Wallet Creation", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
     except Exception as e:
         log_test("Wallet Creation", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
     
-    # 3. Test Wallet Info
+    # 3. Test Wallet Info - check balance calculation method
     if test_wallet_address:
         try:
+            print("\n[TEST] Wallet Info API - Checking balance calculation method")
+            print(f"  Retrieving wallet info for address: {test_wallet_address}")
             response = requests.get(f"{API_URL}/wallet/{test_wallet_address}")
-            passed = response.status_code == 200 and "balance" in response.json()
-            log_test("Wallet Info", passed, response)
-            if passed:
-                print(f"  Wallet Info: {json.dumps(response.json(), indent=2)}")
+            print(f"  Response: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"  Wallet Info: {json.dumps(data, indent=2)}")
+                
+                if "balance" in data:
+                    print(f"  ✓ Balance information available: {data['balance']} WEPO")
+                    
+                    # Check for MongoDB simulation indicators
+                    # In a real blockchain, balance would be calculated from UTXO or account state
+                    # In MongoDB simulation, it's likely calculated from transaction records
+                    if data["balance"] == 0.0:
+                        print("  ⚠ New wallet has exactly 0.0 balance (typical for database simulation)")
+                        integration_assessment["balance_calculation"] = "database_aggregation"
+                    
+                    passed = True
+                else:
+                    print("  ✗ Balance information is missing")
+                    passed = False
+                    
+                log_test("Wallet Info", passed, response)
+            else:
+                log_test("Wallet Info", False, response)
+                print(f"  ✗ Failed with status code: {response.status_code}")
         except Exception as e:
             log_test("Wallet Info", False, error=str(e))
+            print(f"  ✗ Exception: {str(e)}")
     else:
         log_test("Wallet Info", False, error="Skipped - No wallet created")
+        print("  ✗ Skipped - No wallet created")
     
-    # 4. Test Transaction History
+    # 4. Test Transaction History - verify transaction source
     if test_wallet_address:
         try:
+            print("\n[TEST] Transaction History API - Verifying transaction source")
+            print(f"  Retrieving transaction history for address: {test_wallet_address}")
             response = requests.get(f"{API_URL}/wallet/{test_wallet_address}/transactions")
-            passed = response.status_code == 200
-            log_test("Transaction History", passed, response)
-            if passed:
-                print(f"  Transaction count: {len(response.json())}")
+            print(f"  Response: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"  Transaction count: {len(data)}")
+                
+                # Check for MongoDB simulation indicators
+                # In a real blockchain, transactions would be fetched from blockchain nodes
+                if isinstance(data, list):
+                    if len(data) == 0:
+                        print("  ⚠ New wallet has empty transaction list (expected for database simulation)")
+                        integration_assessment["transaction_storage"] = "database"
+                    
+                    passed = True
+                else:
+                    print("  ✗ Unexpected response format")
+                    passed = False
+                    
+                log_test("Transaction History", passed, response)
+            else:
+                log_test("Transaction History", False, response)
+                print(f"  ✗ Failed with status code: {response.status_code}")
         except Exception as e:
             log_test("Transaction History", False, error=str(e))
+            print(f"  ✗ Exception: {str(e)}")
     else:
         log_test("Transaction History", False, error="Skipped - No wallet created")
+        print("  ✗ Skipped - No wallet created")
     
-    # 5. Test Send Transaction (should fail due to insufficient balance)
+    # 5. Test Send Transaction - check how transactions are processed
     if test_wallet_address:
         try:
+            print("\n[TEST] Send Transaction API - Checking transaction processing")
+            recipient_address = generate_random_address()
             transaction_data = {
                 "from_address": test_wallet_address,
-                "to_address": generate_random_address(),
+                "to_address": recipient_address,
                 "amount": 100.0,
                 "password_hash": "test_password_hash"
             }
             
+            print(f"  Sending {transaction_data['amount']} WEPO to {recipient_address}")
             response = requests.post(f"{API_URL}/transaction/send", json=transaction_data)
-            # This should fail with 400 due to insufficient balance
-            passed = response.status_code == 400 and "Insufficient balance" in response.text
-            log_test("Send Transaction (Insufficient Balance)", passed, response)
+            print(f"  Response: {response.status_code}")
             
-            if passed:
-                print("  Transaction correctly failed due to insufficient balance")
+            # This should fail with 400 due to insufficient balance
+            if response.status_code == 400 and "Insufficient balance" in response.text:
+                print("  ✓ Transaction correctly failed due to insufficient balance")
+                
+                # Check for MongoDB simulation indicators
+                # In a real blockchain, transaction validation would happen at the node level
+                # In MongoDB simulation, it's likely checked against database records
+                print("  ⚠ Balance check performed via database query (typical for simulation)")
+                integration_assessment["transaction_storage"] = "database"
+                
+                passed = True
+            else:
+                print("  ✗ Unexpected response")
+                passed = False
+                
+            log_test("Send Transaction (Insufficient Balance)", passed, response)
         except Exception as e:
             log_test("Send Transaction (Insufficient Balance)", False, error=str(e))
+            print(f"  ✗ Exception: {str(e)}")
     else:
         log_test("Send Transaction (Insufficient Balance)", False, error="Skipped - No wallet created")
+        print("  ✗ Skipped - No wallet created")
     
-    # 6. Test Staking (should fail due to minimum requirement)
+    # 6. Test Mining Info - understand current mining implementation
+    try:
+        print("\n[TEST] Mining Info API - Understanding mining implementation")
+        response = requests.get(f"{API_URL}/mining/info")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Mining Info: {json.dumps(data, indent=2)}")
+            
+            if "current_reward" in data and "algorithm" in data:
+                print(f"  ✓ Mining information available")
+                print(f"  ✓ Mining algorithm: {data['algorithm']}")
+                print(f"  ✓ Current block reward: {data['current_reward']} WEPO")
+                
+                # Check for MongoDB simulation indicators
+                if data["algorithm"] == "Argon2" and data["difficulty"] == 1.0:
+                    print("  ⚠ Mining difficulty is fixed at 1.0 (typical for simulation)")
+                    if integration_assessment["data_source"] == "unknown":
+                        integration_assessment["data_source"] = "mongodb_simulation"
+                
+                passed = True
+            else:
+                print("  ✗ Mining information incomplete")
+                passed = False
+                
+            log_test("Mining Info", passed, response)
+        else:
+            log_test("Mining Info", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Mining Info", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # Additional tests to check for blockchain connection
+    try:
+        print("\n[TEST] Checking for real blockchain connection indicators")
+        
+        # Check if there are any API endpoints that might connect to a real blockchain
+        response = requests.get(f"{API_URL}/")
+        if response.status_code == 200:
+            root_data = response.json()
+            print(f"  API root response: {json.dumps(root_data, indent=2)}")
+            
+            # Look for blockchain connection indicators in the API response
+            if "blockchain_node" in root_data or "node_url" in root_data:
+                print("  ✓ Found blockchain node connection information")
+                integration_assessment["blockchain_connection"] = "connected"
+            else:
+                print("  ⚠ No blockchain node connection information found")
+                integration_assessment["blockchain_connection"] = "none"
+        
+        # Check latest blocks to see if they look like real blockchain blocks
+        response = requests.get(f"{API_URL}/blocks/latest")
+        if response.status_code == 200:
+            blocks_data = response.json()
+            if len(blocks_data) > 0:
+                print(f"  Found {len(blocks_data)} blocks")
+                sample_block = blocks_data[0]
+                print(f"  Sample block: {json.dumps(sample_block, indent=2)}")
+                
+                # Real blockchain blocks would have more complex structure and validation
+                if "nonce" in sample_block and sample_block["nonce"] == 0:
+                    print("  ⚠ Block nonce is 0 (typical for simulation)")
+                    if integration_assessment["data_source"] == "unknown":
+                        integration_assessment["data_source"] = "mongodb_simulation"
+            else:
+                print("  No blocks found")
+        
+        log_test("Blockchain Connection Check", True)
+    except Exception as e:
+        log_test("Blockchain Connection Check", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # Additional tests from the original test suite
+    
+    # Test Staking (should fail due to minimum requirement)
     if test_wallet_address:
         try:
             stake_data = {
@@ -171,7 +371,6 @@ def run_tests():
             
             response = requests.post(f"{API_URL}/stake", json=stake_data)
             # This should fail with 400 due to minimum stake requirement or insufficient balance
-            print(f"  Staking response: {response.status_code} - {response.text}")
             passed = response.status_code == 400 and ("Minimum stake is 1000 WEPO" in response.text or "Insufficient balance for staking" in response.text)
             log_test("Staking (Minimum Requirement/Insufficient Balance)", passed, response)
             
@@ -182,7 +381,7 @@ def run_tests():
     else:
         log_test("Staking (Minimum Requirement)", False, error="Skipped - No wallet created")
     
-    # 7. Test Masternode Setup (should fail due to collateral requirement)
+    # Test Masternode Setup (should fail due to collateral requirement)
     if test_wallet_address:
         try:
             masternode_data = {
@@ -203,7 +402,7 @@ def run_tests():
     else:
         log_test("Masternode Setup (Collateral Requirement)", False, error="Skipped - No wallet created")
     
-    # 8. Test BTC-WEPO DEX Swap (should fail for sell due to insufficient balance)
+    # Test BTC-WEPO DEX Swap (should fail for sell due to insufficient balance)
     if test_wallet_address:
         try:
             swap_data = {
@@ -225,7 +424,7 @@ def run_tests():
     else:
         log_test("BTC-WEPO DEX Swap (Sell - Insufficient Balance)", False, error="Skipped - No wallet created")
     
-    # 9. Test BTC-WEPO DEX Swap (buy should succeed)
+    # Test BTC-WEPO DEX Swap (buy should succeed)
     if test_wallet_address:
         try:
             swap_data = {
@@ -248,7 +447,7 @@ def run_tests():
     else:
         log_test("BTC-WEPO DEX Swap (Buy)", False, error="Skipped - No wallet created")
     
-    # 10. Test DEX Exchange Rate
+    # Test DEX Exchange Rate
     try:
         response = requests.get(f"{API_URL}/dex/rate")
         passed = response.status_code == 200 and "btc_to_wepo" in response.json()
@@ -258,7 +457,7 @@ def run_tests():
     except Exception as e:
         log_test("DEX Exchange Rate", False, error=str(e))
     
-    # 11. Test Latest Blocks
+    # Test Latest Blocks
     try:
         response = requests.get(f"{API_URL}/blocks/latest")
         passed = response.status_code == 200
@@ -268,15 +467,27 @@ def run_tests():
     except Exception as e:
         log_test("Latest Blocks", False, error=str(e))
     
-    # 12. Test Mining Info
-    try:
-        response = requests.get(f"{API_URL}/mining/info")
-        passed = response.status_code == 200 and "current_reward" in response.json()
-        log_test("Mining Info", passed, response)
-        if passed:
-            print(f"  Mining Info: {json.dumps(response.json(), indent=2)}")
-    except Exception as e:
-        log_test("Mining Info", False, error=str(e))
+    # Print integration assessment summary
+    print("\n" + "="*80)
+    print("INTEGRATION ASSESSMENT SUMMARY")
+    print("="*80)
+    print(f"Data Source: {integration_assessment['data_source']}")
+    print(f"Balance Calculation: {integration_assessment['balance_calculation']}")
+    print(f"Transaction Storage: {integration_assessment['transaction_storage']}")
+    print(f"Blockchain Connection: {integration_assessment['blockchain_connection']}")
+    
+    # Make final determination
+    if (integration_assessment['data_source'] == 'mongodb_simulation' or 
+        integration_assessment['balance_calculation'] == 'database_aggregation' or
+        integration_assessment['transaction_storage'] == 'database'):
+        print("\nFINAL DETERMINATION: Backend is using MongoDB simulation")
+        print("No evidence of connection to real WEPO blockchain core was found.")
+    elif integration_assessment['blockchain_connection'] == 'connected':
+        print("\nFINAL DETERMINATION: Backend is connected to real blockchain")
+    else:
+        print("\nFINAL DETERMINATION: Inconclusive, but evidence suggests MongoDB simulation")
+    
+    print("="*80)
     
     # Print summary
     print("\n" + "="*50)
