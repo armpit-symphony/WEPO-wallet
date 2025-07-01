@@ -164,6 +164,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully tested BTC-WEPO DEX functionality. Exchange rate API, atomic swap creation, and swap validation are all working correctly. Both buy and sell operations were tested, with proper validation of insufficient balance for sell operations."
+      - working: true
+        agent: "testing"
+        comment: "Integration assessment confirms DEX operations are simulated in MongoDB. The /api/dex/swap and /api/dex/rate endpoints work correctly but use database operations rather than blockchain operations."
 
 frontend:
   - task: "WEPO Wallet Interface"
