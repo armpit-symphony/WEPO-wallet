@@ -143,6 +143,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully tested wallet creation, transaction history, and transaction sending. Privacy features (zk-STARK proofs and ring signatures) are correctly implemented. Transaction validation with insufficient balance check is working properly."
+      - working: true
+        agent: "testing"
+        comment: "Integration assessment confirms transactions are stored in MongoDB and balances are calculated by aggregating transactions in the database. The /api/wallet/{address}/transactions and /api/transaction/send endpoints work correctly but use database operations rather than blockchain operations."
 
   - task: "BTC-to-WEPO DEX Backend"
     implemented: true
