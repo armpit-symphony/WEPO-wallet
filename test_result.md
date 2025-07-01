@@ -278,6 +278,9 @@ backend:
       - working: false
         agent: "main"
         comment: "Need to replace MongoDB simulation with actual WEPO blockchain core. Wallet daemon exists but not integrated with frontend."
+      - working: false
+        agent: "testing"
+        comment: "Integration assessment confirms the current backend is using MongoDB simulation. No evidence of connection to wepo-blockchain core was found. The backend is ready for integration with the real blockchain core as planned."
 
 test_plan:
   current_focus:
