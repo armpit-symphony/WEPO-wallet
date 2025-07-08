@@ -279,6 +279,47 @@ class WepoIntegrationBridge:
                 "fee_percentage": 0.1,
                 "last_updated": time.strftime('%Y-%m-%d %H:%M:%S')
             }
+        
+        @self.app.post("/api/test/mine-block")
+        async def mine_test_block():
+            """Mine a test block quickly (for testing only)"""
+            if not self.blockchain_ready:
+                raise HTTPException(status_code=503, detail="Blockchain not ready")
+            
+            try:
+                print("⛏️ Mining test block...")
+                
+                # Create test miner address  
+                test_miner = "wepo1test000000000000000000000000000"
+                
+                # Temporarily override difficulty for fast mining
+                original_check = self.blockchain.miner.check_difficulty
+                def instant_check(block_hash, difficulty):
+                    return True  # Accept immediately for testing
+                
+                self.blockchain.miner.check_difficulty = instant_check
+                
+                # Mine block
+                mined_block = self.blockchain.mine_next_block(test_miner)
+                
+                # Restore difficulty check
+                self.blockchain.miner.check_difficulty = original_check
+                
+                if mined_block:
+                    print(f"✅ Test block mined: {mined_block.height}")
+                    return {
+                        "success": True,
+                        "block_height": mined_block.height,
+                        "block_hash": mined_block.get_block_hash(),
+                        "transactions": len(mined_block.transactions),
+                        "reward": self.blockchain.calculate_block_reward(mined_block.height) / 100000000.0
+                    }
+                else:
+                    return {"success": False, "message": "Mining failed"}
+                    
+            except Exception as e:
+                print(f"❌ Mining error: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
 
 def main():
     """Main function"""
