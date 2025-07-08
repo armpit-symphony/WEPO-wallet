@@ -44,28 +44,37 @@ class WepoIntegrationBridge:
         )
     
     def init_blockchain(self):
-        """Initialize blockchain in background"""
+        """Initialize blockchain in background with fast test genesis"""
         try:
-            print("🔗 Initializing WEPO blockchain core...")
+            print("🔗 Initializing WEPO blockchain core for TESTING...")
             
-            # Create blockchain with lower initial difficulty
-            self.blockchain = WepoBlockchain("/tmp/wepo")
+            # Create blockchain with minimal difficulty for testing
+            self.blockchain = WepoBlockchain("/tmp/wepo-test")
             
-            # Override difficulty for faster startup
-            original_difficulty = self.blockchain.current_difficulty
-            self.blockchain.current_difficulty = 1  # 1 leading zero for super fast mining
+            # Override to super low difficulty for instant test mining
+            self.blockchain.current_difficulty = 1  # Just 1 leading zero
             
-            # If no genesis block exists, mine it quickly
+            # Force fast genesis block creation
             if len(self.blockchain.chain) == 0:
-                print("⚡ Mining genesis block with reduced difficulty...")
-                # The genesis block will be mined during blockchain initialization
-                pass
+                print("⚡ Creating FAST test genesis block...")
+                
+                # Temporarily override miner difficulty check for testing
+                original_check = self.blockchain.miner.check_difficulty
+                def fast_check(block_hash, difficulty):
+                    # Accept any hash for testing
+                    return True
+                
+                self.blockchain.miner.check_difficulty = fast_check
+                
+                # Mine genesis quickly
+                self.blockchain.create_genesis_block()
+                
+                # Restore normal difficulty checking
+                self.blockchain.miner.check_difficulty = original_check
+                self.blockchain.current_difficulty = 1  # Keep it easy for testing
             
-            # Restore normal difficulty after genesis
-            if len(self.blockchain.chain) > 0:
-                self.blockchain.current_difficulty = 2  # Still easier than default 4
-            
-            print(f"✅ WEPO blockchain initialized with {len(self.blockchain.chain)} blocks")
+            print(f"✅ WEPO test blockchain initialized with {len(self.blockchain.chain)} blocks")
+            print(f"🎯 Test genesis block hash: {self.blockchain.chain[0].get_block_hash() if self.blockchain.chain else 'none'}")
             self.blockchain_ready = True
             
         except Exception as e:
