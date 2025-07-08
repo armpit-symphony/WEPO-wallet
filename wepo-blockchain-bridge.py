@@ -205,12 +205,48 @@ class WepoIntegrationBridge:
             if not self.blockchain_ready:
                 raise HTTPException(status_code=503, detail="Blockchain not ready")
             
-            # For integration testing, simulate transaction creation
-            return {
-                "transaction_id": f"tx_{int(time.time())}",
-                "status": "submitted",
-                "message": "Transaction submitted to blockchain"
-            }
+            try:
+                from_address = request.get('from_address')
+                to_address = request.get('to_address')
+                amount = request.get('amount', 0)
+                
+                print(f"🔄 Processing test transaction: {amount} WEPO from {from_address} to {to_address}")
+                
+                # Create a simple test transaction
+                tx = Transaction(
+                    version=1,
+                    inputs=[TransactionInput(
+                        prev_txid="test_input",
+                        prev_vout=0,
+                        script_sig=b"test_signature",
+                        sequence=0xffffffff
+                    )],
+                    outputs=[TransactionOutput(
+                        value=int(amount * 100000000),  # Convert to satoshis
+                        script_pubkey=b"test_output",
+                        address=to_address
+                    )],
+                    lock_time=0,
+                    timestamp=int(time.time())
+                )
+                
+                # Add to mempool
+                if self.blockchain.add_transaction_to_mempool(tx):
+                    txid = tx.calculate_txid()
+                    print(f"✅ Transaction added to mempool: {txid}")
+                    
+                    return {
+                        "transaction_id": txid,
+                        "tx_hash": txid,
+                        "status": "pending",
+                        "message": "Transaction submitted to blockchain mempool"
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="Invalid transaction")
+                    
+            except Exception as e:
+                print(f"❌ Transaction error: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
         
         @self.app.get("/api/mining/info")
         async def get_mining_info():
