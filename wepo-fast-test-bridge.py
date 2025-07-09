@@ -679,6 +679,97 @@ class WepoFastTestBridge:
                         "status": stake["status"]
                     })
             return stakes
+        
+        @self.app.get("/api/privacy/info")
+        async def get_privacy_info():
+            """Get privacy feature information"""
+            return {
+                'privacy_enabled': True,
+                'supported_features': [
+                    'zk-STARK proofs',
+                    'Ring signatures',
+                    'Confidential transactions',
+                    'Stealth addresses'
+                ],
+                'privacy_levels': {
+                    'standard': 'Basic transaction privacy',
+                    'high': 'zk-STARK proofs + confidential amounts',
+                    'maximum': 'Full anonymity with ring signatures'
+                },
+                'proof_sizes': {
+                    'zk_stark': 256,
+                    'ring_signature': 128,
+                    'confidential': 64
+                }
+            }
+        
+        @self.app.post("/api/privacy/create-proof")
+        async def create_privacy_proof_endpoint(request: dict):
+            """Create privacy proof for transaction"""
+            try:
+                transaction_data = request.get('transaction_data')
+                if not transaction_data:
+                    raise HTTPException(status_code=400, detail="Missing transaction_data")
+                
+                # Create mock privacy proof for testing
+                proof = {
+                    'proof_type': 'zk-stark',
+                    'proof_data': 'mock_proof_data',
+                    'privacy_level': 'maximum'
+                }
+                
+                return {
+                    'success': True,
+                    'privacy_proof': json.dumps(proof),
+                    'proof_size': len(json.dumps(proof)),
+                    'privacy_level': 'maximum'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/privacy/verify-proof")
+        async def verify_privacy_proof_endpoint(request: dict):
+            """Verify privacy proof"""
+            try:
+                proof_data = request.get('proof_data')
+                message = request.get('message')
+                
+                if not proof_data or not message:
+                    raise HTTPException(status_code=400, detail="Missing proof_data or message")
+                
+                # Mock verification for testing
+                is_valid = bool(proof_data and message)
+                
+                return {
+                    'valid': is_valid,
+                    'proof_verified': is_valid,
+                    'privacy_level': 'maximum' if is_valid else 'none'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/privacy/stealth-address")
+        async def generate_stealth_address(request: dict):
+            """Generate stealth address for privacy"""
+            try:
+                recipient_public_key = request.get('recipient_public_key')
+                if not recipient_public_key:
+                    raise HTTPException(status_code=400, detail="Missing recipient_public_key")
+                
+                # Generate stealth address
+                stealth_addr = f"wepo1stealth{hashlib.sha256(recipient_public_key.encode()).hexdigest()[:27]}"
+                shared_secret = hashlib.sha256(f"secret_{recipient_public_key}".encode()).hexdigest()
+                
+                return {
+                    'stealth_address': stealth_addr,
+                    'shared_secret': shared_secret,
+                    'privacy_level': 'maximum'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
 
 def main():
     print("=" * 60)
