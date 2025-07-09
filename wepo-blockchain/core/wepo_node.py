@@ -338,6 +338,142 @@ class WepoFullNode:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
+        # Staking operations
+        @self.app.post("/api/stake")
+        async def create_stake(request: dict):
+            """Create staking position"""
+            try:
+                staker_address = request.get('staker_address')
+                amount = request.get('amount')
+                
+                if not all([staker_address, amount]):
+                    raise HTTPException(status_code=400, detail="Missing required fields: staker_address, amount")
+                
+                # Validate amount
+                if not isinstance(amount, (int, float)) or amount < 1000:
+                    raise HTTPException(status_code=400, detail="Minimum stake amount is 1000 WEPO")
+                
+                # Create stake through blockchain
+                stake_id = self.blockchain.create_stake(staker_address, amount)
+                
+                if stake_id:
+                    return {
+                        'success': True,
+                        'stake_id': stake_id,
+                        'staker_address': staker_address,
+                        'amount': amount,
+                        'message': 'Stake created successfully'
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="Failed to create stake")
+                    
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/staking/info")
+        async def get_staking_info():
+            """Get comprehensive staking information"""
+            try:
+                return self.blockchain.get_staking_info()
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/wallet/{address}/stakes")
+        async def get_wallet_stakes(address: str):
+            """Get staking positions for a wallet"""
+            try:
+                cursor = self.blockchain.conn.execute('''
+                    SELECT stake_id, amount, start_height, start_time, last_reward_height, 
+                           total_rewards, status, unlock_height
+                    FROM stakes 
+                    WHERE staker_address = ?
+                    ORDER BY start_time DESC
+                ''', (address,))
+                
+                stakes = []
+                for row in cursor.fetchall():
+                    stakes.append({
+                        'stake_id': row[0],
+                        'amount': row[1] / 100000000,  # Convert to WEPO
+                        'start_height': row[2],
+                        'start_time': row[3],
+                        'last_reward_height': row[4],
+                        'total_rewards': row[5] / 100000000,  # Convert to WEPO
+                        'status': row[6],
+                        'unlock_height': row[7]
+                    })
+                
+                return stakes
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/masternode")
+        async def create_masternode(request: dict):
+            """Create masternode"""
+            try:
+                operator_address = request.get('operator_address')
+                collateral_txid = request.get('collateral_txid')
+                collateral_vout = request.get('collateral_vout')
+                ip_address = request.get('ip_address')
+                port = request.get('port', 22567)
+                
+                if not all([operator_address, collateral_txid, collateral_vout is not None]):
+                    raise HTTPException(status_code=400, detail="Missing required fields: operator_address, collateral_txid, collateral_vout")
+                
+                # Create masternode through blockchain
+                masternode_id = self.blockchain.create_masternode(
+                    operator_address, collateral_txid, collateral_vout, ip_address, port
+                )
+                
+                if masternode_id:
+                    return {
+                        'success': True,
+                        'masternode_id': masternode_id,
+                        'operator_address': operator_address,
+                        'collateral_txid': collateral_txid,
+                        'collateral_vout': collateral_vout,
+                        'ip_address': ip_address,
+                        'port': port,
+                        'message': 'Masternode created successfully'
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="Failed to create masternode")
+                    
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/masternodes")
+        async def get_masternodes():
+            """Get all masternodes"""
+            try:
+                masternodes = self.blockchain.get_active_masternodes()
+                
+                result = []
+                for mn in masternodes:
+                    result.append({
+                        'masternode_id': mn.masternode_id,
+                        'operator_address': mn.operator_address,
+                        'collateral_txid': mn.collateral_txid,
+                        'collateral_vout': mn.collateral_vout,
+                        'ip_address': mn.ip_address,
+                        'port': mn.port,
+                        'start_height': mn.start_height,
+                        'start_time': mn.start_time,
+                        'last_ping': mn.last_ping,
+                        'status': mn.status,
+                        'total_rewards': mn.total_rewards / 100000000  # Convert to WEPO
+                    })
+                
+                return result
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
         # Mining operations
         @self.app.get("/api/mining/info")
         async def get_mining_info():
