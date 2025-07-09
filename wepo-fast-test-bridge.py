@@ -98,19 +98,56 @@ class FastTestBlockchain:
         return result
     
     def create_transaction(self, from_address, to_address, amount):
-        """Create a test transaction"""
-        txid = f"tx_{int(time.time())}_{hash(from_address + to_address)}"
+        """Create a test transaction with proper UTXO management"""
+        txid = f"tx_{int(time.time())}_{hash(from_address + to_address + str(amount))}"
         
-        tx = {
-            "txid": txid,
-            "inputs": [{"address": from_address, "amount": amount}],
-            "outputs": [{
-                "address": to_address,
-                "value": int(amount * 100000000)  # Convert to satoshis
-            }],
-            "timestamp": int(time.time()),
-            "type": "transfer"
-        }
+        # For non-coinbase transactions, consume UTXOs from sender
+        if from_address != "wepo1genesis0000000000000000000000":
+            # Remove UTXOs being spent (simplified - consume all UTXOs of sender)
+            consumed_value = 0
+            utxos_to_remove = []
+            
+            for utxo_key, utxo in self.utxos.items():
+                if utxo["address"] == from_address:
+                    consumed_value += utxo["value"]
+                    utxos_to_remove.append(utxo_key)
+            
+            # Remove consumed UTXOs
+            for key in utxos_to_remove:
+                del self.utxos[key]
+            
+            # Create change output if needed
+            change = consumed_value - int(amount * 100000000)  # Convert to satoshis
+            
+            tx = {
+                "txid": txid,
+                "inputs": [{"address": from_address, "amount": consumed_value / 100000000}],
+                "outputs": [{
+                    "address": to_address,
+                    "value": int(amount * 100000000)  # Convert to satoshis
+                }],
+                "timestamp": int(time.time()),
+                "type": "transfer"
+            }
+            
+            # Add change output if needed
+            if change > 0:
+                tx["outputs"].append({
+                    "address": from_address,
+                    "value": change
+                })
+        else:
+            # Genesis transaction
+            tx = {
+                "txid": txid,
+                "inputs": [{"address": from_address, "amount": amount}],
+                "outputs": [{
+                    "address": to_address,
+                    "value": int(amount * 100000000)  # Convert to satoshis
+                }],
+                "timestamp": int(time.time()),
+                "type": "transfer"
+            }
         
         self.mempool[txid] = tx
         print(f"⚡ Test transaction created: {amount} WEPO from {from_address} to {to_address}")
