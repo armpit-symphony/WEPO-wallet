@@ -21,6 +21,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from blockchain import WepoBlockchain, Transaction, Block
 from p2p_network import WepoP2PNode
+from privacy import privacy_engine, create_privacy_proof, verify_privacy_proof
 
 class WepoFullNode:
     """WEPO Full Blockchain Node"""
