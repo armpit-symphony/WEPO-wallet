@@ -184,18 +184,9 @@ def test_privacy_engine():
         print(f"Ring signature valid: {proof_verifications['ring_valid']}")
         print(f"zk-STARK proof valid: {proof_verifications['stark_valid']}")
         
-        # Test overall verification
-        message = f"{recipient_address}{amount}{int(time.time())}".encode()
-        
-        # Prepare privacy data for verification
-        verification_data = {
-            'confidential_proof': private_tx['confidential_proof'],
-            'ring_signature': private_tx['ring_signature'],
-            'zk_stark_proof': private_tx['zk_stark_proof']
-        }
-        
+        # Test overall verification using built-in unified message
         print("Verifying complete private transaction...")
-        is_valid = engine.verify_private_transaction(verification_data, message)
+        is_valid = engine.verify_private_transaction(private_tx)
         
         print(f"Complete transaction verification: {'PASS' if is_valid else 'FAIL'}")
         
