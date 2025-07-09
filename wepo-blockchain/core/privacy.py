@@ -608,6 +608,9 @@ class ConfidentialTransactions:
             # Generate bulletproof-style range proof
             bulletproof = self._generate_bulletproof(amount, blinding_int, min_value, max_value)
             
+            # Store the actual bulletproof size
+            actual_bulletproof_size = len(bulletproof)
+            
             # Pad to required size
             proof_data = bytearray(bulletproof)
             while len(proof_data) < CONFIDENTIAL_PROOF_SIZE:
@@ -625,6 +628,7 @@ class ConfidentialTransactions:
                 'min_value': min_value,
                 'max_value': max_value,
                 'proof_size': len(proof_data),
+                'actual_bulletproof_size': actual_bulletproof_size,
                 'blinding_factor_commitment': self.hash_function.new(blinding_factor).digest().hex()
             }
             
