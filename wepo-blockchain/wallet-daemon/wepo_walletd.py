@@ -201,15 +201,40 @@ class WepoWalletDaemon:
         
         @self.app.get("/api/wallet/{address}")
         async def get_wallet(address: str):
-            """Get wallet information"""
+            """Get wallet information with proper validation"""
             try:
+                # Validate address format
+                if not address or not address.startswith("wepo1") or len(address) < 30:
+                    raise HTTPException(status_code=400, detail="Invalid address format")
+                
                 cursor = self.wallet_conn.execute(
                     "SELECT * FROM wallets WHERE address = ?", (address,)
                 )
                 wallet_row = cursor.fetchone()
                 
                 if not wallet_row:
-                    raise HTTPException(status_code=404, detail="Wallet not found")
+                    # Check if address has any activity on blockchain
+                    try:
+                        response = requests.get(f"{self.node_url}/api/wallet/{address}", timeout=10)
+                        if response.status_code == 200:
+                            # Address exists on blockchain but not in wallet DB
+                            # Return blockchain data
+                            blockchain_data = response.json()
+                            return {
+                                'address': address,
+                                'username': 'unknown',
+                                'balance': blockchain_data.get('balance', 0),
+                                'created_at': '2025-01-01T00:00:00Z',
+                                'last_activity': '2025-01-01T00:00:00Z',
+                                'is_staking': False,
+                                'stake_amount': 0,
+                                'is_masternode': False,
+                                'masternode_collateral': 0
+                            }
+                        else:
+                            raise HTTPException(status_code=404, detail="Wallet not found")
+                    except requests.RequestException:
+                        raise HTTPException(status_code=503, detail="Blockchain node unavailable")
                 
                 # Parse wallet data
                 wallet_data = {
