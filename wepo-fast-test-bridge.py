@@ -20,6 +20,8 @@ class FastTestBlockchain:
         self.mempool = {}
         self.utxos = {}
         self.wallets = {}
+        self.stakes = {}  # Add stakes tracking
+        self.masternodes = {}  # Add masternodes tracking
         
         # Create instant genesis block
         self.create_genesis_block()
