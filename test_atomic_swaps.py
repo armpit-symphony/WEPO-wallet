@@ -182,19 +182,33 @@ async def test_swap_redemption():
     
     engine = AtomicSwapEngine()
     
-    # First fund a swap
-    swap_contract = await test_swap_funding()
-    if not swap_contract:
-        print("Cannot test redemption without a funded swap")
+    # Create and fund a swap specifically for redemption testing
+    try:
+        swap_contract = await engine.initiate_swap(
+            SwapType.BTC_TO_WEPO,
+            "1RedemptionTest34567890123456789012345",
+            "wepo1redemption123456789abcdef0123456789ab",
+            "3RedemptionParticipant567890123456789012",
+            "wepo1participant123456789abcdef0123456789ab",
+            0.03
+        )
+        
+        # Fund the swap
+        await engine.fund_swap(swap_contract.swap_id, "BTC", "btc_redemption_tx")
+        await engine.fund_swap(swap_contract.swap_id, "WEPO", "wepo_redemption_tx")
+        
+        print(f"Redemption test swap created and funded: {swap_contract.swap_id}")
+        
+    except Exception as e:
+        print(f"Failed to create swap for redemption test: {e}")
         return None
     
     swap_id = swap_contract.swap_id
     secret = swap_contract.secret
     
-    # Only test redemption if swap is actually funded
+    # Check that swap is funded
     current_status = engine.get_swap_status(swap_id)
-    if current_status.state != SwapState.FUNDED:
-        print(f"Warning: Swap not in FUNDED state, current state: {current_status.state.value}")
+    print(f"Swap funded status: {'✓' if current_status.state == SwapState.FUNDED else '✗'}")
     
     # Test redemption with correct secret
     redemption_success = await engine.redeem_swap(swap_id, secret)
@@ -210,8 +224,8 @@ async def test_swap_redemption():
     # Test redemption with wrong secret on a new swap
     new_swap = await engine.initiate_swap(
         SwapType.BTC_TO_WEPO,
-        "1TestRedemption234567890123456789012345",
-        "wepo1test123456789abcdef0123456789abcdef01",
+        "1TestWrongSecret4567890123456789012345",
+        "wepo1wrong123456789abcdef0123456789abcdef01",
         "3TestParticipant234567890123456789012",
         "wepo1participant123456789abcdef0123456789ab",
         0.01
