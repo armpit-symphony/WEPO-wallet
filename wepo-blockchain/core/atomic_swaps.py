@@ -150,18 +150,57 @@ class HTLCScript:
             return f"3{script_hash[:32]}"
 
 class AtomicSwapEngine:
-    """Main atomic swap engine for BTC-WEPO swaps"""
+    """Enhanced atomic swap engine for BTC-WEPO swaps with advanced features"""
     
     def __init__(self, blockchain_interface=None):
         self.blockchain_interface = blockchain_interface
         self.htlc_script = HTLCScript()
         self.active_swaps: Dict[str, SwapContract] = {}
+        self.swap_history: List[SwapContract] = []  # Track completed swaps
+        self.swap_statistics: Dict[str, Any] = {
+            'total_swaps': 0,
+            'completed_swaps': 0,
+            'failed_swaps': 0,
+            'total_btc_volume': 0.0,
+            'total_wepo_volume': 0.0,
+            'average_completion_time': 0.0
+        }
         
-        # Swap parameters
+        # Enhanced swap parameters
         self.min_btc_amount = 0.001  # Minimum 0.001 BTC
         self.max_btc_amount = 10.0   # Maximum 10 BTC
         self.default_locktime_hours = 24  # 24 hours default
         self.confirmation_blocks = 6  # Wait for 6 confirmations
+        
+        # Fee structure
+        self.fee_structure = {
+            'base_fee_percentage': 0.1,  # 0.1% base fee
+            'network_fee_btc': 0.0001,   # Estimated BTC network fee
+            'network_fee_wepo': 0.01,    # Estimated WEPO network fee
+            'priority_fee_multiplier': 1.5,  # Priority fee multiplier
+            'minimum_fee_btc': 0.00001,  # Minimum BTC fee
+            'minimum_fee_wepo': 0.001    # Minimum WEPO fee
+        }
+        
+        # Rate limiting for security
+        self.rate_limits = {
+            'max_swaps_per_hour': 10,
+            'max_swaps_per_day': 100,
+            'max_amount_per_hour': 1.0,  # 1 BTC per hour
+            'max_amount_per_day': 10.0   # 10 BTC per day
+        }
+        
+        # Track user activity for rate limiting
+        self.user_activity: Dict[str, Dict[str, Any]] = {}
+        
+        # Enhanced security features
+        self.security_settings = {
+            'require_email_verification': False,
+            'require_2fa': False,
+            'blacklisted_addresses': set(),
+            'minimum_reputation_score': 0,
+            'max_daily_volume': 100.0
+        }
         
     def generate_swap_id(self) -> str:
         """Generate unique swap ID"""
