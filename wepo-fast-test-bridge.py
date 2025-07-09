@@ -317,19 +317,9 @@ class WepoFastTestBridge:
         async def get_wallet(address: str):
             # Validate address format
             if not address or not address.startswith("wepo1") or len(address) != 37:
-                raise HTTPException(status_code=404, detail="Wallet not found - invalid address format")
+                raise HTTPException(status_code=400, detail="Invalid address format")
             
-            # Check if wallet exists in our system
-            if address not in self.blockchain.wallets:
-                # For test purposes, return 404 for truly invalid addresses
-                # but allow balance checking for any valid format address
-                balance = self.blockchain.get_balance(address)
-                if balance == 0 and address not in self.blockchain.wallets:
-                    # Check if address has any transaction history
-                    transactions = self.blockchain.get_transactions(address)
-                    if not transactions:
-                        raise HTTPException(status_code=404, detail="Wallet not found")
-            
+            # Get balance (works for any valid address)
             balance = self.blockchain.get_balance(address)
             return {
                 "address": address,
