@@ -643,14 +643,17 @@ class ConfidentialTransactions:
             raise ValueError(f"Failed to generate range proof: {e}")
     
     def _verify_bulletproof(self, proof_data: bytes, commitment: bytes, 
-                           min_value: int, max_value: int) -> bool:
+                           min_value: int, max_value: int, actual_size: int) -> bool:
         """Verify bulletproof-style range proof"""
         try:
             if len(proof_data) < 64:  # Minimum size
                 return False
             
+            # Use only the actual bulletproof data, not the padded data
+            actual_bulletproof = proof_data[:actual_size]
+            
             # Extract proof components
-            proof_commitment = proof_data[:32]
+            proof_commitment = actual_bulletproof[:32]
             
             # Verify commitment matches
             if proof_commitment != commitment:
@@ -660,21 +663,23 @@ class ConfidentialTransactions:
             pos = 32
             
             # Verify bit commitments (simplified)
-            for i in range(min(8, (len(proof_data) - pos) // 32)):  # Check first 8 bits
-                bit_commit = proof_data[pos:pos+32]
+            for i in range(min(8, (len(actual_bulletproof) - pos) // 32)):  # Check first 8 bits
+                bit_commit = actual_bulletproof[pos:pos+32]
                 if len(bit_commit) != 32:
                     return False
                 pos += 32
             
             # Verify inner product proof exists
-            if pos + 32 > len(proof_data):
+            if pos + 32 > len(actual_bulletproof):
                 return False
             
             # Verify proof hash
-            expected_hash = self.hash_function.new(proof_data[:-32]).digest()
-            actual_hash = proof_data[-32:]
+            if len(actual_bulletproof) >= 32:
+                expected_hash = self.hash_function.new(actual_bulletproof[:-32]).digest()
+                actual_hash = actual_bulletproof[-32:]
+                return expected_hash == actual_hash
             
-            return expected_hash == actual_hash
+            return False
             
         except Exception:
             return False
