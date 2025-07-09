@@ -142,23 +142,12 @@ class HTLCScript:
     
     def get_script_address(self, script: bytes) -> str:
         """Get P2SH address from script"""
-        if not BITCOIN_AVAILABLE:
-            # Mock implementation
-            script_hash = hashlib.sha256(script).hexdigest()
-            return f"2{'N' if self.testnet else 'M'}{script_hash[:32]}"
-        
-        # Create P2SH address using newer bitcoin library API
-        try:
-            # Use newer API if available
-            script_hash = hashlib.sha256(script).digest()
-            if self.testnet:
-                return bitcoin.segwit_addr.encode('tb', 0, script_hash)
-            else:
-                return bitcoin.segwit_addr.encode('bc', 0, script_hash)
-        except:
-            # Fallback to mock implementation
-            script_hash = hashlib.sha256(script).hexdigest()
-            return f"2{'N' if self.testnet else 'M'}{script_hash[:32]}"
+        # Always use mock implementation for now due to library compatibility
+        script_hash = hashlib.sha256(script).hexdigest()
+        if self.testnet:
+            return f"2N{script_hash[:32]}"
+        else:
+            return f"3{script_hash[:32]}"
 
 class AtomicSwapEngine:
     """Main atomic swap engine for BTC-WEPO swaps"""
