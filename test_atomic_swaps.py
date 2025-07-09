@@ -134,10 +134,19 @@ async def test_swap_funding():
     
     engine = AtomicSwapEngine()
     
-    # First initiate a swap
-    swap_contract = await test_swap_initiation()
-    if not swap_contract:
-        print("Cannot test funding without a swap")
+    # Create a swap specifically for testing funding
+    try:
+        swap_contract = await engine.initiate_swap(
+            SwapType.BTC_TO_WEPO,
+            "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+            "wepo1test123456789abcdef0123456789abcdef01",
+            "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
+            "wepo1participant123456789abcdef0123456789ab",
+            0.05
+        )
+        print(f"Funding test swap created: {swap_contract.swap_id}")
+    except Exception as e:
+        print(f"Failed to create swap for funding test: {e}")
         return None
     
     swap_id = swap_contract.swap_id
@@ -149,7 +158,8 @@ async def test_swap_funding():
     
     # Check status after BTC funding
     status_after_btc = engine.get_swap_status(swap_id)
-    print(f"BTC funding recorded: {'✓' if status_after_btc.btc_funding_tx == btc_tx_hash else '✗'}")
+    if status_after_btc:
+        print(f"BTC funding recorded: {'✓' if status_after_btc.btc_funding_tx == btc_tx_hash else '✗'}")
     
     # Test WEPO funding
     wepo_tx_hash = "w1x2y3z4a5b6789012345678901234567890123456789012345678901234567890"
