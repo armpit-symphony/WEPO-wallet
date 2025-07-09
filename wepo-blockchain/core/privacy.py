@@ -812,7 +812,8 @@ class WepoPrivacyEngine:
             
             return True
             
-        except Exception:
+        except Exception as e:
+            print(f"Privacy verification error: {e}")
             return False
     
     def derive_public_key(self, private_key: bytes) -> bytes:
