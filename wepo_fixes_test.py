@@ -98,12 +98,27 @@ def create_wallet():
 
 def fund_wallet(address, amount=100.0):
     """Fund a wallet using test endpoints"""
-    # Try mine-block endpoint
-    mine_response = requests.post(f"{API_URL}/test/mine-block", json={"miner_address": address})
-    if mine_response.status_code == 200:
-        return mine_response.json()
+    # First, try the test/fund-wallet endpoint
+    fund_data = {
+        "address": address,
+        "amount": amount
+    }
+    
+    response = requests.post(f"{API_URL}/test/fund-wallet", json=fund_data)
+    
+    # If fund-wallet endpoint doesn't exist or fails, try mine-block endpoint
+    if response.status_code == 404 or response.status_code >= 400:
+        print(f"  Fund-wallet endpoint not available, trying mine-block endpoint...")
+        mine_response = requests.post(f"{API_URL}/test/mine-block", json={"miner_address": address})
+        if mine_response.status_code == 200:
+            return mine_response.json()
+        else:
+            print(f"Failed to mine block: {mine_response.status_code} - {mine_response.text}")
+            return None
+    elif response.status_code == 200:
+        return response.json()
     else:
-        print(f"Failed to mine block: {mine_response.status_code} - {mine_response.text}")
+        print(f"Failed to fund wallet: {response.status_code} - {response.text}")
         return None
 
 def get_wallet_balance(address):
