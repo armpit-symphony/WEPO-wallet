@@ -175,7 +175,7 @@ class FastTestBlockchain:
         return txid
     
     def mine_block(self):
-        """Instantly mine a block with mempool transactions"""
+        """Instantly mine a block with mempool transactions and proper UTXO management"""
         if not self.mempool:
             print("⚠️ No transactions in mempool")
             return None
@@ -212,13 +212,25 @@ class FastTestBlockchain:
         self.transactions[coinbase_tx["txid"]] = coinbase_tx
         self.utxos[f"{coinbase_tx['txid']}:0"] = coinbase_tx["outputs"][0]
         
-        # Add mempool transactions to block
+        # Process mempool transactions and update UTXOs
         for txid, tx in self.mempool.items():
             block_txs.append(txid)
             self.transactions[txid] = tx
-            # Add UTXOs for transaction outputs
+            
+            # Consume input UTXOs for non-coinbase transactions
+            if tx.get("type") != "coinbase" and "inputs" in tx:
+                for inp in tx["inputs"]:
+                    if "utxo_key" in inp:
+                        # Remove consumed UTXO
+                        if inp["utxo_key"] in self.utxos:
+                            del self.utxos[inp["utxo_key"]]
+                            print(f"   Consumed UTXO: {inp['utxo_key']}")
+            
+            # Create new UTXOs for transaction outputs
             for i, output in enumerate(tx["outputs"]):
-                self.utxos[f"{txid}:{i}"] = output
+                utxo_key = f"{txid}:{i}"
+                self.utxos[utxo_key] = output
+                print(f"   Created UTXO: {utxo_key} -> {output['value']/100000000:.1f} WEPO to {output['address']}")
         
         # Create block
         block = {
@@ -240,6 +252,7 @@ class FastTestBlockchain:
         print(f"   Block hash: {block['hash']}")
         print(f"   Transactions: {len(block_txs)}")
         print(f"   Block reward: {reward / 100000000.0} WEPO")
+        print(f"   UTXOs updated: {len(self.utxos)} total UTXOs")
         
         return block
 
