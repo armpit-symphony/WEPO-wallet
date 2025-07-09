@@ -97,20 +97,26 @@ def create_wallet():
         print(f"  Failed to create wallet: {response.status_code} - {response.text}")
         return None
 
-def fund_wallet(address):
-    """Fund a wallet using test mining"""
-    print(f"  Funding wallet {address} via mining...")
-    mine_response = requests.post(f"{API_URL}/test/mine-block", json={"miner_address": address})
+def fund_wallet(address, amount=100.0):
+    """Fund a wallet using test/fund-wallet endpoint"""
+    print(f"  Funding wallet {address} with {amount} WEPO...")
+    fund_data = {
+        "address": address,
+        "amount": amount
+    }
     
-    if mine_response.status_code == 200:
-        mine_data = mine_response.json()
-        print(f"  ✓ Successfully mined block with reward to {address}")
-        print(f"  ✓ Mining reward: {mine_data.get('reward', 'unknown')} WEPO")
-        return mine_data
+    fund_response = requests.post(f"{API_URL}/test/fund-wallet", json=fund_data)
+    
+    if fund_response.status_code == 200:
+        fund_data = fund_response.json()
+        print(f"  ✓ Successfully funded wallet with {amount} WEPO")
+        print(f"  ✓ Transaction ID: {fund_data.get('txid', 'unknown')}")
+        print(f"  ✓ New balance: {fund_data.get('balance', 'unknown')} WEPO")
+        return fund_data
     else:
-        print(f"  ✗ Mine block failed with status code: {mine_response.status_code}")
-        if mine_response.text:
-            print(f"  ✗ Error: {mine_response.text}")
+        print(f"  ✗ Fund wallet failed with status code: {fund_response.status_code}")
+        if fund_response.text:
+            print(f"  ✗ Error: {fund_response.text}")
         return None
 
 def get_wallet_balance(address):
