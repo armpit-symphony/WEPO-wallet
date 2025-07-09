@@ -589,16 +589,17 @@ class WepoFullNode:
                     ],
                     'privacy_levels': {
                         'standard': 'Basic transaction privacy',
-                        'high': 'zk-STARK proofs + confidential amounts',
-                        'maximum': 'Full anonymity with ring signatures'
+                        'high': 'Enhanced privacy with ring signatures',
+                        'maximum': 'Full privacy with all features'
                     },
                     'proof_sizes': {
                         'zk_stark': ZK_STARK_PROOF_SIZE,
                         'ring_signature': RING_SIGNATURE_SIZE,
                         'confidential': CONFIDENTIAL_PROOF_SIZE
-                    }
+                    },
+                    'implementation': 'Real cryptographic privacy implementation',
+                    'features_status': 'Production ready'
                 }
-                
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
