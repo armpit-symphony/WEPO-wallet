@@ -758,16 +758,126 @@ class WepoFastTestBridge:
         
         @self.app.get("/api/atomic-swap/exchange-rate")
         async def get_atomic_swap_exchange_rate():
-            """Get current BTC/WEPO exchange rate"""
+            """Get current BTC/WEPO exchange rate with additional info"""
             try:
                 rate = atomic_swap_engine.get_exchange_rate()
+                fee_info = atomic_swap_engine.calculate_swap_fees(0.1, SwapType.BTC_TO_WEPO)
                 
                 return {
                     'btc_to_wepo': rate,
                     'wepo_to_btc': 1.0 / rate,
-                    'fee_percentage': 0.1,
+                    'fee_percentage': atomic_swap_engine.fee_structure['base_fee_percentage'],
+                    'network_fee_btc': atomic_swap_engine.fee_structure['network_fee_btc'],
+                    'network_fee_wepo': atomic_swap_engine.fee_structure['network_fee_wepo'],
                     'last_updated': int(time.time()),
-                    'source': 'atomic_swap_engine'
+                    'source': 'atomic_swap_engine',
+                    'sample_fees': fee_info
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/atomic-swap/fees")
+        async def calculate_swap_fees(btc_amount: float, swap_type: str = "btc_to_wepo", priority: bool = False):
+            """Calculate swap fees for given amount"""
+            try:
+                if swap_type == "btc_to_wepo":
+                    swap_type_enum = SwapType.BTC_TO_WEPO
+                elif swap_type == "wepo_to_btc":
+                    swap_type_enum = SwapType.WEPO_TO_BTC
+                else:
+                    raise HTTPException(status_code=400, detail="Invalid swap type")
+                
+                fee_info = atomic_swap_engine.calculate_swap_fees(btc_amount, swap_type_enum, priority)
+                
+                return {
+                    'btc_amount': btc_amount,
+                    'swap_type': swap_type,
+                    'priority': priority,
+                    'fees': fee_info,
+                    'estimated_completion_time': '2-4 hours' if not priority else '1-2 hours'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/atomic-swap/statistics")
+        async def get_swap_statistics():
+            """Get comprehensive swap statistics"""
+            try:
+                stats = atomic_swap_engine.get_swap_statistics()
+                return {
+                    'statistics': stats,
+                    'timestamp': int(time.time())
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/atomic-swap/history")
+        async def get_swap_history(limit: int = 50, offset: int = 0):
+            """Get swap history with pagination"""
+            try:
+                history = atomic_swap_engine.get_swap_history(limit, offset)
+                
+                return {
+                    'history': history,
+                    'pagination': {
+                        'limit': limit,
+                        'offset': offset,
+                        'total_count': len(atomic_swap_engine.swap_history)
+                    }
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/atomic-swap/search")
+        async def search_swaps(query: str = "", state: str = "", swap_type: str = ""):
+            """Search swaps by criteria"""
+            try:
+                state_enum = None
+                if state:
+                    try:
+                        state_enum = SwapState(state)
+                    except ValueError:
+                        raise HTTPException(status_code=400, detail="Invalid state")
+                
+                swap_type_enum = None
+                if swap_type:
+                    try:
+                        swap_type_enum = SwapType(swap_type)
+                    except ValueError:
+                        raise HTTPException(status_code=400, detail="Invalid swap type")
+                
+                results = atomic_swap_engine.search_swaps(query, state_enum, swap_type_enum)
+                
+                return {
+                    'results': results,
+                    'query': query,
+                    'filters': {
+                        'state': state,
+                        'swap_type': swap_type
+                    },
+                    'total_results': len(results)
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/atomic-swap/rates/historical")
+        async def get_historical_rates(days: int = 30):
+            """Get historical exchange rates"""
+            try:
+                if days > 365:
+                    raise HTTPException(status_code=400, detail="Maximum 365 days allowed")
+                
+                rates = atomic_swap_engine.get_historical_rates(days)
+                
+                return {
+                    'rates': rates,
+                    'days': days,
+                    'data_points': len(rates)
                 }
                 
             except Exception as e:
