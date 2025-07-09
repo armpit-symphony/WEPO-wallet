@@ -357,16 +357,11 @@ backend:
 
 test_plan:
   current_focus:
-    - "Frontend-Blockchain Integration"
-    - "Fast Test Bridge Functionality"
-    - "Extended Blockchain Testing"
-    - "Blockchain Stress Testing"
-    - "Advanced P2P Network Testing"
-    - "Final Comprehensive Privacy Testing"
+    - "Real Cryptographic Privacy Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  backend_tested: true
+  backend_tested: false
 
 agent_communication:
   - agent: "main"
