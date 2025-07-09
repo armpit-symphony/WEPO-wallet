@@ -508,6 +508,35 @@ class WepoFastTestBridge:
             else:
                 return {"success": False, "message": "Mining failed"}
         
+        @self.app.get("/api/debug/utxos")
+        async def debug_utxos():
+            """Debug endpoint to see all UTXOs"""
+            return {
+                "utxos": {k: v for k, v in self.blockchain.utxos.items()},
+                "total_utxos": len(self.blockchain.utxos)
+            }
+        
+        @self.app.get("/api/debug/balance/{address}")
+        async def debug_balance(address: str):
+            """Debug balance calculation"""
+            utxos = []
+            total = 0
+            for utxo_key, utxo in self.blockchain.utxos.items():
+                if utxo["address"] == address:
+                    utxos.append({
+                        "key": utxo_key,
+                        "value": utxo["value"],
+                        "wepo": utxo["value"] / 100000000.0
+                    })
+                    total += utxo["value"]
+            
+            return {
+                "address": address,
+                "matching_utxos": utxos,
+                "total_satoshis": total,
+                "total_wepo": total / 100000000.0
+            }
+        
         @self.app.get("/api/dex/rate")
         async def get_exchange_rate():
             return {
