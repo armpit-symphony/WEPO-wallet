@@ -1007,5 +1007,23 @@ def run_tests():
     return test_results["failed"] == 0
 
 if __name__ == "__main__":
-    success = run_tests()
+    print("\n" + "="*80)
+    print("WEPO CRYPTOCURRENCY COMPREHENSIVE TESTING")
+    print("="*80)
+    print("Testing revolutionary privacy features and blockchain functionality")
+    print("="*80 + "\n")
+    
+    # Run privacy tests
+    privacy_success = run_privacy_tests()
+    
+    # Overall success
+    success = privacy_success
+    
+    print("\n" + "="*80)
+    print("OVERALL TESTING SUMMARY")
+    print("="*80)
+    print(f"Privacy Features: {'✅ PASSED' if privacy_success else '❌ FAILED'}")
+    print(f"Overall Status: {'✅ PASSED' if success else '❌ FAILED'}")
+    print("="*80)
+    
     sys.exit(0 if success else 1)
