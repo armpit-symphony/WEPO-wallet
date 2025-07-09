@@ -710,6 +710,225 @@ class WepoFullNode:
         async def get_peers():
             """Get connected peers"""
             return self.p2p_node.get_network_info()
+        
+        # Atomic Swap Operations
+        @self.app.post("/api/atomic-swap/initiate")
+        async def initiate_atomic_swap(request: dict):
+            """Initiate a new atomic swap"""
+            try:
+                # Extract request parameters
+                swap_type = request.get('swap_type')
+                btc_amount = request.get('btc_amount')
+                initiator_btc_address = request.get('initiator_btc_address')
+                initiator_wepo_address = request.get('initiator_wepo_address')
+                participant_btc_address = request.get('participant_btc_address')
+                participant_wepo_address = request.get('participant_wepo_address')
+                
+                # Validate parameters
+                if not all([swap_type, btc_amount, initiator_btc_address, 
+                           initiator_wepo_address, participant_btc_address, participant_wepo_address]):
+                    raise HTTPException(status_code=400, detail="Missing required parameters")
+                
+                # Validate addresses
+                if not validate_btc_address(initiator_btc_address) or not validate_btc_address(participant_btc_address):
+                    raise HTTPException(status_code=400, detail="Invalid Bitcoin address")
+                
+                if not validate_wepo_address(initiator_wepo_address) or not validate_wepo_address(participant_wepo_address):
+                    raise HTTPException(status_code=400, detail="Invalid WEPO address")
+                
+                # Convert swap type
+                if swap_type == "btc_to_wepo":
+                    swap_type_enum = SwapType.BTC_TO_WEPO
+                elif swap_type == "wepo_to_btc":
+                    swap_type_enum = SwapType.WEPO_TO_BTC
+                else:
+                    raise HTTPException(status_code=400, detail="Invalid swap type")
+                
+                # Initiate swap
+                swap_contract = await atomic_swap_engine.initiate_swap(
+                    swap_type_enum,
+                    initiator_btc_address,
+                    initiator_wepo_address,
+                    participant_btc_address,
+                    participant_wepo_address,
+                    float(btc_amount)
+                )
+                
+                return {
+                    'success': True,
+                    'swap_id': swap_contract.swap_id,
+                    'swap_type': swap_contract.swap_type.value,
+                    'state': swap_contract.state.value,
+                    'btc_amount': swap_contract.btc_amount,
+                    'wepo_amount': swap_contract.wepo_amount,
+                    'secret_hash': swap_contract.secret_hash,
+                    'btc_htlc_address': swap_contract.btc_htlc_address,
+                    'wepo_htlc_address': swap_contract.wepo_htlc_address,
+                    'btc_locktime': swap_contract.btc_locktime,
+                    'wepo_locktime': swap_contract.wepo_locktime,
+                    'expires_at': swap_contract.expires_at.isoformat()
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/atomic-swap/status/{swap_id}")
+        async def get_swap_status(swap_id: str):
+            """Get atomic swap status"""
+            try:
+                swap_contract = atomic_swap_engine.get_swap_status(swap_id)
+                if not swap_contract:
+                    raise HTTPException(status_code=404, detail="Swap not found")
+                
+                return {
+                    'swap_id': swap_contract.swap_id,
+                    'swap_type': swap_contract.swap_type.value,
+                    'state': swap_contract.state.value,
+                    'btc_amount': swap_contract.btc_amount,
+                    'wepo_amount': swap_contract.wepo_amount,
+                    'secret_hash': swap_contract.secret_hash,
+                    'btc_htlc_address': swap_contract.btc_htlc_address,
+                    'wepo_htlc_address': swap_contract.wepo_htlc_address,
+                    'btc_locktime': swap_contract.btc_locktime,
+                    'wepo_locktime': swap_contract.wepo_locktime,
+                    'btc_funding_tx': swap_contract.btc_funding_tx,
+                    'wepo_funding_tx': swap_contract.wepo_funding_tx,
+                    'created_at': swap_contract.created_at.isoformat(),
+                    'expires_at': swap_contract.expires_at.isoformat()
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/atomic-swap/fund")
+        async def fund_atomic_swap(request: dict):
+            """Fund an atomic swap"""
+            try:
+                swap_id = request.get('swap_id')
+                currency = request.get('currency')
+                tx_hash = request.get('tx_hash')
+                
+                if not all([swap_id, currency, tx_hash]):
+                    raise HTTPException(status_code=400, detail="Missing required parameters")
+                
+                success = await atomic_swap_engine.fund_swap(swap_id, currency, tx_hash)
+                
+                if success:
+                    return {
+                        'success': True,
+                        'message': f'{currency} funding recorded',
+                        'swap_id': swap_id,
+                        'tx_hash': tx_hash
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="Failed to fund swap")
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/atomic-swap/redeem")
+        async def redeem_atomic_swap(request: dict):
+            """Redeem an atomic swap with secret"""
+            try:
+                swap_id = request.get('swap_id')
+                secret = request.get('secret')
+                
+                if not all([swap_id, secret]):
+                    raise HTTPException(status_code=400, detail="Missing required parameters")
+                
+                success = await atomic_swap_engine.redeem_swap(swap_id, secret)
+                
+                if success:
+                    return {
+                        'success': True,
+                        'message': 'Swap redeemed successfully',
+                        'swap_id': swap_id
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="Failed to redeem swap")
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/atomic-swap/refund")
+        async def refund_atomic_swap(request: dict):
+            """Refund an expired atomic swap"""
+            try:
+                swap_id = request.get('swap_id')
+                
+                if not swap_id:
+                    raise HTTPException(status_code=400, detail="Missing swap_id")
+                
+                success = await atomic_swap_engine.refund_swap(swap_id)
+                
+                if success:
+                    return {
+                        'success': True,
+                        'message': 'Swap refunded successfully',
+                        'swap_id': swap_id
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="Failed to refund swap or swap not expired")
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/atomic-swap/list")
+        async def list_atomic_swaps():
+            """List all active atomic swaps"""
+            try:
+                swaps = atomic_swap_engine.get_all_swaps()
+                
+                swap_list = []
+                for swap in swaps:
+                    swap_list.append({
+                        'swap_id': swap.swap_id,
+                        'swap_type': swap.swap_type.value,
+                        'state': swap.state.value,
+                        'btc_amount': swap.btc_amount,
+                        'wepo_amount': swap.wepo_amount,
+                        'created_at': swap.created_at.isoformat(),
+                        'expires_at': swap.expires_at.isoformat()
+                    })
+                
+                return {
+                    'swaps': swap_list,
+                    'total_count': len(swap_list)
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/atomic-swap/proof/{swap_id}")
+        async def get_swap_proof(swap_id: str):
+            """Get cryptographic proof of atomic swap"""
+            try:
+                proof = await atomic_swap_engine.get_swap_proof(swap_id)
+                
+                if not proof:
+                    raise HTTPException(status_code=404, detail="Swap not found")
+                
+                return proof
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/atomic-swap/exchange-rate")
+        async def get_exchange_rate():
+            """Get current BTC/WEPO exchange rate"""
+            try:
+                rate = atomic_swap_engine.get_exchange_rate()
+                
+                return {
+                    'btc_to_wepo': rate,
+                    'wepo_to_btc': 1.0 / rate,
+                    'fee_percentage': 0.1,
+                    'last_updated': int(time.time()),
+                    'source': 'atomic_swap_engine'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
     
     def handle_new_block(self, block_data: dict):
         """Handle new block from P2P network"""
