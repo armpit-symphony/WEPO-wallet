@@ -347,6 +347,7 @@ test_plan:
     - "Extended Blockchain Testing"
     - "Blockchain Stress Testing"
     - "Advanced P2P Network Testing"
+    - "Final Comprehensive Privacy Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
