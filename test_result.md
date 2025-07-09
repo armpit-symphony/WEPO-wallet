@@ -351,6 +351,7 @@ test_plan:
     - "Frontend-Blockchain Integration"
     - "Fast Test Bridge Functionality"
     - "Extended Blockchain Testing"
+    - "Blockchain Stress Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
