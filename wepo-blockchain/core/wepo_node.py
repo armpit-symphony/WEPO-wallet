@@ -193,41 +193,146 @@ class WepoFullNode:
         
         @self.app.post("/api/transaction/send")
         async def send_transaction(request: dict):
-            """Submit transaction to network"""
+            """Submit transaction to network with proper validation and UTXO handling"""
             try:
-                # Create transaction object (simplified)
                 from_address = request.get('from_address')
                 to_address = request.get('to_address')
-                amount = int(request.get('amount', 0) * 100000000)  # Convert to satoshis
-                fee = int(request.get('fee', 0.0001) * 100000000)
+                amount = request.get('amount')
+                fee = request.get('fee', 0.0001)
                 
-                # Create transaction
-                tx = Transaction(
-                    version=1,
-                    inputs=[],  # TODO: Create proper inputs
-                    outputs=[],  # TODO: Create proper outputs
-                    lock_time=0,
-                    fee=fee,
-                    timestamp=int(time.time())
-                )
+                # Input validation
+                if not all([from_address, to_address, amount]):
+                    raise HTTPException(status_code=400, detail="Missing required fields: from_address, to_address, amount")
                 
-                # Add to mempool
+                # Validate addresses
+                if not from_address.startswith("wepo1") or len(from_address) < 30:
+                    raise HTTPException(status_code=400, detail="Invalid sender address format")
+                
+                if not to_address.startswith("wepo1") or len(to_address) < 30:
+                    raise HTTPException(status_code=400, detail="Invalid recipient address format")
+                
+                # Validate amount
+                if not isinstance(amount, (int, float)) or amount <= 0:
+                    raise HTTPException(status_code=400, detail="Amount must be a positive number")
+                
+                # Check sender balance
+                sender_balance = self.blockchain.get_balance_wepo(from_address)
+                required_amount = amount + fee
+                
+                if sender_balance < required_amount:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Insufficient balance. Available: {sender_balance:.8f} WEPO, Required: {required_amount:.8f} WEPO"
+                    )
+                
+                # Create transaction using blockchain method
+                tx = self.blockchain.create_transaction(from_address, to_address, amount, fee)
+                
+                if not tx:
+                    raise HTTPException(status_code=400, detail="Failed to create transaction")
+                
+                # Validate and add to mempool
                 if self.blockchain.add_transaction_to_mempool(tx):
                     txid = tx.calculate_txid()
                     
                     # Broadcast to P2P network
-                    self.p2p_node.broadcast_transaction({'txid': txid})
+                    self.p2p_node.broadcast_transaction({'txid': txid, 'tx_data': 'transaction_data'})
                     
                     return {
                         'transaction_id': txid,
-                        'status': 'submitted',
+                        'tx_hash': txid,
+                        'status': 'pending',
+                        'message': 'Transaction submitted to mempool',
                         'privacy_protected': True
                     }
                 else:
-                    raise HTTPException(status_code=400, detail="Invalid transaction")
+                    raise HTTPException(status_code=400, detail="Transaction validation failed")
                     
+            except HTTPException:
+                raise
             except Exception as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        
+        # Wallet operations 
+        @self.app.get("/api/wallet/{address}")
+        async def get_wallet_info(address: str):
+            """Get wallet information from blockchain"""
+            try:
+                # Validate address format
+                if not address.startswith("wepo1") or len(address) < 30:
+                    raise HTTPException(status_code=400, detail="Invalid address format")
+                
+                balance = self.blockchain.get_balance_wepo(address)
+                utxos = self.blockchain.get_utxos_for_address(address)
+                
+                return {
+                    'address': address,
+                    'balance': balance,
+                    'utxo_count': len(utxos),
+                    'total_received': balance,  # Simplified
+                    'total_sent': 0,  # TODO: Calculate from transaction history
+                    'unconfirmed_balance': 0
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/wallet/{address}/transactions")
+        async def get_wallet_transactions(address: str, limit: int = 50):
+            """Get transaction history for wallet"""
+            try:
+                # Validate address format
+                if not address.startswith("wepo1") or len(address) < 30:
+                    raise HTTPException(status_code=400, detail="Invalid address format")
+                
+                transactions = []
+                
+                # Search through all blocks
+                for block in self.blockchain.chain:
+                    for tx in block.transactions:
+                        # Check if this transaction involves the address
+                        involved = False
+                        tx_type = "unknown"
+                        amount = 0
+                        
+                        # Check outputs (receiving)
+                        for output in tx.outputs:
+                            if output.address == address:
+                                involved = True
+                                tx_type = "receive"
+                                amount = output.value / 100000000  # Convert to WEPO
+                                break
+                        
+                        # Check inputs (sending) - simplified
+                        if not involved and not tx.is_coinbase():
+                            # For now, just check if any input could be from this address
+                            # TODO: Proper input address resolution
+                            pass
+                        
+                        if involved:
+                            transactions.append({
+                                'txid': tx.calculate_txid(),
+                                'type': tx_type,
+                                'amount': amount,
+                                'from_address': "coinbase" if tx.is_coinbase() else "unknown",
+                                'to_address': address,
+                                'timestamp': tx.timestamp,
+                                'status': 'confirmed',
+                                'confirmations': len(self.blockchain.chain) - block.height,
+                                'block_height': block.height,
+                                'block_hash': block.get_block_hash()
+                            })
+                
+                # Sort by timestamp (newest first) and limit
+                transactions.sort(key=lambda x: x['timestamp'], reverse=True)
+                return transactions[:limit]
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
         
         # Mining operations
         @self.app.get("/api/mining/info")
