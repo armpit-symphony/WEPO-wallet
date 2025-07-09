@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """
 WEPO Fast Test Blockchain Bridge
-Instant blockchain for testing functionality
+Instant blockchain for testing functionality with BTC atomic swaps
 """
 
 import time
 import hashlib
 import json
+import sys
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+
+# Add atomic swaps to the path
+sys.path.append('/app/wepo-blockchain/core')
+from atomic_swaps import atomic_swap_engine, SwapType, SwapState, validate_btc_address, validate_wepo_address
 
 class FastTestBlockchain:
     """Fast test blockchain with instant operations"""
