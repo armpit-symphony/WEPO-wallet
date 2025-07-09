@@ -7,6 +7,10 @@ ecdsa==0.18.0
 sqlite3-utils==3.34
 pycryptodome==3.23.0
 
+# Bitcoin and atomic swap dependencies
+python-bitcoinlib==0.21.0
+bitcoinutils==0.6.11
+
 # Networking and API
 fastapi==0.110.1
 uvicorn==0.29.0
