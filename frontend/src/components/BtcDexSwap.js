@@ -294,6 +294,109 @@ const BtcDexSwap = ({ onClose }) => {
         </div>
       </div>
 
+      {/* Priority Fee Toggle */}
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="text-white font-medium">Priority Fee</span>
+          <p className="text-sm text-gray-400">Get faster confirmation times</p>
+        </div>
+        <button
+          onClick={() => setPriorityFee(!priorityFee)}
+          className={`w-12 h-6 rounded-full transition-colors ${
+            priorityFee ? 'bg-blue-600' : 'bg-gray-600'
+          }`}
+        >
+          <div className={`w-5 h-5 rounded-full bg-white transition-transform ${
+            priorityFee ? 'translate-x-6' : 'translate-x-0.5'
+          }`} />
+        </button>
+      </div>
+
+      {/* Statistics Display */}
+      {statistics && (
+        <div className="bg-gray-800 rounded-lg p-4 border border-gray-600">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="h-4 w-4 text-green-400" />
+            <span className="text-sm font-medium text-white">DEX Statistics</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-gray-400">Total Swaps:</span>
+              <div className="text-white font-medium">{statistics.total_swaps}</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Success Rate:</span>
+              <div className="text-white font-medium">{(statistics.success_rate * 100).toFixed(1)}%</div>
+            </div>
+            <div>
+              <span className="text-gray-400">BTC Volume:</span>
+              <div className="text-white font-medium">{statistics.total_btc_volume.toFixed(4)} BTC</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Active Swaps:</span>
+              <div className="text-white font-medium">{statistics.active_swaps}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Swaps */}
+      {swapHistory.length > 0 && (
+        <div className="bg-gray-800 rounded-lg p-4 border border-gray-600">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="h-4 w-4 text-blue-400" />
+            <span className="text-sm font-medium text-white">Recent Swaps</span>
+          </div>
+          <div className="space-y-2">
+            {swapHistory.slice(0, 3).map((swap, index) => (
+              <div key={index} className="flex items-center justify-between text-sm">
+                <div>
+                  <span className="text-gray-400">
+                    {swap.btc_amount} BTC → {swap.wepo_amount} WEPO
+                  </span>
+                </div>
+                <div className={`px-2 py-1 rounded text-xs ${
+                  swap.state === 'redeemed' ? 'bg-green-900/50 text-green-200' :
+                  swap.state === 'funded' ? 'bg-blue-900/50 text-blue-200' :
+                  swap.state === 'initiated' ? 'bg-yellow-900/50 text-yellow-200' :
+                  'bg-gray-900/50 text-gray-200'
+                }`}>
+                  {swap.state}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active Swap Status */}
+      {activeSwap && (
+        <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30">
+          <div className="flex items-center gap-2 mb-3">
+            <Info className="h-4 w-4 text-blue-400" />
+            <span className="text-sm font-medium text-blue-200">Active Swap</span>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Swap ID:</span>
+              <span className="text-white font-mono">{activeSwap.swap_id.slice(0, 16)}...</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Status:</span>
+              <span className="text-blue-200">{activeSwap.state}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">BTC HTLC:</span>
+              <span className="text-white font-mono">{activeSwap.btc_htlc_address}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">WEPO HTLC:</span>
+              <span className="text-white font-mono">{activeSwap.wepo_htlc_address}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 text-red-200 text-sm">
           {error}
