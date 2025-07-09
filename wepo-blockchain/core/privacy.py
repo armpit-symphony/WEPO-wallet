@@ -110,7 +110,7 @@ class RingSignature:
     """Ring signature implementation for transaction anonymity"""
     
     def __init__(self):
-        self.curve = ECC.P256()
+        self.curve = 'P-256'
         self.hash_function = SHA256
     
     def generate_ring_signature(self, message: bytes, private_key: bytes, 
