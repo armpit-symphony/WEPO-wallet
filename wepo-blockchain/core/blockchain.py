@@ -728,7 +728,7 @@ class WepoBlockchain:
             return False
     
     def validate_transaction(self, transaction: Transaction) -> bool:
-        """Validate a transaction"""
+        """Validate a transaction with proper UTXO checking"""
         try:
             # Skip validation for coinbase transactions
             if transaction.is_coinbase():
@@ -737,16 +737,29 @@ class WepoBlockchain:
             # Check inputs exist and are unspent
             total_input_value = 0
             for inp in transaction.inputs:
-                # TODO: Implement UTXO lookup
-                # For now, assume valid
-                total_input_value += 100 * COIN  # Mock value
+                # Look up UTXO in database
+                cursor = self.conn.execute('''
+                    SELECT amount, spent FROM utxos 
+                    WHERE txid = ? AND vout = ?
+                ''', (inp.prev_txid, inp.prev_vout))
+                
+                utxo = cursor.fetchone()
+                if not utxo:
+                    print(f"UTXO not found: {inp.prev_txid}:{inp.prev_vout}")
+                    return False
+                
+                if utxo[1]:  # spent flag
+                    print(f"UTXO already spent: {inp.prev_txid}:{inp.prev_vout}")
+                    return False
+                
+                total_input_value += utxo[0]
             
             # Check outputs
             total_output_value = sum(out.value for out in transaction.outputs)
             
-            # Check fee
+            # Check sufficient funds (inputs >= outputs + fee)
             if total_input_value < total_output_value + transaction.fee:
-                print("Insufficient funds")
+                print(f"Insufficient funds: {total_input_value} < {total_output_value + transaction.fee}")
                 return False
             
             return True
@@ -754,6 +767,39 @@ class WepoBlockchain:
         except Exception as e:
             print(f"Transaction validation error: {e}")
             return False
+    
+    def get_balance(self, address: str) -> int:
+        """Get balance for an address in satoshis"""
+        cursor = self.conn.execute('''
+            SELECT SUM(amount) FROM utxos 
+            WHERE address = ? AND spent = FALSE
+        ''', (address,))
+        
+        result = cursor.fetchone()
+        return result[0] if result[0] else 0
+    
+    def get_balance_wepo(self, address: str) -> float:
+        """Get balance for an address in WEPO"""
+        return self.get_balance(address) / COIN
+    
+    def get_utxos_for_address(self, address: str) -> List[dict]:
+        """Get all unspent UTXOs for an address"""
+        cursor = self.conn.execute('''
+            SELECT txid, vout, amount, script_pubkey FROM utxos 
+            WHERE address = ? AND spent = FALSE
+        ''', (address,))
+        
+        utxos = []
+        for row in cursor.fetchall():
+            utxos.append({
+                'txid': row[0],
+                'vout': row[1],
+                'amount': row[2],
+                'script_pubkey': row[3],
+                'address': address
+            })
+        
+        return utxos
     
     def mine_next_block(self, miner_address: str) -> Optional[Block]:
         """Mine the next block"""
