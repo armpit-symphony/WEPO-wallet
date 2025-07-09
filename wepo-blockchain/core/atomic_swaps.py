@@ -385,9 +385,8 @@ class AtomicSwapEngine:
         # In production, this would fetch from price oracles
         # For now, using a mock rate with some variability
         base_rate = 1.0
-        # Add small random variation (±2%) to simulate real market conditions
-        import random
-        variation = random.uniform(-0.02, 0.02)
+        # Add small variation to simulate real market conditions
+        variation = 0.02 * ((int(time.time()) % 100) - 50) / 100  # ±2% variation
         return base_rate * (1 + variation)
     
     def get_historical_rates(self, days: int = 30) -> List[Dict[str, Any]]:
