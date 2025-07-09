@@ -280,7 +280,9 @@ metadata:
 test_plan:
   current_focus:
     - "Real BTC Atomic Swaps Implementation - COMPLETED"
-  stuck_tasks: []
+    - "Built-in BTC-to-WEPO DEX - FRONTEND INTEGRATION NEEDED"
+  stuck_tasks: 
+    - "Built-in BTC-to-WEPO DEX"
   test_all: false
   test_priority: "high_first"
   backend_tested: true
