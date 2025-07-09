@@ -253,13 +253,25 @@ metadata:
   test_sequence: 0
   run_ui: false
 
+  - task: "Real BTC Atomic Swaps Implementation"
+    implemented: false
+    working: false
+    file: "atomic_swaps.py, wepo_node.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "CRITICAL TASK: Implement real BTC-to-WEPO atomic swaps using HTLC (Hash Time Locked Contracts). Current implementation is mock/UI only. Need to implement: 1) Real HTLC smart contract logic for both BTC and WEPO sides 2) Bitcoin network integration and RPC connectivity 3) Atomic swap protocol with proper validation 4) Exchange rate oracle for real-time BTC/WEPO pricing 5) Swap state management and timeout handling 6) Security validation to ensure truly atomic swaps 7) Integration with existing wallet UI"
+
 test_plan:
   current_focus:
-    - "Real Cryptographic Privacy Implementation - COMPLETED"
+    - "Real BTC Atomic Swaps Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  backend_tested: true
+  backend_tested: false
 
   - task: "Frontend-Blockchain Integration"
     implemented: true
