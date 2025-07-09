@@ -176,10 +176,6 @@ class FastTestBlockchain:
     
     def mine_block(self):
         """Instantly mine a block with mempool transactions and proper UTXO management"""
-        if not self.mempool:
-            print("⚠️ No transactions in mempool")
-            return None
-        
         height = len(self.blocks)
         prev_hash = self.blocks[-1]["hash"]
         
@@ -213,7 +209,7 @@ class FastTestBlockchain:
         self.utxos[f"{coinbase_tx['txid']}:0"] = coinbase_tx["outputs"][0]
         
         # Process mempool transactions and update UTXOs
-        for txid, tx in self.mempool.items():
+        for txid, tx in list(self.mempool.items()):  # Use list() to avoid dict change during iteration
             block_txs.append(txid)
             self.transactions[txid] = tx
             
