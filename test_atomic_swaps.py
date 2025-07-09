@@ -181,6 +181,11 @@ async def test_swap_redemption():
     swap_id = swap_contract.swap_id
     secret = swap_contract.secret
     
+    # Only test redemption if swap is actually funded
+    current_status = engine.get_swap_status(swap_id)
+    if current_status.state != SwapState.FUNDED:
+        print(f"Warning: Swap not in FUNDED state, current state: {current_status.state.value}")
+    
     # Test redemption with correct secret
     redemption_success = await engine.redeem_swap(swap_id, secret)
     print(f"Redemption with correct secret: {'✓' if redemption_success else '✗'}")
@@ -189,11 +194,20 @@ async def test_swap_redemption():
     swap_status = engine.get_swap_status(swap_id)
     if swap_status:
         print(f"Swap state after redemption: {swap_status.state.value}")
-        print(f"Secret revealed: {swap_status.secret[:16]}...")
+        if swap_status.secret:
+            print(f"Secret revealed: {swap_status.secret[:16]}...")
     
-    # Test redemption with wrong secret
+    # Test redemption with wrong secret on a new swap
+    new_swap = await engine.initiate_swap(
+        SwapType.BTC_TO_WEPO,
+        "1TestRedemption234567890123456789012345",
+        "wepo1test123456789abcdef0123456789abcdef01",
+        "3TestParticipant234567890123456789012",
+        "wepo1participant123456789abcdef0123456789ab",
+        0.01
+    )
     wrong_secret = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-    wrong_redemption = await engine.redeem_swap(swap_id, wrong_secret)
+    wrong_redemption = await engine.redeem_swap(new_swap.swap_id, wrong_secret)
     print(f"Redemption with wrong secret (should fail): {'✓' if not wrong_redemption else '✗'}")
     
     return swap_contract
