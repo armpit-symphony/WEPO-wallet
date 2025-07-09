@@ -481,14 +481,31 @@ class AtomicSwapEngine:
         
         return True
     
+    def calculate_wepo_amount(self, btc_amount: float) -> float:
+        """Calculate WEPO amount based on BTC amount"""
+        rate = self.get_exchange_rate()
+        return btc_amount * rate
+    
     async def initiate_swap(self, swap_type: SwapType, initiator_btc_address: str,
                           initiator_wepo_address: str, participant_btc_address: str,
-                          participant_wepo_address: str, btc_amount: float) -> SwapContract:
-        """Initiate a new atomic swap"""
+                          participant_wepo_address: str, btc_amount: float,
+                          priority: bool = False) -> SwapContract:
+        """Enhanced swap initiation with security and fee calculations"""
         
-        # Validate parameters
-        if not self.validate_swap_parameters(btc_amount, initiator_btc_address, initiator_wepo_address):
-            raise ValueError("Invalid swap parameters")
+        # Enhanced validation
+        validation_result = self.validate_enhanced_swap_parameters(
+            btc_amount, initiator_btc_address, initiator_wepo_address,
+            participant_btc_address, participant_wepo_address
+        )
+        
+        if not validation_result['valid']:
+            raise ValueError(f"Swap validation failed: {', '.join(validation_result['errors'])}")
+        
+        # Calculate fees
+        fee_info = self.calculate_swap_fees(btc_amount, swap_type, priority)
+        
+        # Update user activity for rate limiting
+        self.update_user_activity(initiator_btc_address, btc_amount)
         
         # Generate swap ID and secret
         swap_id = self.generate_swap_id()
@@ -500,10 +517,12 @@ class AtomicSwapEngine:
         
         # Set lock times (BTC locktime is longer to allow for WEPO redemption first)
         current_time = int(time.time())
-        wepo_locktime = current_time + (self.default_locktime_hours * 3600)
-        btc_locktime = current_time + (self.default_locktime_hours * 2 * 3600)
+        locktime_seconds = self.default_locktime_hours * 3600
         
-        # Create swap contract
+        wepo_locktime = current_time + locktime_seconds
+        btc_locktime = current_time + (locktime_seconds * 2)
+        
+        # Create enhanced swap contract
         swap_contract = SwapContract(
             swap_id=swap_id,
             swap_type=swap_type,
@@ -515,19 +534,27 @@ class AtomicSwapEngine:
             btc_amount=btc_amount,
             wepo_amount=wepo_amount,
             secret_hash=secret_hash.hex(),
-            secret=secret.hex(),  # Store secret for initiator
             btc_locktime=btc_locktime,
             wepo_locktime=wepo_locktime,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() + timedelta(hours=self.default_locktime_hours * 3)
+            expires_at=datetime.utcnow() + timedelta(hours=self.default_locktime_hours * 3),
+            secret=secret.hex()  # Store secret for initiator
         )
         
-        # Generate HTLC scripts and addresses
+        # Add fee information as metadata
+        swap_contract.fee_info = fee_info
+        swap_contract.priority = priority
+        swap_contract.warnings = validation_result['warnings']
+        
+        # Generate HTLC contracts and addresses
         await self._generate_htlc_contracts(swap_contract)
         
         # Store swap
         self.active_swaps[swap_id] = swap_contract
+        
+        # Update statistics
+        self.update_swap_statistics(swap_contract)
         
         return swap_contract
     
