@@ -205,7 +205,8 @@ async def test_swap_refund():
         "wepo1refund123456789abcdef0123456789abcdef01",
         "1RefundTest1234567890123456789012345678",
         "wepo1participant123456789abcdef0123456789ab",
-        "3RefundParticipant1234567890123456789012"
+        "3RefundParticipant1234567890123456789012",
+        0.01  # Missing btc_amount parameter
     )
     
     swap_id = swap_contract.swap_id
