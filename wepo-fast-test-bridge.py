@@ -179,37 +179,45 @@ class FastTestBlockchain:
         height = len(self.blocks)
         prev_hash = self.blocks[-1]["hash"]
         
-        # Calculate reward based on WEPO tokenomics
-        if height < 13140:  # Q1 (blocks 0-13139)
-            reward = 40000000000  # 400 WEPO in satoshis
-        elif height < 26280:  # Q2 (blocks 13140-26279)
-            reward = 20000000000  # 200 WEPO in satoshis
-        elif height < 39420:  # Q3 (blocks 26280-39419)
-            reward = 10000000000  # 100 WEPO in satoshis
-        elif height < 52560:  # Q4 (blocks 39420-52559)
-            reward = 5000000000   # 50 WEPO in satoshis
-        else:  # Year 2+
-            reward = 1240000000   # 12.4 WEPO in satoshis
+        # Check if there's already a coinbase transaction in mempool
+        has_coinbase = False
+        for tx in self.mempool.values():
+            if tx.get("type") == "coinbase":
+                has_coinbase = True
+                break
         
-        # Create coinbase transaction
-        coinbase_tx = {
-            "txid": f"coinbase_{height}",
-            "inputs": [],
-            "outputs": [{
-                "address": "wepo1miner0000000000000000000000000",
-                "value": reward
-            }],
-            "timestamp": int(time.time()),
-            "type": "coinbase"
-        }
+        # Only create default coinbase if there isn't one already
+        if not has_coinbase:
+            # Calculate reward based on WEPO tokenomics
+            if height < 13140:  # Q1 (blocks 0-13139)
+                reward = 40000000000  # 400 WEPO in satoshis
+            elif height < 26280:  # Q2 (blocks 13140-26279)
+                reward = 20000000000  # 200 WEPO in satoshis
+            elif height < 39420:  # Q3 (blocks 26280-39419)
+                reward = 10000000000  # 100 WEPO in satoshis
+            elif height < 52560:  # Q4 (blocks 39420-52559)
+                reward = 5000000000   # 50 WEPO in satoshis
+            else:  # Year 2+
+                reward = 1240000000   # 12.4 WEPO in satoshis
+            
+            # Create default coinbase transaction
+            coinbase_tx = {
+                "txid": f"coinbase_{height}",
+                "inputs": [],
+                "outputs": [{
+                    "address": "wepo1miner0000000000000000000000000",
+                    "value": reward
+                }],
+                "timestamp": int(time.time()),
+                "type": "coinbase"
+            }
+            
+            # Add default coinbase to mempool temporarily
+            self.mempool[coinbase_tx["txid"]] = coinbase_tx
         
-        # Add coinbase to transactions
-        block_txs = [coinbase_tx["txid"]]
-        self.transactions[coinbase_tx["txid"]] = coinbase_tx
-        self.utxos[f"{coinbase_tx['txid']}:0"] = coinbase_tx["outputs"][0]
-        
-        # Process mempool transactions and update UTXOs
-        for txid, tx in list(self.mempool.items()):  # Use list() to avoid dict change during iteration
+        # Now process all mempool transactions (including coinbase)
+        block_txs = []
+        for txid, tx in list(self.mempool.items()):
             block_txs.append(txid)
             self.transactions[txid] = tx
             
@@ -238,7 +246,7 @@ class FastTestBlockchain:
             "nonce": height * 1000,
             "difficulty": 1,
             "transactions": block_txs,
-            "reward": reward
+            "reward": sum(out["value"] for tx in self.mempool.values() if tx.get("type") == "coinbase" for out in tx["outputs"])
         }
         
         self.blocks.append(block)
@@ -247,7 +255,7 @@ class FastTestBlockchain:
         print(f"⚡ INSTANT block mined: #{height}")
         print(f"   Block hash: {block['hash']}")
         print(f"   Transactions: {len(block_txs)}")
-        print(f"   Block reward: {reward / 100000000.0} WEPO")
+        print(f"   Block reward: {block['reward'] / 100000000.0} WEPO")
         print(f"   UTXOs updated: {len(self.utxos)} total UTXOs")
         
         return block
