@@ -406,8 +406,8 @@ class AtomicSwapEngine:
                 'timestamp': int(timestamp),
                 'btc_to_wepo': rate,
                 'wepo_to_btc': 1.0 / rate,
-                'volume_btc': random.uniform(0.1, 5.0),
-                'volume_wepo': random.uniform(0.1, 5.0)
+                'volume_btc': 0.1 + (i % 5) * 0.5,  # Simulate volume without random
+                'volume_wepo': 0.1 + (i % 5) * 0.5
             })
         
         return rates
