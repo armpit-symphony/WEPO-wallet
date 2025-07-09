@@ -319,11 +319,26 @@ class WepoFastTestBridge:
         
         @self.app.get("/api/wallet/{address}")
         async def get_wallet(address: str):
+            # Validate address format
+            if not address or not address.startswith("wepo1") or len(address) != 37:
+                raise HTTPException(status_code=404, detail="Wallet not found - invalid address format")
+            
+            # Check if wallet exists in our system
+            if address not in self.blockchain.wallets:
+                # For test purposes, return 404 for truly invalid addresses
+                # but allow balance checking for any valid format address
+                balance = self.blockchain.get_balance(address)
+                if balance == 0 and address not in self.blockchain.wallets:
+                    # Check if address has any transaction history
+                    transactions = self.blockchain.get_transactions(address)
+                    if not transactions:
+                        raise HTTPException(status_code=404, detail="Wallet not found")
+            
             balance = self.blockchain.get_balance(address)
             return {
                 "address": address,
                 "balance": balance,
-                "username": self.blockchain.wallets.get(address, {}).get("username", "test_user"),
+                "username": self.blockchain.wallets.get(address, {}).get("username", "unknown"),
                 "created_at": self.blockchain.wallets.get(address, {}).get("created_at", "2025-01-01T00:00:00Z"),
                 "is_staking": False,
                 "is_masternode": False
@@ -331,34 +346,49 @@ class WepoFastTestBridge:
         
         @self.app.get("/api/wallet/{address}/transactions")
         async def get_wallet_transactions(address: str):
+            # Validate address format
+            if not address or not address.startswith("wepo1") or len(address) != 37:
+                raise HTTPException(status_code=400, detail="Invalid address format")
+                
             return self.blockchain.get_transactions(address)
         
         @self.app.post("/api/transaction/send")
         async def send_transaction(request: dict):
-            from_address = request.get('from_address')
-            to_address = request.get('to_address')
-            amount = request.get('amount')
-            
-            # Validation: Check if from_address has sufficient balance
-            current_balance = self.blockchain.get_balance(from_address)
-            if current_balance < amount:
-                raise HTTPException(status_code=400, detail=f"Insufficient balance. Available: {current_balance} WEPO, Required: {amount} WEPO")
-            
-            # Validation: Check for valid amount
-            if amount <= 0:
-                raise HTTPException(status_code=400, detail="Transaction amount must be greater than 0")
-            
-            # Validation: Check if to_address is valid (basic check)
-            if not to_address or not to_address.startswith("wepo1") or len(to_address) != 37:
-                raise HTTPException(status_code=400, detail="Invalid recipient address format")
-            
-            txid = self.blockchain.create_transaction(from_address, to_address, amount)
-            return {
-                "transaction_id": txid,
-                "tx_hash": txid,
-                "status": "pending",
-                "message": "Transaction added to mempool"
-            }
+            try:
+                from_address = request.get('from_address')
+                to_address = request.get('to_address')
+                amount = request.get('amount')
+                
+                # Validation: Check if from_address has sufficient balance
+                current_balance = self.blockchain.get_balance(from_address)
+                if current_balance < amount:
+                    raise HTTPException(status_code=400, detail=f"Insufficient balance. Available: {current_balance} WEPO, Required: {amount} WEPO")
+                
+                # Validation: Check for valid amount
+                if amount <= 0:
+                    raise HTTPException(status_code=400, detail="Transaction amount must be greater than 0")
+                
+                # Validation: Check if to_address is valid (basic check)
+                if not to_address or not to_address.startswith("wepo1") or len(to_address) != 37:
+                    raise HTTPException(status_code=400, detail="Invalid recipient address format")
+                
+                # Validation: Check if from_address is valid
+                if not from_address or not from_address.startswith("wepo1") or len(from_address) != 37:
+                    raise HTTPException(status_code=400, detail="Invalid sender address format")
+                
+                txid = self.blockchain.create_transaction(from_address, to_address, amount)
+                return {
+                    "transaction_id": txid,
+                    "tx_hash": txid,
+                    "status": "pending",
+                    "message": "Transaction added to mempool"
+                }
+            except ValueError as e:
+                # Handle blockchain validation errors
+                raise HTTPException(status_code=400, detail=str(e))
+            except Exception as e:
+                # Handle unexpected errors
+                raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
         
         @self.app.get("/api/mining/info")
         async def get_mining_info():
