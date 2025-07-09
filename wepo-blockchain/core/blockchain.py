@@ -628,7 +628,7 @@ class WepoBlockchain:
             return False
     
     def add_block(self, block: Block, validate: bool = True) -> bool:
-        """Add a block to the blockchain"""
+        """Add a block to the blockchain with proper UTXO management"""
         if validate and not self.validate_block(block):
             return False
         
@@ -636,7 +636,27 @@ class WepoBlockchain:
             # Add to chain
             self.chain.append(block)
             
-            # Save to database
+            # Process transactions and update UTXOs
+            for tx in block.transactions:
+                txid = tx.calculate_txid()
+                
+                # Mark input UTXOs as spent (except for coinbase)
+                if not tx.is_coinbase():
+                    for inp in tx.inputs:
+                        self.conn.execute('''
+                            UPDATE utxos 
+                            SET spent = TRUE, spent_txid = ?, spent_height = ?
+                            WHERE txid = ? AND vout = ?
+                        ''', (txid, block.height, inp.prev_txid, inp.prev_vout))
+                
+                # Create new UTXOs from outputs
+                for vout, output in enumerate(tx.outputs):
+                    self.conn.execute('''
+                        INSERT INTO utxos (txid, vout, address, amount, script_pubkey, spent)
+                        VALUES (?, ?, ?, ?, ?, FALSE)
+                    ''', (txid, vout, output.address, output.value, output.script_pubkey))
+            
+            # Save block to database
             self.conn.execute('''
                 INSERT INTO blocks (
                     height, hash, prev_hash, merkle_root, timestamp, bits, nonce,
@@ -684,10 +704,12 @@ class WepoBlockchain:
                 self.adjust_difficulty()
             
             print(f"Block {block.height} added to blockchain: {block.get_block_hash()}")
+            print(f"Block contains {len(block.transactions)} transactions")
             return True
             
         except Exception as e:
             print(f"Error adding block: {e}")
+            self.conn.rollback()
             return False
     
     def adjust_difficulty(self):
