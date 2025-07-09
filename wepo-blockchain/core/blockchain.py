@@ -784,6 +784,10 @@ class WepoBlockchain:
                     json.dumps(asdict(tx))
                 ))
             
+            # Distribute staking rewards if PoS is active
+            if block.height >= POS_ACTIVATION_HEIGHT:
+                self.distribute_staking_rewards(block.height, block.get_block_hash())
+            
             self.conn.commit()
             
             # Adjust difficulty every 1440 blocks (2 days)
