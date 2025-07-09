@@ -147,17 +147,22 @@ async def test_swap_funding():
     btc_funding_success = await engine.fund_swap(swap_id, "BTC", btc_tx_hash)
     print(f"BTC funding: {'✓' if btc_funding_success else '✗'}")
     
+    # Check status after BTC funding
+    status_after_btc = engine.get_swap_status(swap_id)
+    print(f"BTC funding recorded: {'✓' if status_after_btc.btc_funding_tx == btc_tx_hash else '✗'}")
+    
     # Test WEPO funding
     wepo_tx_hash = "w1x2y3z4a5b6789012345678901234567890123456789012345678901234567890"
     wepo_funding_success = await engine.fund_swap(swap_id, "WEPO", wepo_tx_hash)
     print(f"WEPO funding: {'✓' if wepo_funding_success else '✗'}")
     
-    # Check swap status
+    # Check final swap status
     swap_status = engine.get_swap_status(swap_id)
     if swap_status:
         print(f"Swap state after funding: {swap_status.state.value}")
         print(f"BTC funding tx: {swap_status.btc_funding_tx}")
         print(f"WEPO funding tx: {swap_status.wepo_funding_tx}")
+        print(f"Both sides funded: {'✓' if swap_status.state == SwapState.FUNDED else '✗'}")
     
     return swap_contract
 
