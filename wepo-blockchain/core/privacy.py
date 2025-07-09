@@ -21,10 +21,10 @@ from ecdsa import SigningKey, VerifyingKey, SECP256k1
 from ecdsa.util import sigencode_string, sigdecode_string
 import json
 
-# Privacy constants
-ZK_STARK_PROOF_SIZE = 256  # bytes
-RING_SIGNATURE_SIZE = 128  # bytes 
-CONFIDENTIAL_PROOF_SIZE = 64  # bytes
+# Privacy constants - Updated for real cryptographic implementations
+ZK_STARK_PROOF_SIZE = 512  # bytes - increased for proper FRI proofs
+RING_SIGNATURE_SIZE = 512  # bytes - increased for ring size support
+CONFIDENTIAL_PROOF_SIZE = 1500  # bytes - increased for full bulletproof structure
 
 # Cryptographic constants
 SECP256K1_ORDER = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
