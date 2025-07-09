@@ -360,7 +360,17 @@ class WepoBlockchain:
         mined_genesis = self.miner.mine_block(genesis_block, self.current_difficulty)
         if mined_genesis:
             self.add_block(mined_genesis, validate=False)  # Skip validation for genesis
+            
+            # Create genesis UTXO manually
+            genesis_txid = genesis_tx.calculate_txid()
+            self.conn.execute('''
+                INSERT INTO utxos (txid, vout, address, amount, script_pubkey, spent)
+                VALUES (?, ?, ?, ?, ?, FALSE)
+            ''', (genesis_txid, 0, "wepo1genesis0000000000000000000000", REWARD_Q1, b"genesis_output"))
+            self.conn.commit()
+            
             print(f"Genesis block created: {mined_genesis.get_block_hash()}")
+            print(f"Genesis UTXO created: {REWARD_Q1 / COIN} WEPO")
         else:
             raise Exception("Failed to mine genesis block")
     
