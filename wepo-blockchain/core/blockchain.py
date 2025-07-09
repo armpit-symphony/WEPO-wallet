@@ -847,6 +847,78 @@ class WepoBlockchain:
         else:
             return None
     
+    def create_transaction(self, from_address: str, to_address: str, amount_wepo: float, fee_wepo: float = 0.0001) -> Optional[Transaction]:
+        """Create a transaction with proper UTXO selection"""
+        try:
+            amount_satoshis = int(amount_wepo * COIN)
+            fee_satoshis = int(fee_wepo * COIN)
+            total_needed = amount_satoshis + fee_satoshis
+            
+            # Get available UTXOs for sender
+            available_utxos = self.get_utxos_for_address(from_address)
+            
+            if not available_utxos:
+                print(f"No UTXOs available for address: {from_address}")
+                return None
+            
+            # Select UTXOs (simple algorithm: take all)
+            selected_utxos = []
+            total_input_value = 0
+            
+            for utxo in available_utxos:
+                selected_utxos.append(utxo)
+                total_input_value += utxo['amount']
+                if total_input_value >= total_needed:
+                    break
+            
+            if total_input_value < total_needed:
+                print(f"Insufficient funds: need {total_needed}, have {total_input_value}")
+                return None
+            
+            # Create transaction inputs
+            inputs = []
+            for utxo in selected_utxos:
+                inputs.append(TransactionInput(
+                    prev_txid=utxo['txid'],
+                    prev_vout=utxo['vout'],
+                    script_sig=b"signature_placeholder",
+                    sequence=0xffffffff
+                ))
+            
+            # Create transaction outputs
+            outputs = []
+            
+            # Output to recipient
+            outputs.append(TransactionOutput(
+                value=amount_satoshis,
+                script_pubkey=b"recipient_output",
+                address=to_address
+            ))
+            
+            # Change output (if needed)
+            change_amount = total_input_value - total_needed
+            if change_amount > 0:
+                outputs.append(TransactionOutput(
+                    value=change_amount,
+                    script_pubkey=b"change_output",
+                    address=from_address
+                ))
+            
+            # Create transaction
+            transaction = Transaction(
+                version=1,
+                inputs=inputs,
+                outputs=outputs,
+                lock_time=0,
+                fee=fee_satoshis
+            )
+            
+            return transaction
+            
+        except Exception as e:
+            print(f"Error creating transaction: {e}")
+            return None
+    
     def get_blockchain_info(self) -> dict:
         """Get blockchain information"""
         return {
