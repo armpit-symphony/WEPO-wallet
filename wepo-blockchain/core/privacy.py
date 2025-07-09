@@ -757,18 +757,18 @@ class WepoPrivacyEngine:
             # Combine sender's public key with decoy keys
             all_public_keys = [sender_public_key] + decoy_keys
             
-            # Create message to sign
-            message = f"{recipient_address}{amount}{int(time.time())}".encode()
+            # Create unified message for both ring signature and zk-STARK
+            unified_message = f"{recipient_address}{amount}{int(time.time())}".encode()
             ring_proof = self.ring_signature.generate_ring_signature(
-                message, sender_private_key, all_public_keys
+                unified_message, sender_private_key, all_public_keys
             )
             
             # 3. Create zk-STARK proof (prove transaction validity)
+            # Use the same unified message for consistency
             secret_input = sender_private_key + struct.pack('<Q', amount)
-            public_statement = recipient_address.encode() + blinding_factor
             
             stark_proof = self.zk_stark.generate_stark_proof(
-                secret_input, public_statement
+                secret_input, unified_message
             )
             
             # Create transaction commitment
@@ -781,10 +781,11 @@ class WepoPrivacyEngine:
                 'commitment': commitment.hex(),
                 'privacy_level': 'maximum',
                 'ring_size': len(all_public_keys),
+                'unified_message': unified_message.hex(),  # Store for verification
                 'proof_verification': {
                     'confidential_valid': self.confidential_tx.verify_range_proof(range_proof),
-                    'ring_valid': self.ring_signature.verify_ring_signature(ring_proof, message),
-                    'stark_valid': self.zk_stark.verify_stark_proof(stark_proof, public_statement)
+                    'ring_valid': self.ring_signature.verify_ring_signature(ring_proof, unified_message),
+                    'stark_valid': self.zk_stark.verify_stark_proof(stark_proof, unified_message)
                 }
             }
             
