@@ -221,11 +221,11 @@ async def test_swap_refund():
     # Create a new swap for refund testing
     swap_contract = await engine.initiate_swap(
         SwapType.WEPO_TO_BTC,
-        "wepo1refund123456789abcdef0123456789abcdef01",
         "1RefundTest1234567890123456789012345678",
-        "wepo1participant123456789abcdef0123456789ab",
+        "wepo1refund123456789abcdef0123456789abcdef01",
         "3RefundParticipant1234567890123456789012",
-        0.01  # Missing btc_amount parameter
+        "wepo1participant123456789abcdef0123456789ab",
+        0.01  # btc_amount parameter
     )
     
     swap_id = swap_contract.swap_id
