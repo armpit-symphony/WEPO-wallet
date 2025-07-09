@@ -200,6 +200,7 @@ class ZKStarkProver:
             commitment = bytes.fromhex(proof.public_parameters['commitment'])
             evaluation_points = proof.public_parameters['evaluation_points']
             field_prime = proof.public_parameters['field_prime']
+            actual_proof_size = proof.public_parameters.get('actual_proof_size', len(proof.proof_data))
             
             # Verify field prime matches
             if field_prime != self.field_prime:
@@ -209,9 +210,9 @@ class ZKStarkProver:
             if len(proof.proof_data) != ZK_STARK_PROOF_SIZE:
                 return False
             
-            # Extract proof components
+            # Extract proof components using actual size
             proof_commitment = proof.proof_data[:32]
-            fri_proof = proof.proof_data[32:]
+            fri_proof = proof.proof_data[32:actual_proof_size]
             
             # Verify commitment matches
             if proof_commitment != commitment:
