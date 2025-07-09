@@ -323,8 +323,8 @@ class WepoFastTestBridge:
         
         @self.app.get("/api/wallet/{address}")
         async def get_wallet(address: str):
-            # Validate address format
-            if not address or not address.startswith("wepo1") or len(address) != 37:
+            # Validate address format (allow shorter addresses for testing)
+            if not address or not address.startswith("wepo1") or len(address) < 30:
                 raise HTTPException(status_code=400, detail="Invalid address format")
             
             # Get balance (works for any valid address)
