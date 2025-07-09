@@ -474,7 +474,7 @@ class RingSignature:
                 if expected_commitment != commitments[i]:
                     return False
             
-            # Verify challenge reconstruction
+            # Verify challenge reconstruction - use the same method as generation
             reconstructed_challenge = self._compute_challenge(message, commitments)
             if reconstructed_challenge != challenge:
                 return False
