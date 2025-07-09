@@ -352,6 +352,7 @@ test_plan:
     - "Fast Test Bridge Functionality"
     - "Extended Blockchain Testing"
     - "Blockchain Stress Testing"
+    - "Advanced P2P Network Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
