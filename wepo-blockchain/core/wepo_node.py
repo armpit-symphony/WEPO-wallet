@@ -15,8 +15,8 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from blockchain import WepoBlockchain, Transaction, Block
-from p2p_network import WepoP2PNode
+from .blockchain import WepoBlockchain, Transaction, Block
+from .p2p_network import WepoP2PNode
 
 class WepoFullNode:
     """WEPO Full Blockchain Node"""
