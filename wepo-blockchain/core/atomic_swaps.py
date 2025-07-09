@@ -380,10 +380,84 @@ class AtomicSwapEngine:
         
         return validation_result
     
-    def calculate_wepo_amount(self, btc_amount: float) -> float:
-        """Calculate WEPO amount based on BTC amount"""
-        rate = self.get_exchange_rate()
-        return btc_amount * rate
+    def get_exchange_rate(self) -> float:
+        """Get current BTC/WEPO exchange rate"""
+        # In production, this would fetch from price oracles
+        # For now, using a mock rate with some variability
+        base_rate = 1.0
+        # Add small random variation (±2%) to simulate real market conditions
+        import random
+        variation = random.uniform(-0.02, 0.02)
+        return base_rate * (1 + variation)
+    
+    def get_historical_rates(self, days: int = 30) -> List[Dict[str, Any]]:
+        """Get historical exchange rates (mock implementation)"""
+        rates = []
+        current_time = time.time()
+        base_rate = 1.0
+        
+        for i in range(days):
+            timestamp = current_time - (i * 86400)  # 24 hours ago
+            # Simulate rate variation
+            variation = 0.02 * (i % 10 - 5) / 10  # ±2% variation
+            rate = base_rate * (1 + variation)
+            
+            rates.append({
+                'timestamp': int(timestamp),
+                'btc_to_wepo': rate,
+                'wepo_to_btc': 1.0 / rate,
+                'volume_btc': random.uniform(0.1, 5.0),
+                'volume_wepo': random.uniform(0.1, 5.0)
+            })
+        
+        return rates
+    
+    def update_swap_statistics(self, swap_contract: SwapContract):
+        """Update swap statistics"""
+        self.swap_statistics['total_swaps'] += 1
+        
+        if swap_contract.state == SwapState.REDEEMED:
+            self.swap_statistics['completed_swaps'] += 1
+            self.swap_statistics['total_btc_volume'] += swap_contract.btc_amount
+            self.swap_statistics['total_wepo_volume'] += swap_contract.wepo_amount
+            
+            # Calculate completion time
+            completion_time = (swap_contract.updated_at - swap_contract.created_at).total_seconds()
+            current_avg = self.swap_statistics['average_completion_time']
+            completed_count = self.swap_statistics['completed_swaps']
+            
+            # Update running average
+            self.swap_statistics['average_completion_time'] = (
+                (current_avg * (completed_count - 1) + completion_time) / completed_count
+            )
+        
+        elif swap_contract.state in [SwapState.REFUNDED, SwapState.EXPIRED, SwapState.FAILED]:
+            self.swap_statistics['failed_swaps'] += 1
+    
+    def get_swap_statistics(self) -> Dict[str, Any]:
+        """Get comprehensive swap statistics"""
+        stats = self.swap_statistics.copy()
+        
+        # Calculate success rate
+        total_completed = stats['completed_swaps'] + stats['failed_swaps']
+        if total_completed > 0:
+            stats['success_rate'] = stats['completed_swaps'] / total_completed
+        else:
+            stats['success_rate'] = 0.0
+        
+        # Add current metrics
+        stats['active_swaps'] = len(self.active_swaps)
+        stats['total_historical_swaps'] = len(self.swap_history)
+        
+        # Add volume metrics
+        if stats['completed_swaps'] > 0:
+            stats['average_swap_size_btc'] = stats['total_btc_volume'] / stats['completed_swaps']
+            stats['average_swap_size_wepo'] = stats['total_wepo_volume'] / stats['completed_swaps']
+        else:
+            stats['average_swap_size_btc'] = 0.0
+            stats['average_swap_size_wepo'] = 0.0
+        
+        return stats
     
     def validate_swap_parameters(self, btc_amount: float, btc_address: str, 
                                 wepo_address: str) -> bool:
