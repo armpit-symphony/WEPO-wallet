@@ -996,6 +996,299 @@ class WepoBlockchain:
             print(f"Error creating transaction: {e}")
             return None
     
+    def create_stake(self, staker_address: str, amount_wepo: float) -> Optional[str]:
+        """Create a new stake"""
+        try:
+            amount_satoshis = int(amount_wepo * COIN)
+            
+            # Check minimum stake amount
+            if amount_satoshis < MIN_STAKE_AMOUNT:
+                print(f"Minimum stake amount is {MIN_STAKE_AMOUNT / COIN} WEPO")
+                return None
+            
+            # Check if PoS is activated
+            current_height = self.get_block_height()
+            if current_height < POS_ACTIVATION_HEIGHT:
+                print(f"PoS not activated yet. Activation at height {POS_ACTIVATION_HEIGHT}")
+                return None
+            
+            # Check staker balance
+            balance = self.get_balance(staker_address)
+            if balance < amount_satoshis:
+                print(f"Insufficient balance for staking")
+                return None
+            
+            # Generate stake ID
+            stake_id = hashlib.sha256(f"{staker_address}{amount_satoshis}{time.time()}".encode()).hexdigest()
+            
+            # Create stake record
+            stake_info = StakeInfo(
+                stake_id=stake_id,
+                staker_address=staker_address,
+                amount=amount_satoshis,
+                start_height=current_height + 1,
+                start_time=int(time.time())
+            )
+            
+            # Save to database
+            self.conn.execute('''
+                INSERT INTO stakes (stake_id, staker_address, amount, start_height, start_time)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (stake_id, staker_address, amount_satoshis, current_height + 1, int(time.time())))
+            
+            self.conn.commit()
+            
+            print(f"✅ Stake created: {amount_wepo} WEPO from {staker_address}")
+            print(f"   Stake ID: {stake_id}")
+            
+            return stake_id
+            
+        except Exception as e:
+            print(f"Error creating stake: {e}")
+            return None
+    
+    def create_masternode(self, operator_address: str, collateral_txid: str, collateral_vout: int, ip_address: str = None, port: int = 22567) -> Optional[str]:
+        """Create a new masternode"""
+        try:
+            # Check if PoS is activated
+            current_height = self.get_block_height()
+            if current_height < POS_ACTIVATION_HEIGHT:
+                print(f"Masternode activation not available yet. Activation at height {POS_ACTIVATION_HEIGHT}")
+                return None
+            
+            # Verify collateral UTXO exists and has correct amount
+            cursor = self.conn.execute('''
+                SELECT amount, spent FROM utxos 
+                WHERE txid = ? AND vout = ?
+            ''', (collateral_txid, collateral_vout))
+            
+            utxo = cursor.fetchone()
+            if not utxo:
+                print(f"Collateral UTXO not found: {collateral_txid}:{collateral_vout}")
+                return None
+            
+            if utxo[1]:  # spent flag
+                print(f"Collateral UTXO already spent")
+                return None
+            
+            if utxo[0] < MASTERNODE_COLLATERAL:
+                print(f"Insufficient collateral. Required: {MASTERNODE_COLLATERAL / COIN} WEPO")
+                return None
+            
+            # Generate masternode ID
+            masternode_id = hashlib.sha256(f"{operator_address}{collateral_txid}{time.time()}".encode()).hexdigest()
+            
+            # Create masternode record
+            masternode_info = MasternodeInfo(
+                masternode_id=masternode_id,
+                operator_address=operator_address,
+                collateral_txid=collateral_txid,
+                collateral_vout=collateral_vout,
+                ip_address=ip_address,
+                port=port,
+                start_height=current_height + 1,
+                start_time=int(time.time()),
+                last_ping=int(time.time())
+            )
+            
+            # Save to database
+            self.conn.execute('''
+                INSERT INTO masternodes (masternode_id, operator_address, collateral_txid, collateral_vout, 
+                                       ip_address, port, start_height, start_time, last_ping)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (masternode_id, operator_address, collateral_txid, collateral_vout, 
+                  ip_address, port, current_height + 1, int(time.time()), int(time.time())))
+            
+            self.conn.commit()
+            
+            print(f"✅ Masternode created: {operator_address}")
+            print(f"   Masternode ID: {masternode_id}")
+            print(f"   Collateral: {collateral_txid}:{collateral_vout}")
+            
+            return masternode_id
+            
+        except Exception as e:
+            print(f"Error creating masternode: {e}")
+            return None
+    
+    def get_active_stakes(self) -> List[StakeInfo]:
+        """Get all active stakes"""
+        cursor = self.conn.execute('''
+            SELECT stake_id, staker_address, amount, start_height, start_time, 
+                   last_reward_height, total_rewards, status, unlock_height
+            FROM stakes WHERE status = 'active'
+        ''')
+        
+        stakes = []
+        for row in cursor.fetchall():
+            stakes.append(StakeInfo(
+                stake_id=row[0],
+                staker_address=row[1],
+                amount=row[2],
+                start_height=row[3],
+                start_time=row[4],
+                last_reward_height=row[5],
+                total_rewards=row[6],
+                status=row[7],
+                unlock_height=row[8]
+            ))
+        
+        return stakes
+    
+    def get_active_masternodes(self) -> List[MasternodeInfo]:
+        """Get all active masternodes"""
+        cursor = self.conn.execute('''
+            SELECT masternode_id, operator_address, collateral_txid, collateral_vout,
+                   ip_address, port, start_height, start_time, last_ping, status, total_rewards
+            FROM masternodes WHERE status = 'active'
+        ''')
+        
+        masternodes = []
+        for row in cursor.fetchall():
+            masternodes.append(MasternodeInfo(
+                masternode_id=row[0],
+                operator_address=row[1],
+                collateral_txid=row[2],
+                collateral_vout=row[3],
+                ip_address=row[4],
+                port=row[5],
+                start_height=row[6],
+                start_time=row[7],
+                last_ping=row[8],
+                status=row[9],
+                total_rewards=row[10]
+            ))
+        
+        return masternodes
+    
+    def calculate_staking_rewards(self, block_height: int) -> Dict[str, int]:
+        """Calculate staking rewards for a block"""
+        rewards = {}
+        
+        # Only distribute PoS rewards after activation
+        if block_height < POS_ACTIVATION_HEIGHT:
+            return rewards
+        
+        # Get active stakes and masternodes
+        active_stakes = self.get_active_stakes()
+        active_masternodes = self.get_active_masternodes()
+        
+        if not active_stakes and not active_masternodes:
+            return rewards
+        
+        # Calculate total block reward for PoS (50% of total after year 1)
+        total_pos_reward = self.calculate_pos_reward(block_height)
+        
+        if total_pos_reward <= 0:
+            return rewards
+        
+        # 60% to stakers, 40% to masternodes
+        staking_reward_pool = int(total_pos_reward * 0.6)
+        masternode_reward_pool = int(total_pos_reward * 0.4)
+        
+        # Distribute staking rewards proportionally
+        if active_stakes and staking_reward_pool > 0:
+            total_stake_amount = sum(stake.amount for stake in active_stakes)
+            
+            for stake in active_stakes:
+                proportion = stake.amount / total_stake_amount
+                reward = int(staking_reward_pool * proportion)
+                if reward > 0:
+                    rewards[stake.staker_address] = rewards.get(stake.staker_address, 0) + reward
+        
+        # Distribute masternode rewards equally
+        if active_masternodes and masternode_reward_pool > 0:
+            reward_per_masternode = masternode_reward_pool // len(active_masternodes)
+            
+            for masternode in active_masternodes:
+                if reward_per_masternode > 0:
+                    rewards[masternode.operator_address] = rewards.get(masternode.operator_address, 0) + reward_per_masternode
+        
+        return rewards
+    
+    def calculate_pos_reward(self, block_height: int) -> int:
+        """Calculate PoS reward amount for a block"""
+        if block_height < POS_ACTIVATION_HEIGHT:
+            return 0
+        
+        # After year 1, PoS gets 50% of block rewards
+        if block_height >= POW_BLOCKS_YEAR1:
+            base_reward = REWARD_YEAR2_BASE
+            
+            # Apply halvings every 4 years
+            halvings = (block_height - POW_BLOCKS_YEAR1) // HALVING_INTERVAL
+            for _ in range(halvings):
+                base_reward //= 2
+            
+            return int(base_reward * 0.5)  # 50% to PoS
+        
+        return 0
+    
+    def distribute_staking_rewards(self, block_height: int, block_hash: str):
+        """Distribute staking rewards for a block"""
+        try:
+            rewards = self.calculate_staking_rewards(block_height)
+            
+            for address, reward_amount in rewards.items():
+                # Create reward UTXO
+                reward_txid = f"pos_reward_{block_height}_{address}_{int(time.time())}"
+                
+                self.conn.execute('''
+                    INSERT INTO utxos (txid, vout, address, amount, script_pubkey, spent)
+                    VALUES (?, ?, ?, ?, ?, FALSE)
+                ''', (reward_txid, 0, address, reward_amount, b"pos_reward"))
+                
+                # Record reward in history
+                reward_id = hashlib.sha256(f"{reward_txid}{address}{block_height}".encode()).hexdigest()
+                
+                self.conn.execute('''
+                    INSERT INTO staking_rewards (reward_id, recipient_address, recipient_type, 
+                                               amount, block_height, block_hash, timestamp)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (reward_id, address, 'staker', reward_amount, block_height, block_hash, int(time.time())))
+                
+                print(f"💰 PoS reward: {reward_amount / COIN} WEPO to {address}")
+            
+            self.conn.commit()
+            
+        except Exception as e:
+            print(f"Error distributing staking rewards: {e}")
+    
+    def get_staking_info(self) -> dict:
+        """Get comprehensive staking information"""
+        try:
+            current_height = self.get_block_height()
+            
+            # Count active stakes and masternodes
+            stakes_cursor = self.conn.execute("SELECT COUNT(*), SUM(amount) FROM stakes WHERE status = 'active'")
+            stakes_data = stakes_cursor.fetchone()
+            
+            masternodes_cursor = self.conn.execute("SELECT COUNT(*) FROM masternodes WHERE status = 'active'")
+            masternodes_count = masternodes_cursor.fetchone()[0]
+            
+            # Calculate total rewards distributed
+            rewards_cursor = self.conn.execute("SELECT SUM(amount) FROM staking_rewards")
+            total_rewards = rewards_cursor.fetchone()[0] or 0
+            
+            return {
+                'pos_activated': current_height >= POS_ACTIVATION_HEIGHT,
+                'activation_height': POS_ACTIVATION_HEIGHT,
+                'current_height': current_height,
+                'blocks_until_activation': max(0, POS_ACTIVATION_HEIGHT - current_height),
+                'active_stakes_count': stakes_data[0] or 0,
+                'total_staked_amount': (stakes_data[1] or 0) / COIN,
+                'active_masternodes_count': masternodes_count,
+                'total_rewards_distributed': total_rewards / COIN,
+                'min_stake_amount': MIN_STAKE_AMOUNT / COIN,
+                'masternode_collateral': MASTERNODE_COLLATERAL / COIN,
+                'staking_reward_percentage': 60,
+                'masternode_reward_percentage': 40
+            }
+            
+        except Exception as e:
+            print(f"Error getting staking info: {e}")
+            return {}
+
     def get_blockchain_info(self) -> dict:
         """Get blockchain information"""
         return {
