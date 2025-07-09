@@ -43,6 +43,34 @@ MIN_STAKE_AMOUNT = 1000 * COIN
 MASTERNODE_COLLATERAL = 10000 * COIN
 
 @dataclass
+class StakeInfo:
+    """Staking information"""
+    stake_id: str
+    staker_address: str
+    amount: int  # In satoshis
+    start_height: int
+    start_time: int
+    last_reward_height: int = 0
+    total_rewards: int = 0
+    status: str = 'active'
+    unlock_height: Optional[int] = None
+
+@dataclass
+class MasternodeInfo:
+    """Masternode information"""
+    masternode_id: str
+    operator_address: str
+    collateral_txid: str
+    collateral_vout: int
+    ip_address: Optional[str] = None
+    port: int = 22567
+    start_height: int = 0
+    start_time: int = 0
+    last_ping: int = 0
+    status: str = 'active'
+    total_rewards: int = 0
+
+@dataclass
 class TransactionInput:
     """Transaction input (UTXO reference)"""
     prev_txid: str
