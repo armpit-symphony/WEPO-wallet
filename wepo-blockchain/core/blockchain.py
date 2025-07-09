@@ -311,6 +311,55 @@ class WepoBlockchain:
             )
         ''')
         
+        # Staking tables
+        self.conn.execute('''
+            CREATE TABLE IF NOT EXISTS stakes (
+                stake_id TEXT PRIMARY KEY,
+                staker_address TEXT NOT NULL,
+                amount INTEGER NOT NULL,
+                start_height INTEGER NOT NULL,
+                start_time INTEGER NOT NULL,
+                last_reward_height INTEGER DEFAULT 0,
+                total_rewards INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'active',
+                unlock_height INTEGER,
+                FOREIGN KEY(start_height) REFERENCES blocks(height)
+            )
+        ''')
+        
+        # Masternode tables
+        self.conn.execute('''
+            CREATE TABLE IF NOT EXISTS masternodes (
+                masternode_id TEXT PRIMARY KEY,
+                operator_address TEXT NOT NULL,
+                collateral_txid TEXT NOT NULL,
+                collateral_vout INTEGER NOT NULL,
+                ip_address TEXT,
+                port INTEGER DEFAULT 22567,
+                start_height INTEGER NOT NULL,
+                start_time INTEGER NOT NULL,
+                last_ping INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'active',
+                total_rewards INTEGER DEFAULT 0,
+                FOREIGN KEY(start_height) REFERENCES blocks(height),
+                FOREIGN KEY(collateral_txid) REFERENCES transactions(txid)
+            )
+        ''')
+        
+        # Staking rewards history
+        self.conn.execute('''
+            CREATE TABLE IF NOT EXISTS staking_rewards (
+                reward_id TEXT PRIMARY KEY,
+                recipient_address TEXT NOT NULL,
+                recipient_type TEXT NOT NULL, -- 'staker' or 'masternode'
+                amount INTEGER NOT NULL,
+                block_height INTEGER NOT NULL,
+                block_hash TEXT NOT NULL,
+                timestamp INTEGER NOT NULL,
+                FOREIGN KEY(block_height) REFERENCES blocks(height)
+            )
+        ''')
+        
         self.conn.commit()
     
     def create_genesis_block(self):
