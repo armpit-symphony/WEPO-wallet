@@ -479,6 +479,11 @@ class WepoFullNode:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
+        # Privacy proof sizes
+        ZK_STARK_PROOF_SIZE = 1024  # bytes
+        RING_SIGNATURE_SIZE = 512   # bytes
+        CONFIDENTIAL_PROOF_SIZE = 256  # bytes
+        
         @self.app.get("/api/masternodes")
         async def get_masternodes():
             """Get all masternodes"""
@@ -502,6 +507,102 @@ class WepoFullNode:
                     })
                 
                 return result
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        # Privacy operations
+        @self.app.post("/api/privacy/create-proof")
+        async def create_privacy_proof_endpoint(request: dict):
+            """Create privacy proof for transaction"""
+            try:
+                transaction_data = request.get('transaction_data')
+                if not transaction_data:
+                    raise HTTPException(status_code=400, detail="Missing transaction_data")
+                
+                # Create privacy proof
+                proof = create_privacy_proof(transaction_data)
+                
+                return {
+                    'success': True,
+                    'privacy_proof': proof.hex(),
+                    'proof_size': len(proof),
+                    'privacy_level': 'maximum'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/privacy/verify-proof")
+        async def verify_privacy_proof_endpoint(request: dict):
+            """Verify privacy proof"""
+            try:
+                proof_data = request.get('proof_data')
+                message = request.get('message')
+                
+                if not proof_data or not message:
+                    raise HTTPException(status_code=400, detail="Missing proof_data or message")
+                
+                # Verify privacy proof
+                is_valid = verify_privacy_proof(
+                    bytes.fromhex(proof_data),
+                    message.encode()
+                )
+                
+                return {
+                    'valid': is_valid,
+                    'proof_verified': is_valid,
+                    'privacy_level': 'maximum' if is_valid else 'none'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/privacy/stealth-address")
+        async def generate_stealth_address(request: dict):
+            """Generate stealth address for privacy"""
+            try:
+                recipient_public_key = request.get('recipient_public_key')
+                if not recipient_public_key:
+                    raise HTTPException(status_code=400, detail="Missing recipient_public_key")
+                
+                # Generate stealth address
+                stealth_addr, shared_secret = privacy_engine.generate_stealth_address(
+                    recipient_public_key.encode()
+                )
+                
+                return {
+                    'stealth_address': stealth_addr,
+                    'shared_secret': shared_secret.hex(),
+                    'privacy_level': 'maximum'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/privacy/info")
+        async def get_privacy_info():
+            """Get privacy feature information"""
+            try:
+                return {
+                    'privacy_enabled': True,
+                    'supported_features': [
+                        'zk-STARK proofs',
+                        'Ring signatures',
+                        'Confidential transactions',
+                        'Stealth addresses'
+                    ],
+                    'privacy_levels': {
+                        'standard': 'Basic transaction privacy',
+                        'high': 'zk-STARK proofs + confidential amounts',
+                        'maximum': 'Full anonymity with ring signatures'
+                    },
+                    'proof_sizes': {
+                        'zk_stark': ZK_STARK_PROOF_SIZE,
+                        'ring_signature': RING_SIGNATURE_SIZE,
+                        'confidential': CONFIDENTIAL_PROOF_SIZE
+                    }
+                }
                 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
