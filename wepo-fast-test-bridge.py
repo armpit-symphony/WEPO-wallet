@@ -163,14 +163,16 @@ class FastTestBlockchain:
         prev_hash = self.blocks[-1]["hash"]
         
         # Calculate reward based on WEPO tokenomics
-        if height <= 13140:  # Q1 
-            reward = 40000000000  # 400 WEPO
-        elif height <= 26280:  # Q2
-            reward = 20000000000  # 200 WEPO  
-        elif height <= 39420:  # Q3
-            reward = 10000000000  # 100 WEPO
-        else:  # Q4+
-            reward = 5000000000   # 50 WEPO
+        if height < 13140:  # Q1 (blocks 0-13139)
+            reward = 40000000000  # 400 WEPO in satoshis
+        elif height < 26280:  # Q2 (blocks 13140-26279)
+            reward = 20000000000  # 200 WEPO in satoshis
+        elif height < 39420:  # Q3 (blocks 26280-39419)
+            reward = 10000000000  # 100 WEPO in satoshis
+        elif height < 52560:  # Q4 (blocks 39420-52559)
+            reward = 5000000000   # 50 WEPO in satoshis
+        else:  # Year 2+
+            reward = 1240000000   # 12.4 WEPO in satoshis
         
         # Create coinbase transaction
         coinbase_tx = {
