@@ -4,7 +4,6 @@
 argon2-cffi==21.3.0
 cryptography==41.0.7
 ecdsa==0.18.0
-sqlite3-utils==3.34
 pycryptodome==3.23.0
 
 # Bitcoin and atomic swap dependencies
