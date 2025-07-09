@@ -588,7 +588,7 @@ class ConfidentialTransactions:
             inner_product_proof.extend(evaluation.to_bytes(32, 'big'))
             proof_data.extend(inner_product_proof)
             
-            # 4. Generate final proof hash
+            # 4. Generate final proof hash - calculate before adding to data
             proof_hash = self.hash_function.new(bytes(proof_data)).digest()
             proof_data.extend(proof_hash)
             
