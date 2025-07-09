@@ -124,7 +124,10 @@ class ZKStarkProver:
                 merkle_root + hash_val
             ).digest()
         
+        # Store the actual merkle root for consistent verification
         proof_data.extend(merkle_root)
+        
+        # Don't pad with zeros here - let the main function handle padding
         return bytes(proof_data)
     
     def generate_stark_proof(self, secret_input: bytes, public_statement: bytes) -> PrivacyProof:
