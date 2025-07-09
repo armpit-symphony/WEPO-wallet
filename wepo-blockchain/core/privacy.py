@@ -64,10 +64,10 @@ class ZKStarkProver:
             proof_data = get_random_bytes(ZK_STARK_PROOF_SIZE)
             
             # Create proof commitment
-            commitment = self.hash_function.new(secret_input + public_statement).digest()
+            commitment = self.hash_function.new(digest_bits=256).update(secret_input + public_statement).digest()
             
             # Generate verification key
-            verification_key = self.hash_function.new(commitment + proof_data).digest()
+            verification_key = self.hash_function.new(digest_bits=256).update(commitment + proof_data).digest()
             
             # Create public parameters
             public_params = {
@@ -97,7 +97,7 @@ class ZKStarkProver:
             commitment = bytes.fromhex(proof.public_parameters['commitment'])
             
             # Verify proof integrity
-            expected_verification_key = self.hash_function.new(
+            expected_verification_key = self.hash_function.new(digest_bits=256).update(
                 commitment + proof.proof_data
             ).digest()
             
