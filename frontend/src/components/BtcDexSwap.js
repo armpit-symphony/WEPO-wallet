@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowRightLeft, ArrowLeft, Bitcoin, AlertTriangle, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRightLeft, ArrowLeft, Bitcoin, AlertTriangle, TrendingUp, Clock, DollarSign, Info } from 'lucide-react';
 
 const BtcDexSwap = ({ onClose }) => {
   const [swapType, setSwapType] = useState('buy'); // 'buy' or 'sell'
@@ -8,26 +8,90 @@ const BtcDexSwap = ({ onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [exchangeRate, setExchangeRate] = useState(1);
+  const [feeInfo, setFeeInfo] = useState(null);
+  const [statistics, setStatistics] = useState(null);
+  const [priorityFee, setPriorityFee] = useState(false);
+  const [swapHistory, setSwapHistory] = useState([]);
+  const [activeSwap, setActiveSwap] = useState(null);
   
-  // Mock exchange rate - in real implementation, this would come from the DEX
-  const exchangeRate = 1; // 1 BTC = 1 WEPO (for demo)
-  const swapFee = 0.001; // 0.1% fee
+  // BTC and WEPO addresses (in real implementation, these would come from wallet)
+  const [btcAddress, setBtcAddress] = useState('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa');
+  const [wepoAddress, setWepoAddress] = useState('wepo1test123456789abcdef0123456789abcdef01');
+
+  // Fetch exchange rate and statistics on component mount
+  useEffect(() => {
+    fetchExchangeRate();
+    fetchStatistics();
+    fetchSwapHistory();
+  }, []);
+
+  // Update amounts when exchange rate changes
+  useEffect(() => {
+    if (btcAmount && exchangeRate) {
+      setWepoAmount((parseFloat(btcAmount) * exchangeRate).toFixed(6));
+    }
+  }, [exchangeRate, btcAmount]);
+
+  // Fetch fee information when amount changes
+  useEffect(() => {
+    if (btcAmount && parseFloat(btcAmount) > 0) {
+      fetchFeeInfo();
+    }
+  }, [btcAmount, priorityFee]);
+
+  const fetchExchangeRate = async () => {
+    try {
+      const response = await fetch('/api/atomic-swap/exchange-rate');
+      const data = await response.json();
+      setExchangeRate(data.btc_to_wepo);
+    } catch (err) {
+      console.error('Error fetching exchange rate:', err);
+    }
+  };
+
+  const fetchFeeInfo = async () => {
+    if (!btcAmount || parseFloat(btcAmount) <= 0) return;
+    
+    try {
+      const response = await fetch(`/api/atomic-swap/fees?btc_amount=${btcAmount}&swap_type=btc_to_wepo&priority=${priorityFee}`);
+      const data = await response.json();
+      setFeeInfo(data.fees);
+    } catch (err) {
+      console.error('Error fetching fee info:', err);
+    }
+  };
+
+  const fetchStatistics = async () => {
+    try {
+      const response = await fetch('/api/atomic-swap/statistics');
+      const data = await response.json();
+      setStatistics(data.statistics);
+    } catch (err) {
+      console.error('Error fetching statistics:', err);
+    }
+  };
+
+  const fetchSwapHistory = async () => {
+    try {
+      const response = await fetch('/api/atomic-swap/history?limit=5');
+      const data = await response.json();
+      setSwapHistory(data.history);
+    } catch (err) {
+      console.error('Error fetching swap history:', err);
+    }
+  };
 
   const handleAmountChange = (type, value) => {
     if (type === 'btc') {
       setBtcAmount(value);
-      setWepoAmount((parseFloat(value) * exchangeRate || 0).toString());
+      setWepoAmount((parseFloat(value) * exchangeRate || 0).toFixed(6));
     } else {
       setWepoAmount(value);
-      setBtcAmount((parseFloat(value) / exchangeRate || 0).toString());
+      setBtcAmount((parseFloat(value) / exchangeRate || 0).toFixed(6));
     }
     setError('');
     setSuccess('');
-  };
-
-  const calculateFee = () => {
-    const amount = swapType === 'buy' ? parseFloat(btcAmount) : parseFloat(wepoAmount);
-    return (amount * swapFee) || 0;
   };
 
   const handleSwap = async () => {
@@ -41,16 +105,50 @@ const BtcDexSwap = ({ onClose }) => {
       return;
     }
 
+    if (parseFloat(btcAmount) < 0.001) {
+      setError('Minimum swap amount is 0.001 BTC');
+      return;
+    }
+
     setIsLoading(true);
+    setError('');
+    
     try {
-      // Simulate atomic swap process
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Initiate atomic swap
+      const response = await fetch('/api/atomic-swap/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          swap_type: 'btc_to_wepo',
+          btc_amount: parseFloat(btcAmount),
+          initiator_btc_address: btcAddress,
+          initiator_wepo_address: wepoAddress,
+          participant_btc_address: '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy', // Mock participant
+          participant_wepo_address: 'wepo1participant123456789abcdef0123456789ab'
+        }),
+      });
+
+      const data = await response.json();
       
-      setSuccess(`Successfully swapped ${btcAmount} BTC for ${wepoAmount} WEPO!`);
-      setBtcAmount('');
-      setWepoAmount('');
-    } catch (error) {
-      setError('Swap failed. Please try again.');
+      if (response.ok && data.success) {
+        setActiveSwap(data);
+        setSuccess(`Swap initiated successfully! Swap ID: ${data.swap_id}`);
+        
+        // Reset form
+        setBtcAmount('');
+        setWepoAmount('');
+        setFeeInfo(null);
+        
+        // Refresh data
+        fetchStatistics();
+        fetchSwapHistory();
+      } else {
+        setError(data.detail || 'Failed to initiate swap');
+      }
+    } catch (err) {
+      setError('Error initiating swap: ' + err.message);
     } finally {
       setIsLoading(false);
     }
