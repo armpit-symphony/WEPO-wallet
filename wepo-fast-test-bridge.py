@@ -59,7 +59,7 @@ class FastTestBlockchain:
         print(f"   Genesis UTXO: {genesis_tx['outputs'][0]['address']}")
     
     def get_balance(self, address):
-        """Calculate balance for address"""
+        """Calculate balance for address from confirmed UTXOs only"""
         balance = 0
         for utxo_key, utxo in self.utxos.items():
             if utxo["address"] == address:
