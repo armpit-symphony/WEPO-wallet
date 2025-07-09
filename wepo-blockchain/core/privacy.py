@@ -329,56 +329,52 @@ class RingSignature:
             if signer_index is None:
                 raise ValueError("Signer's public key not found in ring")
             
-            # Generate random values for other ring members
+            # Generate key image
+            key_image = self._generate_key_image(private_key, signer_public_key)
+            
+            # Generate random values and commitments for all ring members
             random_values = []
             commitments = []
             
             for i in range(ring_size):
-                if i == signer_index:
-                    # We'll compute this later
-                    random_values.append(0)
-                    commitments.append(b'')
-                else:
-                    # Generate random value for this ring member
-                    random_val = number.getRandomRange(1, self.order)
-                    random_values.append(random_val)
-                    
-                    # Compute commitment: R = r*G + c*P
-                    # Simplified: hash of random value and public key
-                    commitment = self.hash_function.new(
-                        random_val.to_bytes(32, 'big') + public_keys[i]
-                    ).digest()
-                    commitments.append(commitment)
+                # Generate random value for this ring member
+                random_val = number.getRandomRange(1, self.order)
+                random_values.append(random_val)
+                
+                # Compute commitment: simplified hash-based approach
+                commitment = self.hash_function.new(
+                    random_val.to_bytes(32, 'big') + public_keys[i]
+                ).digest()
+                commitments.append(commitment)
             
-            # Compute challenge
+            # Compute challenge using all commitments
             challenge = self._compute_challenge(message, commitments)
             
-            # Generate key image
-            key_image = self._generate_key_image(private_key, signer_public_key)
+            # Adjust signer's random value to make signature valid
+            # In real ring signature, this would involve more complex crypto
+            # For now, we'll use a deterministic approach
+            signer_adjustment = self.hash_function.new(
+                challenge.to_bytes(32, 'big') + private_key
+            ).digest()
+            signer_scalar_adjustment = int.from_bytes(signer_adjustment, 'big') % self.order
             
-            # Complete ring signature for signer
-            signer_challenge = challenge
-            for i in range(ring_size):
-                if i != signer_index:
-                    signer_challenge = (signer_challenge - self._hash_to_scalar(
-                        commitments[i] + public_keys[i]
-                    )) % self.order
+            # Update signer's random value
+            adjusted_random = (random_values[signer_index] + signer_scalar_adjustment) % self.order
+            random_values[signer_index] = adjusted_random
             
-            # Compute signer's response
-            signer_random = number.getRandomRange(1, self.order)
-            signer_response = (signer_random + signer_challenge * private_scalar) % self.order
-            random_values[signer_index] = signer_response
-            
-            # Compute signer's commitment
+            # Update signer's commitment
             signer_commitment = self.hash_function.new(
-                signer_response.to_bytes(32, 'big') + signer_public_key
+                adjusted_random.to_bytes(32, 'big') + public_keys[signer_index]
             ).digest()
             commitments[signer_index] = signer_commitment
+            
+            # Recalculate challenge with updated commitment
+            final_challenge = self._compute_challenge(message, commitments)
             
             # Create final signature data
             signature_data = bytearray()
             signature_data.extend(key_image)
-            signature_data.extend(challenge.to_bytes(32, 'big'))
+            signature_data.extend(final_challenge.to_bytes(32, 'big'))
             
             for i in range(ring_size):
                 signature_data.extend(random_values[i].to_bytes(32, 'big'))
@@ -398,7 +394,7 @@ class RingSignature:
             public_params = {
                 'ring_size': ring_size,
                 'key_image': key_image.hex(),
-                'challenge': challenge.to_bytes(32, 'big').hex(),
+                'challenge': final_challenge.to_bytes(32, 'big').hex(),
                 'public_keys': [pk.hex() for pk in public_keys],
                 'signer_index': signer_index  # For debugging only - not revealed in real implementation
             }
