@@ -848,13 +848,22 @@ class WepoPrivacyEngine:
 privacy_engine = WepoPrivacyEngine()
 
 def create_privacy_proof(transaction_data: Dict[str, Any]) -> bytes:
-    """Create privacy proof for transaction"""
+    """Create privacy proof for transaction with real cryptography"""
     try:
-        sender_key = transaction_data.get('sender_private_key', get_random_bytes(32))
+        sender_key = transaction_data.get('sender_private_key')
         recipient = transaction_data.get('recipient_address', 'wepo1test')
         amount = transaction_data.get('amount', 0)
-        decoy_keys = transaction_data.get('decoy_keys', [get_random_bytes(32) for _ in range(5)])
+        decoy_keys = transaction_data.get('decoy_keys')
         
+        # Generate sender private key if not provided
+        if not sender_key:
+            sender_key = SigningKey.generate(curve=SECP256k1).to_string()
+        
+        # Ensure sender_key is bytes
+        if isinstance(sender_key, str):
+            sender_key = bytes.fromhex(sender_key)
+        
+        # Generate privacy proof
         privacy_data = privacy_engine.create_private_transaction(
             sender_key, recipient, amount, decoy_keys
         )
@@ -866,7 +875,7 @@ def create_privacy_proof(transaction_data: Dict[str, Any]) -> bytes:
         return b''
 
 def verify_privacy_proof(proof_data: bytes, message: bytes) -> bool:
-    """Verify privacy proof"""
+    """Verify privacy proof with real cryptographic verification"""
     try:
         if not proof_data:
             return False
@@ -878,6 +887,51 @@ def verify_privacy_proof(proof_data: bytes, message: bytes) -> bool:
         print(f"Privacy proof verification failed: {e}")
         return False
 
+def generate_real_private_key() -> bytes:
+    """Generate cryptographically secure private key"""
+    return SigningKey.generate(curve=SECP256k1).to_string()
+
+def create_ring_signature_proof(message: bytes, private_key: bytes, ring_size: int = 5) -> bytes:
+    """Create ring signature proof with real cryptography"""
+    try:
+        # Generate decoy keys
+        decoy_keys = []
+        for _ in range(ring_size - 1):
+            decoy_private = SigningKey.generate(curve=SECP256k1)
+            decoy_public = decoy_private.get_verifying_key().to_string()
+            decoy_keys.append(decoy_public)
+        
+        # Generate sender's public key
+        sender_private = SigningKey.from_string(private_key, curve=SECP256k1)
+        sender_public = sender_private.get_verifying_key().to_string()
+        
+        # Create ring
+        all_public_keys = [sender_public] + decoy_keys
+        
+        # Generate ring signature
+        ring_proof = privacy_engine.ring_signature.generate_ring_signature(
+            message, private_key, all_public_keys
+        )
+        
+        return ring_proof.serialize()
+        
+    except Exception as e:
+        print(f"Ring signature creation failed: {e}")
+        return b''
+
+def verify_ring_signature_proof(proof_data: bytes, message: bytes) -> bool:
+    """Verify ring signature proof with real cryptography"""
+    try:
+        if not proof_data:
+            return False
+        
+        ring_proof = PrivacyProof.deserialize(proof_data)
+        return privacy_engine.ring_signature.verify_ring_signature(ring_proof, message)
+        
+    except Exception as e:
+        print(f"Ring signature verification failed: {e}")
+        return False
+
 # Export main functions
 __all__ = [
     'WepoPrivacyEngine',
@@ -887,5 +941,8 @@ __all__ = [
     'ConfidentialTransactions',
     'create_privacy_proof',
     'verify_privacy_proof',
+    'generate_real_private_key',
+    'create_ring_signature_proof',
+    'verify_ring_signature_proof',
     'privacy_engine'
 ]
