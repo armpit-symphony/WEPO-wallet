@@ -294,22 +294,44 @@ class WepoWalletDaemon:
         # Transaction operations
         @self.app.post("/api/transaction/send")
         async def send_transaction(request: dict):
-            """Send WEPO transaction"""
+            """Send WEPO transaction with comprehensive validation"""
             try:
                 from_address = request.get('from_address')
                 to_address = request.get('to_address')
                 amount = request.get('amount')
                 password_hash = request.get('password_hash')
                 
+                # Input validation
                 if not all([from_address, to_address, amount]):
-                    raise HTTPException(status_code=400, detail="Missing required fields")
+                    raise HTTPException(status_code=400, detail="Missing required fields: from_address, to_address, amount")
+                
+                # Validate addresses
+                if not from_address.startswith("wepo1") or len(from_address) < 30:
+                    raise HTTPException(status_code=400, detail="Invalid sender address format")
+                
+                if not to_address.startswith("wepo1") or len(to_address) < 30:
+                    raise HTTPException(status_code=400, detail="Invalid recipient address format")
+                
+                # Validate amount
+                if not isinstance(amount, (int, float)) or amount <= 0:
+                    raise HTTPException(status_code=400, detail="Amount must be a positive number")
                 
                 # Verify wallet exists and has sufficient balance
-                wallet_info = await self.get_wallet(from_address)
-                if wallet_info['balance'] < amount + 0.0001:  # Include fee
-                    raise HTTPException(status_code=400, detail="Insufficient balance")
+                try:
+                    wallet_info = await self.get_wallet(from_address)
+                    required_amount = amount + 0.0001  # Include fee
+                    
+                    if wallet_info['balance'] < required_amount:
+                        raise HTTPException(
+                            status_code=400, 
+                            detail=f"Insufficient balance. Available: {wallet_info['balance']:.8f} WEPO, Required: {required_amount:.8f} WEPO"
+                        )
+                except HTTPException as he:
+                    if he.status_code == 404:
+                        raise HTTPException(status_code=400, detail="Sender wallet not found")
+                    raise
                 
-                # Create transaction (simplified)
+                # Create transaction data
                 tx_data = {
                     'from_address': from_address,
                     'to_address': to_address,
@@ -321,7 +343,8 @@ class WepoWalletDaemon:
                 # Forward to blockchain node
                 try:
                     response = requests.post(f"{self.node_url}/api/transaction/send", 
-                                           json=tx_data, timeout=10)
+                                           json=tx_data, timeout=30)
+                    
                     if response.status_code == 200:
                         result = response.json()
                         
@@ -335,16 +358,24 @@ class WepoWalletDaemon:
                         await self.broadcast_wallet_update(from_address, "transaction_sent")
                         
                         return result
+                    
+                    elif response.status_code == 400:
+                        # Parse blockchain error and return appropriate message
+                        error_data = response.json()
+                        raise HTTPException(status_code=400, detail=error_data.get('detail', 'Transaction validation failed'))
+                    
                     else:
-                        raise HTTPException(status_code=400, detail="Transaction failed")
+                        raise HTTPException(status_code=500, detail="Blockchain node error")
                         
-                except requests.RequestException:
-                    raise HTTPException(status_code=503, detail="Node unavailable")
+                except requests.Timeout:
+                    raise HTTPException(status_code=503, detail="Blockchain node timeout")
+                except requests.RequestException as e:
+                    raise HTTPException(status_code=503, detail=f"Blockchain node unavailable: {str(e)}")
                 
             except HTTPException:
                 raise
             except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
         
         # Staking operations
         @self.app.post("/api/stake")
