@@ -214,11 +214,171 @@ class AtomicSwapEngine:
         """Hash secret using SHA256"""
         return hashlib.sha256(secret).digest()
     
-    def get_exchange_rate(self) -> float:
-        """Get current BTC/WEPO exchange rate"""
-        # In production, this would fetch from price oracles
-        # For now, using a mock rate
-        return 1.0  # 1 BTC = 1 WEPO (simplified)
+    def calculate_swap_fees(self, btc_amount: float, swap_type: SwapType, 
+                           priority: bool = False) -> Dict[str, float]:
+        """Calculate comprehensive swap fees"""
+        wepo_amount = self.calculate_wepo_amount(btc_amount)
+        
+        # Base fee calculation
+        base_fee_btc = btc_amount * (self.fee_structure['base_fee_percentage'] / 100)
+        base_fee_wepo = wepo_amount * (self.fee_structure['base_fee_percentage'] / 100)
+        
+        # Network fees
+        network_fee_btc = self.fee_structure['network_fee_btc']
+        network_fee_wepo = self.fee_structure['network_fee_wepo']
+        
+        # Priority fee adjustment
+        if priority:
+            multiplier = self.fee_structure['priority_fee_multiplier']
+            base_fee_btc *= multiplier
+            base_fee_wepo *= multiplier
+            network_fee_btc *= multiplier
+            network_fee_wepo *= multiplier
+        
+        # Apply minimum fees
+        total_fee_btc = max(base_fee_btc + network_fee_btc, 
+                           self.fee_structure['minimum_fee_btc'])
+        total_fee_wepo = max(base_fee_wepo + network_fee_wepo,
+                            self.fee_structure['minimum_fee_wepo'])
+        
+        return {
+            'base_fee_btc': base_fee_btc,
+            'base_fee_wepo': base_fee_wepo,
+            'network_fee_btc': network_fee_btc,
+            'network_fee_wepo': network_fee_wepo,
+            'total_fee_btc': total_fee_btc,
+            'total_fee_wepo': total_fee_wepo,
+            'fee_percentage': self.fee_structure['base_fee_percentage'],
+            'priority_applied': priority
+        }
+    
+    def check_rate_limits(self, user_address: str, btc_amount: float) -> Dict[str, Any]:
+        """Check if user is within rate limits"""
+        current_time = time.time()
+        current_hour = int(current_time // 3600)
+        current_day = int(current_time // 86400)
+        
+        # Initialize user activity if not exists
+        if user_address not in self.user_activity:
+            self.user_activity[user_address] = {
+                'hourly_swaps': {},
+                'daily_swaps': {},
+                'hourly_volume': {},
+                'daily_volume': {}
+            }
+        
+        activity = self.user_activity[user_address]
+        
+        # Check hourly limits
+        hourly_swaps = activity['hourly_swaps'].get(current_hour, 0)
+        hourly_volume = activity['hourly_volume'].get(current_hour, 0.0)
+        
+        # Check daily limits
+        daily_swaps = activity['daily_swaps'].get(current_day, 0)
+        daily_volume = activity['daily_volume'].get(current_day, 0.0)
+        
+        # Rate limit checks
+        rate_limit_result = {
+            'allowed': True,
+            'hourly_swaps_remaining': max(0, self.rate_limits['max_swaps_per_hour'] - hourly_swaps),
+            'daily_swaps_remaining': max(0, self.rate_limits['max_swaps_per_day'] - daily_swaps),
+            'hourly_volume_remaining': max(0, self.rate_limits['max_amount_per_hour'] - hourly_volume),
+            'daily_volume_remaining': max(0, self.rate_limits['max_amount_per_day'] - daily_volume),
+            'violations': []
+        }
+        
+        # Check violations
+        if hourly_swaps >= self.rate_limits['max_swaps_per_hour']:
+            rate_limit_result['allowed'] = False
+            rate_limit_result['violations'].append('Hourly swap limit exceeded')
+        
+        if daily_swaps >= self.rate_limits['max_swaps_per_day']:
+            rate_limit_result['allowed'] = False
+            rate_limit_result['violations'].append('Daily swap limit exceeded')
+        
+        if hourly_volume + btc_amount > self.rate_limits['max_amount_per_hour']:
+            rate_limit_result['allowed'] = False
+            rate_limit_result['violations'].append('Hourly volume limit exceeded')
+        
+        if daily_volume + btc_amount > self.rate_limits['max_amount_per_day']:
+            rate_limit_result['allowed'] = False
+            rate_limit_result['violations'].append('Daily volume limit exceeded')
+        
+        return rate_limit_result
+    
+    def update_user_activity(self, user_address: str, btc_amount: float):
+        """Update user activity for rate limiting"""
+        current_time = time.time()
+        current_hour = int(current_time // 3600)
+        current_day = int(current_time // 86400)
+        
+        if user_address not in self.user_activity:
+            self.user_activity[user_address] = {
+                'hourly_swaps': {},
+                'daily_swaps': {},
+                'hourly_volume': {},
+                'daily_volume': {}
+            }
+        
+        activity = self.user_activity[user_address]
+        
+        # Update counters
+        activity['hourly_swaps'][current_hour] = activity['hourly_swaps'].get(current_hour, 0) + 1
+        activity['daily_swaps'][current_day] = activity['daily_swaps'].get(current_day, 0) + 1
+        activity['hourly_volume'][current_hour] = activity['hourly_volume'].get(current_hour, 0.0) + btc_amount
+        activity['daily_volume'][current_day] = activity['daily_volume'].get(current_day, 0.0) + btc_amount
+        
+        # Clean up old data (keep only last 24 hours and 7 days)
+        cutoff_hour = current_hour - 24
+        cutoff_day = current_day - 7
+        
+        activity['hourly_swaps'] = {h: v for h, v in activity['hourly_swaps'].items() if h > cutoff_hour}
+        activity['daily_swaps'] = {d: v for d, v in activity['daily_swaps'].items() if d > cutoff_day}
+        activity['hourly_volume'] = {h: v for h, v in activity['hourly_volume'].items() if h > cutoff_hour}
+        activity['daily_volume'] = {d: v for d, v in activity['daily_volume'].items() if d > cutoff_day}
+    
+    def validate_enhanced_swap_parameters(self, btc_amount: float, initiator_btc_address: str,
+                                         initiator_wepo_address: str, participant_btc_address: str,
+                                         participant_wepo_address: str) -> Dict[str, Any]:
+        """Enhanced parameter validation with security checks"""
+        validation_result = {
+            'valid': True,
+            'errors': [],
+            'warnings': []
+        }
+        
+        # Basic validation
+        if not self.validate_swap_parameters(btc_amount, initiator_btc_address, initiator_wepo_address):
+            validation_result['valid'] = False
+            validation_result['errors'].append('Basic parameter validation failed')
+        
+        # Check blacklisted addresses
+        addresses_to_check = [initiator_btc_address, initiator_wepo_address, 
+                             participant_btc_address, participant_wepo_address]
+        
+        for addr in addresses_to_check:
+            if addr in self.security_settings['blacklisted_addresses']:
+                validation_result['valid'] = False
+                validation_result['errors'].append(f'Address {addr} is blacklisted')
+        
+        # Check rate limits
+        rate_limit_check = self.check_rate_limits(initiator_btc_address, btc_amount)
+        if not rate_limit_check['allowed']:
+            validation_result['valid'] = False
+            validation_result['errors'].extend(rate_limit_check['violations'])
+        
+        # Volume warnings
+        if btc_amount > 1.0:
+            validation_result['warnings'].append('Large swap amount - additional verification may be required')
+        
+        # Address reuse warning
+        if initiator_btc_address == participant_btc_address:
+            validation_result['warnings'].append('Same BTC address for initiator and participant')
+        
+        if initiator_wepo_address == participant_wepo_address:
+            validation_result['warnings'].append('Same WEPO address for initiator and participant')
+        
+        return validation_result
     
     def calculate_wepo_amount(self, btc_amount: float) -> float:
         """Calculate WEPO amount based on BTC amount"""
