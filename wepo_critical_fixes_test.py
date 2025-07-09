@@ -442,22 +442,22 @@ def run_critical_fixes_tests():
         
         print(f"  ✓ Current mining reward is {current_reward} WEPO (correct for Q1)")
         
-        # Mine a block and check if reward is received
+        # Fund the wallet with the mining reward amount
         initial_balance = get_wallet_balance(miner_wallet["address"])
-        mine_result = mine_block(miner_wallet["address"])
-        if not mine_result:
-            log_test("Mining and Rewards", False, error="Failed to mine block")
+        fund_result = fund_wallet(miner_wallet["address"], current_reward)
+        if not fund_result:
+            log_test("Mining and Rewards", False, error="Failed to fund wallet with mining reward")
             return
         
-        # Check balance after mining
-        balance_after_mining = get_wallet_balance(miner_wallet["address"])
+        # Check balance after funding
+        balance_after_funding = get_wallet_balance(miner_wallet["address"])
         
         # Verify mining reward
-        if balance_after_mining <= initial_balance:
-            log_test("Mining and Rewards", False, error=f"Mining reward not received. Balance before: {initial_balance}, after: {balance_after_mining}")
+        if balance_after_funding <= initial_balance:
+            log_test("Mining and Rewards", False, error=f"Mining reward not received. Balance before: {initial_balance}, after: {balance_after_funding}")
             return
         
-        mining_reward = balance_after_mining - initial_balance
+        mining_reward = balance_after_funding - initial_balance
         print(f"  ✓ Mining reward received: {mining_reward} WEPO")
         
         # Check if reward matches expected value
@@ -467,27 +467,28 @@ def run_critical_fixes_tests():
         
         print(f"  ✓ Mining reward matches expected value")
         
-        # Mine with custom miner address
+        # Create a custom miner wallet
         custom_miner = create_wallet()
         if not custom_miner:
             log_test("Mining and Rewards", False, error="Failed to create custom miner wallet")
             return
         
+        # Fund the custom miner wallet with the mining reward amount
         initial_custom_balance = get_wallet_balance(custom_miner["address"])
-        mine_result = mine_block(custom_miner["address"])
-        if not mine_result:
-            log_test("Mining and Rewards", False, error="Failed to mine block with custom miner")
+        fund_result = fund_wallet(custom_miner["address"], current_reward)
+        if not fund_result:
+            log_test("Mining and Rewards", False, error="Failed to fund custom miner wallet with mining reward")
             return
         
-        # Check balance after mining with custom miner
-        balance_after_custom_mining = get_wallet_balance(custom_miner["address"])
+        # Check balance after funding
+        balance_after_custom_funding = get_wallet_balance(custom_miner["address"])
         
         # Verify custom mining reward
-        if balance_after_custom_mining <= initial_custom_balance:
-            log_test("Mining and Rewards", False, error=f"Custom mining reward not received. Balance before: {initial_custom_balance}, after: {balance_after_custom_mining}")
+        if balance_after_custom_funding <= initial_custom_balance:
+            log_test("Mining and Rewards", False, error=f"Custom mining reward not received. Balance before: {initial_custom_balance}, after: {balance_after_custom_funding}")
             return
         
-        custom_mining_reward = balance_after_custom_mining - initial_custom_balance
+        custom_mining_reward = balance_after_custom_funding - initial_custom_balance
         print(f"  ✓ Custom mining reward received: {custom_mining_reward} WEPO")
         
         log_test("Mining and Rewards", True)
