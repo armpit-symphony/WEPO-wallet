@@ -198,12 +198,13 @@ class WepoFullNode:
         
         @self.app.post("/api/transaction/send")
         async def send_transaction(request: dict):
-            """Submit transaction to network with proper validation and UTXO handling"""
+            """Submit transaction to network with privacy features"""
             try:
                 from_address = request.get('from_address')
                 to_address = request.get('to_address')
                 amount = request.get('amount')
                 fee = request.get('fee', 0.0001)
+                privacy_level = request.get('privacy_level', 'standard')  # 'standard', 'high', 'maximum'
                 
                 # Input validation
                 if not all([from_address, to_address, amount]):
@@ -236,6 +237,35 @@ class WepoFullNode:
                 if not tx:
                     raise HTTPException(status_code=400, detail="Failed to create transaction")
                 
+                # Add privacy features based on privacy level
+                if privacy_level in ['high', 'maximum']:
+                    try:
+                        # Generate privacy proof
+                        privacy_data = {
+                            'sender_private_key': from_address.encode(),  # In real impl, derive from wallet
+                            'recipient_address': to_address,
+                            'amount': int(amount * 100000000),  # Convert to satoshis
+                            'decoy_keys': [f"wepo1decoy{i}".encode() for i in range(5)]  # Generate decoy keys
+                        }
+                        
+                        privacy_proof = create_privacy_proof(privacy_data)
+                        tx.privacy_proof = privacy_proof
+                        
+                        # Generate ring signature for maximum privacy
+                        if privacy_level == 'maximum':
+                            ring_signature_data = privacy_engine.ring_signature.generate_ring_signature(
+                                tx.calculate_txid().encode(),
+                                from_address.encode(),
+                                [f"wepo1ring{i}".encode() for i in range(6)]
+                            )
+                            tx.ring_signature = ring_signature_data.serialize()
+                        
+                        print(f"🔒 Privacy features added: {privacy_level}")
+                        
+                    except Exception as e:
+                        print(f"⚠️ Privacy feature generation failed: {e}")
+                        # Continue without privacy features
+                
                 # Validate and add to mempool
                 if self.blockchain.add_transaction_to_mempool(tx):
                     txid = tx.calculate_txid()
@@ -248,7 +278,8 @@ class WepoFullNode:
                         'tx_hash': txid,
                         'status': 'pending',
                         'message': 'Transaction submitted to mempool',
-                        'privacy_protected': True
+                        'privacy_protected': bool(tx.privacy_proof or tx.ring_signature),
+                        'privacy_level': privacy_level
                     }
                 else:
                     raise HTTPException(status_code=400, detail="Transaction validation failed")
