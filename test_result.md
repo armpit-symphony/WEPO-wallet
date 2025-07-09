@@ -228,9 +228,9 @@ frontend:
 
   - task: "Built-in BTC-to-WEPO DEX"
     implemented: true
-    working: true
+    working: false
     file: "App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -246,6 +246,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully verified the BTC-WEPO DEX interface with real blockchain integration. The DEX page loads correctly and displays the exchange rate information. Navigation to and from the DEX works properly."
+      - working: false
+        agent: "testing"
+        comment: "Unable to access the BTC DEX interface in the frontend. While the backend API endpoints for atomic swaps are working correctly (/api/atomic-swap/exchange-rate, /api/atomic-swap/fees, /api/atomic-swap/statistics, /api/atomic-swap/rates/historical, /api/atomic-swap/list, /api/atomic-swap/search, /api/atomic-swap/status/{swap_id}), the frontend interface is not accessible. The BTC DEX button is not visible in the dashboard, and there's no way to navigate to the DEX interface. The backend functionality is implemented and working, but the frontend integration is missing or broken."
 
 metadata:
   created_by: "main_agent"
