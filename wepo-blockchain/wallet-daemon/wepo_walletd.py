@@ -380,46 +380,112 @@ class WepoWalletDaemon:
         # Staking operations
         @self.app.post("/api/stake")
         async def create_stake(request: dict):
-            """Create staking position"""
+            """Create staking position with blockchain integration"""
             try:
                 wallet_address = request.get('wallet_address')
                 amount = request.get('amount')
-                lock_period_months = request.get('lock_period_months')
+                password_hash = request.get('password_hash')
                 
-                if not all([wallet_address, amount, lock_period_months]):
-                    raise HTTPException(status_code=400, detail="Missing required fields")
+                if not all([wallet_address, amount]):
+                    raise HTTPException(status_code=400, detail="Missing required fields: wallet_address, amount")
+                
+                # Validate amount
+                if not isinstance(amount, (int, float)) or amount < 1000:
+                    raise HTTPException(status_code=400, detail="Minimum stake amount is 1000 WEPO")
+                
+                # Verify wallet exists and has sufficient balance
+                try:
+                    wallet_info = await self.get_wallet(wallet_address)
+                    required_amount = amount
+                    
+                    if wallet_info['balance'] < required_amount:
+                        raise HTTPException(
+                            status_code=400, 
+                            detail=f"Insufficient balance. Available: {wallet_info['balance']:.8f} WEPO, Required: {required_amount:.8f} WEPO"
+                        )
+                except HTTPException as he:
+                    if he.status_code == 404:
+                        raise HTTPException(status_code=400, detail="Wallet not found")
+                    raise
+                
+                # Create staking transaction data
+                stake_data = {
+                    'staker_address': wallet_address,
+                    'amount': amount,
+                    'timestamp': time.time()
+                }
                 
                 # Forward to blockchain node
-                response = requests.post(f"{self.node_url}/api/stake", 
-                                       json=request, timeout=10)
-                if response.status_code == 200:
-                    result = response.json()
+                try:
+                    response = requests.post(f"{self.node_url}/api/stake", 
+                                           json=stake_data, timeout=30)
                     
-                    # Update wallet staking status
-                    self.wallet_conn.execute('''
-                        UPDATE wallets 
-                        SET is_staking = TRUE, stake_amount = ?, balance = balance - ?
-                        WHERE address = ?
-                    ''', (amount, amount, wallet_address))
-                    self.wallet_conn.commit()
+                    if response.status_code == 200:
+                        result = response.json()
+                        
+                        # Update wallet staking status
+                        self.wallet_conn.execute('''
+                            UPDATE wallets 
+                            SET is_staking = TRUE, stake_amount = stake_amount + ?, balance = balance - ?
+                            WHERE address = ?
+                        ''', (amount, amount, wallet_address))
+                        self.wallet_conn.commit()
+                        
+                        # Add transaction record
+                        await self.add_wallet_transaction(
+                            wallet_address, result['stake_id'], 'stake',
+                            amount, wallet_address, wallet_address, 'confirmed'
+                        )
+                        
+                        # Notify WebSocket clients
+                        await self.broadcast_wallet_update(wallet_address, "stake_created")
+                        
+                        return result
                     
-                    # Add transaction record
-                    await self.add_wallet_transaction(
-                        wallet_address, f"stake_{result['stake_id']}", 'stake',
-                        amount, wallet_address, wallet_address, 'confirmed'
-                    )
+                    elif response.status_code == 400:
+                        error_data = response.json()
+                        raise HTTPException(status_code=400, detail=error_data.get('detail', 'Staking failed'))
                     
-                    # Notify WebSocket clients
-                    await self.broadcast_wallet_update(wallet_address, "stake_created")
-                    
-                    return result
-                else:
-                    raise HTTPException(status_code=400, detail="Staking failed")
+                    else:
+                        raise HTTPException(status_code=500, detail="Blockchain node error")
+                        
+                except requests.Timeout:
+                    raise HTTPException(status_code=503, detail="Blockchain node timeout")
+                except requests.RequestException as e:
+                    raise HTTPException(status_code=503, detail=f"Blockchain node unavailable: {str(e)}")
                     
             except HTTPException:
                 raise
             except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
+                raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+                
+        @self.app.get("/api/staking/info")
+        async def get_staking_info():
+            """Get comprehensive staking information"""
+            try:
+                # Get staking info from blockchain
+                response = requests.get(f"{self.node_url}/api/staking/info", timeout=10)
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    raise HTTPException(status_code=500, detail="Failed to get staking info")
+                    
+            except requests.RequestException:
+                raise HTTPException(status_code=503, detail="Blockchain node unavailable")
+        
+        @self.app.get("/api/wallet/{address}/stakes")
+        async def get_wallet_stakes(address: str):
+            """Get staking positions for a wallet"""
+            try:
+                # Get stakes from blockchain
+                response = requests.get(f"{self.node_url}/api/wallet/{address}/stakes", timeout=10)
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    return []
+                    
+            except requests.RequestException:
+                raise HTTPException(status_code=503, detail="Blockchain node unavailable")
         
         # Masternode operations
         @self.app.post("/api/masternode")
