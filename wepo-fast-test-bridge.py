@@ -456,6 +456,64 @@ class WepoFastTestBridge:
                 "balance": self.blockchain.get_balance(address)
             }
         
+        @self.app.post("/api/test/mine-block")
+        async def mine_test_block(request: dict = None):
+            """Mine a test block with optional miner address"""
+            # Create a mining reward transaction for the specified miner
+            miner_address = "wepo1miner0000000000000000000000000"
+            if request and request.get("miner_address"):
+                miner_address = request.get("miner_address")
+            
+            # Create mining reward transaction directly in mempool
+            height = len(self.blockchain.blocks)
+            
+            # Calculate reward
+            if height < 13140:  # Q1
+                reward_satoshis = 40000000000  # 400 WEPO
+            elif height < 26280:  # Q2
+                reward_satoshis = 20000000000  # 200 WEPO
+            elif height < 39420:  # Q3
+                reward_satoshis = 10000000000  # 100 WEPO
+            elif height < 52560:  # Q4
+                reward_satoshis = 5000000000   # 50 WEPO
+            else:
+                reward_satoshis = 1240000000   # 12.4 WEPO
+            
+            # Create mining reward transaction
+            reward_txid = f"mining_reward_{height}_{int(time.time())}"
+            reward_tx = {
+                "txid": reward_txid,
+                "inputs": [],
+                "outputs": [{
+                    "address": miner_address,
+                    "value": reward_satoshis
+                }],
+                "timestamp": int(time.time()),
+                "type": "coinbase",
+                "from_address": "system",
+                "to_address": miner_address,
+                "amount": reward_satoshis / 100000000.0
+            }
+            
+            # Add to mempool
+            self.blockchain.mempool[reward_txid] = reward_tx
+            
+            # Mine block
+            block = self.blockchain.mine_block()
+            
+            if block:
+                return {
+                    "success": True,
+                    "block_height": block["height"],
+                    "block_hash": block["hash"],
+                    "transactions": len(block["transactions"]),
+                    "reward": reward_satoshis / 100000000.0,
+                    "miner_address": miner_address,
+                    "miner_balance": self.blockchain.get_balance(miner_address)
+                }
+            else:
+                return {"success": False, "message": "Mining failed"}
+        
         @self.app.get("/api/dex/rate")
         async def get_exchange_rate():
             return {
