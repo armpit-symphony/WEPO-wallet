@@ -151,10 +151,13 @@ class ZKStarkProver:
             # Generate FRI proof
             fri_proof = self._generate_fri_proof(polynomial, evaluation_points)
             
-            # Create final proof data
+            # Create final proof data without padding first
             proof_data = bytearray()
             proof_data.extend(commitment)
             proof_data.extend(fri_proof)
+            
+            # Store the actual size before padding for verification
+            actual_proof_size = len(proof_data)
             
             # Pad to required size
             while len(proof_data) < ZK_STARK_PROOF_SIZE:
@@ -172,6 +175,7 @@ class ZKStarkProver:
                 'field_prime': self.field_prime,
                 'polynomial_degree': self.polynomial_degree,
                 'evaluation_points': evaluation_points,
+                'actual_proof_size': actual_proof_size,  # Store actual size
                 'hash_function': 'BLAKE2b',
                 'timestamp': int(time.time())
             }
