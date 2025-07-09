@@ -97,60 +97,81 @@ class FastTestBlockchain:
         
         return result
     
+    def get_available_utxos(self, address):
+        """Get all available UTXOs for an address"""
+        utxos = []
+        for utxo_key, utxo in self.utxos.items():
+            if utxo["address"] == address:
+                utxos.append({
+                    "key": utxo_key,
+                    "value": utxo["value"],
+                    "address": utxo["address"]
+                })
+        return utxos
+    
     def create_transaction(self, from_address, to_address, amount):
-        """Create a test transaction with proper UTXO management"""
+        """Create a transaction with proper validation (don't consume UTXOs yet)"""
         txid = f"tx_{int(time.time())}_{hash(from_address + to_address + str(amount))}"
         
-        # For non-coinbase transactions, consume UTXOs from sender
+        # Validate sender has sufficient balance
+        current_balance = self.get_balance(from_address)
+        amount_satoshis = int(amount * 100000000)
+        
         if from_address != "wepo1genesis0000000000000000000000":
-            # Remove UTXOs being spent (simplified - consume all UTXOs of sender)
-            consumed_value = 0
-            utxos_to_remove = []
+            if current_balance < amount:
+                raise ValueError(f"Insufficient balance. Available: {current_balance} WEPO, Required: {amount} WEPO")
             
-            for utxo_key, utxo in self.utxos.items():
-                if utxo["address"] == from_address:
-                    consumed_value += utxo["value"]
-                    utxos_to_remove.append(utxo_key)
+            # Get UTXOs for input calculation
+            available_utxos = self.get_available_utxos(from_address)
+            if not available_utxos:
+                raise ValueError(f"No UTXOs available for address {from_address}")
             
-            # Remove consumed UTXOs
-            for key in utxos_to_remove:
-                del self.utxos[key]
+            # Calculate total input value
+            total_input_value = sum(utxo["value"] for utxo in available_utxos)
+            change_value = total_input_value - amount_satoshis
             
-            # Create change output if needed
-            change = consumed_value - int(amount * 100000000)  # Convert to satoshis
-            
+            # Create transaction structure (but don't consume UTXOs yet)
             tx = {
                 "txid": txid,
-                "inputs": [{"address": from_address, "amount": consumed_value / 100000000}],
+                "inputs": [{"utxo_key": utxo["key"], "value": utxo["value"], "address": from_address} for utxo in available_utxos],
                 "outputs": [{
                     "address": to_address,
-                    "value": int(amount * 100000000)  # Convert to satoshis
+                    "value": amount_satoshis
                 }],
                 "timestamp": int(time.time()),
-                "type": "transfer"
+                "type": "transfer",
+                "from_address": from_address,
+                "to_address": to_address,
+                "amount": amount
             }
             
             # Add change output if needed
-            if change > 0:
+            if change_value > 0:
                 tx["outputs"].append({
                     "address": from_address,
-                    "value": change
+                    "value": change_value
                 })
         else:
-            # Genesis transaction
+            # Genesis/funding transaction
             tx = {
                 "txid": txid,
-                "inputs": [{"address": from_address, "amount": amount}],
+                "inputs": [],
                 "outputs": [{
                     "address": to_address,
-                    "value": int(amount * 100000000)  # Convert to satoshis
+                    "value": amount_satoshis
                 }],
                 "timestamp": int(time.time()),
-                "type": "transfer"
+                "type": "transfer",
+                "from_address": from_address,
+                "to_address": to_address,
+                "amount": amount
             }
         
+        # Add to mempool (UTXOs remain in place until mining)
         self.mempool[txid] = tx
-        print(f"⚡ Test transaction created: {amount} WEPO from {from_address} to {to_address}")
+        print(f"⚡ Transaction created: {amount} WEPO from {from_address} to {to_address}")
+        print(f"   Transaction ID: {txid}")
+        print(f"   Status: In mempool (pending)")
         return txid
     
     def mine_block(self):
