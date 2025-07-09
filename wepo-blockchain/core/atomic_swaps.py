@@ -66,26 +66,24 @@ class SwapContract:
     
     # Cryptographic parameters
     secret_hash: str  # SHA256 hash of the secret
-    secret: Optional[str] = None  # The actual secret (revealed during redemption)
     
     # Time locks
     btc_locktime: int  # Unix timestamp
     wepo_locktime: int  # Unix timestamp
     
-    # Contract addresses
-    btc_htlc_address: Optional[str] = None
-    wepo_htlc_address: Optional[str] = None
-    
-    # Transaction hashes
-    btc_funding_tx: Optional[str] = None
-    wepo_funding_tx: Optional[str] = None
-    btc_redeem_tx: Optional[str] = None
-    wepo_redeem_tx: Optional[str] = None
-    
     # Metadata
     created_at: datetime
     updated_at: datetime
     expires_at: datetime
+    
+    # Optional fields with defaults
+    secret: Optional[str] = None  # The actual secret (revealed during redemption)
+    btc_htlc_address: Optional[str] = None
+    wepo_htlc_address: Optional[str] = None
+    btc_funding_tx: Optional[str] = None
+    wepo_funding_tx: Optional[str] = None
+    btc_redeem_tx: Optional[str] = None
+    wepo_redeem_tx: Optional[str] = None
 
 class HTLCScript:
     """Hash Time Locked Contract script generator"""
