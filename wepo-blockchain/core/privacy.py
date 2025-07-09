@@ -793,9 +793,17 @@ class WepoPrivacyEngine:
             raise ValueError(f"Failed to create private transaction: {e}")
     
     def verify_private_transaction(self, privacy_data: Dict[str, Any],
-                                 message: bytes) -> bool:
+                                 message: bytes = None) -> bool:
         """Verify private transaction proofs with real cryptographic verification"""
         try:
+            # Use stored unified message if available, otherwise use provided message
+            if 'unified_message' in privacy_data:
+                verification_message = bytes.fromhex(privacy_data['unified_message'])
+            elif message is not None:
+                verification_message = message
+            else:
+                return False
+            
             # Verify confidential transaction
             range_proof = PrivacyProof.deserialize(bytes.fromhex(privacy_data['confidential_proof']))
             if not self.confidential_tx.verify_range_proof(range_proof):
@@ -803,12 +811,12 @@ class WepoPrivacyEngine:
             
             # Verify ring signature
             ring_proof = PrivacyProof.deserialize(bytes.fromhex(privacy_data['ring_signature']))
-            if not self.ring_signature.verify_ring_signature(ring_proof, message):
+            if not self.ring_signature.verify_ring_signature(ring_proof, verification_message):
                 return False
             
             # Verify zk-STARK proof
             stark_proof = PrivacyProof.deserialize(bytes.fromhex(privacy_data['zk_stark_proof']))
-            if not self.zk_stark.verify_stark_proof(stark_proof, message):
+            if not self.zk_stark.verify_stark_proof(stark_proof, verification_message):
                 return False
             
             return True
