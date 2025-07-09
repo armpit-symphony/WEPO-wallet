@@ -694,6 +694,7 @@ class ConfidentialTransactions:
             commitment = bytes.fromhex(proof.public_parameters['commitment'])
             min_value = proof.public_parameters['min_value']
             max_value = proof.public_parameters['max_value']
+            actual_bulletproof_size = proof.public_parameters.get('actual_bulletproof_size', len(proof.proof_data))
             
             # Verify proof size
             if len(proof.proof_data) != CONFIDENTIAL_PROOF_SIZE:
@@ -707,8 +708,8 @@ class ConfidentialTransactions:
             if expected_verification_key != proof.verification_key:
                 return False
             
-            # Verify bulletproof
-            return self._verify_bulletproof(proof.proof_data, commitment, min_value, max_value)
+            # Verify bulletproof using actual size
+            return self._verify_bulletproof(proof.proof_data, commitment, min_value, max_value, actual_bulletproof_size)
             
         except Exception:
             return False
