@@ -545,6 +545,138 @@ class WepoFastTestBridge:
                 "fee_percentage": 0.1,
                 "last_updated": time.strftime('%Y-%m-%d %H:%M:%S')
             }
+        
+        @self.app.post("/api/stake")
+        async def create_stake(request: dict):
+            """Create staking position"""
+            try:
+                staker_address = request.get('staker_address')
+                amount = request.get('amount')
+                
+                if not staker_address or not amount:
+                    raise HTTPException(status_code=400, detail="Missing staker_address or amount")
+                
+                if amount < 1000:
+                    raise HTTPException(status_code=400, detail="Minimum stake amount is 1000 WEPO")
+                
+                # Check if PoS is activated (18 months = 78,840 blocks)
+                current_height = len(self.blockchain.blocks) - 1
+                if current_height < 78840:
+                    raise HTTPException(status_code=400, detail=f"PoS not activated yet. Activation at block 78,840, current: {current_height}")
+                
+                # Create stake
+                stake_id = f"stake_{int(time.time())}_{staker_address}"
+                
+                # For testing, add stake to blockchain
+                self.blockchain.stakes[stake_id] = {
+                    "staker_address": staker_address,
+                    "amount": amount,
+                    "start_height": current_height,
+                    "start_time": int(time.time()),
+                    "status": "active"
+                }
+                
+                return {
+                    "success": True,
+                    "stake_id": stake_id,
+                    "staker_address": staker_address,
+                    "amount": amount,
+                    "message": "Stake created successfully"
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/staking/info")
+        async def get_staking_info():
+            """Get staking information"""
+            current_height = len(self.blockchain.blocks) - 1
+            activation_height = 78840  # 18 months
+            
+            return {
+                "pos_activated": current_height >= activation_height,
+                "activation_height": activation_height,
+                "current_height": current_height,
+                "blocks_until_activation": max(0, activation_height - current_height),
+                "active_stakes_count": len(self.blockchain.stakes),
+                "total_staked_amount": sum(stake["amount"] for stake in self.blockchain.stakes.values()),
+                "active_masternodes_count": len(self.blockchain.masternodes),
+                "min_stake_amount": 1000.0,
+                "masternode_collateral": 10000.0,
+                "staking_reward_percentage": 60,
+                "masternode_reward_percentage": 40
+            }
+        
+        @self.app.post("/api/masternode")
+        async def create_masternode(request: dict):
+            """Create masternode"""
+            try:
+                operator_address = request.get('operator_address')
+                collateral_txid = request.get('collateral_txid')
+                collateral_vout = request.get('collateral_vout')
+                ip_address = request.get('ip_address')
+                port = request.get('port', 22567)
+                
+                if not all([operator_address, collateral_txid, collateral_vout is not None]):
+                    raise HTTPException(status_code=400, detail="Missing required fields")
+                
+                # Check if PoS is activated
+                current_height = len(self.blockchain.blocks) - 1
+                if current_height < 78840:
+                    raise HTTPException(status_code=400, detail=f"Masternode not activated yet. Activation at block 78,840, current: {current_height}")
+                
+                # Create masternode
+                masternode_id = f"mn_{int(time.time())}_{operator_address}"
+                
+                # For testing, add masternode to blockchain
+                self.blockchain.masternodes[masternode_id] = {
+                    "operator_address": operator_address,
+                    "collateral_txid": collateral_txid,
+                    "collateral_vout": collateral_vout,
+                    "ip_address": ip_address,
+                    "port": port,
+                    "start_height": current_height,
+                    "start_time": int(time.time()),
+                    "status": "active"
+                }
+                
+                return {
+                    "success": True,
+                    "masternode_id": masternode_id,
+                    "operator_address": operator_address,
+                    "collateral_txid": collateral_txid,
+                    "collateral_vout": collateral_vout,
+                    "ip_address": ip_address,
+                    "port": port,
+                    "message": "Masternode created successfully"
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/masternodes")
+        async def get_masternodes():
+            """Get all masternodes"""
+            return list(self.blockchain.masternodes.values())
+        
+        @self.app.get("/api/wallet/{address}/stakes")
+        async def get_wallet_stakes(address: str):
+            """Get staking positions for a wallet"""
+            stakes = []
+            for stake_id, stake in self.blockchain.stakes.items():
+                if stake["staker_address"] == address:
+                    stakes.append({
+                        "stake_id": stake_id,
+                        "amount": stake["amount"],
+                        "start_height": stake["start_height"],
+                        "start_time": stake["start_time"],
+                        "status": stake["status"]
+                    })
+            return stakes
 
 def main():
     print("=" * 60)
