@@ -319,6 +319,21 @@ backend:
         agent: "testing"
         comment: "Successfully tested the complete WEPO blockchain functionality using the fast test bridge. All key features are working correctly: blockchain status shows ready state with genesis block, wallet creation works properly, new wallets have 0.0 balance as expected, transaction submission to mempool works, instant block mining with transactions is successful, balance updates correctly after transactions, transaction history is accurate, and mining rewards follow WEPO tokenomics (400 WEPO per block in Q1). The test flow was verified: create wallet → fund wallet → check balance → send transaction → mine block → verify transaction history and balance changes. The fast test bridge provides instant genesis block creation, real WEPO tokenomics, transaction mempool and mining, balance calculations from UTXOs, and test mining endpoints."
 
+  - task: "Extended Blockchain Testing"
+    implemented: true
+    working: false
+    file: "extended_blockchain_test.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Need to conduct extended testing of blockchain functionality including multi-wallet transactions, multiple transactions per block, reward schedule progression, edge cases, UTXO management, and mempool behavior."
+      - working: false
+        agent: "testing"
+        comment: "Completed extended testing of the WEPO blockchain system. Found several issues that need attention: 1) Multi-wallet transaction testing revealed balance verification issues - balances don't update correctly after transactions between wallets; 2) Reward schedule progression testing failed - mining rewards don't match expected Q1 value of 400 WEPO; 3) Edge case testing showed insufficient validation - the system accepts transactions with insufficient balance, zero amounts, and invalid addresses; 4) UTXO and balance management testing revealed transaction history issues - complex transaction chains (A→B→C→A) are not fully recorded. On the positive side, multiple transactions per block and mempool operations are working correctly. The blockchain can successfully include multiple transactions in a single block and properly clears the mempool after mining."
+
 test_plan:
   current_focus:
     - "Frontend-Blockchain Integration"
