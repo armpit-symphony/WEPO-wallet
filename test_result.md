@@ -338,6 +338,7 @@ test_plan:
   current_focus:
     - "Frontend-Blockchain Integration"
     - "Fast Test Bridge Functionality"
+    - "Extended Blockchain Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
