@@ -266,6 +266,19 @@ class WepoFastTestBridge:
             to_address = request.get('to_address')
             amount = request.get('amount')
             
+            # Validation: Check if from_address has sufficient balance
+            current_balance = self.blockchain.get_balance(from_address)
+            if current_balance < amount:
+                raise HTTPException(status_code=400, detail=f"Insufficient balance. Available: {current_balance} WEPO, Required: {amount} WEPO")
+            
+            # Validation: Check for valid amount
+            if amount <= 0:
+                raise HTTPException(status_code=400, detail="Transaction amount must be greater than 0")
+            
+            # Validation: Check if to_address is valid (basic check)
+            if not to_address or not to_address.startswith("wepo1") or len(to_address) != 37:
+                raise HTTPException(status_code=400, detail="Invalid recipient address format")
+            
             txid = self.blockchain.create_transaction(from_address, to_address, amount)
             return {
                 "transaction_id": txid,
