@@ -208,11 +208,11 @@ class ConfidentialTransactions:
             raise ValueError(f"Failed to commit amount: {e}")
     
     def generate_range_proof(self, amount: int, blinding_factor: bytes,
-                           min_value: int = 0, max_value: int = 2**64) -> PrivacyProof:
+                           min_value: int = 0, max_value: int = 2**32) -> PrivacyProof:
         """Generate range proof for confidential amount"""
         try:
             if not (min_value <= amount <= max_value):
-                raise ValueError("Amount outside valid range")
+                raise ValueError(f"Amount {amount} outside valid range [{min_value}, {max_value}]")
             
             # Create commitment
             commitment = self.commit_amount(amount, blinding_factor)
