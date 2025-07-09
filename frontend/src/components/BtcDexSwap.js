@@ -273,21 +273,23 @@ const BtcDexSwap = ({ onClose }) => {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-gray-400">Exchange Rate:</span>
-            <div className="text-white font-medium">1 BTC = {exchangeRate} WEPO</div>
+            <div className="text-white font-medium">1 BTC = {exchangeRate.toFixed(6)} WEPO</div>
           </div>
           <div>
-            <span className="text-gray-400">Swap Fee:</span>
-            <div className="text-white font-medium">{(swapFee * 100).toFixed(1)}%</div>
+            <span className="text-gray-400">Fee Rate:</span>
+            <div className="text-white font-medium">{feeInfo?.fee_percentage || 0.1}%</div>
           </div>
           <div>
             <span className="text-gray-400">Estimated Fee:</span>
             <div className="text-white font-medium">
-              {calculateFee().toFixed(8)} {swapType === 'buy' ? 'BTC' : 'WEPO'}
+              {feeInfo ? `${feeInfo.total_fee_btc.toFixed(8)} BTC` : '0.00000000 BTC'}
             </div>
           </div>
           <div>
             <span className="text-gray-400">Settlement:</span>
-            <div className="text-white font-medium">~10 minutes</div>
+            <div className="text-white font-medium">
+              {priorityFee ? '~1-2 hours' : '~2-4 hours'}
+            </div>
           </div>
         </div>
       </div>
