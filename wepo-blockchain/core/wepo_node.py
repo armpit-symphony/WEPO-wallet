@@ -479,11 +479,6 @@ class WepoFullNode:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
-        # Privacy proof sizes
-        ZK_STARK_PROOF_SIZE = 1024  # bytes
-        RING_SIGNATURE_SIZE = 512   # bytes
-        CONFIDENTIAL_PROOF_SIZE = 256  # bytes
-        
         @self.app.get("/api/masternodes")
         async def get_masternodes():
             """Get all masternodes"""
