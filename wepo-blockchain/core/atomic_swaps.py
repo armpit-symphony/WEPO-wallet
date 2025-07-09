@@ -626,7 +626,7 @@ class AtomicSwapEngine:
         return True
     
     async def redeem_swap(self, swap_id: str, secret: str) -> bool:
-        """Redeem swap with secret"""
+        """Enhanced redeem swap with history tracking"""
         if swap_id not in self.active_swaps:
             return False
         
@@ -644,13 +644,19 @@ class AtomicSwapEngine:
         swap.secret = secret
         swap.updated_at = datetime.utcnow()
         
+        # Update statistics
+        self.update_swap_statistics(swap)
+        
+        # Move to history
+        self.swap_history.append(swap)
+        
         # In production, this would broadcast redeem transactions
         # For now, we'll simulate successful redemption
         
         return True
     
     async def refund_swap(self, swap_id: str) -> bool:
-        """Refund expired swap"""
+        """Enhanced refund expired swap with history tracking"""
         if swap_id not in self.active_swaps:
             return False
         
@@ -665,7 +671,84 @@ class AtomicSwapEngine:
         swap.state = SwapState.REFUNDED
         swap.updated_at = datetime.utcnow()
         
+        # Update statistics
+        self.update_swap_statistics(swap)
+        
+        # Move to history
+        self.swap_history.append(swap)
+        
         return True
+    
+    def get_swap_history(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+        """Get swap history with pagination"""
+        # Sort by creation time (newest first)
+        sorted_history = sorted(self.swap_history, 
+                               key=lambda x: x.created_at, 
+                               reverse=True)
+        
+        # Apply pagination
+        paginated_history = sorted_history[offset:offset + limit]
+        
+        # Convert to dict format
+        history_data = []
+        for swap in paginated_history:
+            history_data.append({
+                'swap_id': swap.swap_id,
+                'swap_type': swap.swap_type.value,
+                'state': swap.state.value,
+                'btc_amount': swap.btc_amount,
+                'wepo_amount': swap.wepo_amount,
+                'created_at': swap.created_at.isoformat(),
+                'updated_at': swap.updated_at.isoformat(),
+                'completion_time': (swap.updated_at - swap.created_at).total_seconds(),
+                'initiator_btc_address': swap.initiator_btc_address,
+                'participant_btc_address': swap.participant_btc_address,
+                'fee_info': getattr(swap, 'fee_info', None),
+                'priority': getattr(swap, 'priority', False)
+            })
+        
+        return history_data
+    
+    def search_swaps(self, query: str, state: Optional[SwapState] = None,
+                    swap_type: Optional[SwapType] = None) -> List[Dict[str, Any]]:
+        """Search swaps by various criteria"""
+        all_swaps = list(self.active_swaps.values()) + self.swap_history
+        filtered_swaps = []
+        
+        for swap in all_swaps:
+            # Filter by state if specified
+            if state and swap.state != state:
+                continue
+            
+            # Filter by swap type if specified
+            if swap_type and swap.swap_type != swap_type:
+                continue
+            
+            # Search in swap ID, addresses
+            if query:
+                searchable_fields = [
+                    swap.swap_id,
+                    swap.initiator_btc_address,
+                    swap.initiator_wepo_address,
+                    swap.participant_btc_address,
+                    swap.participant_wepo_address
+                ]
+                
+                if not any(query.lower() in field.lower() for field in searchable_fields):
+                    continue
+            
+            filtered_swaps.append({
+                'swap_id': swap.swap_id,
+                'swap_type': swap.swap_type.value,
+                'state': swap.state.value,
+                'btc_amount': swap.btc_amount,
+                'wepo_amount': swap.wepo_amount,
+                'created_at': swap.created_at.isoformat(),
+                'updated_at': swap.updated_at.isoformat(),
+                'is_active': swap.swap_id in self.active_swaps
+            })
+        
+        return sorted(filtered_swaps, key=lambda x: x['created_at'], reverse=True)
     
     def get_swap_status(self, swap_id: str) -> Optional[SwapContract]:
         """Get current swap status"""
