@@ -249,6 +249,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "Unable to access the BTC DEX interface in the frontend. While the backend API endpoints for atomic swaps are working correctly (/api/atomic-swap/exchange-rate, /api/atomic-swap/fees, /api/atomic-swap/statistics, /api/atomic-swap/rates/historical, /api/atomic-swap/list, /api/atomic-swap/search, /api/atomic-swap/status/{swap_id}), the frontend interface is not accessible. The BTC DEX button is not visible in the dashboard, and there's no way to navigate to the DEX interface. The backend functionality is implemented and working, but the frontend integration is missing or broken."
+      - working: false
+        agent: "testing"
+        comment: "Conducted comprehensive testing of the enhanced BTC-to-WEPO atomic swap functionality in the frontend. The backend API endpoints for atomic swaps are working correctly and return valid data (/api/atomic-swap/exchange-rate, /api/atomic-swap/statistics, /api/atomic-swap/history, /api/atomic-swap/fees). However, the frontend interface is completely missing. The BTC DEX button is not visible in the dashboard, and there's no way to navigate to the DEX interface. The BtcDexSwap.js component exists in the codebase with all the enhanced features (real-time exchange rate, dynamic fee calculation, statistics display, priority fee toggle, recent swaps history, active swap tracking, enhanced error handling), but it's not integrated with the main application. Users cannot access any of the DEX functionality from the UI."
 
 metadata:
   created_by: "main_agent"
