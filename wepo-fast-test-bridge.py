@@ -327,14 +327,33 @@ class WepoFastTestBridge:
         @self.app.get("/api/mining/info")
         async def get_mining_info():
             height = len(self.blockchain.blocks) - 1
+            
+            # Calculate current reward based on WEPO tokenomics
+            if height < 13140:  # Q1 (blocks 0-13139)
+                current_reward = 400.0
+                quarter_info = "Q1 (400 WEPO per block)"
+            elif height < 26280:  # Q2 (blocks 13140-26279)
+                current_reward = 200.0 
+                quarter_info = "Q2 (200 WEPO per block)"
+            elif height < 39420:  # Q3 (blocks 26280-39419)
+                current_reward = 100.0
+                quarter_info = "Q3 (100 WEPO per block)"
+            elif height < 52560:  # Q4 (blocks 39420-52559)
+                current_reward = 50.0
+                quarter_info = "Q4 (50 WEPO per block)"
+            else:  # Year 2+ 
+                current_reward = 12.4
+                quarter_info = "Year 2+ (12.4 WEPO per block)"
+            
             return {
                 "current_block_height": height,
-                "current_reward": 400.0 if height < 13140 else 200.0 if height < 26280 else 100.0 if height < 39420 else 50.0,
+                "current_reward": current_reward,
+                "quarter_info": quarter_info,
                 "difficulty": 1,
                 "algorithm": "FastTest",
                 "mining_enabled": True,
                 "mempool_size": len(self.blockchain.mempool),
-                "reward_schedule": "TEST: 400→200→100→50 WEPO per block"
+                "reward_schedule": "WEPO Tokenomics: Q1=400, Q2=200, Q3=100, Q4=50, Year2+=12.4 WEPO per block"
             }
         
         @self.app.post("/api/test/mine-block")
