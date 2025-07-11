@@ -2282,19 +2282,19 @@ if __name__ == "__main__":
     print("\n" + "="*80)
     print("WEPO CRYPTOCURRENCY COMPREHENSIVE TESTING")
     print("="*80)
-    print("Testing real cryptographic privacy features and blockchain functionality")
+    print("Testing RWA system with WEPO balance requirements and fee deduction")
     print("="*80 + "\n")
     
-    # Run real cryptographic privacy tests
-    real_crypto_privacy_success = run_real_cryptographic_privacy_tests()
+    # Run RWA fee system tests
+    rwa_fee_system_success = run_rwa_fee_system_tests()
     
     # Overall success
-    success = real_crypto_privacy_success
+    success = rwa_fee_system_success
     
     print("\n" + "="*80)
     print("OVERALL TESTING SUMMARY")
     print("="*80)
-    print(f"Real Cryptographic Privacy Features: {'✅ PASSED' if real_crypto_privacy_success else '❌ FAILED'}")
+    print(f"RWA Fee System: {'✅ PASSED' if rwa_fee_system_success else '❌ FAILED'}")
     print(f"Overall Status: {'✅ PASSED' if success else '❌ FAILED'}")
     print("="*80)
     
