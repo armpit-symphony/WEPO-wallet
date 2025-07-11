@@ -547,12 +547,109 @@ class WepoFastTestBridge:
         
         @self.app.get("/api/dex/rate")
         async def get_exchange_rate():
+            """Get current exchange rates"""
+            # Get RWA tokens for trading
+            rwa_tokens = rwa_system.get_tradeable_tokens()
+            
+            # Create rate info for each RWA token
+            rwa_rates = {}
+            for token in rwa_tokens:
+                # Use last price or default to 1 WEPO per 1000 tokens
+                rate = token.get('last_price', 1000000000)  # Default rate in satoshis per token
+                rwa_rates[token['token_id']] = {
+                    'symbol': token['symbol'],
+                    'name': token['name'],
+                    'rate_wepo_per_token': rate / 100000000,  # Convert to WEPO
+                    'asset_name': token.get('asset_name', 'Unknown Asset'),
+                    'asset_type': token.get('asset_type', 'unknown'),
+                    'last_updated': time.strftime('%Y-%m-%d %H:%M:%S')
+                }
+            
             return {
-                "btc_to_wepo": 1.0,
-                "wepo_to_btc": 1.0,
-                "fee_percentage": 0.1,
-                "last_updated": time.strftime('%Y-%m-%d %H:%M:%S')
+                'btc_to_wepo': 1.0,
+                'wepo_to_btc': 1.0,
+                'rwa_tokens': rwa_rates,
+                'fee_percentage': 0.1,
+                'last_updated': time.strftime('%Y-%m-%d %H:%M:%S')
             }
+        
+        @self.app.post("/api/dex/rwa-trade")
+        async def create_rwa_trade(request: dict):
+            """Create RWA-WEPO trade"""
+            try:
+                token_id = request.get('token_id')
+                trade_type = request.get('trade_type')  # 'buy' or 'sell'
+                user_address = request.get('user_address')
+                token_amount = request.get('token_amount')
+                wepo_amount = request.get('wepo_amount')
+                
+                if not all([token_id, trade_type, user_address, token_amount, wepo_amount]):
+                    raise HTTPException(status_code=400, detail="Missing required fields")
+                
+                # Get token info
+                token_info = rwa_system.get_token_info(token_id)
+                if not token_info:
+                    raise HTTPException(status_code=404, detail="Token not found")
+                
+                # Create a simulated counterparty for the trade
+                counterparty_address = "wepo1dexpool0000000000000000000000000"
+                
+                if trade_type == 'buy':
+                    # User buys RWA tokens with WEPO
+                    seller_address = counterparty_address
+                    buyer_address = user_address
+                    
+                    # Check user has sufficient WEPO
+                    user_balance = self.blockchain.get_balance(user_address)
+                    if user_balance < float(wepo_amount):
+                        raise HTTPException(status_code=400, detail="Insufficient WEPO balance")
+                    
+                elif trade_type == 'sell':
+                    # User sells RWA tokens for WEPO
+                    seller_address = user_address
+                    buyer_address = counterparty_address
+                    
+                    # Check user has sufficient RWA tokens
+                    token = rwa_system.tokens.get(token_id)
+                    if not token or user_address not in token.holders:
+                        raise HTTPException(status_code=400, detail="No RWA tokens to sell")
+                    
+                    if token.holders[user_address] < int(token_amount):
+                        raise HTTPException(status_code=400, detail="Insufficient RWA token balance")
+                else:
+                    raise HTTPException(status_code=400, detail="Invalid trade type")
+                
+                # Execute RWA trade
+                rwa_tx_id = rwa_system.trade_tokens_for_wepo(
+                    token_id=token_id,
+                    seller_address=seller_address,
+                    buyer_address=buyer_address,
+                    token_amount=int(token_amount),
+                    wepo_amount=int(float(wepo_amount) * 100000000),  # Convert to satoshis
+                    block_height=len(self.blockchain.blocks)
+                )
+                
+                # Create corresponding WEPO transaction
+                if trade_type == 'buy':
+                    wepo_tx_id = self.blockchain.create_transaction(user_address, counterparty_address, float(wepo_amount))
+                else:
+                    wepo_tx_id = self.blockchain.create_transaction(counterparty_address, user_address, float(wepo_amount))
+                
+                return {
+                    'success': True,
+                    'trade_id': rwa_tx_id,
+                    'rwa_transaction_id': rwa_tx_id,
+                    'wepo_transaction_id': wepo_tx_id,
+                    'trade_type': trade_type,
+                    'token_amount': token_amount,
+                    'wepo_amount': wepo_amount,
+                    'message': f'RWA {trade_type} trade executed successfully'
+                }
+                
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
         
         # Atomic Swap Operations
         @self.app.post("/api/atomic-swap/initiate")
