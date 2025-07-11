@@ -1,76 +1,81 @@
 <analysis>
-The previous AI engineer successfully initiated and developed the WEPO cryptocurrency project from scratch, bringing it to a state of robust core functionality. The initial phase focused on building a functional frontend wallet and integrating it with a nascent blockchain backend, moving from a MongoDB simulation to a custom Python-based blockchain. Key challenges involved intricate debugging of transaction processing, UTXO management, and block rewards, which led to the creation of temporary test bridges and subsequent porting of critical fixes to the main blockchain codebase. Following core integration, the engineer methodically implemented and verified advanced features including stress testing (mempool, block size, UTXOs), P2P networking, and a full staking mechanism with an 18-month activation. The final major task involved implementing privacy features (zk-STARKs, Ring Signatures, Confidential Transactions), which, while structurally integrated with API endpoints and placeholders, were explicitly identified as *mock implementations* lacking actual cryptographic logic. The trajectory demonstrates a strong iterative development approach, focusing on verifiable, modular progress.
+The previous AI engineer successfully brought the WEPO cryptocurrency project from initial concept to a functional MVP, focusing on core blockchain mechanics, P2P networking, and staking. A significant portion of the work involved transitioning from mock implementations to real cryptographic features. Specifically, zk-STARKs, Ring Signatures, and Confidential Transactions were fully implemented and thoroughly tested. Following this, BTC-to-WEPO atomic swaps using HTLCs were developed, including enhanced features like fee calculations and swap history, with backend integration verified. The current focus has shifted to a major architectural overhaul to integrate quantum resistance (Dilithium signatures) across the codebase, a task deemed highly complex. This overhaul is also being used as an opportunity to add a no-fee messenger and RWA tokenization, aiming for a single, comprehensive rewrite.
 </analysis>
 
 <product_requirements>
-The WEPO - We the People project aims to create a privacy-focused, decentralized cryptocurrency to achieve financial freedom. Its core vision challenges traditional finance through privacy, decentralization, and an anti-establishment ethos. Key features include unbreakable privacy via zk-STARKs, Ring Signatures, Confidential Transactions, and Masternode Mixing. Consensus is a hybrid PoW/PoS system with Masternodes. The native wallet should support 16-word seed recovery, username/password login, a built-in BTC-to-WEPO Atomic DEX swap, and locked PoS/Masternode options until 18 months post-PoW launch. Tokenomics define a total supply of 63,900,006 WEPO, split 50/50 between PoW mining and PoS/Masternode rewards. Year 1 mining rewards follow Option A: Q1 (400 WEPO/block), Q2 (200 WEPO/block), Q3 (100 WEPO/block), Q4 (50 WEPO/block), with transaction fees redirecting post-Year 1. Launch is anonymous via Tor/IPFS, with a community-mined genesis block. Security includes quantum resistance (Dilithium) and memory-hard PoW (Argon2).
+The WEPO project aims to create a privacy-focused, decentralized cryptocurrency called We the People. The core problem it solves is providing financial freedom through unbreakable privacy (via zk-STARKs, Ring Signatures, Confidential Transactions, Masternode Mixing), decentralization, and an anti-establishment ethos. Its consensus mechanism is a hybrid PoW/PoS system with Masternodes. The native wallet must support 16-word seed recovery, username/password login, a built-in BTC-to-WEPO Atomic DEX swap, and locked PoS/Masternode options for 18 months post-PoW launch. Tokenomics specify a 63,900,006 WEPO total supply, split 50/50 between PoW and PoS/Masternode rewards, with Year 1 PoW rewards following Option A (400, 200, 100, 50 WEPO/block). Launch is to be anonymous via Tor/IPFS, with a community-mined genesis block. Security includes quantum resistance (Dilithium) and memory-hard PoW (Argon2).
+**Implementation done so far:** Core blockchain functionality, P2P networking, and staking mechanism are implemented. Real cryptographic privacy features (zk-STARKs, Ring Signatures, Confidential Transactions) and BTC-to-WEPO Atomic Swaps (HTLC-based with enhanced features) have been successfully integrated and tested at the backend level.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-Stack:** React, FastAPI, MongoDB (initial, replaced), SQLite (blockchain DB).
-- **Cryptocurrency:** PoW (Argon2), PoS, Masternodes, UTXO, Blockchains, Mining, Atomic Swaps (HTLC).
-- **Cryptography:** BIP39, , zk-STARKs (framework only), Ring Signatures (framework only), Confidential Transactions (framework only), BLAKE2b hashing, ECC curves.
-- **Development Tools:** Yarn, Pip, Supervisorctl, Linux Bash.
+-   **Full-Stack:** React, FastAPI, Python-based Custom Blockchain (SQLite).
+-   **Cryptocurrency:** PoW (Argon2), PoS, Masternodes, UTXO, HTLC Atomic Swaps, Mempool.
+-   **Cryptography:** zk-STARKs, Ring Signatures, Confidential Transactions (all real implementations), SECP256k1, Pedersen Commitments, BLAKE2b, BIP39.
+-   **Quantum Resistance:** Dilithium Signatures (planned).
+-   **Development:** Yarn, Pip, Supervisorctl, Linux Bash, FastAPI.
 </key_technical_concepts>
 
 <code_architecture>
-The application features a full-stack setup with a React frontend, a FastAPI backend, and a custom Python-based blockchain, initially using MongoDB (later replaced by SQLite within the blockchain itself).
+The application features a full-stack setup with a React frontend, a FastAPI backend, and a custom Python-based blockchain, utilizing SQLite for its internal database.
 
 **Detailed Directory Structure:**
 
 
-**Key Files and Their Importance:**
 
--   : The main FastAPI backend. Initially simulated blockchain functions, now largely replaced by direct integration with the  components or the . Its role is primarily as an API gateway for frontend.
--    & : Core React components for the wallet UI and global state management.  handles wallet creation, loading, and persistence, now configured to interact with the real blockchain via its API endpoints.
--   : Contains the central WEPO blockchain logic, including block creation, validation, mining difficulty, and the Option A mining reward schedule. This file received significant updates for robust UTXO management, transaction creation/validation, and proper genesis block handling.
--   : Defines the  class and related cryptographic operations. Updated for proper transaction hashing, input/output management, and now includes fields for privacy features.
--   : The main WEPO node class, extended to expose API endpoints for blockchain interactions, wallet operations, and transaction handling. This acts as the direct interface to the blockchain.
--   : Implements the peer-to-peer networking logic for WEPO nodes, handling peer discovery, connection management, and message broadcasting (transactions, blocks).
--   : A newly introduced module intended for cryptographic privacy features (zk-STARKs, Ring Signatures, Confidential Transactions). Currently contains API frameworks and placeholder/mock implementations.
--   : A daemon bridging the frontend wallet UI and the core blockchain. Updated to handle wallet management, transaction sending, and improved error handling, now supporting staking operations.
--   : A temporary FastAPI application created for rapid testing and integration. It simulates a fast WEPO blockchain with pre-mined genesis blocks and simplified mining, serving as a robust testbed for core blockchain and feature integration before porting fixes to the main  modules.
--   : Supervisor configuration file. Modified to manage the WEPO blockchain node (), wallet daemon (), and temporary  processes, enabling them to run persistently.
+**Key Files and Their Importance (with recent changes):**
+
+-   : Primary FastAPI backend, acting as an API gateway. No direct changes observed in the trajectory, but it routes calls to the blockchain components.
+-   : Frontend component for the BTC DEX swap. Initially a UI mockup, it has been updated to integrate with the real atomic swap API endpoints, including new UI elements for statistics, history, and priority fees.
+-   : Core React dashboard. Displays the BTC DEX button, but required wallet to be loaded to see it. No significant changes to its structure from the trajectory.
+-   : Contains the central WEPO blockchain logic. It was examined to understand transaction structure ( was found here), suggesting  might not exist or is deprecated. It will require major changes for Dilithium.
+-   : Crucial module for cryptographic privacy features. It was transformed from mock implementations to real zk-STARKs, Ring Signatures, and Confidential Transactions, including proper field arithmetic, ECC, Pedersen commitments, and unified message handling.
+-   : Newly created module implementing the real BTC-to-WEPO atomic swap logic using HTLCs. It handles swap initiation, funding, redemption, refunds, and includes features for fees, statistics, and history.
+-   : The main WEPO node class, exposing API endpoints. It was updated to import and expose the real atomic swap API endpoints and integrate the real cryptographic privacy features. It will undergo massive changes for Dilithium.
+-   : A temporary FastAPI application for rapid testing. It was updated to include the real atomic swap API endpoints for backend testing purposes.
+-   : A comprehensive test script specifically created to validate the real cryptographic privacy implementations.
+-   : A simpler debug test script created to pinpoint issues within the cryptographic privacy implementations.
+-   : A comprehensive test script specifically created to validate the real BTC atomic swap implementation.
+-   : A newly created document outlining the plan for a single, comprehensive rewrite to integrate all remaining tasks and new features, centered around the Dilithium cryptographic overhaul.
 </code_architecture>
 
 <pending_tasks>
-- Implement real cryptographic logic for zk-STARKs, Ring Signatures, and Confidential Transactions (currently only framework/mock).
-- Implement actual BTC-to-WEPO Atomic DEX swap backend logic (currently UI only).
-- Implement the actual staking mechanism and masternode networking beyond the 18-month countdown, for production (currently timer logic, DB schema, and API exist, but full activation logic might need refinement).
-- Conduct advanced network feature testing, specifically for full peer synchronization and complex node discovery scenarios, beyond basic P2P activation.
+-   Implement quantum resistance (Dilithium Signatures), requiring a cryptographic overhaul.
+-   Implement a no-fee, end-to-end encrypted messenger.
+-   Implement RWA (Real World Asset) tokenization (document/image).
+-   Enhance Staking UI Polish (minor UI improvements).
+-   Standardize Wallet Address Format.
+-   Conduct Advanced P2P Network Testing.
+-   Activate Production Staking Mechanism (beyond 18-month countdown).
+-   Implement Masternode Networking (mixing, governance).
+-   Implement Community-Mined Genesis Block.
+-   Integrate Anonymous Launch via Tor/IPFS.
+-   Implement Full Peer Synchronization & Advanced Network Features.
 </pending_tasks>
 
 <current_work>
-The WEPO cryptocurrency project is in a highly functional state, with a strong emphasis on real blockchain integration and core features.
+The WEPO cryptocurrency project has made substantial progress, transitioning from mock features to robust, real implementations.
 
-**Core Blockchain Integration:**
-The application successfully transitioned from a MongoDB simulation to a direct integration with the Python-based WEPO blockchain core. This involved:
--   Replacing the backend's data persistence with the custom blockchain.
--   Implementing a  for rapid development and testing cycles, which includes a simplified blockchain for quick genesis block mining.
--   Porting all critical fixes related to UTXO management, transaction validation, mining rewards, and API error handling from the test bridge to the main  files (, , , ).
--   The frontend wallet now connects to and displays real blockchain data, showing a 0.0 WEPO balance for new wallets (as expected).
+**Real Cryptographic Privacy Features (Completed):**
+The project successfully replaced placeholder privacy features with production-grade cryptographic implementations in . This involved:
+-   **zk-STARKs:** Real polynomial commitments, FRI proofs, field arithmetic (512 bytes proof size).
+-   **Ring Signatures:** Genuine elliptic curve cryptography (SECP256k1) with challenge-response and key image generation (512 bytes proof size).
+-   **Confidential Transactions:** Actual Pedersen commitments and bulletproof-style range proofs for amount hiding (1500 bytes proof size).
+-   **Unified Message Handling:** Critical fix ensuring consistent message/statement usage across all proof types during generation and verification, resolving previous failures.
+-   **API Integration:** The API endpoints in  were updated to use these real cryptographic implementations, passing backend validation.
+All comprehensive tests for these privacy features (, ) passed consistently.
 
-**Implemented Features (Production Ready):**
-1.  **Core Blockchain Functionality:**
-    -   Proof of Work (Argon2) mining with correct Option A Q1 tokenomics (400 WEPO/block).
-    -   Robust UTXO-based transaction system, including proper balance calculations, change management, and comprehensive transaction validation.
-    -   Mempool management for pending transactions.
-    -   API endpoints for wallet operations (creation, balance, transactions), mining info, and network status.
-    -   Full transaction flow (send, mine, confirm) has been verified.
-2.  **Stress Testing:**
-    -   Comprehensive stress testing has been completed successfully, verifying the blockchain's stability under load for mempool operations, block size limits (2MB enforced), UTXO management with complex transaction chains, and API performance.
-3.  **P2P Networking:**
-    -   The P2P network () has been activated and is functional, supporting multi-node connections, message broadcasting (transactions, blocks), and peer discovery (DNS seed support). The infrastructure for peer synchronization and network consensus is in place.
-4.  **Staking Mechanism:**
-    -   The staking system is fully implemented, including minimum stake (1000 WEPO) and masternode collateral (10000 WEPO) enforcement.
-    -   An 18-month activation mechanism (78,840 blocks) is in place, with automatic activation.
-    -   Reward distribution (60% staking / 40% masternode) is integrated into block processing.
-    -   Dedicated database tables (, , ) and API endpoints (, , ) are functional.
+**Real BTC-to-WEPO Atomic Swaps (Backend Complete, Frontend In-Progress):**
+The project implemented real BTC atomic swaps using Hash Time-Locked Contracts (HTLCs) within . Key aspects include:
+-   **HTLC Logic:** Comprehensive implementation of swap initiation, funding, redemption, and refund processes.
+-   **Bitcoin Library Integration:** Handled  dependencies and API changes (including mock for  due to library issues).
+-   **Enhanced Features:** Added swap history tracking, detailed fee calculations (including priority fees), and enhanced exchange rate methods.
+-   **API Integration:** Atomic swap endpoints were added to  and specifically integrated into  for backend testing. All backend API calls for initiation, funding, status, proof generation, and listing swaps were successfully verified.
 
-**Current Nuances (Privacy Features):**
-The privacy features (zk-STARKs, Ring Signatures, Confidential Transactions, Stealth Addresses) were chosen for implementation. A framework () with API endpoints and classes has been integrated into the system, and the frontend displays related notices. However, it was explicitly clarified that these are **placeholder/mock implementations** lacking actual, production-grade cryptographic logic. For genuine privacy, real cryptographic libraries and complex algorithms would need to be integrated, which represents the current state and next major challenge.
+**Current Nuances & Challenges:**
+-   **Frontend Integration for Atomic Swaps:** While backend atomic swap functionality is complete and enhanced, the frontend  component has been updated to use the real API and display new UI elements, but full frontend integration and testing are still pending. Debugging efforts revealed the BTC DEX button is only visible after wallet creation/loading, and there were issues with the wallet setup process resetting.
+-   **Upcoming Quantum Resistance Overhaul:** The next major task, as confirmed by the user, is integrating Dilithium signatures for quantum resistance. This is anticipated to be a MASSIVE ARCHITECTURAL CHANGE, affecting nearly all cryptographic and transaction-related files, requiring a complete cryptographic overhaul. This complex task will also serve as the foundation for new features like a no-fee messenger and RWA tokenization.
 </current_work>
 
 <optional_next_step>
-The next step is to proceed with implementing actual cryptographic privacy features for WEPO, moving beyond the current placeholder/mock implementations.
+The next step is to begin Stage 1.1: Dilithium Cryptography Library Integration as part of the quantum foundation and core architecture overhaul.
 </optional_next_step>
