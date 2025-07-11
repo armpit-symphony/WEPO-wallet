@@ -490,10 +490,16 @@ class RWATokenSystem:
             'pending_for_distribution': self.fee_redistribution_pool.total_collected,
             'distribution_history': self.fee_redistribution_pool.distribution_history,
             'distribution_policy': {
-                'first_18_months': 'Distributed to miners as additional block rewards',
-                'after_18_months': 'Distributed to masternode operators',
-                'distribution_frequency': 'Per block or periodic batches'
-            }
+                'first_18_months': 'All fees distributed to miners as additional block rewards',
+                'after_18_months': 'All fees distributed to masternode operators',
+                'distribution_frequency': 'Per block mining',
+                'fee_types_included': [
+                    'RWA creation fees (0.0002 WEPO per asset)',
+                    'Normal transaction fees (0.0001 WEPO per transaction)',
+                    'All other network fees'
+                ]
+            },
+            'fee_redistribution_philosophy': 'No fees are ever burned - all fees support network participants and ensure sustainable tokenomics'
         }
     
     def distribute_fees_to_miners(self, miner_address: str, block_height: int) -> float:
