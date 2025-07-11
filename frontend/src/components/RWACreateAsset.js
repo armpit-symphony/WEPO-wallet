@@ -238,6 +238,38 @@ const RWACreateAsset = ({ onBack, userAddress, onAssetCreated }) => {
         </p>
       </div>
 
+      {/* Fee Information */}
+      {feeInfo && (
+        <div className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-500/30">
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign className="h-4 w-4 text-yellow-400" />
+            <span className="text-sm font-medium text-yellow-200">RWA Creation Fee</span>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-300">Creation Fee:</span>
+              <span className="text-yellow-200 font-medium">{feeInfo.rwa_creation_fee} WEPO</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Your Balance:</span>
+              <span className={`font-medium ${userBalance >= feeInfo.rwa_creation_fee ? 'text-green-400' : 'text-red-400'}`}>
+                {userBalance.toFixed(8)} WEPO
+              </span>
+            </div>
+            <div className="text-xs text-gray-400 mt-2">
+              {feeInfo.description}
+            </div>
+            {userBalance < feeInfo.rwa_creation_fee && (
+              <div className="bg-red-900/50 border border-red-500/50 rounded p-2 mt-2">
+                <div className="text-red-200 text-xs">
+                  ⚠️ Insufficient WEPO balance. You need at least {feeInfo.rwa_creation_fee} WEPO to create an RWA asset.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Asset Type Selection */}
       <div>
         <label className="block text-sm font-medium text-purple-200 mb-3">
