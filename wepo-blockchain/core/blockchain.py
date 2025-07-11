@@ -72,18 +72,55 @@ class MasternodeInfo:
 
 @dataclass
 class TransactionInput:
-    """Transaction input (UTXO reference)"""
+    """Transaction input with support for both ECDSA and Dilithium signatures"""
     prev_txid: str
     prev_vout: int
-    script_sig: bytes
+    script_sig: Optional[bytes] = None
     sequence: int = 0xffffffff
     
-@dataclass 
+    # Quantum signature support
+    quantum_signature: Optional[bytes] = None
+    quantum_public_key: Optional[bytes] = None
+    signature_type: str = "ecdsa"  # "ecdsa" or "dilithium"
+    
+    def __post_init__(self):
+        # Validate quantum signature sizes if present
+        if self.quantum_signature and len(self.quantum_signature) != 2420:
+            raise ValueError(f"Invalid Dilithium signature size: {len(self.quantum_signature)}")
+        
+        if self.quantum_public_key and len(self.quantum_public_key) != 1312:
+            raise ValueError(f"Invalid Dilithium public key size: {len(self.quantum_public_key)}")
+
+@dataclass
 class TransactionOutput:
-    """Transaction output"""
+    """Transaction output with quantum address support"""
     value: int
-    script_pubkey: bytes
+    script_pubkey: Optional[bytes] = None
     address: str = ""
+    
+    def __post_init__(self):
+        # Validate address format (supports both regular and quantum addresses)
+        if not self.is_valid_address():
+            raise ValueError(f"Invalid address format: {self.address}")
+    
+    def is_valid_address(self) -> bool:
+        """Validate both regular and quantum address formats"""
+        if not self.address or not isinstance(self.address, str):
+            return False
+        
+        # Regular WEPO address (32 characters after wepo1)
+        if self.address.startswith("wepo1") and len(self.address) == 37:
+            return True
+        
+        # Quantum WEPO address (40 characters after wepo1)
+        if self.address.startswith("wepo1") and len(self.address) == 45:
+            return True
+        
+        return False
+    
+    def is_quantum_address(self) -> bool:
+        """Check if this is a quantum address"""
+        return self.address.startswith("wepo1") and len(self.address) == 45
 
 @dataclass
 class Transaction:
