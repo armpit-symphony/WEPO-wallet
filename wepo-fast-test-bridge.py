@@ -1172,29 +1172,52 @@ class WepoFastTestBridge:
                 if not all([from_address, to_address, amount, private_key]):
                     raise HTTPException(status_code=400, detail="Missing required fields")
                 
-                # Validate addresses
-                if not (from_address.startswith("wepo1") and to_address.startswith("wepo1")):
-                    raise HTTPException(status_code=400, detail="Invalid quantum address format")
+                # Validate quantum addresses
+                if not (from_address.startswith("wepo1") and len(from_address) == 45):
+                    raise HTTPException(status_code=400, detail="Invalid quantum from address format")
                 
-                # Generate quantum transaction ID
-                import secrets
-                transaction_id = secrets.token_hex(32)
+                # Convert private key from hex
+                try:
+                    private_key_bytes = bytes.fromhex(private_key)
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid private key format")
                 
-                # Create quantum signature (mock for testing)
-                quantum_signature = secrets.token_hex(1210)  # 2420 bytes as hex
+                # Generate quantum public key (simplified for bridge)
+                from dilithium import generate_dilithium_keypair
+                keypair = generate_dilithium_keypair()
+                public_key = keypair.public_key
+                
+                # Create quantum transaction using the main blockchain
+                transaction = self.blockchain.create_quantum_transaction(
+                    from_address=from_address,
+                    to_address=to_address,
+                    amount_wepo=float(amount),
+                    private_key=private_key_bytes,
+                    public_key=public_key,
+                    fee_wepo=float(fee)
+                )
+                
+                if not transaction:
+                    raise HTTPException(status_code=400, detail="Failed to create quantum transaction")
+                
+                # Add to mempool for mining
+                self.blockchain.mempool[transaction.calculate_txid()] = transaction
                 
                 return {
                     'success': True,
-                    'transaction_id': transaction_id,
+                    'transaction_id': transaction.calculate_txid(),
                     'quantum_resistant': True,
                     'signature_algorithm': 'Dilithium2',
-                    'signature': quantum_signature,
-                    'status': 'pending'
+                    'status': 'pending',
+                    'quantum_inputs': len([inp for inp in transaction.inputs if inp.signature_type == "dilithium"])
                 }
                 
             except HTTPException:
                 raise
             except Exception as e:
+                print(f"Quantum transaction creation error: {e}")
+                import traceback
+                traceback.print_exc()
                 raise HTTPException(status_code=500, detail=str(e))
         
         @self.app.get("/api/quantum/status")
