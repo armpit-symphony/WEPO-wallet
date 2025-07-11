@@ -11,7 +11,7 @@ from typing import List, Dict, Optional, Union
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
-from .dilithium import (
+from dilithium import (
     DilithiumKeyPair, DilithiumSigner, DilithiumVerifier,
     generate_dilithium_keypair, sign_message, verify_signature,
     generate_wepo_address, validate_wepo_address,
