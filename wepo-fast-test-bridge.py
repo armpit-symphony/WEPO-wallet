@@ -494,7 +494,7 @@ class WepoFastTestBridge:
                 mempool_size = len(self.blockchain.mempool)
                 
                 # Mine block
-                mined_block = self.blockchain.mine_next_block(miner_address)
+                mined_block = self.blockchain.mine_block_with_miner(miner_address)
                 
                 if not mined_block:
                     raise HTTPException(status_code=500, detail="Failed to mine block")
