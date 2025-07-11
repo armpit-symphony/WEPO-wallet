@@ -114,6 +114,13 @@ const Dashboard = () => {
     toggleQuantumMode();
   };
 
+  const formatBalance = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    }).format(amount);
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
