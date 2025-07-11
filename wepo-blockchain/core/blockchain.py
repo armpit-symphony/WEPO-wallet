@@ -758,7 +758,17 @@ class WepoBlockchain:
         latest_block = self.get_latest_block()
         prev_hash = latest_block.get_block_hash() if latest_block else "0" * 64
         
-        # Create coinbase transaction
+        # Collect transaction fees before creating coinbase
+        total_transaction_fees = 0
+        for txid, tx in list(self.mempool.items()):
+            if hasattr(tx, 'fee') and tx.fee:
+                total_transaction_fees += tx.fee
+        
+        # Add normal transaction fees to RWA redistribution pool
+        if total_transaction_fees > 0:
+            rwa_system.add_transaction_fees_to_pool(total_transaction_fees, height)
+        
+        # Create coinbase transaction (will include redistributed fees)
         coinbase_tx = self.create_coinbase_transaction(height, miner_address)
         
         # Add transactions from mempool (up to block size limit)
