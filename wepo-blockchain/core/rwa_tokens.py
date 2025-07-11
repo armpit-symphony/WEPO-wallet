@@ -54,16 +54,14 @@ class RWAToken:
     symbol: str
     name: str
     total_supply: int
-    decimals: int = 8
     creator_address: str
     creation_block: int
     creation_timestamp: int
     
-    # Current token distribution
+    # Defaults
+    decimals: int = 8
     current_supply: int = 0
-    holders: Dict[str, int] = None  # address -> balance
-    
-    # Trading info
+    holders: Optional[Dict[str, int]] = None  # address -> balance
     is_tradeable: bool = True
     last_price: Optional[float] = None  # Last traded price in WEPO
     market_cap: Optional[float] = None
