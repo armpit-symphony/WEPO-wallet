@@ -42,6 +42,9 @@ class WepoFullNode:
         # Initialize blockchain
         self.blockchain = WepoBlockchain(data_dir)
         
+        # Initialize quantum-resistant blockchain
+        self.quantum_blockchain = QuantumWepoBlockchain(data_dir + "_quantum")
+        
         # Initialize P2P network
         self.p2p_node = WepoP2PNode(port=p2p_port)
         
