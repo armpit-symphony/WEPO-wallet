@@ -13,9 +13,13 @@ import {
   Server,
   ArrowRightLeft,
   AlertCircle,
-  Clock
+  Clock,
+  Zap,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
+import { useQuantum } from '../contexts/QuantumContext';
 import SendWepo from './SendWepo';
 import ReceiveWepo from './ReceiveWepo';
 import BtcDexSwap from './BtcDexSwap';
