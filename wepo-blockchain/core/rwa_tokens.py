@@ -126,12 +126,31 @@ class RWATokenSystem:
     def create_rwa_asset(self, name: str, description: str, asset_type: str, 
                         owner_address: str, file_data: str = None, 
                         file_name: str = None, file_type: str = None,
-                        metadata: Dict = None, valuation: float = None) -> str:
-        """Create a new RWA asset"""
+                        metadata: Dict = None, valuation: float = None,
+                        blockchain=None) -> str:
+        """Create a new RWA asset with WEPO balance check and fee deduction"""
         
         # Validate file if provided
         if file_data and not self.validate_file_upload(file_data, file_type, file_name):
             raise ValueError("Invalid file upload")
+        
+        # Check WEPO balance requirement (if blockchain is provided)
+        if blockchain:
+            user_balance = blockchain.get_balance(owner_address)
+            rwa_creation_fee = 0.0002  # Double normal transaction fee (0.0001 * 2)
+            
+            if user_balance < rwa_creation_fee:
+                raise ValueError(f"Insufficient WEPO balance. RWA creation requires {rwa_creation_fee} WEPO (current balance: {user_balance} WEPO)")
+            
+            # Deduct fee by creating a transaction to a burn address
+            burn_address = "wepo1burn000000000000000000000000000"
+            try:
+                fee_tx_id = blockchain.create_transaction(owner_address, burn_address, rwa_creation_fee)
+                # Mine the fee transaction immediately in test mode
+                if hasattr(blockchain, 'mine_block'):
+                    blockchain.mine_block()
+            except Exception as e:
+                raise ValueError(f"Failed to deduct RWA creation fee: {str(e)}")
         
         # Generate unique asset ID
         asset_id = hashlib.sha256(
