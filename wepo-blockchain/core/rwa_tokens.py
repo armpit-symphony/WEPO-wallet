@@ -446,7 +446,11 @@ class RWATokenSystem:
             'fee_multiplier': 2,
             'currency': 'WEPO',
             'description': 'RWA token creation fee (2x normal transaction fee)',
-            'burn_address': 'wepo1burn000000000000000000000000000'
+            'redistribution_info': {
+                'first_18_months': 'Fees redistributed to miners as additional block rewards',
+                'after_18_months': 'Fees redistributed to masternode operators',
+                'policy': 'No coins are burned - all fees support network participants'
+            }
         }
     
     def is_valid_address(self, address: str) -> bool:
