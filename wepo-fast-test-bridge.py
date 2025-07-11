@@ -665,6 +665,54 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
+        @self.app.get("/api/rwa/redistribution-pool")
+        async def get_redistribution_pool_info():
+            """Get fee redistribution pool information"""
+            try:
+                pool_info = rwa_system.get_redistribution_pool_info()
+                
+                return {
+                    'success': True,
+                    'redistribution_pool': pool_info
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/rwa/distribute-fees")
+        async def distribute_fees(request: dict):
+            """Distribute fees to miners or masternodes (admin endpoint)"""
+            try:
+                distribution_type = request.get('type')  # 'miner' or 'masternode'
+                recipient_address = request.get('recipient_address')
+                masternode_addresses = request.get('masternode_addresses', [])
+                block_height = len(self.blockchain.blocks)
+                
+                if distribution_type == 'miner' and recipient_address:
+                    amount_distributed = rwa_system.distribute_fees_to_miners(recipient_address, block_height)
+                    return {
+                        'success': True,
+                        'distribution_type': 'miner',
+                        'recipient': recipient_address,
+                        'amount_distributed': amount_distributed,
+                        'message': f'Distributed {amount_distributed} WEPO to miner'
+                    }
+                    
+                elif distribution_type == 'masternode' and masternode_addresses:
+                    distributions = rwa_system.distribute_fees_to_masternodes(masternode_addresses, block_height)
+                    return {
+                        'success': True,
+                        'distribution_type': 'masternode',
+                        'distributions': distributions,
+                        'total_distributed': sum(distributions.values()),
+                        'message': f'Distributed fees to {len(masternode_addresses)} masternodes'
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="Invalid distribution parameters")
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         # Atomic Swap Operations
         @self.app.post("/api/atomic-swap/initiate")
         async def initiate_atomic_swap(request: dict):
