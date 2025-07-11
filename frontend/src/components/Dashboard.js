@@ -28,6 +28,7 @@ import StakingInterface from './StakingInterface';
 import MasternodeInterface from './MasternodeInterface';
 import SettingsPanel from './SettingsPanel';
 import QuantumMessaging from './QuantumMessaging';
+import RWADashboard from './RWADashboard';
 
 const Dashboard = () => {
   const { 
