@@ -371,18 +371,45 @@ const Dashboard = () => {
           <div className="flex items-center gap-3">
             <Shield className="h-8 w-8 text-purple-400" />
             <div>
-              <h1 className="text-2xl font-bold text-white">WEPO Wallet</h1>
-              <p className="text-purple-200 text-sm">Welcome back, {wallet?.username}</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-white">WEPO Wallet</h1>
+                {isQuantumMode && (
+                  <div className="flex items-center gap-1 bg-purple-600/20 px-2 py-1 rounded-full">
+                    <Zap className="h-3 w-3 text-yellow-400" />
+                    <span className="text-xs text-yellow-400">Quantum</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-purple-200 text-sm">Welcome back, {currentWallet?.username}</p>
             </div>
           </div>
           
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Mode Toggle */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-300">Regular</span>
+              <button
+                onClick={handleModeToggle}
+                className="relative inline-flex items-center cursor-pointer"
+                title={isQuantumMode ? 'Switch to Regular Mode' : 'Switch to Quantum Mode'}
+              >
+                {isQuantumMode ? (
+                  <ToggleRight className="h-6 w-6 text-purple-400" />
+                ) : (
+                  <ToggleLeft className="h-6 w-6 text-gray-400" />
+                )}
+              </button>
+              <span className="text-sm text-gray-300">Quantum</span>
+            </div>
+            
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Main Content */}
