@@ -1110,6 +1110,118 @@ class WepoBlockchain:
             return transaction
             
         except Exception as e:
+            print(f"Transaction creation error: {e}")
+            return None
+
+    def create_quantum_transaction(self, from_address: str, to_address: str, amount_wepo: float, 
+                                 private_key: bytes, public_key: bytes, fee_wepo: float = 0.0001) -> Optional[Transaction]:
+        """Create a quantum-signed transaction"""
+        try:
+            # Validate quantum address format
+            if not (from_address.startswith("wepo1") and len(from_address) == 45):
+                print(f"Invalid quantum address format: {from_address}")
+                return None
+            
+            amount_satoshis = int(amount_wepo * COIN)
+            fee_satoshis = int(fee_wepo * COIN)
+            total_needed = amount_satoshis + fee_satoshis
+            
+            # Get available UTXOs for sender
+            available_utxos = self.get_utxos_for_address(from_address)
+            
+            if not available_utxos:
+                print(f"No UTXOs available for quantum address: {from_address}")
+                return None
+            
+            # Select UTXOs
+            selected_utxos = []
+            total_input_value = 0
+            
+            for utxo in available_utxos:
+                selected_utxos.append(utxo)
+                total_input_value += utxo['amount']
+                if total_input_value >= total_needed:
+                    break
+            
+            if total_input_value < total_needed:
+                print(f"Insufficient funds: need {total_needed}, have {total_input_value}")
+                return None
+            
+            # Create transaction inputs (without signatures first)
+            inputs = []
+            for utxo in selected_utxos:
+                inputs.append(TransactionInput(
+                    prev_txid=utxo['txid'],
+                    prev_vout=utxo['vout'],
+                    script_sig=None,  # No script_sig for quantum transactions
+                    sequence=0xffffffff,
+                    quantum_signature=None,  # Will be filled after signing
+                    quantum_public_key=public_key,
+                    signature_type="dilithium"
+                ))
+            
+            # Create transaction outputs
+            outputs = []
+            
+            # Output to recipient
+            outputs.append(TransactionOutput(
+                value=amount_satoshis,
+                script_pubkey=None,  # No script_pubkey for quantum transactions
+                address=to_address
+            ))
+            
+            # Change output (if needed)
+            change_amount = total_input_value - total_needed
+            if change_amount > 0:
+                outputs.append(TransactionOutput(
+                    value=change_amount,
+                    script_pubkey=None,
+                    address=from_address
+                ))
+            
+            # Create transaction
+            transaction = Transaction(
+                version=1,
+                inputs=inputs,
+                outputs=outputs,
+                lock_time=0,
+                fee=fee_satoshis
+            )
+            
+            # Sign all inputs with quantum signatures
+            for i, inp in enumerate(transaction.inputs):
+                signing_message = transaction.get_signing_message_for_input(i)
+                
+                # Import quantum signing
+                from dilithium import sign_message
+                
+                # Create quantum signature
+                quantum_signature = sign_message(signing_message, private_key)
+                
+                # Update input with signature
+                inp.quantum_signature = quantum_signature
+            
+            print(f"✓ Quantum transaction created with {len(inputs)} inputs")
+            return transaction
+            
+        except Exception as e:
+            print(f"Quantum transaction creation error: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+            
+            # Create transaction
+            transaction = Transaction(
+                version=1,
+                inputs=inputs,
+                outputs=outputs,
+                lock_time=0,
+                fee=fee_satoshis
+            )
+            
+            return transaction
+            
+        except Exception as e:
             print(f"Error creating transaction: {e}")
             return None
     
