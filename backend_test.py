@@ -2358,13 +2358,13 @@ def run_rwa_redistribution_tests():
                     print("  ✗ Missing redistribution info (key change)")
                     passed = False
                     
-                # Check that burn address is NOT mentioned
+                # Check that burn address is NOT mentioned (but "not burned" is OK)
                 fee_info_str = json.dumps(fee_info).lower()
-                if "burn" in fee_info_str and "not burned" not in fee_info_str:
+                if "burn_address" in fee_info_str or ("burn" in fee_info_str and "not burned" not in fee_info_str):
                     print("  ✗ Still mentions burning (should be removed)")
                     passed = False
                 else:
-                    print("  ✓ No mention of burning coins")
+                    print("  ✓ No mention of burning coins or burn address")
                     
             else:
                 print("  ✗ API call failed")
