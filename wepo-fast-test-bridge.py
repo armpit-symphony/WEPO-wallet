@@ -618,6 +618,9 @@ class WepoFastTestBridge:
         # Import quantum messaging system
         from quantum_messaging import messaging_system
         
+        # Import RWA token system
+        from rwa_tokens import rwa_system
+        
         # Quantum Messaging API Endpoints
         @self.app.post("/api/messaging/send")
         async def send_quantum_message(request: dict):
