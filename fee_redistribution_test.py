@@ -252,7 +252,7 @@ def run_complete_fee_redistribution_test():
                 "metadata": {"location": "Test City", "value": 100000}
             }
             
-            response = requests.post(f"{API_URL}/rwa/create", json=rwa_data)
+            response = requests.post(f"{API_URL}/rwa/create-asset", json=rwa_data)
             
             if response.status_code == 200:
                 data = response.json()
