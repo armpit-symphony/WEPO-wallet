@@ -149,20 +149,26 @@ class RWATokenSystem:
         # Check WEPO balance requirement (if blockchain is provided)
         if blockchain:
             user_balance = blockchain.get_balance(owner_address)
-            rwa_creation_fee = 0.0002  # Double normal transaction fee (0.0001 * 2)
+            rwa_creation_fee = 0.0002  # Double normal transaction fee
             
             if user_balance < rwa_creation_fee:
                 raise ValueError(f"Insufficient WEPO balance. RWA creation requires {rwa_creation_fee} WEPO (current balance: {user_balance} WEPO)")
             
-            # Deduct fee by creating a transaction to a burn address
-            burn_address = "wepo1burn000000000000000000000000000"
+            # Add fee to redistribution pool instead of burning
             try:
-                fee_tx_id = blockchain.create_transaction(owner_address, burn_address, rwa_creation_fee)
+                # Create transaction to temporary holding address (will be redistributed)
+                redistribution_address = "wepo1redistribution000000000000000000"
+                fee_tx_id = blockchain.create_transaction(owner_address, redistribution_address, rwa_creation_fee)
+                
+                # Add to redistribution pool
+                self.fee_redistribution_pool.total_collected += rwa_creation_fee
+                
                 # Mine the fee transaction immediately in test mode
                 if hasattr(blockchain, 'mine_block'):
                     blockchain.mine_block()
+                    
             except Exception as e:
-                raise ValueError(f"Failed to deduct RWA creation fee: {str(e)}")
+                raise ValueError(f"Failed to process RWA creation fee: {str(e)}")
         
         # Generate unique asset ID
         asset_id = hashlib.sha256(
