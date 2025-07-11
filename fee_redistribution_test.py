@@ -170,20 +170,26 @@ def run_complete_fee_redistribution_test():
         for i in range(3):
             wallet_address = generate_random_address()
             
-            # Fund wallet with mining
-            mine_data = {"miner_address": wallet_address}
-            response = requests.post(f"{API_URL}/test/mine-block", json=mine_data)
+            # Fund wallet directly using fund-wallet endpoint
+            fund_data = {"address": wallet_address, "amount": 1000.0}
+            response = requests.post(f"{API_URL}/test/fund-wallet", json=fund_data)
             
             if response.status_code == 200:
                 data = response.json()
                 if data.get("success"):
                     test_wallets.append(wallet_address)
                     print(f"  ✓ Created and funded wallet {i+1}: {wallet_address}")
-                    print(f"    Mining reward: {data.get('reward', 'unknown')} WEPO")
+                    print(f"    Funded amount: {data.get('amount', 'unknown')} WEPO")
+                    
+                    # Verify balance
+                    balance_response = requests.get(f"{API_URL}/wallet/{wallet_address}")
+                    if balance_response.status_code == 200:
+                        balance = balance_response.json().get("balance", 0)
+                        print(f"    Verified balance: {balance} WEPO")
                 else:
-                    print(f"  ✗ Failed to fund wallet {i+1}")
+                    print(f"  ✗ Failed to fund wallet {i+1}: {data}")
             else:
-                print(f"  ✗ Failed to create wallet {i+1}: {response.status_code}")
+                print(f"  ✗ Failed to create wallet {i+1}: {response.status_code} - {response.text}")
         
         # Create miner address
         miner_address = generate_random_address()
