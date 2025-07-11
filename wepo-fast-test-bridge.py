@@ -437,7 +437,82 @@ class WepoFastTestBridge:
                 }
             else:
                 return {"success": False, "message": "No transactions to mine"}
-        
+
+        @self.app.post("/api/test/create-normal-transaction")
+        async def create_normal_transaction(request: dict):
+            """Create a normal transaction for testing fee redistribution"""
+            try:
+                from_address = request.get('from_address')
+                to_address = request.get('to_address')
+                amount = request.get('amount', 0.001)  # Default small amount
+                fee = request.get('fee', 0.0001)  # Default fee
+                
+                if not all([from_address, to_address]):
+                    raise HTTPException(status_code=400, detail="Missing required addresses")
+                
+                # Create transaction
+                transaction = self.blockchain.create_transaction(
+                    from_address=from_address,
+                    to_address=to_address,
+                    amount_wepo=float(amount),
+                    fee_wepo=float(fee)
+                )
+                
+                if not transaction:
+                    raise HTTPException(status_code=400, detail="Failed to create transaction")
+                
+                # Add to mempool
+                tx_id = transaction.calculate_txid()
+                self.blockchain.add_transaction_to_mempool(transaction)
+                
+                return {
+                    'success': True,
+                    'transaction_id': tx_id,
+                    'amount': amount,
+                    'fee': fee,
+                    'fee_satoshis': transaction.fee,
+                    'mempool_size': len(self.blockchain.mempool),
+                    'message': f'Normal transaction created with {fee} WEPO fee'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/test/mine-block")
+        async def mine_test_block(request: dict):
+            """Mine a block for testing fee redistribution"""
+            try:
+                miner_address = request.get('miner_address')
+                if not miner_address:
+                    raise HTTPException(status_code=400, detail="Miner address required")
+                
+                # Check mempool before mining
+                mempool_fees = sum(tx.fee for tx in self.blockchain.mempool.values() if hasattr(tx, 'fee') and tx.fee)
+                mempool_size = len(self.blockchain.mempool)
+                
+                # Mine block
+                mined_block = self.blockchain.mine_next_block(miner_address)
+                
+                if not mined_block:
+                    raise HTTPException(status_code=500, detail="Failed to mine block")
+                
+                # Get redistribution pool info after mining
+                pool_info = rwa_system.get_redistribution_pool_info()
+                
+                return {
+                    'success': True,
+                    'block_height': mined_block.height,
+                    'miner_address': miner_address,
+                    'mempool_fees_processed': mempool_fees / 100000000,  # Convert to WEPO
+                    'transactions_processed': mempool_size,
+                    'new_mempool_size': len(self.blockchain.mempool),
+                    'redistribution_pool_total': pool_info['total_collected'],
+                    'message': f'Block {mined_block.height} mined successfully'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.post("/api/test/fund-wallet")
         async def fund_wallet(request: dict):
             """Fund a wallet for testing"""
