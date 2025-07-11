@@ -80,36 +80,60 @@ function App() {
   };
 
   const renderAuthFlow = () => {
-    // If no wallets exist, show mode selector
-    if (!isWalletSetup && !isQuantumWalletSetup) {
-      return <WalletModeSelector onSetupComplete={handleSetupComplete} />;
-    }
-    
-    // If logged in, show dashboard
-    if (isLoggedIn) {
-      return <Dashboard />;
-    }
-    
-    // Show appropriate login based on mode and available wallets
-    if (isQuantumMode && isQuantumWalletSetup) {
+    try {
+      // If no wallets exist, show mode selector
+      if (!isWalletSetup && !isQuantumWalletSetup) {
+        return <WalletModeSelector onSetupComplete={handleSetupComplete} />;
+      }
+      
+      // If logged in, show dashboard
+      if (isLoggedIn) {
+        return <Dashboard />;
+      }
+      
+      // Show appropriate login based on mode and available wallets
+      if (isQuantumMode && isQuantumWalletSetup) {
+        return (
+          <QuantumWalletLogin 
+            onLoginSuccess={handleLoginSuccess}
+            onBackToRegular={() => {
+              setIsQuantumMode(false);
+              localStorage.setItem('wepo_quantum_mode', 'false');
+            }}
+          />
+        );
+      } else if (!isQuantumMode && isWalletSetup) {
+        return (
+          <WalletLogin 
+            onLoginSuccess={handleLoginSuccess}
+          />
+        );
+      } else {
+        // Handle edge cases - show mode selector
+        console.warn('Edge case in auth flow:', {
+          isQuantumMode,
+          isWalletSetup,
+          isQuantumWalletSetup,
+          isLoggedIn
+        });
+        return <WalletModeSelector onSetupComplete={handleSetupComplete} />;
+      }
+    } catch (error) {
+      console.error('Auth flow error:', error);
       return (
-        <QuantumWalletLogin 
-          onLoginSuccess={handleLoginSuccess}
-          onBackToRegular={() => {
-            setIsQuantumMode(false);
-            localStorage.setItem('wepo_quantum_mode', 'false');
-          }}
-        />
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-4">
+          <div className="bg-red-900/50 border border-red-500 rounded-lg p-6 text-red-200 max-w-md">
+            <h2 className="text-xl font-bold mb-2">Authentication Error</h2>
+            <p className="mb-4">There was an error loading the wallet interface.</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
       );
-    } else if (!isQuantumMode && isWalletSetup) {
-      return (
-        <WalletLogin 
-          onLoginSuccess={handleLoginSuccess}
-        />
-      );
-    } else {
-      // Handle edge cases - show mode selector
-      return <WalletModeSelector onSetupComplete={handleSetupComplete} />;
     }
   };
 
