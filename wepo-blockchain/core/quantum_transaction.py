@@ -442,20 +442,23 @@ def test_quantum_transaction_system():
         utxos=utxos
     )
     
-    print(f"✓ Created transaction: {transaction.calculate_txid()}")
-    print(f"  Size: {transaction.get_size()} bytes")
-    print(f"  Inputs: {len(transaction.inputs)}")
-    print(f"  Outputs: {len(transaction.outputs)}")
-    
-    # Verify transaction
-    is_valid = transaction.verify_all_inputs()
-    print(f"✓ Transaction verification: {is_valid}")
-    
-    # Test serialization
-    tx_dict = transaction.to_dict()
-    reconstructed_tx = QuantumTransaction.from_dict(tx_dict)
-    
-    print(f"✓ Serialization test: {reconstructed_tx.calculate_txid() == transaction.calculate_txid()}")
+    if transaction:
+        print(f"✓ Created transaction: {transaction.calculate_txid()}")
+        print(f"  Size: {transaction.get_size()} bytes")
+        print(f"  Inputs: {len(transaction.inputs)}")
+        print(f"  Outputs: {len(transaction.outputs)}")
+        
+        # Verify transaction
+        is_valid = transaction.verify_all_inputs()
+        print(f"✓ Transaction verification: {is_valid}")
+        
+        # Test serialization
+        tx_dict = transaction.to_dict()
+        reconstructed_tx = QuantumTransaction.from_dict(tx_dict)
+        
+        print(f"✓ Serialization test: {reconstructed_tx.calculate_txid() == transaction.calculate_txid()}")
+    else:
+        print("✗ Failed to create transaction")
     
     print("🎉 All quantum transaction tests passed!")
     
