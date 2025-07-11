@@ -63,7 +63,7 @@ def test_quantum_mining_compatibility():
     
     # Test 4: Mine Initial Block to Fund Wallets
     print("\n4. Mining Initial Block to Fund Wallets...")
-    response = requests.post(f"{base_url}/api/mining/mine")
+    response = requests.post(f"{base_url}/api/test/mine-block")
     if response.status_code == 200:
         mine_result = response.json()
         print(f"   ✓ Block Mined: {mine_result['success']}")
