@@ -937,6 +937,124 @@ class WepoFullNode:
                 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
+        
+        # Quantum-Resistant Blockchain Operations
+        @self.app.get("/api/quantum/info")
+        async def get_quantum_info():
+            """Get quantum blockchain information"""
+            try:
+                return self.quantum_blockchain.get_quantum_info()
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/quantum/dilithium")
+        async def get_dilithium_info():
+            """Get Dilithium implementation details"""
+            try:
+                return get_dilithium_info()
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/quantum/wallet/create")
+        async def create_quantum_wallet():
+            """Create a new quantum-resistant wallet"""
+            try:
+                wallet = QuantumWallet()
+                wallet_info = wallet.generate_new_wallet()
+                
+                return {
+                    'success': True,
+                    'wallet': wallet_info,
+                    'quantum_resistant': True,
+                    'message': 'Quantum-resistant wallet created successfully'
+                }
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/quantum/wallet/{address}")
+        async def get_quantum_wallet_info(address: str):
+            """Get quantum wallet information"""
+            try:
+                if not validate_quantum_address(address):
+                    raise HTTPException(status_code=400, detail="Invalid quantum address format")
+                
+                balance = self.quantum_blockchain.get_balance_wepo(address)
+                
+                return {
+                    'address': address,
+                    'balance': balance,
+                    'quantum_resistant': True,
+                    'signature_algorithm': 'Dilithium2',
+                    'hash_algorithm': 'BLAKE2b'
+                }
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/quantum/transaction/create")
+        async def create_quantum_transaction(request: dict):
+            """Create a quantum-resistant transaction"""
+            try:
+                from_address = request.get('from_address')
+                to_address = request.get('to_address')
+                amount = request.get('amount')
+                fee = request.get('fee', 0.0001)
+                private_key = request.get('private_key')
+                
+                if not all([from_address, to_address, amount, private_key]):
+                    raise HTTPException(status_code=400, detail="Missing required fields")
+                
+                # Create and sign transaction
+                wallet = QuantumWallet()
+                if not wallet.load_wallet(private_key):
+                    raise HTTPException(status_code=400, detail="Invalid private key")
+                
+                # Get UTXOs (simplified)
+                utxos = []  # In real implementation, get from blockchain
+                
+                # Create transaction
+                transaction = wallet.create_transaction(
+                    recipient_address=to_address,
+                    amount=int(amount * 100000000),  # Convert to satoshis
+                    fee=int(fee * 100000000),
+                    utxos=utxos
+                )
+                
+                if not transaction:
+                    raise HTTPException(status_code=400, detail="Failed to create transaction")
+                
+                # Add to mempool
+                if self.quantum_blockchain.add_transaction_to_mempool(transaction):
+                    return {
+                        'success': True,
+                        'transaction_id': transaction.calculate_txid(),
+                        'quantum_resistant': True,
+                        'signature_algorithm': 'Dilithium2',
+                        'status': 'pending'
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="Transaction validation failed")
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/quantum/status")
+        async def get_quantum_status():
+            """Get quantum blockchain status"""
+            try:
+                return {
+                    'quantum_ready': True,
+                    'current_height': self.quantum_blockchain.get_block_height(),
+                    'mempool_size': len(self.quantum_blockchain.mempool),
+                    'signature_algorithm': 'Dilithium2',
+                    'hash_algorithm': 'BLAKE2b',
+                    'implementation': 'WEPO Quantum-Resistant v1.0'
+                }
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
     
     def handle_new_block(self, block_data: dict):
         """Handle new block from P2P network"""
