@@ -657,6 +657,14 @@ class WepoFastTestBridge:
             try:
                 fee_info = rwa_system.get_rwa_creation_fee_info()
                 
+                # Add information about normal transaction fees
+                fee_info['normal_transaction_redistribution'] = {
+                    'policy': 'Normal transaction fees (0.0001 WEPO) are also redistributed to network participants',
+                    'first_18_months': 'All transaction fees redistributed to miners as additional block rewards',
+                    'after_18_months': 'All transaction fees redistributed to masternode operators',
+                    'no_fees_burned': 'No transaction fees are ever burned - all support the network'
+                }
+                
                 return {
                     'success': True,
                     'fee_info': fee_info
