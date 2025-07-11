@@ -123,7 +123,7 @@ def test_quantum_mining_compatibility():
     
     # Test 8: Mine Block with Regular Transaction
     print("\n8. Mining Block with Regular Transaction...")
-    response = requests.post(f"{base_url}/api/mining/mine")
+    response = requests.post(f"{base_url}/api/test/mine-block")
     if response.status_code == 200:
         mine_result = response.json()
         print(f"   ✓ Block Mined: {mine_result['success']}")
