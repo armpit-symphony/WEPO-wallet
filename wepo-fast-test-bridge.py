@@ -1231,15 +1231,18 @@ class WepoFastTestBridge:
             """Get quantum blockchain status"""
             try:
                 # Count quantum transactions in mempool
-                quantum_txs_in_mempool = sum(1 for tx in self.blockchain.mempool.values() 
-                                           if tx.has_quantum_signatures())
+                quantum_txs_in_mempool = 0
+                for tx in self.blockchain.mempool.values():
+                    if hasattr(tx, 'has_quantum_signatures') and tx.has_quantum_signatures():
+                        quantum_txs_in_mempool += 1
                 
                 # Count total quantum transactions
                 quantum_txs_total = 0
                 for block in self.blockchain.blocks:
-                    for tx in block.transactions:
-                        if tx.has_quantum_signatures():
-                            quantum_txs_total += 1
+                    if hasattr(block, 'transactions'):
+                        for tx in block.transactions:
+                            if hasattr(tx, 'has_quantum_signatures') and tx.has_quantum_signatures():
+                                quantum_txs_total += 1
                 
                 return {
                     'quantum_ready': True,
@@ -1254,6 +1257,8 @@ class WepoFastTestBridge:
                     'cross_compatibility': True
                 }
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 raise HTTPException(status_code=500, detail=str(e))
         
         @self.app.get("/api/address/validate/{address}")
