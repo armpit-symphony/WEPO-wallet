@@ -142,7 +142,7 @@ const Dashboard = () => {
       case 'receive':
         return <ReceiveWepo onBack={() => setActiveTab('dashboard')} />;
       case 'btc-dex':
-        return <BtcDexSwap onBack={() => setActiveTab('dashboard')} />;
+        return <EnhancedDEX onClose={() => setActiveTab('dashboard')} />;
       case 'staking':
         return <StakingInterface onBack={() => setActiveTab('dashboard')} />;
       case 'masternode':
