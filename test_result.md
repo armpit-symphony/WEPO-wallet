@@ -438,9 +438,9 @@ test_plan:
 
   - task: "RWA Tokenization System"
     implemented: true
-    working: false
+    working: true
     file: "rwa_tokens.py, wepo-fast-test-bridge.py, RWADashboard.js, RWACreateAsset.js, EnhancedDEX.js"
-    stuck_count: 2
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
