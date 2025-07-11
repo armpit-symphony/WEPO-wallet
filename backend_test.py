@@ -3939,32 +3939,16 @@ def run_complete_fee_redistribution_tests():
     
     return test_results["failed"] == 0
 
-    print("Starting WEPO Backend API Comprehensive Testing...")
-    print(f"Backend URL: {BACKEND_URL}")
-    print(f"API URL: {API_URL}")
+if __name__ == "__main__":
+    print("WEPO Backend Testing Suite")
+    print("=" * 50)
     
-    # Run the comprehensive fee redistribution system tests
-    print("\n🎯 RUNNING COMPREHENSIVE FEE REDISTRIBUTION SYSTEM TESTS")
-    print("Testing updated fee redistribution system that includes normal transaction fees")
-    success = run_fee_redistribution_system_tests()
-    
-    # Print final results
-    print("\n" + "="*80)
-    print("FINAL TESTING RESULTS")
-    print("="*80)
-    print(f"Total tests run: {test_results['total']}")
-    print(f"Tests passed: {test_results['passed']}")
-    print(f"Tests failed: {test_results['failed']}")
-    print(f"Overall success rate: {(test_results['passed'] / test_results['total'] * 100):.1f}%")
+    # Run the complete fee redistribution system tests as requested
+    success = run_complete_fee_redistribution_tests()
     
     if success:
-        print("\n🎉 ALL TESTS PASSED! Fee redistribution system is working correctly.")
-        print("✅ Normal transaction fees are redistributed to network participants")
-        print("✅ RWA creation fees are redistributed to network participants") 
-        print("✅ No fees are burned or permanently lost")
-        print("✅ Sustainable tokenomics implemented successfully")
+        print("\n🎉 ALL TESTS PASSED! Fee redistribution system working correctly.")
     else:
-        print("\n❌ SOME TESTS FAILED! Please review the failed tests above.")
-        print("Issues found in the fee redistribution system implementation.")
+        print("\n❌ SOME TESTS FAILED! Check the results above for details.")
     
-    print("="*80)
+    sys.exit(0 if success else 1)
