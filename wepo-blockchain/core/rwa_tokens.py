@@ -471,10 +471,16 @@ class RWATokenSystem:
             }
         }
     
-    def add_fee_to_redistribution_pool(self, amount: float, block_height: int):
+    def add_fee_to_redistribution_pool(self, amount: float, block_height: int, fee_type: str = "transaction"):
         """Add fee to redistribution pool"""
         self.fee_redistribution_pool.total_collected += amount
-        print(f"Added {amount} WEPO to redistribution pool. Total: {self.fee_redistribution_pool.total_collected}")
+        print(f"Added {amount} WEPO {fee_type} fee to redistribution pool. Total: {self.fee_redistribution_pool.total_collected}")
+    
+    def add_transaction_fees_to_pool(self, total_fees_satoshis: int, block_height: int):
+        """Add normal transaction fees to redistribution pool"""
+        if total_fees_satoshis > 0:
+            fee_amount_wepo = total_fees_satoshis / 100000000  # Convert from satoshis
+            self.add_fee_to_redistribution_pool(fee_amount_wepo, block_height, "transaction")
     
     def get_redistribution_pool_info(self) -> Dict:
         """Get information about the fee redistribution pool"""
