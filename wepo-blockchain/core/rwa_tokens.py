@@ -24,18 +24,18 @@ class RWAAsset:
     creator_address: str
     creation_timestamp: int
     
-    # File data (base64 encoded)
+    # File data (base64 encoded) - defaults
     file_data: Optional[str] = None
     file_name: Optional[str] = None
     file_size: int = 0
     file_type: Optional[str] = None  # MIME type
     
-    # Asset metadata
-    metadata: Dict = None
+    # Asset metadata - defaults
+    metadata: Optional[Dict] = None
     valuation: Optional[float] = None  # In USD
     verification_status: str = "pending"  # pending, verified, rejected
     
-    # Tokenization info
+    # Tokenization info - defaults
     token_symbol: str = ""
     total_supply: int = 1000000000000  # 10,000 tokens with 8 decimal places
     divisible: bool = True
