@@ -160,11 +160,8 @@ const RWADashboard = ({ onBack }) => {
   );
 
   const renderDEXTrading = () => (
-    <RWADEXTrading 
-      onBack={() => setActiveTab('dashboard')}
-      userAddress={currentAddress}
-      tradeableTokens={tradeableTokens}
-      onTradeComplete={loadRWAData}
+    <EnhancedDEX 
+      onClose={() => setActiveTab('dashboard')}
     />
   );
 
