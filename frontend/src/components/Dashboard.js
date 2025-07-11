@@ -315,7 +315,7 @@ const Dashboard = () => {
         </div>
         
         <div className="p-6">
-          {transactions.length === 0 ? (
+          {currentTransactions.length === 0 ? (
             <div className="text-center py-8">
               <AlertCircle className="h-12 w-12 text-gray-500 mx-auto mb-4" />
               <p className="text-gray-400">No transactions yet</p>
@@ -325,7 +325,7 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {transactions.slice(0, 5).map((tx) => (
+              {currentTransactions.slice(0, 5).map((tx) => (
                 <div key={tx.id} className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-full ${
@@ -336,7 +336,15 @@ const Dashboard = () => {
                       {tx.type === 'send' ? <Send size={16} /> : <Download size={16} />}
                     </div>
                     <div>
-                      <p className="text-white font-medium capitalize">{tx.type}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-white font-medium capitalize">{tx.type}</p>
+                        {tx.quantumResistant && (
+                          <div className="flex items-center gap-1 bg-purple-600/20 px-2 py-1 rounded-full">
+                            <Zap className="h-3 w-3 text-yellow-400" />
+                            <span className="text-xs text-yellow-400">Quantum</span>
+                          </div>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-400">{formatDate(tx.timestamp)}</p>
                     </div>
                   </div>
