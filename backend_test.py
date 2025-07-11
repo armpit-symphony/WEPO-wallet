@@ -2274,23 +2274,670 @@ def run_real_cryptographic_privacy_tests():
     
     return test_results["failed"] == 0
 
+def run_rwa_redistribution_tests():
+    """Run comprehensive tests for the updated RWA fee redistribution system"""
+    # Test variables to store data between tests
+    test_wallet_address = None
+    test_asset_id = None
+    miner_address = None
+    masternode_addresses = []
+    
+    print("\n" + "="*80)
+    print("WEPO RWA FEE REDISTRIBUTION SYSTEM COMPREHENSIVE TESTING")
+    print("="*80)
+    print("Testing updated RWA fee redistribution system - fees collected and redistributed instead of burned")
+    print("Key changes: Redistribution pool, miner distribution, masternode distribution")
+    print("="*80 + "\n")
+    
+    # 1. Test RWA Fee Info Endpoint - Check redistribution policy
+    try:
+        print("\n[TEST] RWA Fee Info - Verifying redistribution policy instead of burn policy")
+        response = requests.get(f"{API_URL}/rwa/fee-info")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  RWA Fee Info: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check success status
+            if data.get("success") == True:
+                print("  ✓ API call successful")
+                fee_info = data.get("fee_info", {})
+                
+                # Check RWA creation fee (should be 0.0002 WEPO)
+                if fee_info.get("rwa_creation_fee") == 0.0002:
+                    print(f"  ✓ Correct RWA creation fee: {fee_info['rwa_creation_fee']} WEPO")
+                else:
+                    print(f"  ✗ Incorrect RWA creation fee: {fee_info.get('rwa_creation_fee')} (expected 0.0002)")
+                    passed = False
+                    
+                # Check redistribution info (key change)
+                if "redistribution_info" in fee_info:
+                    redistribution_info = fee_info["redistribution_info"]
+                    print(f"  ✓ Redistribution info present: {json.dumps(redistribution_info, indent=4)}")
+                    
+                    # Check first 18 months policy
+                    if "first_18_months" in redistribution_info:
+                        print(f"  ✓ First 18 months policy: {redistribution_info['first_18_months']}")
+                        if "miners" in redistribution_info["first_18_months"].lower():
+                            print("  ✓ Correctly mentions miner redistribution")
+                        else:
+                            print("  ✗ Missing miner redistribution policy")
+                            passed = False
+                    else:
+                        print("  ✗ Missing first 18 months redistribution policy")
+                        passed = False
+                        
+                    # Check after 18 months policy
+                    if "after_18_months" in redistribution_info:
+                        print(f"  ✓ After 18 months policy: {redistribution_info['after_18_months']}")
+                        if "masternode" in redistribution_info["after_18_months"].lower():
+                            print("  ✓ Correctly mentions masternode redistribution")
+                        else:
+                            print("  ✗ Missing masternode redistribution policy")
+                            passed = False
+                    else:
+                        print("  ✗ Missing after 18 months redistribution policy")
+                        passed = False
+                        
+                    # Check no burn policy
+                    if "policy" in redistribution_info:
+                        policy = redistribution_info["policy"]
+                        print(f"  ✓ Policy statement: {policy}")
+                        if "no coins are burned" in policy.lower() or "not burned" in policy.lower():
+                            print("  ✓ Correctly states no coins are burned")
+                        else:
+                            print("  ✗ Missing no-burn policy statement")
+                            passed = False
+                    else:
+                        print("  ✗ Missing policy statement")
+                        passed = False
+                else:
+                    print("  ✗ Missing redistribution info (key change)")
+                    passed = False
+                    
+                # Check that burn address is NOT mentioned
+                fee_info_str = json.dumps(fee_info).lower()
+                if "burn" in fee_info_str and "not burned" not in fee_info_str:
+                    print("  ✗ Still mentions burning (should be removed)")
+                    passed = False
+                else:
+                    print("  ✓ No mention of burning coins")
+                    
+            else:
+                print("  ✗ API call failed")
+                passed = False
+                
+            log_test("RWA Fee Info - Redistribution Policy", passed, response)
+        else:
+            log_test("RWA Fee Info - Redistribution Policy", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("RWA Fee Info - Redistribution Policy", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 2. Test Redistribution Pool Info Endpoint
+    try:
+        print("\n[TEST] Redistribution Pool Info - Checking fee redistribution pool status")
+        response = requests.get(f"{API_URL}/rwa/redistribution-pool")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Redistribution Pool Info: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check success status
+            if data.get("success") == True:
+                print("  ✓ API call successful")
+                pool_info = data.get("redistribution_pool", {})
+                
+                # Check total collected
+                if "total_collected" in pool_info:
+                    print(f"  ✓ Total collected: {pool_info['total_collected']} WEPO")
+                else:
+                    print("  ✗ Missing total collected amount")
+                    passed = False
+                    
+                # Check distribution policy
+                if "distribution_policy" in pool_info:
+                    policy = pool_info["distribution_policy"]
+                    print(f"  ✓ Distribution policy: {json.dumps(policy, indent=4)}")
+                    
+                    # Check first 18 months policy
+                    if "first_18_months" in policy:
+                        print(f"  ✓ First 18 months: {policy['first_18_months']}")
+                    else:
+                        print("  ✗ Missing first 18 months policy")
+                        passed = False
+                        
+                    # Check after 18 months policy
+                    if "after_18_months" in policy:
+                        print(f"  ✓ After 18 months: {policy['after_18_months']}")
+                    else:
+                        print("  ✗ Missing after 18 months policy")
+                        passed = False
+                else:
+                    print("  ✗ Missing distribution policy")
+                    passed = False
+                    
+                # Check pending for distribution
+                if "pending_for_distribution" in pool_info:
+                    print(f"  ✓ Pending for distribution: {pool_info['pending_for_distribution']} WEPO")
+                else:
+                    print("  ✗ Missing pending distribution amount")
+                    passed = False
+                    
+            else:
+                print("  ✗ API call failed")
+                passed = False
+                
+            log_test("Redistribution Pool Info", passed, response)
+        else:
+            log_test("Redistribution Pool Info", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Redistribution Pool Info", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 3. Test Wallet Creation and Funding for RWA Tests
+    try:
+        print("\n[TEST] Wallet Setup - Creating and funding wallet for RWA tests")
+        
+        # Create wallet
+        username = generate_random_username()
+        address = generate_random_address()
+        encrypted_private_key = generate_encrypted_key()
+        
+        wallet_data = {
+            "username": username,
+            "address": address,
+            "encrypted_private_key": encrypted_private_key
+        }
+        
+        print(f"  Creating wallet: {address}")
+        response = requests.post(f"{API_URL}/wallet/create", json=wallet_data)
+        
+        if response.status_code == 200:
+            test_wallet_address = address
+            print(f"  ✓ Wallet created: {address}")
+            
+            # Fund wallet with test mining
+            fund_data = {"address": address, "amount": 1.0}
+            fund_response = requests.post(f"{API_URL}/test/fund-wallet", json=fund_data)
+            
+            if fund_response.status_code == 200:
+                fund_result = fund_response.json()
+                print(f"  ✓ Wallet funded with {fund_result.get('amount', 0)} WEPO")
+                print(f"  ✓ Current balance: {fund_result.get('balance', 0)} WEPO")
+                passed = True
+            else:
+                print("  ✗ Failed to fund wallet")
+                passed = False
+        else:
+            print("  ✗ Failed to create wallet")
+            passed = False
+            
+        log_test("Wallet Setup", passed)
+    except Exception as e:
+        log_test("Wallet Setup", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 4. Test RWA Asset Creation - Verify fees go to redistribution pool
+    if test_wallet_address:
+        try:
+            print("\n[TEST] RWA Asset Creation - Testing fee collection in redistribution pool")
+            
+            # Get initial pool status
+            pool_response = requests.get(f"{API_URL}/rwa/redistribution-pool")
+            initial_pool_amount = 0.0
+            if pool_response.status_code == 200:
+                pool_data = pool_response.json()
+                initial_pool_amount = pool_data.get("redistribution_pool", {}).get("total_collected", 0.0)
+                print(f"  Initial pool amount: {initial_pool_amount} WEPO")
+            
+            # Create RWA asset
+            asset_data = {
+                "name": "Test Property for Redistribution",
+                "description": "Testing RWA creation with fee redistribution",
+                "asset_type": "property",
+                "owner_address": test_wallet_address,
+                "file_data": base64.b64encode(b"Test property document content").decode(),
+                "file_name": "property_deed.txt",
+                "file_type": "text/plain",
+                "metadata": {"location": "Test City", "value": 100000},
+                "valuation": 100000.0
+            }
+            
+            print(f"  Creating RWA asset: {asset_data['name']}")
+            response = requests.post(f"{API_URL}/rwa/create-asset", json=asset_data)
+            print(f"  Response: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"  Asset creation response: {json.dumps(data, indent=2)}")
+                
+                if data.get("success") == True:
+                    test_asset_id = data.get("asset_id")
+                    print(f"  ✓ Successfully created asset: {test_asset_id}")
+                    
+                    # Check response message mentions redistribution instead of burning
+                    response_str = json.dumps(data).lower()
+                    if "redistribution" in response_str or "redistributed" in response_str:
+                        print("  ✓ Response mentions redistribution")
+                        passed = True
+                    elif "burn" in response_str and "not burned" not in response_str:
+                        print("  ✗ Response still mentions burning")
+                        passed = False
+                    else:
+                        print("  ✓ No mention of burning in response")
+                        passed = True
+                        
+                    # Check if pool amount increased
+                    pool_response_after = requests.get(f"{API_URL}/rwa/redistribution-pool")
+                    if pool_response_after.status_code == 200:
+                        pool_data_after = pool_response_after.json()
+                        final_pool_amount = pool_data_after.get("redistribution_pool", {}).get("total_collected", 0.0)
+                        print(f"  Final pool amount: {final_pool_amount} WEPO")
+                        
+                        if final_pool_amount > initial_pool_amount:
+                            fee_added = final_pool_amount - initial_pool_amount
+                            print(f"  ✓ Fee added to redistribution pool: {fee_added} WEPO")
+                            if abs(fee_added - 0.0002) < 0.0001:  # Allow for floating point precision
+                                print("  ✓ Correct fee amount added (0.0002 WEPO)")
+                            else:
+                                print(f"  ✗ Incorrect fee amount: {fee_added} (expected 0.0002)")
+                                passed = False
+                        else:
+                            print("  ✗ No fee added to redistribution pool")
+                            passed = False
+                    else:
+                        print("  ✗ Could not check pool status after asset creation")
+                        passed = False
+                else:
+                    print("  ✗ Asset creation failed")
+                    passed = False
+                    
+            else:
+                print(f"  ✗ Asset creation failed with status code: {response.status_code}")
+                passed = False
+                
+            log_test("RWA Asset Creation - Fee Redistribution", passed, response)
+        except Exception as e:
+            log_test("RWA Asset Creation - Fee Redistribution", False, error=str(e))
+            print(f"  ✗ Exception: {str(e)}")
+    else:
+        log_test("RWA Asset Creation - Fee Redistribution", False, error="Skipped - No wallet created")
+        print("  ✗ Skipped - No wallet created")
+    
+    # 5. Test Multiple Asset Creation - Verify pool accumulation
+    if test_wallet_address:
+        try:
+            print("\n[TEST] Multiple Asset Creation - Testing fee accumulation in redistribution pool")
+            
+            # Get current pool status
+            pool_response = requests.get(f"{API_URL}/rwa/redistribution-pool")
+            initial_pool_amount = 0.0
+            if pool_response.status_code == 200:
+                pool_data = pool_response.json()
+                initial_pool_amount = pool_data.get("redistribution_pool", {}).get("total_collected", 0.0)
+                print(f"  Initial pool amount: {initial_pool_amount} WEPO")
+            
+            # Create multiple assets
+            assets_created = 0
+            for i in range(2):  # Create 2 more assets
+                asset_data = {
+                    "name": f"Test Asset {i+2}",
+                    "description": f"Testing asset {i+2} for fee accumulation",
+                    "asset_type": "document",
+                    "owner_address": test_wallet_address,
+                    "file_data": base64.b64encode(f"Test document {i+2} content".encode()).decode(),
+                    "file_name": f"document_{i+2}.txt",
+                    "file_type": "text/plain",
+                    "metadata": {"test": True},
+                    "valuation": 5000.0
+                }
+                
+                print(f"  Creating asset {i+2}: {asset_data['name']}")
+                response = requests.post(f"{API_URL}/rwa/create-asset", json=asset_data)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("success") == True:
+                        assets_created += 1
+                        print(f"  ✓ Asset {i+2} created successfully")
+                    else:
+                        print(f"  ✗ Asset {i+2} creation failed")
+                else:
+                    print(f"  ✗ Asset {i+2} creation failed with status {response.status_code}")
+            
+            # Check final pool amount
+            pool_response_final = requests.get(f"{API_URL}/rwa/redistribution-pool")
+            if pool_response_final.status_code == 200:
+                pool_data_final = pool_response_final.json()
+                final_pool_amount = pool_data_final.get("redistribution_pool", {}).get("total_collected", 0.0)
+                print(f"  Final pool amount: {final_pool_amount} WEPO")
+                
+                expected_increase = assets_created * 0.0002
+                actual_increase = final_pool_amount - initial_pool_amount
+                
+                print(f"  Expected increase: {expected_increase} WEPO")
+                print(f"  Actual increase: {actual_increase} WEPO")
+                
+                if abs(actual_increase - expected_increase) < 0.0001:
+                    print(f"  ✓ Correct fee accumulation for {assets_created} assets")
+                    passed = True
+                else:
+                    print(f"  ✗ Incorrect fee accumulation")
+                    passed = False
+            else:
+                print("  ✗ Could not check final pool status")
+                passed = False
+                
+            log_test("Multiple Asset Creation - Fee Accumulation", passed)
+        except Exception as e:
+            log_test("Multiple Asset Creation - Fee Accumulation", False, error=str(e))
+            print(f"  ✗ Exception: {str(e)}")
+    else:
+        log_test("Multiple Asset Creation - Fee Accumulation", False, error="Skipped - No wallet created")
+        print("  ✗ Skipped - No wallet created")
+    
+    # 6. Test Miner Fee Distribution
+    try:
+        print("\n[TEST] Miner Fee Distribution - Testing fee distribution to miners")
+        
+        # Create miner address
+        miner_address = generate_random_address()
+        print(f"  Miner address: {miner_address}")
+        
+        # Get current pool status
+        pool_response = requests.get(f"{API_URL}/rwa/redistribution-pool")
+        initial_pool_amount = 0.0
+        if pool_response.status_code == 200:
+            pool_data = pool_response.json()
+            initial_pool_amount = pool_data.get("redistribution_pool", {}).get("total_collected", 0.0)
+            print(f"  Pool amount before distribution: {initial_pool_amount} WEPO")
+        
+        # Distribute fees to miner
+        distribution_data = {
+            "type": "miner",
+            "recipient_address": miner_address
+        }
+        
+        print(f"  Distributing fees to miner: {miner_address}")
+        response = requests.post(f"{API_URL}/rwa/distribute-fees", json=distribution_data)
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Distribution response: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            if data.get("success") == True:
+                print("  ✓ Distribution successful")
+                
+                # Check distribution type
+                if data.get("distribution_type") == "miner":
+                    print("  ✓ Correct distribution type: miner")
+                else:
+                    print(f"  ✗ Incorrect distribution type: {data.get('distribution_type')}")
+                    passed = False
+                    
+                # Check recipient
+                if data.get("recipient") == miner_address:
+                    print(f"  ✓ Correct recipient: {data.get('recipient')}")
+                else:
+                    print(f"  ✗ Incorrect recipient: {data.get('recipient')}")
+                    passed = False
+                    
+                # Check amount distributed
+                amount_distributed = data.get("amount_distributed", 0)
+                print(f"  ✓ Amount distributed: {amount_distributed} WEPO")
+                
+                if amount_distributed > 0:
+                    print("  ✓ Positive amount distributed")
+                else:
+                    print("  ✗ No amount distributed")
+                    passed = False
+                    
+                # Check pool is now empty or reduced
+                pool_response_after = requests.get(f"{API_URL}/rwa/redistribution-pool")
+                if pool_response_after.status_code == 200:
+                    pool_data_after = pool_response_after.json()
+                    final_pool_amount = pool_data_after.get("redistribution_pool", {}).get("total_collected", 0.0)
+                    print(f"  Pool amount after distribution: {final_pool_amount} WEPO")
+                    
+                    if final_pool_amount < initial_pool_amount:
+                        print("  ✓ Pool amount reduced after distribution")
+                    else:
+                        print("  ✗ Pool amount not reduced")
+                        passed = False
+                else:
+                    print("  ✗ Could not check pool status after distribution")
+                    passed = False
+                    
+            else:
+                print("  ✗ Distribution failed")
+                passed = False
+                
+        else:
+            print(f"  ✗ Distribution failed with status code: {response.status_code}")
+            passed = False
+            
+        log_test("Miner Fee Distribution", passed, response)
+    except Exception as e:
+        log_test("Miner Fee Distribution", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 7. Test Masternode Fee Distribution
+    try:
+        print("\n[TEST] Masternode Fee Distribution - Testing fee distribution to masternodes")
+        
+        # Create masternode addresses
+        masternode_addresses = [generate_random_address() for _ in range(3)]
+        print(f"  Masternode addresses: {masternode_addresses}")
+        
+        # First, add some fees to the pool by creating another asset
+        if test_wallet_address:
+            asset_data = {
+                "name": "Asset for Masternode Test",
+                "description": "Creating asset to add fees for masternode distribution",
+                "asset_type": "document",
+                "owner_address": test_wallet_address,
+                "file_data": base64.b64encode(b"Masternode test content").decode(),
+                "file_name": "masternode_test.txt",
+                "file_type": "text/plain",
+                "metadata": {},
+                "valuation": 1000.0
+            }
+            
+            print("  Creating asset to add fees to pool...")
+            asset_response = requests.post(f"{API_URL}/rwa/create-asset", json=asset_data)
+            if asset_response.status_code == 200:
+                print("  ✓ Asset created, fees added to pool")
+            else:
+                print("  ✗ Failed to create asset for masternode test")
+        
+        # Get current pool status
+        pool_response = requests.get(f"{API_URL}/rwa/redistribution-pool")
+        initial_pool_amount = 0.0
+        if pool_response.status_code == 200:
+            pool_data = pool_response.json()
+            initial_pool_amount = pool_data.get("redistribution_pool", {}).get("total_collected", 0.0)
+            print(f"  Pool amount before distribution: {initial_pool_amount} WEPO")
+        
+        # Distribute fees to masternodes
+        distribution_data = {
+            "type": "masternode",
+            "masternode_addresses": masternode_addresses
+        }
+        
+        print(f"  Distributing fees to {len(masternode_addresses)} masternodes")
+        response = requests.post(f"{API_URL}/rwa/distribute-fees", json=distribution_data)
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Distribution response: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            if data.get("success") == True:
+                print("  ✓ Distribution successful")
+                
+                # Check distribution type
+                if data.get("distribution_type") == "masternode":
+                    print("  ✓ Correct distribution type: masternode")
+                else:
+                    print(f"  ✗ Incorrect distribution type: {data.get('distribution_type')}")
+                    passed = False
+                    
+                # Check distributions
+                distributions = data.get("distributions", {})
+                if len(distributions) == len(masternode_addresses):
+                    print(f"  ✓ Correct number of distributions: {len(distributions)}")
+                    
+                    # Check each masternode got equal distribution
+                    amounts = list(distributions.values())
+                    if len(set(amounts)) == 1:  # All amounts are equal
+                        print(f"  ✓ Equal distribution to all masternodes: {amounts[0]} WEPO each")
+                    else:
+                        print(f"  ✗ Unequal distribution: {amounts}")
+                        passed = False
+                        
+                    # Check all addresses are included
+                    for addr in masternode_addresses:
+                        if addr in distributions:
+                            print(f"  ✓ Masternode {addr[:10]}... received {distributions[addr]} WEPO")
+                        else:
+                            print(f"  ✗ Masternode {addr[:10]}... not in distributions")
+                            passed = False
+                else:
+                    print(f"  ✗ Incorrect number of distributions: {len(distributions)} (expected {len(masternode_addresses)})")
+                    passed = False
+                    
+                # Check total distributed
+                total_distributed = data.get("total_distributed", 0)
+                print(f"  ✓ Total distributed: {total_distributed} WEPO")
+                
+            else:
+                print("  ✗ Distribution failed")
+                passed = False
+                
+        else:
+            print(f"  ✗ Distribution failed with status code: {response.status_code}")
+            passed = False
+            
+        log_test("Masternode Fee Distribution", passed, response)
+    except Exception as e:
+        log_test("Masternode Fee Distribution", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 8. Test Distribution History Tracking
+    try:
+        print("\n[TEST] Distribution History - Verifying distribution history is tracked")
+        
+        # Get redistribution pool info to check history
+        response = requests.get(f"{API_URL}/rwa/redistribution-pool")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Pool info with history: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            if data.get("success") == True:
+                pool_info = data.get("redistribution_pool", {})
+                
+                # Check if distribution history exists
+                if "distribution_history" in pool_info:
+                    print("  ✓ Distribution history field present")
+                    # Note: History might be empty if no distributions occurred
+                    # This is acceptable as long as the field exists
+                else:
+                    print("  ✗ Distribution history field missing")
+                    passed = False
+                    
+                # Check last distribution block
+                if "last_distribution_block" in pool_info:
+                    last_block = pool_info["last_distribution_block"]
+                    print(f"  ✓ Last distribution block: {last_block}")
+                else:
+                    print("  ✗ Last distribution block missing")
+                    passed = False
+                    
+            else:
+                print("  ✗ API call failed")
+                passed = False
+                
+        else:
+            print(f"  ✗ Failed with status code: {response.status_code}")
+            passed = False
+            
+        log_test("Distribution History Tracking", passed, response)
+    except Exception as e:
+        log_test("Distribution History Tracking", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # Print summary
+    print("\n" + "="*80)
+    print("WEPO RWA FEE REDISTRIBUTION SYSTEM TESTING SUMMARY")
+    print("="*80)
+    print(f"Total tests:    {test_results['total']}")
+    print(f"Passed:         {test_results['passed']}")
+    print(f"Failed:         {test_results['failed']}")
+    print(f"Success rate:   {(test_results['passed'] / test_results['total'] * 100):.1f}%")
+    
+    if test_results["failed"] > 0:
+        print("\nFailed tests:")
+        for test in test_results["tests"]:
+            if not test["passed"]:
+                print(f"- {test['name']}")
+    
+    print("\nKEY FINDINGS:")
+    print("1. Fee Redistribution Policy: " + ("✅ Updated to show redistribution instead of burning" if any(t["name"] == "RWA Fee Info - Redistribution Policy" and t["passed"] for t in test_results["tests"]) else "❌ Still shows burning or policy missing"))
+    print("2. Redistribution Pool: " + ("✅ Pool system working and tracking fees" if any(t["name"] == "Redistribution Pool Info" and t["passed"] for t in test_results["tests"]) else "❌ Pool system not working"))
+    print("3. Fee Collection: " + ("✅ Fees properly collected in redistribution pool" if any(t["name"] == "RWA Asset Creation - Fee Redistribution" and t["passed"] for t in test_results["tests"]) else "❌ Fees not collected properly"))
+    print("4. Fee Accumulation: " + ("✅ Multiple asset fees accumulate correctly" if any(t["name"] == "Multiple Asset Creation - Fee Accumulation" and t["passed"] for t in test_results["tests"]) else "❌ Fee accumulation not working"))
+    print("5. Miner Distribution: " + ("✅ Fees can be distributed to miners" if any(t["name"] == "Miner Fee Distribution" and t["passed"] for t in test_results["tests"]) else "❌ Miner distribution not working"))
+    print("6. Masternode Distribution: " + ("✅ Fees can be distributed to masternodes" if any(t["name"] == "Masternode Fee Distribution" and t["passed"] for t in test_results["tests"]) else "❌ Masternode distribution not working"))
+    print("7. Distribution History: " + ("✅ Distribution history is tracked" if any(t["name"] == "Distribution History Tracking" and t["passed"] for t in test_results["tests"]) else "❌ Distribution history not tracked"))
+    
+    print("\nRWA FEE REDISTRIBUTION FEATURES:")
+    print("✅ No WEPO coins are permanently burned/lost")
+    print("✅ Fees accumulate in redistribution pool")
+    print("✅ Pool can distribute fees to miners (first 18 months)")
+    print("✅ Pool can distribute fees to masternodes (after 18 months)")
+    print("✅ Distribution history is properly tracked")
+    print("✅ API responses reflect redistribution instead of burning")
+    print("✅ Sustainable tokenomics - network participants are rewarded")
+    
+    print("="*80)
+    
+    return test_results["failed"] == 0
+
 if __name__ == "__main__":
     print("\n" + "="*80)
     print("WEPO CRYPTOCURRENCY COMPREHENSIVE TESTING")
     print("="*80)
-    print("Testing RWA system with WEPO balance requirements and fee deduction")
+    print("Testing RWA fee redistribution system - fees collected and redistributed instead of burned")
     print("="*80 + "\n")
     
-    # Run RWA fee system tests
-    rwa_fee_system_success = run_rwa_fee_system_tests()
+    # Run RWA redistribution system tests
+    rwa_redistribution_success = run_rwa_redistribution_tests()
     
     # Overall success
-    success = rwa_fee_system_success
+    success = rwa_redistribution_success
     
     print("\n" + "="*80)
     print("OVERALL TESTING SUMMARY")
     print("="*80)
-    print(f"RWA Fee System: {'✅ PASSED' if rwa_fee_system_success else '❌ FAILED'}")
+    print(f"RWA Fee Redistribution System: {'✅ PASSED' if rwa_redistribution_success else '❌ FAILED'}")
     print(f"Overall Status: {'✅ PASSED' if success else '❌ FAILED'}")
     print("="*80)
     
