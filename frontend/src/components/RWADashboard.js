@@ -422,36 +422,55 @@ const RWADashboard = ({ onBack }) => {
   );
 };
 
-// Sub-components would be defined here in separate files
-const RWACreateAsset = ({ onBack, userAddress, onAssetCreated }) => {
-  return (
-    <div className="text-white">
-      <h3>Create Asset Component - To be implemented</h3>
-      <button onClick={onBack} className="mt-4 bg-gray-600 px-4 py-2 rounded">
-        Back
-      </button>
-    </div>
-  );
-};
-
+// Token Management Component (simplified for now)
 const RWATokenManagement = ({ onBack, userAddress, portfolio, onTokenAction }) => {
   return (
-    <div className="text-white">
-      <h3>Token Management Component - To be implemented</h3>
-      <button onClick={onBack} className="mt-4 bg-gray-600 px-4 py-2 rounded">
-        Back
-      </button>
-    </div>
-  );
-};
-
-const RWADEXTrading = ({ onBack, userAddress, tradeableTokens, onTradeComplete }) => {
-  return (
-    <div className="text-white">
-      <h3>DEX Trading Component - To be implemented</h3>
-      <button onClick={onBack} className="mt-4 bg-gray-600 px-4 py-2 rounded">
-        Back
-      </button>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={onBack}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft size={24} />
+        </button>
+        <div className="flex items-center gap-2">
+          <Coins className="h-6 w-6 text-emerald-400" />
+          <h2 className="text-xl font-semibold text-white">Token Management</h2>
+        </div>
+      </div>
+      
+      <div className="bg-gray-800 rounded-xl p-6 border border-gray-600">
+        <h3 className="text-white font-semibold mb-4">Your RWA Tokens</h3>
+        {portfolio?.tokens_held && portfolio.tokens_held.length > 0 ? (
+          <div className="space-y-4">
+            {portfolio.tokens_held.map((token, index) => (
+              <div key={index} className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Coins className="h-8 w-8 text-emerald-400" />
+                  <div>
+                    <div className="text-white font-medium">{token.symbol}</div>
+                    <div className="text-sm text-gray-400">{token.name}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-white font-medium">
+                    {(token.balance / Math.pow(10, token.decimals || 8)).toFixed(4)}
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    {token.value_wepo?.toFixed(4) || '0.0000'} WEPO
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Coins className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+            <p className="text-gray-400">No RWA tokens found</p>
+            <p className="text-sm text-gray-500 mt-2">Create an asset to get started</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
