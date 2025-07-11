@@ -309,7 +309,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "RWA Fee Redistribution System Testing Complete"
+    - "Normal Transaction Fee Redistribution Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
