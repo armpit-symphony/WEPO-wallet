@@ -180,7 +180,7 @@ def test_quantum_mining_compatibility():
     
     # Test 11: Mine Block with Cross-Type Transaction
     print("\n11. Mining Block with Cross-Type Transaction...")
-    response = requests.post(f"{base_url}/api/mining/mine")
+    response = requests.post(f"{base_url}/api/test/mine-block")
     if response.status_code == 200:
         mine_result = response.json()
         print(f"   ✓ Block Mined: {mine_result['success']}")
