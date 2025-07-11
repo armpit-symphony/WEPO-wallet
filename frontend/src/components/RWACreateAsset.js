@@ -262,6 +262,17 @@ const RWACreateAsset = ({ onBack, userAddress, onAssetCreated }) => {
             <div className="text-xs text-gray-400 mt-2">
               {feeInfo.description}
             </div>
+            <div className="bg-blue-900/50 border border-blue-500/50 rounded p-2 mt-2">
+              <div className="text-blue-200 text-xs">
+                💡 <strong>Fee Redistribution:</strong> Your fee supports the network! 
+                {feeInfo.redistribution_info && (
+                  <>
+                    <br />• <strong>First 18 months:</strong> {feeInfo.redistribution_info.first_18_months}
+                    <br />• <strong>After 18 months:</strong> {feeInfo.redistribution_info.after_18_months}
+                  </>
+                )}
+              </div>
+            </div>
             {userBalance < feeInfo.rwa_creation_fee && (
               <div className="bg-red-900/50 border border-red-500/50 rounded p-2 mt-2">
                 <div className="text-red-200 text-xs">
