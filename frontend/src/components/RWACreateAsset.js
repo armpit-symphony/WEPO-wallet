@@ -422,7 +422,7 @@ const RWACreateAsset = ({ onBack, userAddress, onAssetCreated }) => {
         </button>
         <button
           onClick={handleCreateAsset}
-          disabled={loading || !formData.name || !formData.description}
+          disabled={loading || !formData.name || !formData.description || (feeInfo && userBalance < feeInfo.rwa_creation_fee)}
           className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {loading ? (
@@ -433,7 +433,10 @@ const RWACreateAsset = ({ onBack, userAddress, onAssetCreated }) => {
           ) : (
             <>
               <Package size={20} />
-              Create Asset
+              {feeInfo && userBalance < feeInfo.rwa_creation_fee 
+                ? `Insufficient Balance (${feeInfo.rwa_creation_fee} WEPO required)`
+                : 'Create Asset'
+              }
             </>
           )}
         </button>
