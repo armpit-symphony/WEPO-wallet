@@ -79,6 +79,8 @@ class RWATransaction:
     to_address: str
     amount: int  # Token amount in smallest units
     tx_type: str  # 'mint', 'transfer', 'burn', 'trade'
+    
+    # Defaults
     wepo_amount: Optional[int] = None  # For trades, WEPO amount
     timestamp: int = 0
     block_height: int = 0
