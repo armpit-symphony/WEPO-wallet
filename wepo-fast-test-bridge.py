@@ -1579,7 +1579,7 @@ class WepoFastTestBridge:
         
         @self.app.post("/api/rwa/create-asset")
         async def create_rwa_asset(request: dict):
-            """Create a new RWA asset"""
+            """Create a new RWA asset with WEPO balance check and fee"""
             try:
                 name = request.get('name')
                 description = request.get('description')
@@ -1598,7 +1598,18 @@ class WepoFastTestBridge:
                 if not owner_address.startswith("wepo1"):
                     raise HTTPException(status_code=400, detail="Invalid WEPO address format")
                 
-                # Create asset
+                # Check WEPO balance for RWA creation fee
+                user_balance = self.blockchain.get_balance(owner_address)
+                fee_info = rwa_system.get_rwa_creation_fee_info()
+                required_fee = fee_info['rwa_creation_fee']
+                
+                if user_balance < required_fee:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Insufficient WEPO balance. RWA creation requires {required_fee} WEPO (current balance: {user_balance:.8f} WEPO)"
+                    )
+                
+                # Create asset with blockchain reference for fee deduction
                 asset_id = rwa_system.create_rwa_asset(
                     name=name,
                     description=description,
@@ -1608,13 +1619,16 @@ class WepoFastTestBridge:
                     file_name=file_name,
                     file_type=file_type,
                     metadata=metadata,
-                    valuation=valuation
+                    valuation=valuation,
+                    blockchain=self.blockchain
                 )
                 
                 return {
                     'success': True,
                     'asset_id': asset_id,
-                    'message': 'RWA asset created successfully'
+                    'fee_paid': required_fee,
+                    'remaining_balance': self.blockchain.get_balance(owner_address),
+                    'message': f'RWA asset created successfully. Fee of {required_fee} WEPO deducted.'
                 }
                 
             except ValueError as e:
