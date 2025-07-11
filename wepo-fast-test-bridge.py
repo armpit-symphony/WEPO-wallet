@@ -1850,54 +1850,7 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
-        # ===================
-        # RWA TOKEN ENDPOINTS
-        # ===================
-        
-        @self.app.post("/api/rwa/create-asset")
-        async def create_rwa_asset(request: dict):
-            """Create a new RWA asset"""
-            try:
-                name = request.get('name')
-                description = request.get('description')
-                asset_type = request.get('asset_type')  # 'document', 'image', 'property', etc.
-                owner_address = request.get('owner_address')
-                file_data = request.get('file_data')  # Base64 encoded
-                file_name = request.get('file_name')
-                file_type = request.get('file_type')  # MIME type
-                metadata = request.get('metadata', {})
-                valuation = request.get('valuation')  # USD value
-                
-                if not all([name, description, asset_type, owner_address]):
-                    raise HTTPException(status_code=400, detail="Missing required fields")
-                
-                # Validate owner address
-                if not owner_address.startswith("wepo1"):
-                    raise HTTPException(status_code=400, detail="Invalid WEPO address format")
-                
-                # Create asset
-                asset_id = rwa_system.create_rwa_asset(
-                    name=name,
-                    description=description,
-                    asset_type=asset_type,
-                    owner_address=owner_address,
-                    file_data=file_data,
-                    file_name=file_name,
-                    file_type=file_type,
-                    metadata=metadata,
-                    valuation=valuation
-                )
-                
-                return {
-                    'success': True,
-                    'asset_id': asset_id,
-                    'message': 'RWA asset created successfully'
-                }
-                
-            except ValueError as e:
-                raise HTTPException(status_code=400, detail=str(e))
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
+
         
         @self.app.post("/api/rwa/tokenize")
         async def tokenize_rwa_asset(request: dict):
