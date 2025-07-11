@@ -36,6 +36,16 @@ function App() {
     } else {
       setIsLoggedIn(false);
     }
+    
+    // Debug logging
+    console.log('Auth state check:', {
+      walletExists: !!walletExists,
+      quantumWalletExists: !!quantumWalletExists,
+      quantumMode,
+      sessionActive: !!sessionActive,
+      quantumSessionActive: !!quantumSessionActive,
+      isLoggedIn: (quantumMode && quantumSessionActive) || (!quantumMode && sessionActive)
+    });
   }, []);
 
   const handleSetupComplete = () => {
@@ -47,6 +57,22 @@ function App() {
     setIsWalletSetup(!!walletExists);
     setIsQuantumWalletSetup(!!quantumWalletExists);
     setIsQuantumMode(quantumMode);
+    
+    // Auto-login after setup for better UX
+    if (quantumMode && quantumWalletExists) {
+      sessionStorage.setItem('wepo_quantum_session_active', 'true');
+      setIsLoggedIn(true);
+    } else if (!quantumMode && walletExists) {
+      sessionStorage.setItem('wepo_session_active', 'true');
+      setIsLoggedIn(true);
+    }
+    
+    console.log('Setup complete:', {
+      quantumMode,
+      walletExists: !!walletExists,
+      quantumWalletExists: !!quantumWalletExists,
+      autoLogin: true
+    });
   };
 
   const handleLoginSuccess = () => {
