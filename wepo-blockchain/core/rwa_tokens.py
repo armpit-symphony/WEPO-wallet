@@ -438,17 +438,16 @@ class RWATokenSystem:
             }
         }
     
-    def is_valid_address(self, address: str) -> bool:
-        """Validate WEPO address format"""
-        if not address or not isinstance(address, str):
-            return False
-        
-        # Support both regular and quantum addresses
-        if address.startswith("wepo1"):
-            return len(address) in [37, 45]  # Regular or quantum
-        
-        return False
-    
+    def get_rwa_creation_fee_info(self) -> Dict:
+        """Get RWA creation fee information"""
+        return {
+            'rwa_creation_fee': 0.0002,  # Double normal transaction fee
+            'normal_transaction_fee': 0.0001,
+            'fee_multiplier': 2,
+            'currency': 'WEPO',
+            'description': 'RWA token creation fee (2x normal transaction fee)',
+            'burn_address': 'wepo1burn000000000000000000000000000'
+        }
     def get_asset_file(self, asset_id: str) -> Optional[Dict]:
         """Get asset file data"""
         if asset_id not in self.assets:
