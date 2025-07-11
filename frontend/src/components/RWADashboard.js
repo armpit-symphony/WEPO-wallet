@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { useQuantum } from '../contexts/QuantumContext';
+import RWACreateAsset from './RWACreateAsset';
+import EnhancedDEX from './EnhancedDEX';
 
 const RWADashboard = ({ onBack }) => {
   const { wallet } = useWallet();
