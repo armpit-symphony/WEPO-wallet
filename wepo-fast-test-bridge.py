@@ -651,6 +651,20 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
+        @self.app.get("/api/rwa/fee-info")
+        async def get_rwa_fee_info():
+            """Get RWA creation fee information"""
+            try:
+                fee_info = rwa_system.get_rwa_creation_fee_info()
+                
+                return {
+                    'success': True,
+                    'fee_info': fee_info
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         # Atomic Swap Operations
         @self.app.post("/api/atomic-swap/initiate")
         async def initiate_atomic_swap(request: dict):
