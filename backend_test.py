@@ -1332,7 +1332,7 @@ def run_tests():
     return test_results["failed"] == 0
 
 def run_fee_redistribution_system_tests():
-    """Run comprehensive tests for the updated fee redistribution system that includes normal transaction fees"""
+    """Run comprehensive tests for the complete fee redistribution system with new testing endpoints"""
     # Test variables to store data between tests
     test_wallet_address = None
     test_wallet_2_address = None
@@ -1340,10 +1340,11 @@ def run_fee_redistribution_system_tests():
     masternode_addresses = []
     
     print("\n" + "="*80)
-    print("WEPO COMPREHENSIVE FEE REDISTRIBUTION SYSTEM TESTING")
+    print("WEPO COMPLETE FEE REDISTRIBUTION SYSTEM TESTING")
     print("="*80)
-    print("Testing updated fee redistribution system with ALL fees (RWA + normal transaction)")
-    print("Key Changes: ALL fees redistributed to miners/masternodes instead of being burned")
+    print("Testing complete fee redistribution system with new testing endpoints")
+    print("Key Test Areas: Normal transaction fees + RWA creation fees + Mining distribution")
+    print("Expected: ALL WEPO fees redistributed to network participants (NO BURNING)")
     print("="*80 + "\n")
     
     # 1. Test Updated Fee Information API
