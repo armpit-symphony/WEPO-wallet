@@ -482,6 +482,7 @@ class RWATokenSystem:
             'total_collected': self.fee_redistribution_pool.total_collected,
             'last_distribution_block': self.fee_redistribution_pool.last_distribution,
             'pending_for_distribution': self.fee_redistribution_pool.total_collected,
+            'distribution_history': self.fee_redistribution_pool.distribution_history,
             'distribution_policy': {
                 'first_18_months': 'Distributed to miners as additional block rewards',
                 'after_18_months': 'Distributed to masternode operators',
