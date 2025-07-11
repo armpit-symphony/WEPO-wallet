@@ -24,6 +24,11 @@ from p2p_network import WepoP2PNode
 from privacy import privacy_engine, create_privacy_proof, verify_privacy_proof, ZK_STARK_PROOF_SIZE, RING_SIGNATURE_SIZE, CONFIDENTIAL_PROOF_SIZE
 from atomic_swaps import atomic_swap_engine, SwapType, SwapState, validate_btc_address, validate_wepo_address
 
+# Import quantum-resistant components
+from quantum_blockchain import QuantumWepoBlockchain
+from quantum_transaction import QuantumTransaction, QuantumWallet
+from dilithium import generate_dilithium_keypair, generate_wepo_address, validate_wepo_address as validate_quantum_address, get_dilithium_info
+
 class WepoFullNode:
     """WEPO Full Blockchain Node"""
     
