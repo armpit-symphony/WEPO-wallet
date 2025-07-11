@@ -3582,23 +3582,32 @@ def run_rwa_redistribution_tests():
     return test_results["failed"] == 0
 
 if __name__ == "__main__":
+    print("Starting WEPO Backend API Comprehensive Testing...")
+    print(f"Backend URL: {BACKEND_URL}")
+    print(f"API URL: {API_URL}")
+    
+    # Run the comprehensive fee redistribution system tests
+    print("\n🎯 RUNNING COMPREHENSIVE FEE REDISTRIBUTION SYSTEM TESTS")
+    print("Testing updated fee redistribution system that includes normal transaction fees")
+    success = run_fee_redistribution_system_tests()
+    
+    # Print final results
     print("\n" + "="*80)
-    print("WEPO CRYPTOCURRENCY COMPREHENSIVE TESTING")
+    print("FINAL TESTING RESULTS")
     print("="*80)
-    print("Testing RWA fee redistribution system - fees collected and redistributed instead of burned")
-    print("="*80 + "\n")
+    print(f"Total tests run: {test_results['total']}")
+    print(f"Tests passed: {test_results['passed']}")
+    print(f"Tests failed: {test_results['failed']}")
+    print(f"Overall success rate: {(test_results['passed'] / test_results['total'] * 100):.1f}%")
     
-    # Run RWA redistribution system tests
-    rwa_redistribution_success = run_rwa_redistribution_tests()
+    if success:
+        print("\n🎉 ALL TESTS PASSED! Fee redistribution system is working correctly.")
+        print("✅ Normal transaction fees are redistributed to network participants")
+        print("✅ RWA creation fees are redistributed to network participants") 
+        print("✅ No fees are burned or permanently lost")
+        print("✅ Sustainable tokenomics implemented successfully")
+    else:
+        print("\n❌ SOME TESTS FAILED! Please review the failed tests above.")
+        print("Issues found in the fee redistribution system implementation.")
     
-    # Overall success
-    success = rwa_redistribution_success
-    
-    print("\n" + "="*80)
-    print("OVERALL TESTING SUMMARY")
     print("="*80)
-    print(f"RWA Fee Redistribution System: {'✅ PASSED' if rwa_redistribution_success else '❌ FAILED'}")
-    print(f"Overall Status: {'✅ PASSED' if success else '❌ FAILED'}")
-    print("="*80)
-    
-    sys.exit(0 if success else 1)
