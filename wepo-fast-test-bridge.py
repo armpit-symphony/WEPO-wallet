@@ -615,6 +615,190 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
+        # Import quantum messaging system
+        from quantum_messaging import messaging_system
+        
+        # Quantum Messaging API Endpoints
+        @self.app.post("/api/messaging/send")
+        async def send_quantum_message(request: dict):
+            """Send quantum-encrypted message (works with all wallet types)"""
+            try:
+                from_address = request.get('from_address')
+                to_address = request.get('to_address')
+                content = request.get('content')
+                subject = request.get('subject', '')
+                message_type = request.get('message_type', 'text')
+                
+                if not all([from_address, to_address, content]):
+                    raise HTTPException(status_code=400, detail="Missing required fields")
+                
+                # Validate addresses (accept both regular and quantum)
+                if not (from_address.startswith("wepo1") and to_address.startswith("wepo1")):
+                    raise HTTPException(status_code=400, detail="Invalid address format")
+                
+                # Send quantum-encrypted message
+                message = messaging_system.send_message(
+                    from_address=from_address,
+                    to_address=to_address,
+                    content=content,
+                    subject=subject,
+                    message_type=message_type
+                )
+                
+                return {
+                    'success': True,
+                    'message_id': message.message_id,
+                    'quantum_encrypted': True,
+                    'delivery_status': message.delivery_status,
+                    'timestamp': message.timestamp,
+                    'universal_compatibility': True,
+                    'encryption_algorithm': 'Dilithium2'
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/messaging/inbox/{address}")
+        async def get_inbox_messages(address: str):
+            """Get inbox messages for any wallet type"""
+            try:
+                # Validate address format
+                if not address.startswith("wepo1"):
+                    raise HTTPException(status_code=400, detail="Invalid address format")
+                
+                # Get inbox messages
+                messages = messaging_system.get_messages(address, "inbox")
+                
+                # Convert to API response format
+                message_list = []
+                for msg in messages:
+                    # Decrypt message for this user
+                    try:
+                        decrypted_content = messaging_system.decrypt_message_for_user(msg, address)
+                    except:
+                        decrypted_content = "[Encrypted]"  # Can't decrypt if not recipient
+                    
+                    message_list.append({
+                        'message_id': msg.message_id,
+                        'from_address': msg.from_address,
+                        'to_address': msg.to_address,
+                        'content': decrypted_content,
+                        'subject': msg.subject,
+                        'timestamp': msg.timestamp,
+                        'message_type': msg.message_type,
+                        'read_status': msg.read_status,
+                        'delivery_status': msg.delivery_status,
+                        'quantum_encrypted': True,
+                        'signature_valid': messaging_system.verify_message_signature(msg)
+                    })
+                
+                return {
+                    'success': True,
+                    'address': address,
+                    'message_count': len(message_list),
+                    'messages': message_list,
+                    'quantum_encrypted': True,
+                    'universal_compatibility': True
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/messaging/conversation/{address1}/{address2}")
+        async def get_conversation(address1: str, address2: str):
+            """Get conversation between two addresses"""
+            try:
+                # Validate addresses
+                if not (address1.startswith("wepo1") and address2.startswith("wepo1")):
+                    raise HTTPException(status_code=400, detail="Invalid address format")
+                
+                # Get conversation
+                conversation = messaging_system.get_conversation(address1, address2)
+                
+                # Convert to API response format
+                message_list = []
+                for msg in conversation:
+                    # Try to decrypt for address1
+                    try:
+                        if msg.to_address == address1:
+                            decrypted_content = messaging_system.decrypt_message_for_user(msg, address1)
+                        else:
+                            decrypted_content = msg.content  # Outgoing message
+                    except:
+                        decrypted_content = "[Encrypted]"
+                    
+                    message_list.append({
+                        'message_id': msg.message_id,
+                        'from_address': msg.from_address,
+                        'to_address': msg.to_address,
+                        'content': decrypted_content,
+                        'subject': msg.subject,
+                        'timestamp': msg.timestamp,
+                        'message_type': msg.message_type,
+                        'read_status': msg.read_status,
+                        'quantum_encrypted': True,
+                        'signature_valid': messaging_system.verify_message_signature(msg)
+                    })
+                
+                return {
+                    'success': True,
+                    'participants': [address1, address2],
+                    'message_count': len(message_list),
+                    'conversation': message_list,
+                    'quantum_encrypted': True,
+                    'universal_compatibility': True
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/messaging/mark-read")
+        async def mark_message_read(request: dict):
+            """Mark message as read"""
+            try:
+                message_id = request.get('message_id')
+                user_address = request.get('user_address')
+                
+                if not all([message_id, user_address]):
+                    raise HTTPException(status_code=400, detail="Missing required fields")
+                
+                success = messaging_system.mark_as_read(message_id, user_address)
+                
+                return {
+                    'success': success,
+                    'message_id': message_id,
+                    'marked_read': success
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/messaging/stats")
+        async def get_messaging_stats():
+            """Get messaging system statistics"""
+            try:
+                stats = messaging_system.get_messaging_stats()
+                
+                return {
+                    'success': True,
+                    'stats': stats,
+                    'quantum_encrypted': True,
+                    'universal_compatibility': True,
+                    'feature': 'Universal Quantum Messaging',
+                    'description': 'Quantum-resistant messaging for all wallet types'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.get("/api/atomic-swap/status/{swap_id}")
         async def get_swap_status(swap_id: str):
             """Get atomic swap status"""
