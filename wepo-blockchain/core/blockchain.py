@@ -713,19 +713,39 @@ class WepoBlockchain:
         return reward
     
     def create_coinbase_transaction(self, height: int, miner_address: str) -> Transaction:
-        """Create coinbase transaction for new block"""
-        reward = self.calculate_block_reward(height)
+        """Create coinbase transaction for new block with fees redistribution"""
+        base_reward = self.calculate_block_reward(height)
+        
+        # Calculate total transaction fees from pending transactions
+        total_transaction_fees = 0
+        for txid, tx in self.mempool.items():
+            if hasattr(tx, 'fee') and tx.fee:
+                total_transaction_fees += tx.fee
+        
+        # Add any pending fees from RWA redistribution pool
+        rwa_redistribution_amount = 0
+        if hasattr(rwa_system, 'distribute_fees_to_miners'):
+            rwa_redistribution_amount = rwa_system.distribute_fees_to_miners(miner_address, height)
+        
+        # Total miner reward includes base reward + transaction fees + RWA redistributed fees
+        total_reward = base_reward + total_transaction_fees + int(rwa_redistribution_amount * COIN)
+        
+        print(f"Coinbase for height {height}:")
+        print(f"  Base reward: {base_reward / COIN:.8f} WEPO")
+        print(f"  Transaction fees: {total_transaction_fees / COIN:.8f} WEPO")
+        print(f"  RWA redistributed fees: {rwa_redistribution_amount:.8f} WEPO") 
+        print(f"  Total reward: {total_reward / COIN:.8f} WEPO")
         
         return Transaction(
             version=1,
             inputs=[TransactionInput(
                 prev_txid="0" * 64,
                 prev_vout=0xffffffff,
-                script_sig=f"Block {height}".encode(),
+                script_sig=f"Block {height} fees:{total_transaction_fees}".encode(),
                 sequence=0xffffffff
             )],
             outputs=[TransactionOutput(
-                value=reward,
+                value=total_reward,
                 script_pubkey=b"coinbase_output",
                 address=miner_address
             )],
