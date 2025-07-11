@@ -150,6 +150,7 @@ const Dashboard = () => {
         return <QuantumMessaging onBack={() => setActiveTab('dashboard')} />;
       default:
         return renderDashboard();
+    }
   };
 
   const renderDashboard = () => (
