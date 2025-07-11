@@ -17,7 +17,8 @@ import {
   Zap,
   ToggleLeft,
   ToggleRight,
-  MessageCircle
+  MessageCircle,
+  Package
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { useQuantum } from '../contexts/QuantumContext';
