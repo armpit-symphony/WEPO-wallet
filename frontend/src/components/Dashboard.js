@@ -133,22 +133,23 @@ const Dashboard = () => {
   };
 
   const renderTabContent = () => {
-    switch (activeTab) {
+    switch(activeTab) {
       case 'send':
-        return <SendWepo onClose={() => setActiveTab('dashboard')} />;
+        return <SendWepo onBack={() => setActiveTab('dashboard')} />;
       case 'receive':
-        return <ReceiveWepo onClose={() => setActiveTab('dashboard')} />;
-      case 'dex':
-        return <BtcDexSwap onClose={() => setActiveTab('dashboard')} />;
+        return <ReceiveWepo onBack={() => setActiveTab('dashboard')} />;
+      case 'btc-dex':
+        return <BtcDexSwap onBack={() => setActiveTab('dashboard')} />;
       case 'staking':
-        return <StakingInterface onClose={() => setActiveTab('dashboard')} />;
-      case 'masternodes':
-        return <MasternodeInterface onClose={() => setActiveTab('dashboard')} />;
+        return <StakingInterface onBack={() => setActiveTab('dashboard')} />;
+      case 'masternode':
+        return <MasternodeInterface onBack={() => setActiveTab('dashboard')} />;
       case 'settings':
-        return <SettingsPanel onClose={() => setActiveTab('dashboard')} />;
+        return <SettingsPanel onBack={() => setActiveTab('dashboard')} />;
+      case 'messaging':
+        return <QuantumMessaging onBack={() => setActiveTab('dashboard')} />;
       default:
         return renderDashboard();
-    }
   };
 
   const renderDashboard = () => (
