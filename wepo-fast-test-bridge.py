@@ -1230,13 +1230,54 @@ class WepoFastTestBridge:
         async def get_quantum_status():
             """Get quantum blockchain status"""
             try:
+                # Count quantum transactions in mempool
+                quantum_txs_in_mempool = sum(1 for tx in self.blockchain.mempool.values() 
+                                           if tx.has_quantum_signatures())
+                
+                # Count total quantum transactions
+                quantum_txs_total = 0
+                for block in self.blockchain.blocks:
+                    for tx in block.transactions:
+                        if tx.has_quantum_signatures():
+                            quantum_txs_total += 1
+                
                 return {
                     'quantum_ready': True,
                     'current_height': len(self.blockchain.blocks) - 1,
                     'mempool_size': len(self.blockchain.mempool),
+                    'quantum_txs_in_mempool': quantum_txs_in_mempool,
+                    'quantum_txs_total': quantum_txs_total,
                     'signature_algorithm': 'Dilithium2',
                     'hash_algorithm': 'BLAKE2b',
-                    'implementation': 'WEPO Quantum-Resistant v1.0'
+                    'implementation': 'WEPO Quantum-Resistant v1.0',
+                    'unified_blockchain': True,
+                    'cross_compatibility': True
+                }
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/address/validate/{address}")
+        async def validate_address(address: str):
+            """Validate address and determine type"""
+            try:
+                is_valid = False
+                address_type = "unknown"
+                
+                if address.startswith("wepo1"):
+                    if len(address) == 37:
+                        is_valid = True
+                        address_type = "regular"
+                    elif len(address) == 45:
+                        is_valid = True
+                        address_type = "quantum"
+                
+                return {
+                    'address': address,
+                    'is_valid': is_valid,
+                    'address_type': address_type,
+                    'can_receive_from_quantum': is_valid,
+                    'can_receive_from_regular': is_valid,
+                    'unified_blockchain': True
                 }
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
