@@ -3,6 +3,11 @@
 WEPO Core Blockchain Implementation
 Revolutionary cryptocurrency with hybrid PoW/PoS consensus and privacy features
 """
+from .transaction import Transaction, TransactionInput, TransactionOutput, UTXO
+from .dilithium import dilithium_system
+from .quantum_transaction import QuantumTransaction
+from .rwa_tokens import rwa_system
+
 
 import hashlib
 import json
