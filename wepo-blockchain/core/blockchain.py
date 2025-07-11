@@ -976,6 +976,13 @@ class WepoBlockchain:
         # Basic validation
         if self.validate_transaction(transaction):
             self.mempool[txid] = transaction
+            
+            # Collect fee for redistribution (if not coinbase)
+            if not transaction.is_coinbase() and hasattr(transaction, 'fee') and transaction.fee > 0:
+                fee_amount_wepo = transaction.fee / COIN  # Convert satoshis to WEPO
+                rwa_system.add_transaction_fees_to_pool(transaction.fee, self.get_block_height() + 1)
+                print(f"Added {fee_amount_wepo:.8f} WEPO transaction fee to redistribution pool")
+            
             print(f"Transaction added to mempool: {txid}")
             return True
         else:
