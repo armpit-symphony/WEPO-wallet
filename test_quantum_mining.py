@@ -44,8 +44,8 @@ def test_quantum_mining_compatibility():
     # Test 3: Create Regular Wallet for Testing  
     print("\n3. Creating Regular Wallet for Mining Test...")
     
-    # Generate a regular address for testing
-    regular_address = "wepo1fa1ae07426d7718f50f4b3c45d8b6e2a1c9"
+    # Generate a regular address for testing (37 chars total)
+    regular_address = "wepo1fa1ae07426d7718f50f4b3c45d8b6e2a1c9f7e"
     regular_wallet_data = {
         "address": regular_address,
         "username": "test_regular_wallet"
