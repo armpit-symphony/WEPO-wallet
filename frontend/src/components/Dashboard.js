@@ -16,7 +16,8 @@ import {
   Clock,
   Zap,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  MessageCircle
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { useQuantum } from '../contexts/QuantumContext';
@@ -26,6 +27,7 @@ import BtcDexSwap from './BtcDexSwap';
 import StakingInterface from './StakingInterface';
 import MasternodeInterface from './MasternodeInterface';
 import SettingsPanel from './SettingsPanel';
+import QuantumMessaging from './QuantumMessaging';
 
 const Dashboard = () => {
   const { 
