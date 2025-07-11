@@ -1451,33 +1451,28 @@ def run_rwa_fee_system_tests():
         try:
             print("\n[TEST] Wallet Funding - Funding wallet for RWA testing")
             
-            # Try to mine blocks to fund the wallet
-            for i in range(3):  # Mine 3 blocks to ensure sufficient balance
-                mine_data = {
-                    "miner_address": test_wallet_2_address
-                }
-                
-                print(f"  Mining block {i+1} with miner address: {test_wallet_2_address}")
-                response = requests.post(f"{API_URL}/test/mine-block", json=mine_data)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("success"):
-                        print(f"  ✓ Block {i+1} mined successfully, reward: {data.get('reward', 'unknown')} WEPO")
-                    else:
-                        print(f"  ✗ Block {i+1} mining failed")
-                else:
-                    print(f"  ✗ Block {i+1} mining request failed: {response.status_code}")
+            # Use the test funding endpoint to directly fund the wallet
+            fund_data = {
+                "address": test_wallet_2_address,
+                "amount": 1.0  # Fund with 1 WEPO
+            }
             
-            # Check balance after mining
-            balance_response = requests.get(f"{API_URL}/wallet/{test_wallet_2_address}")
-            if balance_response.status_code == 200:
-                balance_data = balance_response.json()
-                initial_balance = balance_data.get("balance", 0.0)
-                print(f"  ✓ Wallet funded with balance: {initial_balance} WEPO")
-                log_test("Wallet Funding", True)
+            print(f"  Funding wallet with 1.0 WEPO: {test_wallet_2_address}")
+            response = requests.post(f"{API_URL}/test/fund-wallet", json=fund_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    print(f"  ✓ Wallet funded successfully with {data.get('amount')} WEPO")
+                    print(f"  ✓ Transaction ID: {data.get('txid')}")
+                    print(f"  ✓ New balance: {data.get('balance')} WEPO")
+                    initial_balance = data.get('balance', 1.0)
+                    log_test("Wallet Funding", True)
+                else:
+                    print(f"  ✗ Wallet funding failed")
+                    log_test("Wallet Funding", False)
             else:
-                print(f"  ✗ Failed to check wallet balance: {balance_response.status_code}")
+                print(f"  ✗ Wallet funding request failed: {response.status_code}")
                 log_test("Wallet Funding", False)
                 
         except Exception as e:
