@@ -1144,15 +1144,21 @@ class WepoFastTestBridge:
                 if not address.startswith("wepo1") or len(address) != 45:
                     raise HTTPException(status_code=400, detail="Invalid quantum address format")
                 
-                # Calculate balance (simplified)
+                # Get balance from the main blockchain (unified)
                 balance = self.blockchain.get_balance(address)
+                
+                # Get UTXOs for this address
+                utxos = self.blockchain.get_utxos_for_address(address)
                 
                 return {
                     'address': address,
-                    'balance': balance,
+                    'balance': balance / 100000000,  # Convert to WEPO
+                    'balance_satoshis': balance,
+                    'utxo_count': len(utxos),
                     'quantum_resistant': True,
                     'signature_algorithm': 'Dilithium2',
-                    'hash_algorithm': 'BLAKE2b'
+                    'hash_algorithm': 'BLAKE2b',
+                    'address_type': 'quantum'
                 }
             except HTTPException:
                 raise
