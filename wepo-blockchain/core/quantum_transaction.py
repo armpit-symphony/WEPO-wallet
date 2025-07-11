@@ -85,7 +85,7 @@ class QuantumTransaction:
         signing_data = {
             'version': self.version,
             'inputs': [],
-            'outputs': [asdict(out) for out in self.outputs],
+            'outputs': [],
             'lock_time': self.lock_time,
             'fee': self.fee,
             'timestamp': self.timestamp
@@ -97,6 +97,14 @@ class QuantumTransaction:
                 'prev_txid': inp.prev_txid,
                 'prev_vout': inp.prev_vout,
                 'sequence': inp.sequence
+            })
+        
+        # Add outputs (convert bytes to hex)
+        for out in self.outputs:
+            signing_data['outputs'].append({
+                'value': out.value,
+                'recipient_address': out.recipient_address,
+                'public_key_hash': out.public_key_hash.hex() if out.public_key_hash else ''
             })
         
         # Convert to bytes for signing
