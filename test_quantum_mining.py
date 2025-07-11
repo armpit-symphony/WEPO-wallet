@@ -43,12 +43,20 @@ def test_quantum_mining_compatibility():
     
     # Test 3: Create Regular Wallet for Testing  
     print("\n3. Creating Regular Wallet for Mining Test...")
-    response = requests.post(f"{base_url}/api/wallet/create")
+    
+    # Generate a regular address for testing
+    regular_address = "wepo1fa1ae07426d7718f50f4b3c45d8b6e2a1c9"
+    regular_wallet_data = {
+        "address": regular_address,
+        "username": "test_regular_wallet"
+    }
+    
+    response = requests.post(f"{base_url}/api/wallet/create", json=regular_wallet_data)
     if response.status_code == 200:
         regular_wallet = response.json()
-        regular_address = regular_wallet['address']
         print(f"   ✓ Regular Wallet Created: {regular_address}")
         print(f"   ✓ Address Type: Regular (37 chars)")
+        print(f"   ✓ Success: {regular_wallet['success']}")
     else:
         print(f"   ✗ Failed to create regular wallet: {response.status_code}")
         return False
