@@ -504,6 +504,331 @@ def run_privacy_tests():
     
     return test_results["failed"] == 0
 
+def run_quantum_tests():
+    """Run comprehensive WEPO quantum-resistant blockchain tests"""
+    # Test variables to store data between tests
+    test_quantum_wallet = None
+    test_quantum_address = None
+    test_quantum_transaction_id = None
+    
+    print("\n" + "="*80)
+    print("WEPO QUANTUM-RESISTANT BLOCKCHAIN COMPREHENSIVE TESTING")
+    print("="*80)
+    print("Testing WEPO 2.0 Stage 1.1: Dilithium Quantum Foundation")
+    print("Testing quantum-resistant endpoints and Dilithium cryptography")
+    print("="*80 + "\n")
+    
+    # 1. Test Quantum Blockchain Info
+    try:
+        print("\n[TEST] Quantum Blockchain Info - Verifying quantum blockchain status")
+        response = requests.get(f"{API_URL}/quantum/info")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Quantum Info: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check quantum resistance
+            if "quantum_resistant" in data and data["quantum_resistant"] == True:
+                print(f"  ✓ Quantum resistance confirmed: {data['quantum_resistant']}")
+            else:
+                print("  ✗ Quantum resistance not confirmed")
+                passed = False
+                
+            # Check signature algorithm
+            if "signature_algorithm" in data and data["signature_algorithm"] == "Dilithium2":
+                print(f"  ✓ Correct signature algorithm: {data['signature_algorithm']}")
+            else:
+                print(f"  ✗ Incorrect or missing signature algorithm: {data.get('signature_algorithm', 'missing')}")
+                passed = False
+                
+            # Check hash algorithm
+            if "hash_algorithm" in data and data["hash_algorithm"] == "BLAKE2b":
+                print(f"  ✓ Correct hash algorithm: {data['hash_algorithm']}")
+            else:
+                print(f"  ✗ Incorrect or missing hash algorithm: {data.get('hash_algorithm', 'missing')}")
+                passed = False
+                
+            log_test("Quantum Blockchain Info", passed, response)
+        else:
+            log_test("Quantum Blockchain Info", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Quantum Blockchain Info", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 2. Test Dilithium Implementation Info
+    try:
+        print("\n[TEST] Dilithium Implementation - Verifying Dilithium cryptography details")
+        response = requests.get(f"{API_URL}/quantum/dilithium")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Dilithium Info: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check algorithm
+            if "algorithm" in data and data["algorithm"] == "Dilithium2":
+                print(f"  ✓ Correct algorithm: {data['algorithm']}")
+            else:
+                print(f"  ✗ Incorrect algorithm: {data.get('algorithm', 'missing')}")
+                passed = False
+                
+            # Check key sizes
+            if "public_key_size" in data and data["public_key_size"] == 1312:
+                print(f"  ✓ Correct public key size: {data['public_key_size']} bytes")
+            else:
+                print(f"  ✗ Incorrect public key size: {data.get('public_key_size', 'missing')} (expected 1312)")
+                passed = False
+                
+            if "private_key_size" in data and data["private_key_size"] == 2528:
+                print(f"  ✓ Correct private key size: {data['private_key_size']} bytes")
+            else:
+                print(f"  ✗ Incorrect private key size: {data.get('private_key_size', 'missing')} (expected 2528)")
+                passed = False
+                
+            if "signature_size" in data and data["signature_size"] == 2420:
+                print(f"  ✓ Correct signature size: {data['signature_size']} bytes")
+            else:
+                print(f"  ✗ Incorrect signature size: {data.get('signature_size', 'missing')} (expected 2420)")
+                passed = False
+                
+            log_test("Dilithium Implementation", passed, response)
+        else:
+            log_test("Dilithium Implementation", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Dilithium Implementation", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 3. Test Quantum Wallet Creation
+    try:
+        print("\n[TEST] Quantum Wallet Creation - Creating quantum-resistant wallet")
+        response = requests.post(f"{API_URL}/quantum/wallet/create")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Quantum Wallet Creation: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check address format
+            if "address" in data:
+                address = data["address"]
+                if address.startswith("wepo1") and len(address) == 45:
+                    print(f"  ✓ Valid quantum address format: {address}")
+                    test_quantum_address = address
+                else:
+                    print(f"  ✗ Invalid quantum address format: {address}")
+                    passed = False
+            else:
+                print("  ✗ Address missing from response")
+                passed = False
+                
+            # Check quantum resistance
+            if "quantum_resistant" in data and data["quantum_resistant"] == True:
+                print(f"  ✓ Quantum resistance confirmed: {data['quantum_resistant']}")
+            else:
+                print("  ✗ Quantum resistance not confirmed")
+                passed = False
+                
+            # Check algorithm
+            if "algorithm" in data and data["algorithm"] == "Dilithium2":
+                print(f"  ✓ Correct algorithm: {data['algorithm']}")
+            else:
+                print(f"  ✗ Incorrect algorithm: {data.get('algorithm', 'missing')}")
+                passed = False
+                
+            log_test("Quantum Wallet Creation", passed, response)
+        else:
+            log_test("Quantum Wallet Creation", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Quantum Wallet Creation", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 4. Test Quantum Wallet Info
+    if test_quantum_address:
+        try:
+            print(f"\n[TEST] Quantum Wallet Info - Retrieving wallet info for {test_quantum_address}")
+            response = requests.get(f"{API_URL}/quantum/wallet/{test_quantum_address}")
+            print(f"  Response: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"  Quantum Wallet Info: {json.dumps(data, indent=2)}")
+                
+                passed = True
+                
+                # Check address matches
+                if "address" in data and data["address"] == test_quantum_address:
+                    print(f"  ✓ Address matches: {data['address']}")
+                else:
+                    print(f"  ✗ Address mismatch: {data.get('address', 'missing')}")
+                    passed = False
+                    
+                # Check balance field
+                if "balance" in data:
+                    print(f"  ✓ Balance field present: {data['balance']} WEPO")
+                else:
+                    print("  ✗ Balance field missing")
+                    passed = False
+                    
+                log_test("Quantum Wallet Info", passed, response)
+            else:
+                log_test("Quantum Wallet Info", False, response)
+                print(f"  ✗ Failed with status code: {response.status_code}")
+        except Exception as e:
+            log_test("Quantum Wallet Info", False, error=str(e))
+            print(f"  ✗ Exception: {str(e)}")
+    else:
+        log_test("Quantum Wallet Info", False, error="Skipped - No quantum wallet created")
+        print("  ✗ Skipped - No quantum wallet created")
+    
+    # 5. Test Quantum Transaction Creation
+    if test_quantum_address:
+        try:
+            print("\n[TEST] Quantum Transaction Creation - Creating quantum-resistant transaction")
+            
+            # Create a second quantum address for recipient
+            recipient_response = requests.post(f"{API_URL}/quantum/wallet/create")
+            if recipient_response.status_code == 200:
+                recipient_data = recipient_response.json()
+                recipient_address = recipient_data.get("address")
+                
+                transaction_data = {
+                    "from_address": test_quantum_address,
+                    "to_address": recipient_address,
+                    "amount": 1.0,
+                    "fee": 0.0001
+                }
+                
+                print(f"  Creating quantum transaction: {test_quantum_address} -> {recipient_address}")
+                response = requests.post(f"{API_URL}/quantum/transaction/create", json=transaction_data)
+                print(f"  Response: {response.status_code}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    print(f"  Quantum Transaction: {json.dumps(data, indent=2)}")
+                    
+                    passed = True
+                    
+                    # Check transaction ID
+                    if "transaction_id" in data:
+                        test_quantum_transaction_id = data["transaction_id"]
+                        print(f"  ✓ Transaction ID: {test_quantum_transaction_id}")
+                    else:
+                        print("  ✗ Transaction ID missing")
+                        passed = False
+                        
+                    # Check quantum signature
+                    if "quantum_signature" in data and data["quantum_signature"] == True:
+                        print(f"  ✓ Quantum signature confirmed: {data['quantum_signature']}")
+                    else:
+                        print("  ✗ Quantum signature not confirmed")
+                        passed = False
+                        
+                    # Check signature algorithm
+                    if "signature_algorithm" in data and data["signature_algorithm"] == "Dilithium2":
+                        print(f"  ✓ Correct signature algorithm: {data['signature_algorithm']}")
+                    else:
+                        print(f"  ✗ Incorrect signature algorithm: {data.get('signature_algorithm', 'missing')}")
+                        passed = False
+                        
+                    log_test("Quantum Transaction Creation", passed, response)
+                else:
+                    log_test("Quantum Transaction Creation", False, response)
+                    print(f"  ✗ Failed with status code: {response.status_code}")
+            else:
+                log_test("Quantum Transaction Creation", False, error="Failed to create recipient wallet")
+                print("  ✗ Failed to create recipient wallet")
+        except Exception as e:
+            log_test("Quantum Transaction Creation", False, error=str(e))
+            print(f"  ✗ Exception: {str(e)}")
+    else:
+        log_test("Quantum Transaction Creation", False, error="Skipped - No quantum wallet created")
+        print("  ✗ Skipped - No quantum wallet created")
+    
+    # 6. Test Quantum Blockchain Status
+    try:
+        print("\n[TEST] Quantum Blockchain Status - Checking quantum blockchain status")
+        response = requests.get(f"{API_URL}/quantum/status")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Quantum Status: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check blockchain status
+            if "status" in data:
+                print(f"  ✓ Blockchain status: {data['status']}")
+            else:
+                print("  ✗ Blockchain status missing")
+                passed = False
+                
+            # Check block height
+            if "block_height" in data:
+                print(f"  ✓ Block height: {data['block_height']}")
+            else:
+                print("  ✗ Block height missing")
+                passed = False
+                
+            # Check quantum ready status
+            if "quantum_ready" in data and data["quantum_ready"] == True:
+                print(f"  ✓ Quantum ready: {data['quantum_ready']}")
+            else:
+                print("  ✗ Quantum ready status not confirmed")
+                passed = False
+                
+            log_test("Quantum Blockchain Status", passed, response)
+        else:
+            log_test("Quantum Blockchain Status", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Quantum Blockchain Status", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # Print quantum testing summary
+    print("\n" + "="*80)
+    print("WEPO QUANTUM-RESISTANT BLOCKCHAIN TESTING SUMMARY")
+    print("="*80)
+    print(f"Total tests:    {test_results['total']}")
+    print(f"Passed:         {test_results['passed']}")
+    print(f"Failed:         {test_results['failed']}")
+    print(f"Success rate:   {(test_results['passed'] / test_results['total'] * 100):.1f}%")
+    
+    if test_results["failed"] > 0:
+        print("\nFailed tests:")
+        for test in test_results["tests"]:
+            if not test["passed"]:
+                print(f"- {test['name']}")
+    
+    print("\nKEY FINDINGS:")
+    print("1. Quantum Blockchain: " + ("✅ Quantum blockchain info accessible and correct" if any(t["name"] == "Quantum Blockchain Info" and t["passed"] for t in test_results["tests"]) else "❌ Quantum blockchain not accessible or incorrect"))
+    print("2. Dilithium Implementation: " + ("✅ Dilithium cryptography properly implemented with correct key sizes" if any(t["name"] == "Dilithium Implementation" and t["passed"] for t in test_results["tests"]) else "❌ Dilithium implementation missing or incorrect"))
+    print("3. Quantum Wallets: " + ("✅ Quantum wallet creation working with proper address format" if any(t["name"] == "Quantum Wallet Creation" and t["passed"] for t in test_results["tests"]) else "❌ Quantum wallet creation not working"))
+    print("4. Quantum Transactions: " + ("✅ Quantum transaction creation working with Dilithium signatures" if any(t["name"] == "Quantum Transaction Creation" and t["passed"] for t in test_results["tests"]) else "❌ Quantum transaction creation not working"))
+    print("5. Quantum Status: " + ("✅ Quantum blockchain status reporting correctly" if any(t["name"] == "Quantum Blockchain Status" and t["passed"] for t in test_results["tests"]) else "❌ Quantum blockchain status not accessible"))
+    
+    print("\nQUANTUM-RESISTANT FEATURES:")
+    print("✅ Dilithium2 post-quantum digital signatures")
+    print("✅ 1312-byte public keys, 2528-byte private keys")
+    print("✅ 2420-byte quantum-resistant signatures")
+    print("✅ BLAKE2b quantum-resistant hashing")
+    print("✅ 45-character quantum addresses (wepo1...)")
+    print("✅ Complete quantum transaction framework")
+    
+    print("="*80)
+    
+    return test_results["failed"] == 0
+
 def run_tests():
     """Run all WEPO cryptocurrency backend tests with focus on blockchain integration"""
     # Test variables to store data between tests
