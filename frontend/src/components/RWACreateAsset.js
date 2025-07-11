@@ -30,6 +30,33 @@ const RWACreateAsset = ({ onBack, userAddress, onAssetCreated }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [assetId, setAssetId] = useState('');
+  const [feeInfo, setFeeInfo] = useState(null);
+  const [userBalance, setUserBalance] = useState(0);
+
+  useEffect(() => {
+    // Load fee info and user balance
+    loadFeeInfoAndBalance();
+  }, [userAddress]);
+
+  const loadFeeInfoAndBalance = async () => {
+    try {
+      // Get fee info
+      const feeResponse = await fetch('/api/rwa/fee-info');
+      const feeData = await feeResponse.json();
+      if (feeData.success) {
+        setFeeInfo(feeData.fee_info);
+      }
+
+      // Get user balance (from wallet context or API)
+      const balanceResponse = await fetch(`/api/wallet/${userAddress}`);
+      const balanceData = await balanceResponse.json();
+      if (balanceData.balance !== undefined) {
+        setUserBalance(balanceData.balance);
+      }
+    } catch (err) {
+      console.error('Error loading fee info:', err);
+    }
+  };
 
   const assetTypes = [
     { value: 'document', label: 'Document', icon: FileText, description: 'Legal documents, contracts, certificates' },
