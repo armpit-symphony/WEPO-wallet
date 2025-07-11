@@ -935,7 +935,7 @@ class WepoBlockchain:
             return False
     
     def validate_transaction(self, transaction: Transaction) -> bool:
-        """Validate a transaction with proper UTXO checking"""
+        """Validate a transaction with proper UTXO checking and quantum signature support"""
         try:
             # Skip validation for coinbase transactions
             if transaction.is_coinbase():
@@ -943,7 +943,7 @@ class WepoBlockchain:
             
             # Check inputs exist and are unspent
             total_input_value = 0
-            for inp in transaction.inputs:
+            for input_index, inp in enumerate(transaction.inputs):
                 # Look up UTXO in database
                 cursor = self.conn.execute('''
                     SELECT amount, spent FROM utxos 
@@ -959,6 +959,21 @@ class WepoBlockchain:
                     print(f"UTXO already spent: {inp.prev_txid}:{inp.prev_vout}")
                     return False
                 
+                # Verify signature based on type
+                if inp.signature_type == "dilithium":
+                    if not transaction.verify_quantum_signature(input_index):
+                        print(f"Quantum signature verification failed for input {input_index}")
+                        return False
+                elif inp.signature_type == "ecdsa":
+                    # Regular ECDSA signature validation (existing logic)
+                    if not inp.script_sig:
+                        print(f"Missing ECDSA signature for input {input_index}")
+                        return False
+                    # TODO: Add ECDSA signature verification here
+                else:
+                    print(f"Unknown signature type: {inp.signature_type}")
+                    return False
+                
                 total_input_value += utxo[0]
             
             # Check outputs
@@ -968,6 +983,10 @@ class WepoBlockchain:
             if total_input_value < total_output_value + transaction.fee:
                 print(f"Insufficient funds: {total_input_value} < {total_output_value + transaction.fee}")
                 return False
+            
+            # Log transaction type for debugging
+            if transaction.has_quantum_signatures():
+                print(f"✓ Quantum transaction validated: {transaction.calculate_txid()[:16]}...")
             
             return True
             
