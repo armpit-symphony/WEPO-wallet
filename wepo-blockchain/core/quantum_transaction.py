@@ -404,11 +404,14 @@ class QuantumWallet:
             # Sign transaction
             if self.sign_transaction(transaction):
                 return transaction
-            
-            return None
+            else:
+                print("Failed to sign transaction")
+                return None
             
         except Exception as e:
             print(f"Failed to create transaction: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
 # Testing function
