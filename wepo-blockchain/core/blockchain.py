@@ -124,7 +124,7 @@ class TransactionOutput:
 
 @dataclass
 class Transaction:
-    """WEPO Transaction with privacy features"""
+    """WEPO Transaction with privacy features and quantum signature support"""
     version: int
     inputs: List[TransactionInput]
     outputs: List[TransactionOutput]
@@ -137,6 +137,63 @@ class Transaction:
     def __post_init__(self):
         if self.timestamp == 0:
             self.timestamp = int(time.time())
+    
+    def has_quantum_signatures(self) -> bool:
+        """Check if transaction contains quantum signatures"""
+        return any(inp.signature_type == "dilithium" for inp in self.inputs)
+    
+    def is_mixed_signature_transaction(self) -> bool:
+        """Check if transaction has mixed signature types"""
+        signature_types = set(inp.signature_type for inp in self.inputs)
+        return len(signature_types) > 1
+    
+    def verify_quantum_signature(self, input_index: int) -> bool:
+        """Verify quantum signature for specific input"""
+        if input_index >= len(self.inputs):
+            return False
+        
+        inp = self.inputs[input_index]
+        
+        if inp.signature_type != "dilithium":
+            return False
+        
+        if not inp.quantum_signature or not inp.quantum_public_key:
+            return False
+        
+        try:
+            # Import quantum signature verification
+            from dilithium import verify_signature
+            
+            # Create signing message
+            signing_message = self.get_signing_message_for_input(input_index)
+            
+            # Verify quantum signature
+            return verify_signature(signing_message, inp.quantum_signature, inp.quantum_public_key)
+        except Exception as e:
+            print(f"Quantum signature verification failed: {e}")
+            return False
+    
+    def get_signing_message_for_input(self, input_index: int) -> bytes:
+        """Get message to be signed for specific input"""
+        # Create deterministic message for signing
+        message_parts = [
+            str(self.version),
+            str(self.lock_time),
+            str(self.fee),
+            str(input_index)
+        ]
+        
+        # Add outputs
+        for out in self.outputs:
+            message_parts.extend([str(out.value), out.address])
+        
+        # Add other inputs (without signatures)
+        for i, inp in enumerate(self.inputs):
+            if i != input_index:
+                message_parts.extend([inp.prev_txid, str(inp.prev_vout)])
+        
+        message = "|".join(message_parts)
+        return message.encode('utf-8')
     
     def calculate_txid(self) -> str:
         """Calculate transaction hash"""
