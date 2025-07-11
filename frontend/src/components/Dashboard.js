@@ -102,11 +102,16 @@ const Dashboard = () => {
     loadData();
   }, [isQuantumMode, wallet, quantumWallet, setWallet, setBalance, setTransactions, loadWalletData, loadQuantumWalletData]);
 
-  const formatBalance = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 4,
-      maximumFractionDigits: 4,
-    }).format(amount);
+  const handleLogout = () => {
+    if (isQuantumMode) {
+      logoutQuantum();
+    } else {
+      logout();
+    }
+  };
+
+  const handleModeToggle = () => {
+    toggleQuantumMode();
   };
 
   const formatDate = (dateString) => {
