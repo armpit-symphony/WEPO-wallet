@@ -89,6 +89,17 @@ class RWATransaction:
         if self.timestamp == 0:
             self.timestamp = int(time.time())
 
+@dataclass
+class FeeRedistributionPool:
+    """Pool for collecting and redistributing RWA fees"""
+    total_collected: float = 0.0
+    last_distribution: int = 0  # Block height of last distribution
+    distribution_history: List = None
+    
+    def __post_init__(self):
+        if self.distribution_history is None:
+            self.distribution_history = []
+
 class RWATokenSystem:
     """RWA Token management system"""
     
