@@ -262,37 +262,40 @@ const Dashboard = () => {
       )}
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <button 
           onClick={() => setActiveTab('send')}
-          className="bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl p-4 text-center transition-colors group"
+          className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50"
         >
-          <Send className="h-8 w-8 text-purple-400 mx-auto mb-2 group-hover:text-purple-300" />
-          <span className="text-white font-medium">Send</span>
+          <Send className="h-6 w-6 text-purple-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Send WEPO</span>
         </button>
         
-        <button
+        <button 
           onClick={() => setActiveTab('receive')}
-          className="bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl p-4 text-center transition-colors group"
+          className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50"
         >
-          <Download className="h-8 w-8 text-green-400 mx-auto mb-2 group-hover:text-green-300" />
-          <span className="text-white font-medium">Receive</span>
+          <Download className="h-6 w-6 text-blue-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Receive WEPO</span>
         </button>
         
-        <button
-          onClick={() => setActiveTab('dex')}
-          className="bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl p-4 text-center transition-colors group"
+        <button 
+          onClick={() => setActiveTab('messaging')}
+          className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50 relative"
         >
-          <ArrowRightLeft className="h-8 w-8 text-blue-400 mx-auto mb-2 group-hover:text-blue-300" />
+          <MessageCircle className="h-6 w-6 text-green-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Quantum Messages</span>
+          <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+            NEW
+          </div>
+        </button>
+        
+        <button 
+          onClick={() => setActiveTab('btc-dex')}
+          className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50"
+        >
+          <ArrowRightLeft className="h-6 w-6 text-orange-400 mx-auto mb-2" />
           <span className="text-white font-medium">BTC DEX</span>
-        </button>
-        
-        <button
-          onClick={() => setActiveTab('settings')}
-          className="bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl p-4 text-center transition-colors group"
-        >
-          <Settings className="h-8 w-8 text-gray-400 mx-auto mb-2 group-hover:text-gray-300" />
-          <span className="text-white font-medium">Settings</span>
         </button>
       </div>
 
