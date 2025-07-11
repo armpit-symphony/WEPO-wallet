@@ -450,12 +450,11 @@ class WepoFastTestBridge:
                 if not all([from_address, to_address]):
                     raise HTTPException(status_code=400, detail="Missing required addresses")
                 
-                # Create transaction
+                # Create transaction (FastTestBlockchain doesn't support fee parameter)
                 transaction = self.blockchain.create_transaction(
                     from_address=from_address,
                     to_address=to_address,
-                    amount_wepo=float(amount),
-                    fee_wepo=float(fee)
+                    amount=float(amount)
                 )
                 
                 if not transaction:
@@ -465,12 +464,16 @@ class WepoFastTestBridge:
                 tx_id = transaction.calculate_txid()
                 self.blockchain.add_transaction_to_mempool(transaction)
                 
+                # Manually add fee to redistribution pool for testing
+                if hasattr(rwa_system, 'add_fee_to_pool'):
+                    rwa_system.add_fee_to_pool(fee, 'normal_transaction')
+                
                 return {
                     'success': True,
                     'transaction_id': tx_id,
                     'amount': amount,
                     'fee': fee,
-                    'fee_satoshis': transaction.fee,
+                    'fee_satoshis': int(fee * 100000000),
                     'mempool_size': len(self.blockchain.mempool),
                     'message': f'Normal transaction created with {fee} WEPO fee'
                 }
