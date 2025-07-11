@@ -296,11 +296,33 @@ const Dashboard = () => {
         </button>
         
         <button 
+          onClick={() => setActiveTab('rwa')}
+          className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50 relative"
+        >
+          <Package className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
+          <span className="text-white font-medium">RWA Tokens</span>
+          <div className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full">
+            NEW
+          </div>
+        </button>
+      </div>
+
+      {/* Secondary Action Buttons */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <button 
           onClick={() => setActiveTab('btc-dex')}
           className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50"
         >
           <ArrowRightLeft className="h-6 w-6 text-orange-400 mx-auto mb-2" />
           <span className="text-white font-medium">BTC DEX</span>
+        </button>
+        
+        <button 
+          onClick={() => setActiveTab('settings')}
+          className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50"
+        >
+          <Settings className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Settings</span>
         </button>
       </div>
 
