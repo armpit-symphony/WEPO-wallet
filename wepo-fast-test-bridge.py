@@ -508,8 +508,7 @@ class WepoFastTestBridge:
                 self.blockchain.add_transaction_to_mempool(transaction)
                 
                 # Manually add fee to redistribution pool for testing
-                if hasattr(rwa_system, 'add_fee_to_pool'):
-                    rwa_system.add_fee_to_pool(fee, 'normal_transaction')
+                rwa_system.add_fee_to_redistribution_pool(fee, len(self.blockchain.blocks), 'normal_transaction')
                 
                 return {
                     'success': True,
