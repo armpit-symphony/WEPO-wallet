@@ -245,11 +245,12 @@ def run_complete_fee_redistribution_test():
             print("\n[TEST 5] RWA Creation Fee Collection - Creating RWA asset with 0.0002 WEPO fee")
             
             rwa_data = {
-                "creator_address": test_wallets[0],
-                "asset_name": "Test Property",
-                "asset_type": "property",
+                "name": "Test Property",
                 "description": "Test property for fee redistribution testing",
-                "metadata": {"location": "Test City", "value": 100000}
+                "asset_type": "property",
+                "owner_address": test_wallets[0],
+                "metadata": {"location": "Test City", "value": 100000},
+                "valuation": 100000
             }
             
             response = requests.post(f"{API_URL}/rwa/create-asset", json=rwa_data)
