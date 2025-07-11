@@ -1642,7 +1642,8 @@ class WepoFastTestBridge:
                     'asset_id': asset_id,
                     'fee_paid': required_fee,
                     'remaining_balance': self.blockchain.get_balance(owner_address),
-                    'message': f'RWA asset created successfully. Fee of {required_fee} WEPO deducted.'
+                    'fee_redistribution': f'Fee of {required_fee} WEPO added to redistribution pool for miners/masternodes',
+                    'message': f'RWA asset created successfully. Fee of {required_fee} WEPO will be redistributed to network participants.'
                 }
                 
             except ValueError as e:
