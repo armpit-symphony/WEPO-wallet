@@ -531,28 +531,40 @@ class WepoFastTestBridge:
                 if not miner_address:
                     raise HTTPException(status_code=400, detail="Miner address required")
                 
+                # Check redistribution pool before mining
+                pool_info_before = rwa_system.get_redistribution_pool_info()
+                fees_before = pool_info_before.get('total_collected', 0)
+                
                 # Check mempool before mining
-                mempool_fees = sum(tx.fee for tx in self.blockchain.mempool.values() if hasattr(tx, 'fee') and tx.fee)
                 mempool_size = len(self.blockchain.mempool)
                 
+                # Distribute fees to miner
+                fees_distributed = rwa_system.distribute_fees_to_miners(miner_address, len(self.blockchain.blocks))
+                
                 # Mine block
-                mined_block = self.blockchain.mine_block_with_miner(miner_address)
+                try:
+                    mined_block = self.blockchain.mine_block_with_miner(miner_address)
+                except AttributeError:
+                    # Fallback if mine_block_with_miner doesn't exist
+                    mined_block = self.blockchain.mine_block()
                 
                 if not mined_block:
                     raise HTTPException(status_code=500, detail="Failed to mine block")
                 
                 # Get redistribution pool info after mining
-                pool_info = rwa_system.get_redistribution_pool_info()
+                pool_info_after = rwa_system.get_redistribution_pool_info()
+                fees_after = pool_info_after.get('total_collected', 0)
                 
                 return {
                     'success': True,
-                    'block_height': mined_block.height,
+                    'block_height': getattr(mined_block, 'height', len(self.blockchain.blocks)),
                     'miner_address': miner_address,
-                    'mempool_fees_processed': mempool_fees / 100000000,  # Convert to WEPO
+                    'fees_before_mining': fees_before,
+                    'fees_distributed': fees_distributed,
+                    'fees_after_mining': fees_after,
                     'transactions_processed': mempool_size,
                     'new_mempool_size': len(self.blockchain.mempool),
-                    'redistribution_pool_total': pool_info['total_collected'],
-                    'message': f'Block {mined_block.height} mined successfully'
+                    'message': f'Block mined successfully. Distributed {fees_distributed} WEPO in fees to miner.'
                 }
                 
             except Exception as e:
