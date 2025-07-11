@@ -25,6 +25,7 @@ import { useQuantum } from '../contexts/QuantumContext';
 import SendWepo from './SendWepo';
 import ReceiveWepo from './ReceiveWepo';
 import BtcDexSwap from './BtcDexSwap';
+import EnhancedDEX from './EnhancedDEX';
 import StakingInterface from './StakingInterface';
 import MasternodeInterface from './MasternodeInterface';
 import SettingsPanel from './SettingsPanel';
