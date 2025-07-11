@@ -614,11 +614,24 @@ class WepoBlockchain:
                 script_sig = inp_data.get('script_sig', b'')
                 if isinstance(script_sig, str):
                     script_sig = script_sig.encode() if script_sig else b''
+                
+                # Handle quantum signature fields
+                quantum_signature = inp_data.get('quantum_signature')
+                if isinstance(quantum_signature, str) and quantum_signature:
+                    quantum_signature = bytes.fromhex(quantum_signature)
+                
+                quantum_public_key = inp_data.get('quantum_public_key')
+                if isinstance(quantum_public_key, str) and quantum_public_key:
+                    quantum_public_key = bytes.fromhex(quantum_public_key)
+                
                 inputs.append(TransactionInput(
                     prev_txid=inp_data['prev_txid'],
                     prev_vout=inp_data['prev_vout'],
                     script_sig=script_sig,
-                    sequence=inp_data.get('sequence', 0xffffffff)
+                    sequence=inp_data.get('sequence', 0xffffffff),
+                    quantum_signature=quantum_signature,
+                    quantum_public_key=quantum_public_key,
+                    signature_type=inp_data.get('signature_type', 'ecdsa')
                 ))
             
             outputs = []
