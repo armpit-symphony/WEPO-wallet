@@ -1736,6 +1736,269 @@ class WepoFastTestBridge:
                 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
+
+        # ===================
+        # RWA TOKEN ENDPOINTS
+        # ===================
+        
+        @self.app.post("/api/rwa/create-asset")
+        async def create_rwa_asset(request: dict):
+            """Create a new RWA asset"""
+            try:
+                name = request.get('name')
+                description = request.get('description')
+                asset_type = request.get('asset_type')  # 'document', 'image', 'property', etc.
+                owner_address = request.get('owner_address')
+                file_data = request.get('file_data')  # Base64 encoded
+                file_name = request.get('file_name')
+                file_type = request.get('file_type')  # MIME type
+                metadata = request.get('metadata', {})
+                valuation = request.get('valuation')  # USD value
+                
+                if not all([name, description, asset_type, owner_address]):
+                    raise HTTPException(status_code=400, detail="Missing required fields")
+                
+                # Validate owner address
+                if not owner_address.startswith("wepo1"):
+                    raise HTTPException(status_code=400, detail="Invalid WEPO address format")
+                
+                # Create asset
+                asset_id = rwa_system.create_rwa_asset(
+                    name=name,
+                    description=description,
+                    asset_type=asset_type,
+                    owner_address=owner_address,
+                    file_data=file_data,
+                    file_name=file_name,
+                    file_type=file_type,
+                    metadata=metadata,
+                    valuation=valuation
+                )
+                
+                return {
+                    'success': True,
+                    'asset_id': asset_id,
+                    'message': 'RWA asset created successfully'
+                }
+                
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/rwa/tokenize")
+        async def tokenize_rwa_asset(request: dict):
+            """Tokenize an RWA asset"""
+            try:
+                asset_id = request.get('asset_id')
+                token_name = request.get('token_name')
+                token_symbol = request.get('token_symbol')
+                total_supply = request.get('total_supply')
+                
+                if not asset_id:
+                    raise HTTPException(status_code=400, detail="Asset ID is required")
+                
+                # Get current block height
+                block_height = len(self.blockchain.blocks)
+                
+                # Tokenize asset
+                token_id = rwa_system.tokenize_asset(
+                    asset_id=asset_id,
+                    token_name=token_name,
+                    token_symbol=token_symbol,
+                    total_supply=total_supply,
+                    block_height=block_height
+                )
+                
+                return {
+                    'success': True,
+                    'token_id': token_id,
+                    'message': 'Asset tokenized successfully'
+                }
+                
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/rwa/asset/{asset_id}")
+        async def get_rwa_asset(asset_id: str):
+            """Get RWA asset information"""
+            try:
+                asset_info = rwa_system.get_asset_info(asset_id)
+                
+                if not asset_info:
+                    raise HTTPException(status_code=404, detail="Asset not found")
+                
+                return {
+                    'success': True,
+                    'asset': asset_info
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/rwa/asset/{asset_id}/file")
+        async def get_rwa_asset_file(asset_id: str):
+            """Get RWA asset file data"""
+            try:
+                file_data = rwa_system.get_asset_file(asset_id)
+                
+                if not file_data:
+                    raise HTTPException(status_code=404, detail="Asset file not found")
+                
+                return {
+                    'success': True,
+                    'file': file_data
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/rwa/token/{token_id}")
+        async def get_rwa_token(token_id: str):
+            """Get RWA token information"""
+            try:
+                token_info = rwa_system.get_token_info(token_id)
+                
+                if not token_info:
+                    raise HTTPException(status_code=404, detail="Token not found")
+                
+                return {
+                    'success': True,
+                    'token': token_info
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/rwa/portfolio/{address}")
+        async def get_rwa_portfolio(address: str):
+            """Get user's RWA portfolio"""
+            try:
+                # Validate address
+                if not address.startswith("wepo1"):
+                    raise HTTPException(status_code=400, detail="Invalid WEPO address format")
+                
+                portfolio = rwa_system.get_user_rwa_portfolio(address)
+                
+                return {
+                    'success': True,
+                    'portfolio': portfolio
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/rwa/tokens/tradeable")
+        async def get_tradeable_rwa_tokens():
+            """Get all tradeable RWA tokens"""
+            try:
+                tokens = rwa_system.get_tradeable_tokens()
+                
+                return {
+                    'success': True,
+                    'tokens': tokens,
+                    'count': len(tokens)
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/rwa/transfer")
+        async def transfer_rwa_tokens(request: dict):
+            """Transfer RWA tokens"""
+            try:
+                token_id = request.get('token_id')
+                from_address = request.get('from_address')
+                to_address = request.get('to_address')
+                amount = request.get('amount')
+                
+                if not all([token_id, from_address, to_address, amount]):
+                    raise HTTPException(status_code=400, detail="Missing required fields")
+                
+                # Get current block height
+                block_height = len(self.blockchain.blocks)
+                
+                # Transfer tokens
+                tx_id = rwa_system.transfer_tokens(
+                    token_id=token_id,
+                    from_address=from_address,
+                    to_address=to_address,
+                    amount=int(amount),
+                    block_height=block_height
+                )
+                
+                return {
+                    'success': True,
+                    'transaction_id': tx_id,
+                    'message': 'Tokens transferred successfully'
+                }
+                
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/rwa/trade")
+        async def trade_rwa_tokens(request: dict):
+            """Trade RWA tokens for WEPO"""
+            try:
+                token_id = request.get('token_id')
+                seller_address = request.get('seller_address')
+                buyer_address = request.get('buyer_address')
+                token_amount = request.get('token_amount')
+                wepo_amount = request.get('wepo_amount')
+                
+                if not all([token_id, seller_address, buyer_address, token_amount, wepo_amount]):
+                    raise HTTPException(status_code=400, detail="Missing required fields")
+                
+                # Check buyer has sufficient WEPO balance
+                buyer_balance = self.blockchain.get_balance(buyer_address)
+                if buyer_balance < float(wepo_amount):
+                    raise HTTPException(status_code=400, detail="Insufficient WEPO balance")
+                
+                # Get current block height
+                block_height = len(self.blockchain.blocks)
+                
+                # Execute trade
+                tx_id = rwa_system.trade_tokens_for_wepo(
+                    token_id=token_id,
+                    seller_address=seller_address,
+                    buyer_address=buyer_address,
+                    token_amount=int(token_amount),
+                    wepo_amount=int(float(wepo_amount) * 100000000),  # Convert to satoshis
+                    block_height=block_height
+                )
+                
+                # Create corresponding WEPO transaction
+                wepo_tx_id = self.blockchain.create_transaction(buyer_address, seller_address, float(wepo_amount))
+                
+                return {
+                    'success': True,
+                    'rwa_transaction_id': tx_id,
+                    'wepo_transaction_id': wepo_tx_id,
+                    'message': 'Trade executed successfully'
+                }
+                
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/rwa/statistics")
+        async def get_rwa_statistics():
+            """Get RWA system statistics"""
+            try:
+                stats = rwa_system.get_rwa_statistics()
+                
+                return {
+                    'success': True,
+                    'statistics': stats
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
         
         @self.app.post("/api/privacy/verify-proof")
         async def verify_privacy_proof_endpoint(request: dict):
