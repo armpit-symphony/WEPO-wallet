@@ -150,6 +150,8 @@ const Dashboard = () => {
         return <SettingsPanel onBack={() => setActiveTab('dashboard')} />;
       case 'messaging':
         return <QuantumMessaging onBack={() => setActiveTab('dashboard')} />;
+      case 'rwa':
+        return <RWADashboard onBack={() => setActiveTab('dashboard')} />;
       default:
         return renderDashboard();
     }
