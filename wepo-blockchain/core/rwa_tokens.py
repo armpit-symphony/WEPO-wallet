@@ -471,6 +471,74 @@ class RWATokenSystem:
             }
         }
     
+    def add_fee_to_redistribution_pool(self, amount: float, block_height: int):
+        """Add fee to redistribution pool"""
+        self.fee_redistribution_pool.total_collected += amount
+        print(f"Added {amount} WEPO to redistribution pool. Total: {self.fee_redistribution_pool.total_collected}")
+    
+    def get_redistribution_pool_info(self) -> Dict:
+        """Get information about the fee redistribution pool"""
+        return {
+            'total_collected': self.fee_redistribution_pool.total_collected,
+            'last_distribution_block': self.fee_redistribution_pool.last_distribution,
+            'pending_for_distribution': self.fee_redistribution_pool.total_collected,
+            'distribution_policy': {
+                'first_18_months': 'Distributed to miners as additional block rewards',
+                'after_18_months': 'Distributed to masternode operators',
+                'distribution_frequency': 'Per block or periodic batches'
+            }
+        }
+    
+    def distribute_fees_to_miners(self, miner_address: str, block_height: int) -> float:
+        """Distribute collected fees to miners (for first 18 months)"""
+        if self.fee_redistribution_pool.total_collected > 0:
+            # For demo, distribute all collected fees to the miner
+            amount_to_distribute = self.fee_redistribution_pool.total_collected
+            self.fee_redistribution_pool.total_collected = 0
+            self.fee_redistribution_pool.last_distribution = block_height
+            
+            # Record distribution
+            distribution_record = {
+                'block_height': block_height,
+                'recipient': miner_address,
+                'amount': amount_to_distribute,
+                'type': 'miner_reward',
+                'timestamp': int(time.time())
+            }
+            self.fee_redistribution_pool.distribution_history.append(distribution_record)
+            
+            print(f"Distributed {amount_to_distribute} WEPO to miner {miner_address} at block {block_height}")
+            return amount_to_distribute
+        return 0.0
+    
+    def distribute_fees_to_masternodes(self, masternode_addresses: List[str], block_height: int) -> Dict:
+        """Distribute collected fees to masternodes (after 18 months)"""
+        if self.fee_redistribution_pool.total_collected > 0 and masternode_addresses:
+            # Distribute equally among masternodes
+            total_amount = self.fee_redistribution_pool.total_collected
+            amount_per_node = total_amount / len(masternode_addresses)
+            
+            self.fee_redistribution_pool.total_collected = 0
+            self.fee_redistribution_pool.last_distribution = block_height
+            
+            distributions = {}
+            for address in masternode_addresses:
+                distributions[address] = amount_per_node
+                
+                # Record distribution
+                distribution_record = {
+                    'block_height': block_height,
+                    'recipient': address,
+                    'amount': amount_per_node,
+                    'type': 'masternode_reward',
+                    'timestamp': int(time.time())
+                }
+                self.fee_redistribution_pool.distribution_history.append(distribution_record)
+            
+            print(f"Distributed {total_amount} WEPO to {len(masternode_addresses)} masternodes at block {block_height}")
+            return distributions
+        return {}
+    
     def is_valid_address(self, address: str) -> bool:
         """Validate WEPO address format"""
         if not address or not isinstance(address, str):
