@@ -39,25 +39,72 @@ const RWADashboard = ({ onBack }) => {
   const currentAddress = currentWallet?.address;
 
   useEffect(() => {
+    console.log('RWADashboard useEffect:', {
+      currentAddress,
+      currentWallet,
+      isQuantumMode,
+      wallet,
+      quantumWallet
+    });
+    
     if (currentAddress) {
       loadRWAData();
+    } else {
+      // Try to get address from localStorage if context is not ready
+      const storedWallet = localStorage.getItem('wepo_wallet');
+      const storedQuantumWallet = localStorage.getItem('wepo_quantum_wallet');
+      
+      if (storedWallet) {
+        try {
+          const walletData = JSON.parse(storedWallet);
+          if (walletData.address) {
+            loadRWAData(walletData.address);
+            return;
+          }
+        } catch (e) {
+          console.error('Error parsing stored wallet:', e);
+        }
+      }
+      
+      if (storedQuantumWallet) {
+        try {
+          const quantumWalletData = JSON.parse(storedQuantumWallet);
+          if (quantumWalletData.address) {
+            loadRWAData(quantumWalletData.address);
+            return;
+          }
+        } catch (e) {
+          console.error('Error parsing stored quantum wallet:', e);
+        }
+      }
+      
+      // If no address found, still load basic data
+      setLoading(false);
+      setError('No wallet address found. Please ensure you are logged in.');
     }
-  }, [currentAddress]);
+  }, [currentAddress, wallet, quantumWallet, isQuantumMode]);
 
-  const loadRWAData = async () => {
+  const loadRWAData = async (address = currentAddress) => {
     try {
       setLoading(true);
+      setError('');
       
-      // Load portfolio
-      const portfolioResponse = await fetch(`/api/rwa/portfolio/${currentAddress}`);
-      const portfolioData = await portfolioResponse.json();
-      if (portfolioData.success) {
-        setPortfolio(portfolioData.portfolio);
+      console.log('Loading RWA data for address:', address);
+      
+      // Load portfolio if address is available
+      if (address) {
+        const portfolioResponse = await fetch(`/api/rwa/portfolio/${address}`);
+        const portfolioData = await portfolioResponse.json();
+        console.log('Portfolio response:', portfolioData);
+        if (portfolioData.success) {
+          setPortfolio(portfolioData.portfolio);
+        }
       }
       
       // Load tradeable tokens
       const tokensResponse = await fetch('/api/rwa/tokens/tradeable');
       const tokensData = await tokensResponse.json();
+      console.log('Tradeable tokens response:', tokensData);
       if (tokensData.success) {
         setTradeableTokens(tokensData.tokens);
       }
@@ -65,13 +112,14 @@ const RWADashboard = ({ onBack }) => {
       // Load statistics
       const statsResponse = await fetch('/api/rwa/statistics');
       const statsData = await statsResponse.json();
+      console.log('Statistics response:', statsData);
       if (statsData.success) {
         setStatistics(statsData.statistics);
       }
       
     } catch (err) {
       console.error('Error loading RWA data:', err);
-      setError('Failed to load RWA data');
+      setError('Failed to load RWA data: ' + err.message);
     } finally {
       setLoading(false);
     }
