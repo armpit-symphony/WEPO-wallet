@@ -76,6 +76,19 @@ def test_quantum_mining_compatibility():
     
     # Test 5: Check Miner Balance
     print("\n5. Checking Miner Balance...")
+    
+    # Use the actual miner address with correct length
+    miner_address = "wepo1miner0000000000000000000000000"
+    
+    # Create a proper miner wallet entry first
+    miner_wallet_data = {
+        "address": miner_address,
+        "username": "test_miner"
+    }
+    
+    # Create miner wallet entry
+    response = requests.post(f"{base_url}/api/wallet/create", json=miner_wallet_data)
+    
     response = requests.get(f"{base_url}/api/wallet/{miner_address}")
     if response.status_code == 200:
         miner_balance = response.json()
