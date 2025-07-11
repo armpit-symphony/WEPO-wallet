@@ -107,6 +107,7 @@ class RWATokenSystem:
         self.assets: Dict[str, RWAAsset] = {}
         self.tokens: Dict[str, RWAToken] = {}
         self.transactions: List[RWATransaction] = []
+        self.fee_redistribution_pool = FeeRedistributionPool()
         self.supported_file_types = {
             'image/jpeg', 'image/png', 'image/gif', 'image/bmp',
             'application/pdf', 'application/msword', 
