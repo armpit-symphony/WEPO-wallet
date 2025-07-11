@@ -716,6 +716,8 @@ class WepoFastTestBridge:
         from quantum_messaging import messaging_system
         
         # Import RWA token system
+        import sys
+        sys.path.append('/app/wepo-blockchain/core')
         from rwa_tokens import rwa_system
         
         # Quantum Messaging API Endpoints
