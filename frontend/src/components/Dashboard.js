@@ -152,13 +152,25 @@ const Dashboard = () => {
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Balance Card */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-6 text-white">
+      <div className={`rounded-2xl p-6 text-white ${
+        isQuantumMode 
+          ? 'bg-gradient-to-r from-purple-600 to-blue-600' 
+          : 'bg-gradient-to-r from-purple-600 to-blue-600'
+      }`}>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-purple-100 text-sm font-medium">Total Balance</p>
+            <div className="flex items-center gap-2 mb-2">
+              <p className="text-purple-100 text-sm font-medium">Total Balance</p>
+              {isQuantumMode && (
+                <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full">
+                  <Zap className="h-3 w-3 text-yellow-300" />
+                  <span className="text-xs text-yellow-300">Quantum</span>
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-3 mt-2">
               <span className="text-3xl font-bold">
-                {showBalance ? formatBalance(balance) : '••••••••'}
+                {showBalance ? formatBalance(currentBalance) : '••••••••'}
               </span>
               <span className="text-xl text-purple-200">WEPO</span>
               <button
@@ -169,11 +181,25 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
-          <Shield className="h-12 w-12 text-purple-200" />
+          <div className="text-right">
+            <Shield className="h-12 w-12 text-purple-200 mb-2" />
+            {isQuantumMode && dilithiumInfo && (
+              <div className="text-xs text-purple-100">
+                {dilithiumInfo.algorithm}
+              </div>
+            )}
+          </div>
         </div>
         
-        <div className="text-sm text-purple-100">
-          Address: {wallet?.address?.substring(0, 20)}...
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-purple-100">
+            Address: {currentWallet?.address?.substring(0, 20)}...
+          </div>
+          {isQuantumMode && (
+            <div className="text-xs text-purple-100">
+              Post-quantum secure
+            </div>
+          )}
         </div>
       </div>
 
