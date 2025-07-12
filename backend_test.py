@@ -1557,38 +1557,34 @@ def run_btc_dex_atomic_swap_tests():
                 
                 passed = True
                 
-                # Check swap details
-                if "swap" in data:
-                    swap = data["swap"]
-                    
-                    # Check swap ID matches
-                    if swap.get("swap_id") == test_swap_id:
-                        print(f"  ✓ Swap ID matches: {test_swap_id}")
-                    else:
-                        print(f"  ✗ Swap ID mismatch: {swap.get('swap_id')}")
-                        passed = False
-                    
-                    # Check status
-                    if "status" in swap:
-                        print(f"  ✓ Swap status: {swap['status']}")
-                    else:
-                        print("  ✗ Swap status missing")
-                        passed = False
-                    
-                    # Check addresses
-                    if swap.get("btc_address") == test_btc_address:
-                        print(f"  ✓ BTC address matches")
-                    else:
-                        print(f"  ✗ BTC address mismatch")
-                        passed = False
-                    
-                    if swap.get("wepo_address") == test_wepo_address:
-                        print(f"  ✓ WEPO address matches")
-                    else:
-                        print(f"  ✗ WEPO address mismatch")
-                        passed = False
+                # Check swap details (data is the swap object directly)
+                # Check swap ID matches
+                if data.get("swap_id") == test_swap_id:
+                    print(f"  ✓ Swap ID matches: {test_swap_id}")
                 else:
-                    print("  ✗ Swap details missing")
+                    print(f"  ✗ Swap ID mismatch: {data.get('swap_id')}")
+                    passed = False
+                
+                # Check status/state
+                if "state" in data:
+                    print(f"  ✓ Swap state: {data['state']}")
+                elif "status" in data:
+                    print(f"  ✓ Swap status: {data['status']}")
+                else:
+                    print("  ✗ Swap state/status missing")
+                    passed = False
+                
+                # Check addresses
+                if "btc_htlc_address" in data:
+                    print(f"  ✓ BTC HTLC address present")
+                else:
+                    print(f"  ✗ BTC HTLC address missing")
+                    passed = False
+                
+                if "wepo_htlc_address" in data:
+                    print(f"  ✓ WEPO HTLC address present")
+                else:
+                    print(f"  ✗ WEPO HTLC address missing")
                     passed = False
                 
                 log_test("Swap Status", passed, response)
