@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
+import { generateWepoAddress, validateWepoAddress, isQuantumAddress } from '../utils/addressUtils';
 
 const QuantumContext = createContext();
 
