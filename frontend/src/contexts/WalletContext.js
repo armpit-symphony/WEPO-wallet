@@ -21,21 +21,17 @@ export const WalletProvider = ({ children }) => {
   const [btcTransactions, setBtcTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [posEnabled, setPosEnabled] = useState(false);
+  const [masternodesEnabled, setMasternodesEnabled] = useState(false);
   const [showSeedPhrase, setShowSeedPhrase] = useState(false);
 
+  // Enable PoS after 18 months
   useEffect(() => {
-    // Check if 18 months have passed since first PoW block (simulated for demo)
-    // In real implementation, this would check the blockchain
-    const launchDate = localStorage.getItem('wepo_launch_date');
-    if (launchDate) {
-      const eighteenMonthsLater = new Date(launchDate);
-      eighteenMonthsLater.setMonth(eighteenMonthsLater.getMonth() + 18);
-      
-      if (new Date() > eighteenMonthsLater) {
-        setPosEnabled(true);
-        setMasternodesEnabled(true);
-      }
-    }
+    const timer = setTimeout(() => {
+      setPosEnabled(true);
+      setMasternodesEnabled(true);
+    }, 100000); // For demo - in production this would be actual 18 months
+
+    return () => clearTimeout(timer);
   }, []);
 
   const generateMnemonic = () => {
