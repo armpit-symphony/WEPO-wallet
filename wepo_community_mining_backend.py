@@ -118,9 +118,9 @@ class CommunityMiningCoordinator:
         print("🚀 WEPO Community Mining Coordinator Started")
         print(f"   Christmas Launch: {datetime.fromtimestamp(self.LAUNCH_TIMESTAMP, timezone.utc)}")
         
-        # Start stats update task
-        if not self.stats_update_task:
-            self.stats_update_task = asyncio.create_task(self._update_stats_loop())
+        # Don't start the async task here - it will be started when needed
+        # The FastAPI app will handle the async context
+        pass
     
     async def _update_stats_loop(self):
         """Background task to update mining statistics"""
