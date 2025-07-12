@@ -398,6 +398,10 @@ class SecurityAuditor:
         
         # Test 1: Transaction validation
         try:
+            import os
+            import sys
+            sys.path.insert(0, '/app/wepo-blockchain/core')
+            
             from blockchain import WepoBlockchain, Transaction
             
             with tempfile.TemporaryDirectory() as temp_dir:
