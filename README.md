@@ -58,16 +58,30 @@ WEPO is a groundbreaking cryptocurrency platform that combines quantum-resistant
 
 ### Total Supply: 63,900,006 WEPO
 
-### Mining Rewards Schedule:
-- **Q1 (Blocks 0-13,139)**: 400 WEPO per block
-- **Q2 (Blocks 13,140-26,279)**: 200 WEPO per block  
-- **Q3 (Blocks 26,280-39,419)**: 100 WEPO per block
-- **Q4 (Blocks 39,420-52,559)**: 50 WEPO per block
-- **Year 2+**: 12.4 WEPO per block
+### New Mining Schedule (6-Month Periods):
+- **Months 1-6 (26,280 blocks)**: 400 WEPO per block = 10,512,000 WEPO
+- **Months 7-12 (26,280 blocks)**: 200 WEPO per block = 5,256,000 WEPO  
+- **Months 13-18 (26,280 blocks)**: 100 WEPO per block = 2,628,000 WEPO
+- **Total Mining**: 18,396,000 WEPO (28.8% of supply)
+
+### Complete Supply Distribution:
+- **Mining Rewards (18 months)**: 18,396,000 WEPO (28.8%)
+- **PoS Staking Rewards (Years 2-10)**: 30,000,000 WEPO (47.0%)
+- **Masternode Rewards (Years 2-15)**: 12,000,000 WEPO (18.8%)
+- **Development/Ecosystem**: 3,504,006 WEPO (5.5%)
+
+### Revolutionary 3-Way Fee Distribution:
+**Every network fee is distributed in real-time:**
+- **Masternodes**: 60% of all fees (split equally among active nodes)
+- **Miners**: 25% of all fees (goes to current block miner)
+- **PoS Stakers**: 15% of all fees (proportional to stake amount)
+
+**Zero Fee Burning Policy**: No fees are ever burned - 100% distributed to network participants!
 
 ### Consensus Transition:
-- **First 18 Months**: Pure Proof of Work mining
-- **After 18 Months**: Hybrid PoW/PoS with Masternode governance
+- **Months 1-18**: Pure Proof of Work mining
+- **Month 19+**: Hybrid PoW/PoS with Masternode governance (10,000 WEPO collateral)
+- **Long-term**: Fee-driven sustainable economy
 
 ---
 
