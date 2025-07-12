@@ -116,12 +116,33 @@ export const WalletProvider = ({ children }) => {
       const encryptedMnemonic = CryptoJS.AES.encrypt(mnemonic, password).toString();
       
       // Create wallet object
+      // Generate WEPO address (regular type)
+      const wepoAddress = generateWepoAddress(seed, 'regular');
+      
+      // Generate Bitcoin address from same seed
+      const btcWallet = generateBitcoinAddress(seed, 'legacy');
+      
       const walletData = {
         username,
-        address: generateWepoAddress(seed, 'regular'),
-        encryptedMnemonic,
+        seed: seed.toString('hex'),
+        mnemonic,
+        
+        // WEPO wallet
+        wepo: {
+          address: wepoAddress,
+          privateKey: CryptoJS.SHA256(seed.toString('hex')).toString()
+        },
+        
+        // Bitcoin wallet (same seed)
+        btc: {
+          address: btcWallet.address,
+          privateKey: btcWallet.privateKey,
+          publicKey: btcWallet.publicKey,
+          type: btcWallet.type
+        },
+        
         createdAt: new Date().toISOString(),
-        balance: 0
+        version: '2.0' // Unified wallet version
       };
 
       // Store wallet data (encrypted)
