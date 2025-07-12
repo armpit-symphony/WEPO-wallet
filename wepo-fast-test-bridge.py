@@ -366,6 +366,12 @@ class WepoFastTestBridge:
         self.app = FastAPI(title="WEPO Fast Test Bridge", version="1.0.0")
         self.setup_cors()
         self.setup_routes()
+        
+        # Initialize mining coordinator
+        mining_coordinator.start_coordinator()
+        
+        # Setup mining routes
+        setup_mining_routes(self.app)
     
     def setup_cors(self):
         self.app.add_middleware(
