@@ -319,14 +319,18 @@ const Dashboard = () => {
         </button>
         
         <button 
-          onClick={() => setActiveTab('rwa')}
+          onClick={() => setActiveTab('mining')}
           className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50 relative"
         >
-          <Package className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
-          <span className="text-white font-medium">RWA Tokens</span>
-          <div className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full">
-            NEW
-          </div>
+          <Pickaxe className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
+          <span className="text-white font-medium">
+            {miningMode === 'genesis' ? '🎄 Join Genesis Mining' : '⚡ Start PoW Mining'}
+          </span>
+          {miningMode === 'genesis' && (
+            <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+              XMAS
+            </div>
+          )}
         </button>
       </div>
 
