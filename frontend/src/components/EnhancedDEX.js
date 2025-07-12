@@ -159,7 +159,8 @@ const EnhancedDEX = ({ onClose }) => {
     setError('');
     
     try {
-      const response = await fetch('/api/atomic-swap/initiate', {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/atomic-swap/initiate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
