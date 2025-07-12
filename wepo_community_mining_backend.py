@@ -19,9 +19,9 @@ from pydantic import BaseModel
 import uvicorn
 
 # Import existing WEPO components
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'wepo-blockchain'))
+# import sys
+# import os
+# sys.path.append(os.path.join(os.path.dirname(__file__), 'wepo-blockchain'))
 
 @dataclass
 class MinerInfo:
