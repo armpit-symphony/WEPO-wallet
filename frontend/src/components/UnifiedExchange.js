@@ -706,6 +706,17 @@ const UnifiedExchange = ({ onBack }) => {
           <Package className="h-4 w-4" />
           RWA DEX
         </button>
+        <button
+          onClick={() => setActiveTab('liquidity')}
+          className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+            activeTab === 'liquidity' 
+              ? 'bg-purple-600 text-white' 
+              : 'text-gray-300 hover:text-white'
+          }`}
+        >
+          <Coins className="h-4 w-4" />
+          Liquidity
+        </button>
       </div>
 
       {/* Content */}
