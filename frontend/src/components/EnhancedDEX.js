@@ -72,10 +72,10 @@ const EnhancedDEX = ({ onClose }) => {
 
   const fetchExchangeRate = async () => {
     try {
-      const response = await fetch('/api/dex/rate');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/atomic-swap/exchange-rate`);
       const data = await response.json();
       setExchangeRate(data.btc_to_wepo);
-      setRwaRates(data.rwa_tokens || {});
     } catch (err) {
       console.error('Error fetching exchange rate:', err);
     }
