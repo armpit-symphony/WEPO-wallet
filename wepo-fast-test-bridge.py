@@ -2026,7 +2026,58 @@ class WepoFastTestBridge:
         @self.app.post("/api/rwa/create")
         async def create_rwa_asset_alias(request: dict):
             """Alias for create_rwa_asset for compatibility"""
-            return await create_rwa_asset(request)
+            try:
+                name = request.get('name')
+                description = request.get('description')
+                asset_type = request.get('asset_type')
+                owner_address = request.get('owner_address')
+                file_data = request.get('file_data')
+                file_name = request.get('file_name')
+                file_type = request.get('file_type')
+                metadata = request.get('metadata', {})
+                valuation = request.get('valuation')
+                
+                if not all([name, description, asset_type, owner_address]):
+                    raise HTTPException(status_code=400, detail="Missing required fields: name, description, asset_type, owner_address")
+                
+                # Check WEPO balance for RWA creation fee
+                user_balance = self.blockchain.get_balance(owner_address)
+                fee_info = rwa_system.get_rwa_creation_fee_info()
+                required_fee = fee_info['rwa_creation_fee']
+                
+                if user_balance < required_fee:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Insufficient WEPO balance. RWA creation requires {required_fee} WEPO (current balance: {user_balance:.8f} WEPO)"
+                    )
+                
+                # Create asset with blockchain reference for fee deduction
+                asset_id = rwa_system.create_rwa_asset(
+                    name=name,
+                    description=description,
+                    asset_type=asset_type,
+                    owner_address=owner_address,
+                    file_data=file_data,
+                    file_name=file_name,
+                    file_type=file_type,
+                    metadata=metadata,
+                    valuation=valuation,
+                    blockchain=self.blockchain
+                )
+                
+                return {
+                    'success': True,
+                    'asset_id': asset_id,
+                    'fee_paid': required_fee,
+                    'remaining_balance': self.blockchain.get_balance(owner_address),
+                    'fee_distribution': f'Fee of {required_fee} WEPO distributed via 3-way system: 60% masternodes, 25% miners, 15% stakers',
+                    'message': f'RWA asset created successfully. Fee of {required_fee} WEPO distributed to network participants.'
+                }
+                
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
         
         @self.app.post("/api/rwa/tokenize")
         async def tokenize_rwa_asset(request: dict):
