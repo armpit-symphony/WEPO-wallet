@@ -457,7 +457,7 @@ class RWATokenSystem:
         }
     
     def get_rwa_creation_fee_info(self) -> Dict:
-        """Get RWA creation fee information"""
+        """Get RWA creation fee information with new 3-way distribution"""
         return {
             'rwa_creation_fee': 0.0002,  # Double normal transaction fee
             'normal_transaction_fee': 0.0001,
@@ -465,9 +465,16 @@ class RWATokenSystem:
             'currency': 'WEPO',
             'description': 'RWA token creation fee (2x normal transaction fee)',
             'redistribution_info': {
-                'first_18_months': 'Fees redistributed to miners as additional block rewards',
-                'after_18_months': 'Fees redistributed to masternode operators',
-                'policy': 'No coins are burned - all fees support network participants'
+                'masternodes': 'Receive 60% of all network fees (split equally among active nodes)',
+                'miners': 'Receive 25% of all network fees (goes to current block miner)',
+                'stakers': 'Receive 15% of all network fees (proportional to stake amount)',
+                'policy': 'No fees are burned - all fees support network participants',
+                'distribution_method': 'Real-time per-block distribution'
+            },
+            'fee_distribution_weights': {
+                'masternode_share': 60,
+                'miner_share': 25, 
+                'staker_share': 15
             }
         }
     
