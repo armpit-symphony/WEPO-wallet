@@ -309,8 +309,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "WEPO New Tokenomics Implementation"
-  stuck_tasks: []
+    - "WEPO New Tokenomics Frontend Integration"
+  stuck_tasks:
+    - "Frontend Authentication Flow"
   test_all: false
   test_priority: "high_first"
   backend_tested: true
