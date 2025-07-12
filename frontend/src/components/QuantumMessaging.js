@@ -16,7 +16,6 @@ import { validateWepoAddress } from '../utils/addressUtils';
 
 const QuantumMessaging = ({ onBack }) => {
   const { wallet } = useWallet();
-  const { quantumWallet, isQuantumMode } = useQuantum();
   
   const [activeTab, setActiveTab] = useState('inbox');
   const [messages, setMessages] = useState([]);
