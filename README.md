@@ -2,32 +2,47 @@
 
 ## 🚀 "We the People" - The Future of Decentralized Finance
 
-WEPO is a groundbreaking cryptocurrency platform that combines quantum-resistant security, real-world asset tokenization, and sustainable tokenomics to create the most advanced blockchain ecosystem ever built.
+WEPO is a groundbreaking cryptocurrency platform that combines quantum-resistant security, real-world asset tokenization, community-driven AMM exchanges, and sustainable tokenomics to create the most advanced blockchain ecosystem ever built.
+
+**🎯 Latest Major Updates (December 2024):**
+- ✅ **Unified Exchange Interface**: Consolidated all trading (BTC-WEPO & RWA-WEPO) into single interface
+- ✅ **Community-Driven AMM**: No-admin liquidity pools with market-determined pricing
+- ✅ **Fair Launch Economics**: No hardcoded rates, community sets all prices
+- ✅ **Complete Fee Integration**: All trading fees → 3-way redistribution (60% masternodes, 25% miners, 15% stakers)
 
 ---
 
 ## 🌟 Key Features
 
-### 🔐 Quantum-Resistant Security
-- **Dilithium2 Signatures**: Post-quantum cryptographic security
-- **Dual Wallet System**: Regular (ECDSA) and Quantum (Dilithium) wallets
-- **Future-Proof**: Protection against quantum computer attacks
-- **Cross-Wallet Compatibility**: Seamless interaction between wallet types
+### 🔄 **NEW: Community-Driven AMM Exchange**
+- **No Admin Control**: Users create and manage all liquidity pools
+- **Market-Determined Pricing**: No hardcoded exchange rates - community sets prices
+- **Bootstrap Markets**: First user sets initial BTC/WEPO price ratio
+- **Triple Revenue Streams**: Block rewards + Fee redistribution + LP fees
+- **Constant Product Formula**: `x * y = k` automated market making
+- **Fair Launch**: Equal opportunity for all users to provide liquidity
+
+### 🎯 **NEW: Unified Exchange Interface**
+- **Single Trading Hub**: BTC-WEPO and RWA-WEPO trading in one interface
+- **Three-Tab System**: BTC DEX | RWA DEX | Liquidity Provision
+- **Seamless UX**: Internal swaps feel like currency conversion, not complex trading
+- **Community Pricing**: All rates determined by liquidity pools and trading activity
+- **Immediate Execution**: No waiting for order matching - instant swaps
 
 ### 🏢 Real World Asset (RWA) Tokenization
 - **Asset Upload**: Tokenize documents, images, property, vehicles, artwork
 - **Base64 File Storage**: 10MB file support with frontend compatibility
 - **Smart Tokenization**: Convert physical assets into tradeable blockchain tokens
-- **DEX Integration**: Trade RWA tokens for WEPO on integrated exchange
+- **DEX Integration**: Trade RWA tokens for WEPO on unified exchange
 - **Economic Spam Prevention**: 0.0002 WEPO fee requirement (redistributed to network)
 
 ### 💰 Sustainable Tokenomics & 3-Way Fee Distribution
 - **Zero Fee Burning**: ALL fees distributed to network participants (60% masternodes, 25% miners, 15% stakers)
 - **Real-time Distribution**: Fees distributed every block to all participant types
+- **Trading Fee Integration**: All AMM and DEX fees follow same redistribution
 - **Miner Income Security**: Miners always receive 25% of fees (never lose all income)
 - **Masternode Rewards**: 60% of all network fees + service-based rewards
 - **Staker Participation**: 15% of fees from day one, proportional to stake
-- **Sustainable Economics**: Network activity directly benefits all participants
 
 ### 🔒 Advanced Privacy Features
 - **zk-STARKs**: Zero-knowledge proofs for transaction privacy
