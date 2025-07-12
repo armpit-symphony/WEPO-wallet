@@ -1452,8 +1452,11 @@ class WepoBlockchain:
                 print(f"Collateral UTXO already spent")
                 return None
             
-            if utxo[0] < MASTERNODE_COLLATERAL:
-                print(f"Insufficient collateral. Required: {MASTERNODE_COLLATERAL / COIN} WEPO")
+            # Get dynamic collateral requirement for current height
+            required_collateral = self.get_masternode_collateral_for_height(current_height)
+            
+            if utxo[0] < required_collateral:
+                print(f"Insufficient collateral. Required: {required_collateral / COIN} WEPO")
                 return None
             
             # Generate masternode ID
