@@ -17,7 +17,6 @@ import {
   Palette
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
-import { useQuantum } from '../contexts/QuantumContext';
 
 const EnhancedDEX = ({ onClose }) => {
   const { wallet } = useWallet();
