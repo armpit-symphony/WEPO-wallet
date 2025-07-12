@@ -21,7 +21,6 @@ import {
   Clock
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
-import { useQuantum } from '../contexts/QuantumContext';
 import RWACreateAsset from './RWACreateAsset';
 import EnhancedDEX from './EnhancedDEX';
 
