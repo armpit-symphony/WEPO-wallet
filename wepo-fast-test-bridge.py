@@ -1726,6 +1726,52 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
+        @self.app.get("/api/masternode/collateral-info")
+        async def get_masternode_collateral_info():
+            """Get detailed masternode collateral information"""
+            current_height = len(self.blockchain.blocks) - 1
+            current_collateral = self.blockchain.get_dynamic_masternode_collateral(current_height)
+            
+            collateral_schedule = {
+                0: {"collateral": 10000.0, "description": "Genesis - Year 5: High security threshold"},
+                262800: {"collateral": 5000.0, "description": "Year 5: 50% reduction for broader access"},
+                525600: {"collateral": 1000.0, "description": "Year 10: 80% reduction for mass adoption"},
+                1051200: {"collateral": 500.0, "description": "Year 20: 95% reduction for maximum decentralization"}
+            }
+            
+            # Find current and next milestones
+            current_milestone = None
+            next_milestone = None
+            
+            for height, info in sorted(collateral_schedule.items(), reverse=True):
+                if current_height >= height:
+                    current_milestone = {"height": height, **info}
+                    break
+            
+            for height, info in sorted(collateral_schedule.items()):
+                if height > current_height:
+                    next_milestone = {
+                        "height": height,
+                        "collateral": info["collateral"],
+                        "description": info["description"],
+                        "blocks_until": height - current_height,
+                        "years_until": round((height - current_height) / 525600, 1)
+                    }
+                    break
+            
+            return {
+                "current_height": current_height,
+                "current_collateral": current_collateral,
+                "current_milestone": current_milestone,
+                "next_milestone": next_milestone,
+                "full_schedule": collateral_schedule,
+                "benefits": {
+                    "accessibility": "Progressive reduction keeps masternodes accessible as WEPO value grows",
+                    "decentralization": "Lower barriers enable more operators and better network distribution",
+                    "long_term_vision": "Aligns with WEPO's financial freedom and anti-establishment philosophy"
+                }
+            }
+        
         @self.app.get("/api/masternodes")
         async def get_masternodes():
             """Get all masternodes"""
