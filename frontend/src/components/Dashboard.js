@@ -18,7 +18,8 @@ import {
   ToggleLeft,
   ToggleRight,
   MessageCircle,
-  Package
+  Package,
+  Pickaxe
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { useQuantum } from '../contexts/QuantumContext';
