@@ -280,7 +280,6 @@ const UnifiedExchange = ({ onBack }) => {
         
         // Refresh data
         fetchStatistics();
-        fetchSwapHistory();
       } else {
         setError(data.detail || 'Failed to initiate swap');
       }
