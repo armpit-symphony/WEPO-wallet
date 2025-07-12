@@ -179,6 +179,10 @@ class SecurityAuditor:
         
         # Test 1: Block validation
         try:
+            import os
+            import sys
+            sys.path.insert(0, '/app/wepo-blockchain/core')
+            
             from blockchain import WepoBlockchain, Transaction, Block
             
             # Create test blockchain
