@@ -41,7 +41,10 @@ const UnifiedExchange = ({ onBack }) => {
   const [statistics, setStatistics] = useState(null);
   const [priorityFee, setPriorityFee] = useState(false);
   const [swapHistory, setSwapHistory] = useState([]);
-  const [activeSwap, setActiveSwap] = useState(null);
+  // State for liquidity provision
+  const [liquidityBtcAmount, setLiquidityBtcAmount] = useState('');
+  const [liquidityWepoAmount, setLiquidityWepoAmount] = useState('');
+  const [poolStats, setPoolStats] = useState(null);
   
   // BTC address from wallet (remove the hardcoded one)
   // const [btcAddress, setBtcAddress] = useState('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa');
