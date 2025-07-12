@@ -50,11 +50,20 @@ WEPO is a groundbreaking cryptocurrency platform that combines quantum-resistant
 - **Confidential Transactions**: Encrypted transaction amounts using Pedersen commitments
 - **Masternode Mixing**: Enhanced privacy through masternode network
 
-### 🔄 Atomic Swap DEX
-- **BTC-WEPO Trading**: Trustless Bitcoin to WEPO atomic swaps using HTLCs
-- **RWA-WEPO Trading**: Trade Real World Asset tokens for WEPO
-- **Enhanced DEX Interface**: Unified trading platform for all asset types
-- **Zero Counterparty Risk**: Atomic swaps eliminate third-party custody
+### 🔄 **UPDATED: Unified DEX Trading Platform**
+- **Community AMM**: User-created liquidity pools for BTC-WEPO trading
+- **Market-Based Pricing**: No hardcoded rates - prices emerge from trading activity
+- **RWA-WEPO Trading**: Trade tokenized real-world assets for WEPO
+- **Zero Counterparty Risk**: Non-custodial trading with instant settlement
+- **Triple Tab Interface**: BTC DEX | RWA DEX | Liquidity (all in one place)
+- **Fee Integration**: All trading fees support network participants via redistribution
+
+### 💻 **UPDATED: Unified Wallet System**
+- **Single Wallet**: Manages both BTC and WEPO from same seed phrase
+- **Internal Conversion**: BTC ↔ WEPO swaps within unified wallet
+- **No External Dependencies**: No complex atomic swaps with external Bitcoin network
+- **Seamless UX**: Currency conversion feels natural and instant
+- **Market Rates**: All conversion rates determined by community liquidity pools
 
 ### 💬 Universal Quantum Messaging
 - **Zero-Fee Messaging**: Completely free encrypted communication
