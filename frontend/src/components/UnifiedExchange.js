@@ -139,31 +139,70 @@ const UnifiedExchange = ({ onBack }) => {
     }
   };
 
-  const fetchSwapHistory = async () => {
+  const fetchPoolStats = async () => {
     try {
-      // For internal swaps, provide simple history
-      setSwapHistory([
-        {
-          id: 'swap_demo_1',
-          timestamp: Date.now() - 3600000,
-          from_currency: 'BTC',
-          to_currency: 'WEPO',
-          from_amount: 0.05,
-          to_amount: 0.05036,
-          status: 'completed'
-        },
-        {
-          id: 'swap_demo_2', 
-          timestamp: Date.now() - 7200000,
-          from_currency: 'WEPO',
-          to_currency: 'BTC',
-          from_amount: 0.1,
-          to_amount: 0.0993,
-          status: 'completed'
-        }
-      ]);
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/liquidity/stats`);
+      const data = await response.json();
+      setPoolStats(data);
     } catch (err) {
-      console.error('Error loading swap history:', err);
+      console.error('Error fetching pool stats:', err);
+    }
+  };
+
+  const handleAddLiquidity = async () => {
+    if (!liquidityBtcAmount || !liquidityWepoAmount) {
+      setError('Please enter both BTC and WEPO amounts');
+      return;
+    }
+
+    if (parseFloat(liquidityBtcAmount) <= 0 || parseFloat(liquidityWepoAmount) <= 0) {
+      setError('Amounts must be greater than 0');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      
+      const response = await fetch(`${backendUrl}/api/liquidity/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wallet_address: currentAddress,
+          btc_amount: parseFloat(liquidityBtcAmount),
+          wepo_amount: parseFloat(liquidityWepoAmount)
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.status === 'success') {
+        if (data.pool_created) {
+          setSuccess(`Market created! You provided the initial liquidity. Price set at ${data.market_price.toFixed(6)} WEPO per BTC.`);
+        } else {
+          setSuccess(`Liquidity added successfully! You received ${data.shares_minted.toFixed(6)} LP shares.`);
+        }
+        
+        // Clear form
+        setLiquidityBtcAmount('');
+        setLiquidityWepoAmount('');
+        
+        // Refresh data
+        fetchExchangeRate();
+        fetchPoolStats();
+      } else {
+        setError(data.detail || 'Failed to add liquidity');
+      }
+    } catch (err) {
+      console.error('Error adding liquidity:', err);
+      setError('Failed to add liquidity');
+    } finally {
+      setIsLoading(false);
     }
   };
 
