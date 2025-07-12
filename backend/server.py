@@ -507,15 +507,29 @@ async def get_mining_info():
 # Internal BTC ↔ WEPO Swap Endpoints (Unified Wallet)
 @api_router.get("/swap/rate")
 async def get_internal_swap_rate():
-    """Get current BTC/WEPO exchange rate for internal swaps"""
+    """Get current BTC/WEPO exchange rate for internal swaps - market determined"""
     try:
-        # Fixed rate for internal swaps - in production this would be dynamic
-        rate = 1.007200  # 1 BTC = 1.007200 WEPO
+        # Market-based rate calculation - this should be determined by:
+        # 1. Supply and demand within the WEPO network
+        # 2. External BTC price feeds
+        # 3. Trading volume and liquidity
+        
+        # For now, return a placeholder that indicates rates should be market-based
+        # In production, this would connect to:
+        # - External price oracles
+        # - Internal trading data
+        # - Liquidity pool information
+        
         return {
-            "btc_to_wepo": rate,
-            "wepo_to_btc": 1 / rate,
-            "last_updated": int(time.time()),
-            "source": "internal_market_maker"
+            "error": "Market-based pricing not yet implemented",
+            "message": "BTC/WEPO exchange rates should be determined by market forces, not hardcoded",
+            "todo": [
+                "Implement price oracle integration",
+                "Add liquidity pool mechanics", 
+                "Connect to external BTC price feeds",
+                "Implement supply/demand based pricing"
+            ],
+            "current_status": "placeholder_endpoint"
         }
     except Exception as e:
         logger.error(f"Error getting swap rate: {str(e)}")
