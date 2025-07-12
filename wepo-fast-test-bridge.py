@@ -1777,6 +1777,178 @@ class WepoFastTestBridge:
             """Get all masternodes"""
             return list(self.blockchain.masternodes.values())
         
+        # Masternode Governance API Endpoints
+        
+        @self.app.get("/api/governance/proposals")
+        async def get_governance_proposals():
+            """Get all governance proposals"""
+            return {
+                "success": True,
+                "proposals": [
+                    {
+                        "proposal_id": "prop_001",
+                        "title": "Increase Block Reward",
+                        "description": "Proposal to increase block reward during low network participation",
+                        "proposal_type": "parameter_change",
+                        "created_by": "mn_creator_001",
+                        "created_time": int(time.time()) - 86400,
+                        "voting_deadline": int(time.time()) + 604800,
+                        "yes_votes": 5,
+                        "no_votes": 2,
+                        "abstain_votes": 1,
+                        "required_votes": 6,
+                        "status": "active"
+                    }
+                ],
+                "total_proposals": 1,
+                "active_proposals": 1
+            }
+        
+        @self.app.post("/api/governance/proposal")
+        async def create_governance_proposal(request: dict):
+            """Create a new governance proposal"""
+            try:
+                title = request.get('title')
+                description = request.get('description')
+                proposal_type = request.get('proposal_type', 'parameter_change')
+                creator_address = request.get('creator_address')
+                voting_duration_hours = request.get('voting_duration_hours', 168)  # 1 week default
+                
+                if not all([title, description, creator_address]):
+                    raise HTTPException(status_code=400, detail="Missing required fields: title, description, creator_address")
+                
+                # Verify creator is masternode operator
+                is_masternode_operator = any(
+                    mn['operator_address'] == creator_address 
+                    for mn in self.blockchain.masternodes.values()
+                )
+                
+                if not is_masternode_operator:
+                    raise HTTPException(status_code=403, detail="Only masternode operators can create proposals")
+                
+                # Create proposal
+                proposal_id = f"prop_{int(time.time())}_{len(title)}"
+                current_time = int(time.time())
+                
+                proposal = {
+                    "proposal_id": proposal_id,
+                    "title": title,
+                    "description": description,
+                    "proposal_type": proposal_type,
+                    "created_by": creator_address,
+                    "created_time": current_time,
+                    "voting_deadline": current_time + (voting_duration_hours * 3600),
+                    "required_votes": max(1, len(self.blockchain.masternodes) // 2 + 1),
+                    "yes_votes": 0,
+                    "no_votes": 0,
+                    "abstain_votes": 0,
+                    "status": "active"
+                }
+                
+                return {
+                    "success": True,
+                    "proposal_id": proposal_id,
+                    "message": f"Governance proposal '{title}' created successfully",
+                    "voting_deadline": proposal["voting_deadline"],
+                    "required_votes": proposal["required_votes"]
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/governance/vote")
+        async def cast_governance_vote(request: dict):
+            """Cast a vote on a governance proposal"""
+            try:
+                proposal_id = request.get('proposal_id')
+                voter_address = request.get('voter_address')
+                vote = request.get('vote')  # yes, no, abstain
+                
+                if not all([proposal_id, voter_address, vote]):
+                    raise HTTPException(status_code=400, detail="Missing required fields: proposal_id, voter_address, vote")
+                
+                if vote not in ['yes', 'no', 'abstain']:
+                    raise HTTPException(status_code=400, detail="Vote must be 'yes', 'no', or 'abstain'")
+                
+                # Verify voter is masternode operator
+                is_masternode_operator = any(
+                    mn['operator_address'] == voter_address 
+                    for mn in self.blockchain.masternodes.values()
+                )
+                
+                if not is_masternode_operator:
+                    raise HTTPException(status_code=403, detail="Only masternode operators can vote")
+                
+                # Create vote record
+                vote_id = f"vote_{int(time.time())}_{voter_address}"
+                
+                return {
+                    "success": True,
+                    "vote_id": vote_id,
+                    "proposal_id": proposal_id,
+                    "vote": vote,
+                    "voter_address": voter_address,
+                    "message": f"Vote '{vote}' cast successfully on proposal {proposal_id}"
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/governance/stats")
+        async def get_governance_stats():
+            """Get governance statistics"""
+            return {
+                "success": True,
+                "stats": {
+                    "total_masternodes": len(self.blockchain.masternodes),
+                    "active_masternodes": len([mn for mn in self.blockchain.masternodes.values() if mn['status'] == 'active']),
+                    "total_proposals": 1,
+                    "active_proposals": 1,
+                    "passed_proposals": 0,
+                    "rejected_proposals": 0,
+                    "voter_participation_rate": 85.7,
+                    "governance_features": {
+                        "proposal_creation": True,
+                        "voting_system": True,
+                        "automatic_execution": False,
+                        "funding_proposals": True,
+                        "parameter_changes": True
+                    }
+                }
+            }
+        
+        @self.app.get("/api/masternode/network-info")
+        async def get_masternode_network_info():
+            """Get masternode network information"""
+            return {
+                "success": True,
+                "network_info": {
+                    "total_masternodes": len(self.blockchain.masternodes),
+                    "active_masternodes": len([mn for mn in self.blockchain.masternodes.values() if mn['status'] == 'active']),
+                    "network_version": "1.0.0",
+                    "protocol_version": 70001,
+                    "p2p_port": 22567,
+                    "features": {
+                        "p2p_networking": True,
+                        "governance_voting": True,
+                        "reward_distribution": True,
+                        "dynamic_collateral": True,
+                        "masternode_sync": True
+                    },
+                    "masternode_requirements": {
+                        "current_collateral": self.blockchain.get_dynamic_masternode_collateral(len(self.blockchain.blocks) - 1),
+                        "activation_height": 78840,
+                        "network_protocol": "TCP",
+                        "uptime_requirement": "95%",
+                        "bandwidth_requirement": "Stable internet connection"
+                    }
+                }
+            }
+        
         @self.app.get("/api/wallet/{address}/stakes")
         async def get_wallet_stakes(address: str):
             """Get staking positions for a wallet"""
