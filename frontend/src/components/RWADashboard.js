@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import RWACreateAsset from './RWACreateAsset';
-import EnhancedDEX from './EnhancedDEX';
+import UnifiedExchange from './UnifiedExchange';
 
 const RWADashboard = ({ onBack }) => {
   const { wallet } = useWallet();
