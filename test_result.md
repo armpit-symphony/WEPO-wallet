@@ -379,11 +379,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "WEPO Community Genesis Mining Software"
+    - "Unified Exchange Interface - Backend API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  backend_tested: true
+  backend_tested: false
 
 backend:
   - task: "WEPO New Tokenomics Implementation"
