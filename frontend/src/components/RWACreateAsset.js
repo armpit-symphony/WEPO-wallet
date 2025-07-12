@@ -169,7 +169,7 @@ const RWACreateAsset = ({ onBack, userAddress, onAssetCreated }) => {
 
       if (response.ok && data.success) {
         setAssetId(data.asset_id);
-        setSuccess(`Asset created successfully! Fee of ${data.fee_paid} WEPO will be redistributed to network participants. Remaining balance: ${data.remaining_balance.toFixed(8)} WEPO`);
+        setSuccess(`Asset created successfully! Fee of ${data.fee_paid} WEPO distributed to network participants (60% masternodes, 25% miners, 15% stakers). Remaining balance: ${data.remaining_balance.toFixed(8)} WEPO`);
         setStep(2);
         
         // Update user balance
