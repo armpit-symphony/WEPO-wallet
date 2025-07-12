@@ -119,7 +119,8 @@ const EnhancedDEX = ({ onClose }) => {
 
   const fetchSwapHistory = async () => {
     try {
-      const response = await fetch('/api/atomic-swap/history?limit=5');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/atomic-swap/history?limit=5`);
       const data = await response.json();
       setSwapHistory(data.history);
     } catch (err) {
