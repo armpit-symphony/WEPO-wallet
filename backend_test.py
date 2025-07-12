@@ -1260,6 +1260,419 @@ def run_new_tokenomics_tests():
     
     return test_results["failed"] == 0
 
+def run_genesis_mining_tests():
+    """Run comprehensive tests for WEPO Community Genesis Mining Software"""
+    print("\n" + "="*80)
+    print("WEPO COMMUNITY GENESIS MINING SOFTWARE COMPREHENSIVE TESTING")
+    print("="*80)
+    print("Testing Christmas Genesis Mining Launch (December 25, 2025 3pm EST / 8pm UTC)")
+    print("Features: Genesis Mining API, Mining Coordinator, Dual-Layer Mining System")
+    print("Expected: ~166 days countdown, Argon2 (60%) + SHA-256 (40%) layers")
+    print("="*80 + "\n")
+    
+    # Calculate expected days until Christmas 2025
+    from datetime import datetime, timezone
+    christmas_2025 = datetime(2025, 12, 25, 20, 0, 0, tzinfo=timezone.utc)  # 8pm UTC
+    now = datetime.now(timezone.utc)
+    days_remaining = (christmas_2025 - now).days
+    
+    print(f"Expected days remaining until launch: ~{days_remaining}")
+    
+    # 1. Test Genesis Mining Status Endpoint
+    try:
+        print("\n[TEST] Genesis Mining Status - Testing Christmas launch countdown")
+        response = requests.get(f"{API_URL}/mining/status")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Mining Status: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check launch date
+            if "launch_date" in data:
+                launch_date = data["launch_date"]
+                if "2025-12-25" in str(launch_date) or "December 25, 2025" in str(launch_date):
+                    print(f"  ✓ Correct launch date: {launch_date}")
+                else:
+                    print(f"  ✗ Incorrect launch date: {launch_date}")
+                    passed = False
+            else:
+                print("  ✗ Launch date missing")
+                passed = False
+            
+            # Check countdown
+            if "days_remaining" in data:
+                days_remaining_api = data["days_remaining"]
+                if abs(days_remaining_api - days_remaining) <= 1:  # Allow 1 day difference
+                    print(f"  ✓ Correct countdown: {days_remaining_api} days remaining")
+                else:
+                    print(f"  ✗ Incorrect countdown: {days_remaining_api} (expected ~{days_remaining})")
+                    passed = False
+            else:
+                print("  ✗ Days remaining missing")
+                passed = False
+            
+            # Check mining mode
+            if "mining_mode" in data:
+                if data["mining_mode"] == "genesis":
+                    print(f"  ✓ Correct mining mode: {data['mining_mode']}")
+                else:
+                    print(f"  ✗ Incorrect mining mode: {data['mining_mode']} (expected 'genesis')")
+                    passed = False
+            else:
+                print("  ✗ Mining mode missing")
+                passed = False
+            
+            # Check launch time
+            if "launch_time" in data:
+                launch_time = data["launch_time"]
+                if "3pm EST" in str(launch_time) or "8pm UTC" in str(launch_time) or "20:00" in str(launch_time):
+                    print(f"  ✓ Correct launch time: {launch_time}")
+                else:
+                    print(f"  ✗ Incorrect launch time: {launch_time}")
+                    passed = False
+            else:
+                print("  ✗ Launch time missing")
+                passed = False
+            
+            log_test("Genesis Mining Status", passed, response)
+        else:
+            log_test("Genesis Mining Status", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Genesis Mining Status", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 2. Test Miner Connection Endpoint
+    try:
+        print("\n[TEST] Miner Connection - Testing /api/mining/connect endpoint")
+        
+        # Test miner connection data
+        miner_data = {
+            "miner_id": f"test_miner_{uuid.uuid4().hex[:8]}",
+            "hash_rate": 1000000,  # 1 MH/s
+            "algorithm": "argon2",
+            "worker_name": "test_worker_1"
+        }
+        
+        response = requests.post(f"{API_URL}/mining/connect", json=miner_data)
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Miner Connection: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check connection success
+            if data.get("connected") == True:
+                print("  ✓ Miner connection successful")
+            else:
+                print("  ✗ Miner connection failed")
+                passed = False
+            
+            # Check miner ID assignment
+            if "miner_id" in data:
+                print(f"  ✓ Miner ID assigned: {data['miner_id']}")
+            else:
+                print("  ✗ Miner ID not assigned")
+                passed = False
+            
+            # Check algorithm assignment
+            if "assigned_algorithm" in data:
+                algorithm = data["assigned_algorithm"]
+                if algorithm in ["argon2", "sha256"]:
+                    print(f"  ✓ Valid algorithm assigned: {algorithm}")
+                else:
+                    print(f"  ✗ Invalid algorithm assigned: {algorithm}")
+                    passed = False
+            else:
+                print("  ✗ Algorithm assignment missing")
+                passed = False
+            
+            log_test("Miner Connection", passed, response)
+        else:
+            log_test("Miner Connection", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Miner Connection", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 3. Test Mining Start Endpoint (Should fail before launch)
+    try:
+        print("\n[TEST] Mining Start - Testing pre-launch mining prevention")
+        
+        start_data = {
+            "miner_id": "test_miner_123",
+            "algorithm": "argon2"
+        }
+        
+        response = requests.post(f"{API_URL}/mining/start", json=start_data)
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 400 or response.status_code == 403:
+            data = response.json()
+            print(f"  Mining Start Response: {json.dumps(data, indent=2)}")
+            
+            # Should fail before launch date
+            if "launch" in str(data).lower() or "december" in str(data).lower() or "not yet" in str(data).lower():
+                print("  ✓ Correctly prevents mining before launch date")
+                passed = True
+            else:
+                print("  ✗ Error message doesn't mention launch date")
+                passed = False
+            
+            log_test("Mining Start Prevention", passed, response)
+        elif response.status_code == 200:
+            # If it succeeds, check if we're actually past launch date
+            data = response.json()
+            print(f"  Mining Start Response: {json.dumps(data, indent=2)}")
+            
+            if days_remaining <= 0:
+                print("  ✓ Mining allowed - launch date has passed")
+                passed = True
+            else:
+                print("  ✗ Mining should not be allowed before launch date")
+                passed = False
+            
+            log_test("Mining Start Prevention", passed, response)
+        else:
+            log_test("Mining Start Prevention", False, response)
+            print(f"  ✗ Unexpected status code: {response.status_code}")
+    except Exception as e:
+        log_test("Mining Start Prevention", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 4. Test Mining Stop Endpoint
+    try:
+        print("\n[TEST] Mining Stop - Testing /api/mining/stop endpoint")
+        
+        stop_data = {
+            "miner_id": "test_miner_123"
+        }
+        
+        response = requests.post(f"{API_URL}/mining/stop", json=stop_data)
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Mining Stop Response: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check stop confirmation
+            if data.get("stopped") == True or data.get("success") == True:
+                print("  ✓ Mining stop successful")
+            else:
+                print("  ✗ Mining stop failed")
+                passed = False
+            
+            log_test("Mining Stop", passed, response)
+        else:
+            log_test("Mining Stop", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Mining Stop", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 5. Test Dual-Layer Mining System Configuration
+    try:
+        print("\n[TEST] Dual-Layer Mining System - Testing Argon2 (60%) + SHA-256 (40%) configuration")
+        response = requests.get(f"{API_URL}/mining/algorithms")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Mining Algorithms: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check algorithm distribution
+            if "algorithms" in data:
+                algorithms = data["algorithms"]
+                
+                # Check Argon2 configuration
+                argon2_found = False
+                sha256_found = False
+                
+                for algo in algorithms:
+                    if algo.get("name", "").lower() == "argon2":
+                        argon2_found = True
+                        if algo.get("reward_percentage") == 60:
+                            print("  ✓ Argon2 configured with 60% reward share")
+                        else:
+                            print(f"  ✗ Argon2 incorrect reward share: {algo.get('reward_percentage')}% (expected 60%)")
+                            passed = False
+                    
+                    elif algo.get("name", "").lower() == "sha256":
+                        sha256_found = True
+                        if algo.get("reward_percentage") == 40:
+                            print("  ✓ SHA-256 configured with 40% reward share")
+                        else:
+                            print(f"  ✗ SHA-256 incorrect reward share: {algo.get('reward_percentage')}% (expected 40%)")
+                            passed = False
+                
+                if not argon2_found:
+                    print("  ✗ Argon2 algorithm not found")
+                    passed = False
+                
+                if not sha256_found:
+                    print("  ✗ SHA-256 algorithm not found")
+                    passed = False
+            else:
+                print("  ✗ Algorithms configuration missing")
+                passed = False
+            
+            log_test("Dual-Layer Mining System", passed, response)
+        else:
+            log_test("Dual-Layer Mining System", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Dual-Layer Mining System", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 6. Test Mining Coordinator Statistics
+    try:
+        print("\n[TEST] Mining Coordinator - Testing connected miners tracking")
+        response = requests.get(f"{API_URL}/mining/stats")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Mining Stats: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check connected miners count
+            if "connected_miners" in data:
+                print(f"  ✓ Connected miners: {data['connected_miners']}")
+            else:
+                print("  ✗ Connected miners count missing")
+                passed = False
+            
+            # Check total hash rate
+            if "total_hash_rate" in data:
+                print(f"  ✓ Total hash rate: {data['total_hash_rate']}")
+            else:
+                print("  ✗ Total hash rate missing")
+                passed = False
+            
+            # Check algorithm distribution
+            if "algorithm_distribution" in data:
+                dist = data["algorithm_distribution"]
+                print(f"  ✓ Algorithm distribution: {dist}")
+            else:
+                print("  ✗ Algorithm distribution missing")
+                passed = False
+            
+            # Check launch status
+            if "launch_status" in data:
+                status = data["launch_status"]
+                if "countdown" in str(status).lower() or "waiting" in str(status).lower():
+                    print(f"  ✓ Launch status: {status}")
+                else:
+                    print(f"  ✗ Unexpected launch status: {status}")
+                    passed = False
+            else:
+                print("  ✗ Launch status missing")
+                passed = False
+            
+            log_test("Mining Coordinator", passed, response)
+        else:
+            log_test("Mining Coordinator", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Mining Coordinator", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # 7. Test Genesis Block Mining Transition
+    try:
+        print("\n[TEST] Genesis Block Transition - Testing mode transition from 'genesis' to 'pow'")
+        response = requests.get(f"{API_URL}/mining/transition-status")
+        print(f"  Response: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Transition Status: {json.dumps(data, indent=2)}")
+            
+            passed = True
+            
+            # Check current mode
+            if "current_mode" in data:
+                mode = data["current_mode"]
+                if mode in ["genesis", "pow"]:
+                    print(f"  ✓ Valid mining mode: {mode}")
+                else:
+                    print(f"  ✗ Invalid mining mode: {mode}")
+                    passed = False
+            else:
+                print("  ✗ Current mode missing")
+                passed = False
+            
+            # Check transition criteria
+            if "genesis_block_found" in data:
+                genesis_found = data["genesis_block_found"]
+                print(f"  ✓ Genesis block status: {genesis_found}")
+            else:
+                print("  ✗ Genesis block status missing")
+                passed = False
+            
+            # Check transition readiness
+            if "transition_ready" in data:
+                ready = data["transition_ready"]
+                print(f"  ✓ Transition ready: {ready}")
+            else:
+                print("  ✗ Transition readiness missing")
+                passed = False
+            
+            log_test("Genesis Block Transition", passed, response)
+        else:
+            log_test("Genesis Block Transition", False, response)
+            print(f"  ✗ Failed with status code: {response.status_code}")
+    except Exception as e:
+        log_test("Genesis Block Transition", False, error=str(e))
+        print(f"  ✗ Exception: {str(e)}")
+    
+    # Print Genesis Mining Testing Summary
+    print("\n" + "="*80)
+    print("WEPO COMMUNITY GENESIS MINING SOFTWARE TESTING SUMMARY")
+    print("="*80)
+    print(f"Total tests:    {test_results['total']}")
+    print(f"Passed:         {test_results['passed']}")
+    print(f"Failed:         {test_results['failed']}")
+    print(f"Success rate:   {(test_results['passed'] / test_results['total'] * 100):.1f}%")
+    
+    if test_results["failed"] > 0:
+        print("\nFailed tests:")
+        for test in test_results["tests"]:
+            if not test["passed"]:
+                print(f"- {test['name']}")
+    
+    print("\nKEY FINDINGS:")
+    print("1. Christmas Launch Countdown: " + ("✅ Correctly showing ~166 days until Dec 25, 2025" if any(t["name"] == "Genesis Mining Status" and t["passed"] for t in test_results["tests"]) else "❌ Launch countdown not working"))
+    print("2. Miner Connection System: " + ("✅ Miners can connect and get algorithm assignments" if any(t["name"] == "Miner Connection" and t["passed"] for t in test_results["tests"]) else "❌ Miner connection not working"))
+    print("3. Pre-Launch Mining Prevention: " + ("✅ Mining correctly prevented before launch date" if any(t["name"] == "Mining Start Prevention" and t["passed"] for t in test_results["tests"]) else "❌ Pre-launch prevention not working"))
+    print("4. Mining Control Endpoints: " + ("✅ Start/stop mining endpoints functional" if any(t["name"] == "Mining Stop" and t["passed"] for t in test_results["tests"]) else "❌ Mining control not working"))
+    print("5. Dual-Layer Mining System: " + ("✅ Argon2 (60%) + SHA-256 (40%) configured correctly" if any(t["name"] == "Dual-Layer Mining System" and t["passed"] for t in test_results["tests"]) else "❌ Dual-layer system not configured"))
+    print("6. Mining Coordinator: " + ("✅ Connected miners tracking and statistics working" if any(t["name"] == "Mining Coordinator" and t["passed"] for t in test_results["tests"]) else "❌ Mining coordinator not working"))
+    print("7. Genesis Block Transition: " + ("✅ Mode transition from 'genesis' to 'pow' ready" if any(t["name"] == "Genesis Block Transition" and t["passed"] for t in test_results["tests"]) else "❌ Genesis transition not implemented"))
+    
+    print("\nGENESIS MINING FEATURES TESTED:")
+    print("✅ Christmas Launch Date: December 25, 2025 3pm EST (8pm UTC)")
+    print("✅ Launch Countdown: ~166 days remaining")
+    print("✅ Miner Connection API: /api/mining/connect")
+    print("✅ Mining Control: /api/mining/start, /api/mining/stop")
+    print("✅ Pre-Launch Prevention: Mining blocked until launch")
+    print("✅ Dual-Layer System: Argon2 (60%) + SHA-256 (40%)")
+    print("✅ Mining Coordinator: Connected miners tracking")
+    print("✅ Genesis Transition: 'genesis' → 'pow' mode switch")
+    
+    print("="*80)
+    
+    return test_results["failed"] == 0
+
 def run_rwa_tokenomics_integration_tests():
     """Run focused tests for RWA endpoints integration with new tokenomics"""
     print("\n" + "="*80)
