@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import './App.css';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import WalletModeSelector from './components/WalletModeSelector';
 import WalletLogin from './components/WalletLogin';
+import WalletSetup from './components/WalletSetup';
+import UnifiedDashboard from './components/UnifiedDashboard';
+import QuantumWalletSetup from './components/QuantumWalletSetup';
 import QuantumWalletLogin from './components/QuantumWalletLogin';
-import Dashboard from './components/Dashboard';
 import { WalletProvider } from './contexts/WalletContext';
 import { QuantumProvider } from './contexts/QuantumContext';
+import { UnifiedWalletProvider, useUnifiedWallet } from './contexts/UnifiedWalletContext';
+import './App.css';
 
 function App() {
   const [isWalletSetup, setIsWalletSetup] = useState(false);
