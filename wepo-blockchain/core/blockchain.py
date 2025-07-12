@@ -686,31 +686,28 @@ class WepoBlockchain:
         return len(self.chain) - 1 if self.chain else -1
     
     def calculate_block_reward(self, height: int) -> int:
-        """Calculate block reward based on height with balanced Year 1 schedule"""
-        # Year 1: Quarterly halvings starting at 400 WEPO (15.4% of supply)
-        if height <= POW_BLOCKS_YEAR1:
-            # Calculate quarter within year 1 (10-minute blocks)
-            blocks_per_quarter = POW_BLOCKS_YEAR1 // 4  # 13,140 blocks per quarter
-            quarter = height // blocks_per_quarter
-            
-            if quarter == 0:      # Q1: Months 1-3 = 400 WEPO
-                return 400 * COIN
-            elif quarter == 1:    # Q2: Months 4-6 = 200 WEPO
-                return 200 * COIN
-            elif quarter == 2:    # Q3: Months 7-9 = 100 WEPO
-                return 100 * COIN
-            else:                 # Q4: Months 10-12 = 50 WEPO
-                return 50 * COIN
+        """Calculate block reward based on new 18-month mining schedule"""
         
-        # After year 1: Standard schedule with 4-year halvings
-        years_since_year2 = (height - POW_BLOCKS_YEAR1) // HALVING_INTERVAL
-        reward = REWARD_YEAR2_BASE
+        # New Mining Schedule (18 months total)
+        PHASE_1_BLOCKS = 26280  # Months 1-6: 400 WEPO
+        PHASE_2_BLOCKS = 26280  # Months 7-12: 200 WEPO
+        PHASE_3_BLOCKS = 26280  # Months 13-18: 100 WEPO
+        TOTAL_MINING_BLOCKS = PHASE_1_BLOCKS + PHASE_2_BLOCKS + PHASE_3_BLOCKS
         
-        # Apply halvings every 4 years
-        for _ in range(years_since_year2):
-            reward //= 2
+        if height <= PHASE_1_BLOCKS:
+            # Months 1-6: 400 WEPO per block
+            return 400 * COIN
+        elif height <= (PHASE_1_BLOCKS + PHASE_2_BLOCKS):
+            # Months 7-12: 200 WEPO per block
+            return 200 * COIN
+        elif height <= TOTAL_MINING_BLOCKS:
+            # Months 13-18: 100 WEPO per block
+            return 100 * COIN
+        else:
+            # After 18 months: PoS/Masternode phase (minimal mining rewards)
+            return 0  # No more mining rewards, transition to PoS
         
-        return reward
+        # Total mining rewards: 18,396,000 WEPO (28.8% of supply)
     
     def create_coinbase_transaction(self, height: int, miner_address: str) -> Transaction:
         """Create coinbase transaction for new block with fees redistribution"""
