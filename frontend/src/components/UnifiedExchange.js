@@ -73,9 +73,22 @@ const UnifiedExchange = ({ onBack }) => {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
       const response = await fetch(`${backendUrl}/api/swap/rate`);
       const data = await response.json();
-      setExchangeRate(data.btc_to_wepo);
+      
+      if (data.pool_exists) {
+        setExchangeRate(data.btc_to_wepo);
+        setStatistics({
+          btc_reserve: data.btc_reserve,
+          wepo_reserve: data.wepo_reserve,
+          total_liquidity: data.total_liquidity_shares,
+          fee_rate: data.fee_rate
+        });
+      } else {
+        setExchangeRate(null);
+        setError('No liquidity pool exists yet. You can create the market by adding liquidity.');
+      }
     } catch (err) {
       console.error('Error fetching exchange rate:', err);
+      setError('Failed to fetch market data');
     }
   };
 
