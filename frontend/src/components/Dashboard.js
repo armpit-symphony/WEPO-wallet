@@ -31,6 +31,7 @@ import MasternodeInterface from './MasternodeInterface';
 import SettingsPanel from './SettingsPanel';
 import QuantumMessaging from './QuantumMessaging';
 import RWADashboard from './RWADashboard';
+import CommunityMining from './CommunityMining';
 
 const Dashboard = () => {
   const { 
