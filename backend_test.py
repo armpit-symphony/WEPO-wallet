@@ -6674,59 +6674,59 @@ def run_complete_fee_redistribution_tests():
     return test_results["failed"] == 0
 
 if __name__ == "__main__":
-    print("WEPO BTC WALLET INTEGRATION TESTING SUITE")
+    print("WEPO UNIFIED EXCHANGE INTERFACE TESTING SUITE")
     print("=" * 60)
     
-    # Run the BTC wallet integration tests as specifically requested by user
-    print("Running Complete BTC Wallet Integration Tests...")
-    print("Testing: Address Standardization, Unified Wallet API, Bitcoin Integration, Backend Integration")
+    # Run the Unified Exchange Interface tests as specifically requested
+    print("Running Unified Exchange Interface Backend API Tests...")
+    print("Testing: BTC-WEPO Exchange APIs, RWA-WEPO Exchange APIs, Unified Exchange Rates, Trading Functionality, Fee Calculation")
     print("=" * 60)
     
-    btc_integration_success = run_btc_wallet_integration_tests()
+    unified_exchange_success = run_unified_exchange_interface_tests()
     
     # Print final summary
     print("\n" + "="*80)
-    print("BTC WALLET INTEGRATION TESTING FINAL SUMMARY")
+    print("UNIFIED EXCHANGE INTERFACE TESTING FINAL SUMMARY")
     print("="*80)
     
-    if btc_integration_success:
-        print("\n🎉 BTC WALLET INTEGRATION TESTS COMPLETED SUCCESSFULLY!")
+    if unified_exchange_success:
+        print("\n🎉 UNIFIED EXCHANGE INTERFACE TESTS COMPLETED SUCCESSFULLY!")
         print("\n✅ CRITICAL SUCCESS AREAS:")
-        print("✅ Address Standardization: WEPO addresses (37-char) and Quantum addresses (45-char) working")
-        print("✅ Unified Wallet API: Exchange rate and swap endpoints accessible")
-        print("✅ Bitcoin Integration: BTC address support through DEX operations")
-        print("✅ Backend Integration: All core endpoints responding correctly")
-        print("✅ Currency Validation: Proper validation of amounts and addresses")
-        print("✅ Multi-Currency Support: Both BTC and WEPO operations supported")
-        print("✅ Error Handling: Invalid requests properly rejected")
-        print("✅ Exchange Rate Calculations: BTC/WEPO rates working correctly")
+        print("✅ BTC-WEPO Exchange APIs: All atomic swap endpoints working correctly")
+        print("✅ RWA-WEPO Exchange APIs: All RWA trading endpoints functional")
+        print("✅ Unified Exchange Rate APIs: Both BTC and RWA exchange rate calculations working")
+        print("✅ Trading Functionality: Buy and sell operations working for both BTC and RWA")
+        print("✅ Fee Calculation: 3-way redistribution (60% masternodes, 25% miners, 15% stakers)")
+        print("✅ Zero Burning Policy: All fees redistributed to network participants")
+        print("✅ Error Handling: Proper validation and error responses")
+        print("✅ Complete Trading Lifecycle: Initiation, funding, status tracking, proof generation")
         
-        print("\n🎯 BTC WALLET INTEGRATION STATUS: READY FOR PRODUCTION")
-        print("Users can now create unified wallets that handle both Bitcoin and WEPO")
-        print("Internal swapping capabilities are functional through existing DEX endpoints")
-        print("Address utilities support both Bitcoin and WEPO address formats")
-        print("All existing functionality is maintained while adding BTC support")
+        print("\n🎯 UNIFIED EXCHANGE INTERFACE STATUS: READY FOR PRODUCTION")
+        print("All trading functionalities are working correctly through unified endpoints")
+        print("Both BTC and RWA trading are functional with proper fee redistribution")
+        print("Exchange rate calculations show proper 3-way redistribution instead of burning")
+        print("Error responses are properly formatted and informative")
         
     else:
-        print("\n❌ BTC WALLET INTEGRATION TESTS FOUND ISSUES!")
+        print("\n❌ UNIFIED EXCHANGE INTERFACE TESTS FOUND ISSUES!")
         print("\n⚠️ AREAS REQUIRING ATTENTION:")
-        print("- Address standardization may have issues")
-        print("- Unified wallet API endpoints may not be fully implemented")
-        print("- Bitcoin integration may be incomplete")
-        print("- Backend integration may have connectivity issues")
+        print("- Some atomic swap endpoints may not be working")
+        print("- RWA trading endpoints may have issues")
         print("- Exchange rate calculations may be incorrect")
-        print("- Error handling may not be working properly")
+        print("- Fee redistribution may not be properly implemented")
+        print("- Trading functionality may be incomplete")
+        print("- Error handling may need improvement")
         
         print("\n🔧 RECOMMENDED ACTIONS:")
-        print("1. Check if /api/swap/rate and /api/swap/execute endpoints exist")
-        print("2. Verify Bitcoin address validation in swap operations")
-        print("3. Ensure unified wallet creation supports both BTC and WEPO")
-        print("4. Test address utilities for consistent formats")
-        print("5. Verify exchange rate calculations are accurate")
-        print("6. Check error handling for invalid swap requests")
+        print("1. Check atomic swap endpoints: /api/atomic-swap/*")
+        print("2. Verify RWA trading endpoints: /api/rwa/*")
+        print("3. Ensure 3-way fee redistribution is working")
+        print("4. Test exchange rate consistency across endpoints")
+        print("5. Verify trading validation and error handling")
+        print("6. Check zero burning policy implementation")
     
     print("\n" + "="*80)
-    print("END OF BTC WALLET INTEGRATION TESTING")
+    print("END OF UNIFIED EXCHANGE INTERFACE TESTING")
     print("="*80)
     
-    sys.exit(0 if btc_integration_success else 1)
+    sys.exit(0 if unified_exchange_success else 1)
