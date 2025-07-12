@@ -5,6 +5,11 @@
 
 import CryptoJS from 'crypto-js';
 import * as bitcoin from 'bitcoinjs-lib';
+import ECPairFactory from 'ecpair';
+import * as ecc from 'tiny-secp256k1';
+
+// Initialize ECPair with secp256k1 implementation
+const ECPair = ECPairFactory(ecc);
 
 // Address format constants
 export const ADDRESS_FORMATS = {
