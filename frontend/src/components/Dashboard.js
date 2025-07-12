@@ -1,28 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Shield, 
+  Eye, 
+  EyeOff, 
   Send, 
   Download, 
-  Settings, 
-  LogOut, 
-  Eye, 
-  EyeOff,
+  ArrowRightLeft,
+  Bitcoin,
   Coins,
   TrendingUp,
-  Lock,
-  Server,
-  ArrowRightLeft,
-  AlertCircle,
   Clock,
-  Zap,
-  ToggleLeft,
-  ToggleRight,
-  MessageCircle,
+  Copy,
+  QrCode,
+  RefreshCw,
   Package,
   Pickaxe,
-  Bitcoin
+  MessageCircle,
+  Settings,
+  Users,
+  Zap,
+  Lock
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
+import { generateBitcoinAddress } from '../utils/addressUtils';
 import { useQuantum } from '../contexts/QuantumContext';
 import SendWepo from './SendWepo';
 import ReceiveWepo from './ReceiveWepo';
