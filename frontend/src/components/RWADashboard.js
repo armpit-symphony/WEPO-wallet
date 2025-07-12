@@ -42,9 +42,7 @@ const RWADashboard = ({ onBack }) => {
     console.log('RWADashboard useEffect:', {
       currentAddress,
       currentWallet,
-      isQuantumMode,
-      wallet,
-      quantumWallet
+      wallet
     });
     
     if (currentAddress) {
@@ -52,7 +50,6 @@ const RWADashboard = ({ onBack }) => {
     } else {
       // Try to get address from localStorage if context is not ready
       const storedWallet = localStorage.getItem('wepo_wallet');
-      const storedQuantumWallet = localStorage.getItem('wepo_quantum_wallet');
       
       if (storedWallet) {
         try {
@@ -66,23 +63,11 @@ const RWADashboard = ({ onBack }) => {
         }
       }
       
-      if (storedQuantumWallet) {
-        try {
-          const quantumWalletData = JSON.parse(storedQuantumWallet);
-          if (quantumWalletData.address) {
-            loadRWAData(quantumWalletData.address);
-            return;
-          }
-        } catch (e) {
-          console.error('Error parsing stored quantum wallet:', e);
-        }
-      }
-      
       // If no address found, still load basic data
       setLoading(false);
       setError('No wallet address found. Please ensure you are logged in.');
     }
-  }, [currentAddress, wallet, quantumWallet, isQuantumMode]);
+  }, [currentAddress, wallet]);
 
   const loadRWAData = async (address = currentAddress) => {
     try {
