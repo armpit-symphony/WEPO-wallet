@@ -108,7 +108,8 @@ const EnhancedDEX = ({ onClose }) => {
 
   const fetchStatistics = async () => {
     try {
-      const response = await fetch('/api/atomic-swap/statistics');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/atomic-swap/statistics`);
       const data = await response.json();
       setStatistics(data.statistics);
     } catch (err) {
