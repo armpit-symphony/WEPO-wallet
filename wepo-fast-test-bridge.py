@@ -823,6 +823,156 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
+        @self.app.get("/api/tokenomics/overview")
+        async def get_tokenomics_overview():
+            """Get complete WEPO tokenomics overview"""
+            try:
+                current_height = len(self.blockchain.blocks)
+                
+                # Calculate current mining phase
+                if current_height <= 26280:
+                    current_phase = "Phase 1 (Months 1-6)"
+                    current_reward = 400
+                    remaining_blocks = 26280 - current_height
+                elif current_height <= 52560:
+                    current_phase = "Phase 2 (Months 7-12)" 
+                    current_reward = 200
+                    remaining_blocks = 52560 - current_height
+                elif current_height <= 78840:
+                    current_phase = "Phase 3 (Months 13-18)"
+                    current_reward = 100
+                    remaining_blocks = 78840 - current_height
+                else:
+                    current_phase = "PoS/Masternode Phase"
+                    current_reward = 0
+                    remaining_blocks = 0
+                
+                tokenomics = {
+                    'total_supply': 63900006,
+                    'current_block_height': current_height,
+                    'current_mining_phase': current_phase,
+                    'current_block_reward': current_reward,
+                    'blocks_until_next_phase': remaining_blocks,
+                    
+                    'supply_distribution': {
+                        'mining_rewards': {
+                            'amount': 18396000,
+                            'percentage': 28.8,
+                            'duration': '18 months',
+                            'schedule': {
+                                'months_1_6': '400 WEPO × 26,280 blocks = 10,512,000 WEPO',
+                                'months_7_12': '200 WEPO × 26,280 blocks = 5,256,000 WEPO',
+                                'months_13_18': '100 WEPO × 26,280 blocks = 2,628,000 WEPO'
+                            }
+                        },
+                        'pos_staking': {
+                            'amount': 30000000,
+                            'percentage': 47.0,
+                            'duration': 'Years 2-10',
+                            'description': 'PoS staking rewards distributed over 9 years'
+                        },
+                        'masternodes': {
+                            'amount': 12000000,
+                            'percentage': 18.8,
+                            'duration': 'Years 2-15',
+                            'collateral_required': 10000,
+                            'description': 'Masternode service rewards'
+                        },
+                        'development_ecosystem': {
+                            'amount': 3504006,
+                            'percentage': 5.5,
+                            'description': 'Protocol development and ecosystem growth'
+                        }
+                    },
+                    
+                    'fee_distribution': {
+                        'masternodes': 60,
+                        'miners': 25,
+                        'stakers': 15,
+                        'method': 'Real-time per-block distribution',
+                        'policy': 'Zero burning - 100% distributed to participants'
+                    },
+                    
+                    'consensus_transition': {
+                        'phase_1': 'Pure PoW (Months 1-18)',
+                        'phase_2': 'Hybrid PoW/PoS (Month 19+)',
+                        'long_term': 'Fee-driven sustainable economy'
+                    }
+                }
+                
+                return {
+                    'success': True,
+                    'tokenomics': tokenomics
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/mining/schedule")
+        async def get_mining_schedule():
+            """Get detailed mining schedule and current status"""
+            try:
+                current_height = len(self.blockchain.blocks)
+                current_reward = self.blockchain.calculate_block_reward(current_height)
+                
+                schedule = {
+                    'current_status': {
+                        'block_height': current_height,
+                        'current_reward_wepo': current_reward / 100000000,
+                        'estimated_blocks_per_day': 576,  # 2.5 minute blocks
+                        'estimated_daily_issuance': (current_reward / 100000000) * 576
+                    },
+                    
+                    'mining_phases': [
+                        {
+                            'phase': 'Phase 1',
+                            'duration': 'Months 1-6',
+                            'blocks': '1 - 26,280',
+                            'reward_per_block': 400,
+                            'total_rewards': 10512000,
+                            'percentage_of_supply': 16.5
+                        },
+                        {
+                            'phase': 'Phase 2', 
+                            'duration': 'Months 7-12',
+                            'blocks': '26,281 - 52,560',
+                            'reward_per_block': 200,
+                            'total_rewards': 5256000,
+                            'percentage_of_supply': 8.2
+                        },
+                        {
+                            'phase': 'Phase 3',
+                            'duration': 'Months 13-18', 
+                            'blocks': '52,561 - 78,840',
+                            'reward_per_block': 100,
+                            'total_rewards': 2628000,
+                            'percentage_of_supply': 4.1
+                        },
+                        {
+                            'phase': 'PoS Transition',
+                            'duration': 'Month 19+',
+                            'blocks': '78,841+',
+                            'reward_per_block': 0,
+                            'note': 'Mining ends, PoS and Masternode rewards begin'
+                        }
+                    ],
+                    
+                    'total_mining_summary': {
+                        'total_blocks': 78840,
+                        'total_rewards': 18396000,
+                        'percentage_of_supply': 28.8,
+                        'estimated_duration_days': 137  # 78,840 blocks / 576 blocks per day
+                    }
+                }
+                
+                return {
+                    'success': True,
+                    'mining_schedule': schedule
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.get("/api/rwa/redistribution-pool")
         async def get_redistribution_pool_info():
             """Get fee redistribution pool information"""
