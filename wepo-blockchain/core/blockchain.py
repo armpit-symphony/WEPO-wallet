@@ -1340,6 +1340,43 @@ class WepoBlockchain:
             print(f"Error creating transaction: {e}")
             return None
     
+    def get_masternode_collateral_for_height(self, block_height: int) -> int:
+        """Get masternode collateral required at specific block height"""
+        
+        # Find the applicable collateral amount from the schedule
+        applicable_collateral = 10000 * COIN  # Default to genesis amount
+        
+        for milestone_height in sorted(DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE.keys(), reverse=True):
+            if block_height >= milestone_height:
+                applicable_collateral = DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE[milestone_height]
+                break
+        
+        return applicable_collateral
+    
+    def get_masternode_collateral_info(self, block_height: int) -> dict:
+        """Get comprehensive masternode collateral information"""
+        
+        current_collateral = self.get_masternode_collateral_for_height(block_height)
+        
+        # Find next reduction
+        next_reduction = None
+        for milestone_height, collateral in sorted(DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE.items()):
+            if milestone_height > block_height:
+                next_reduction = {
+                    "block_height": milestone_height,
+                    "new_collateral": collateral / COIN,  # Convert to WEPO
+                    "blocks_until": milestone_height - block_height,
+                    "years_until": (milestone_height - block_height) / 525600  # Assuming 1 minute blocks
+                }
+                break
+        
+        return {
+            "current_collateral": current_collateral / COIN,  # Convert to WEPO
+            "current_height": block_height,
+            "next_reduction": next_reduction,
+            "schedule": {height: amount / COIN for height, amount in DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE.items()}
+        }
+    
     def create_stake(self, staker_address: str, amount_wepo: float) -> Optional[str]:
         """Create a new stake"""
         try:
