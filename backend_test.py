@@ -4374,11 +4374,16 @@ if __name__ == "__main__":
     print("WEPO Backend Testing Suite")
     print("=" * 50)
     
-    # Run the complete fee redistribution system tests as requested
-    success = run_complete_fee_redistribution_tests()
+    # Run the new WEPO tokenomics implementation tests as requested
+    success = run_new_tokenomics_tests()
     
     if success:
-        print("\n🎉 ALL TESTS PASSED! Fee redistribution system working correctly.")
+        print("\n🎉 ALL TESTS PASSED! New WEPO tokenomics implementation working correctly.")
+        print("✅ 6-month mining schedule implemented")
+        print("✅ 3-way fee distribution (60/25/15) working")
+        print("✅ Complete tokenomics overview available")
+        print("✅ Zero burning policy enforced")
+        print("✅ Sustainable, fair, participant-rewarding ecosystem achieved!")
     else:
         print("\n❌ SOME TESTS FAILED! Check the results above for details.")
     
