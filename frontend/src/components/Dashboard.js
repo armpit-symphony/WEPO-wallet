@@ -290,7 +290,47 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Action Buttons */}
+      {/* BTC Wallet Integration */}
+      <div className="bg-gradient-to-r from-orange-900/30 to-yellow-900/30 border border-orange-500/30 rounded-xl p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Bitcoin className="h-8 w-8 text-orange-400" />
+            <div>
+              <h3 className="text-white font-semibold">Bitcoin Integration</h3>
+              <p className="text-sm text-gray-300">Hold BTC while waiting for genesis launch</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-orange-400 font-semibold">Ready for Christmas</div>
+            <div className="text-xs text-gray-400">Dec 25, 2025 Launch</div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="bg-black/30 rounded-lg p-3">
+            <div className="text-gray-400">BTC Address</div>
+            <div className="text-white font-mono text-xs">1A1zP1eP...DivfNa</div>
+            <div className="text-orange-400 text-xs mt-1">Use external wallet</div>
+          </div>
+          <div className="bg-black/30 rounded-lg p-3">
+            <div className="text-gray-400">Exchange Rate</div>
+            <div className="text-white font-semibold">1 BTC ≈ 1.007 WEPO</div>
+            <div className="text-green-400 text-xs mt-1">Live atomic swaps</div>
+          </div>
+          <div className="bg-black/30 rounded-lg p-3">
+            <div className="text-gray-400">Status</div>
+            <div className="text-green-400 font-semibold">Trading Available</div>
+            <div className="text-gray-400 text-xs mt-1">Start accumulating now</div>
+          </div>
+        </div>
+        
+        <div className="mt-4 p-3 bg-orange-900/30 rounded-lg">
+          <p className="text-orange-200 text-sm">
+            💡 <strong>Get Ready for Launch:</strong> Use the Enhanced DEX to swap BTC for WEPO tokens. 
+            Your BTC is held securely in external wallets while you participate in atomic swaps.
+          </p>
+        </div>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <button 
           onClick={() => setActiveTab('send')}
