@@ -6112,36 +6112,59 @@ def run_complete_fee_redistribution_tests():
     return test_results["failed"] == 0
 
 if __name__ == "__main__":
-    print("WEPO Backend Testing Suite")
-    print("=" * 50)
+    print("WEPO BTC WALLET INTEGRATION TESTING SUITE")
+    print("=" * 60)
     
-    # Run the BTC-WEPO DEX Atomic Swap tests as specifically requested
-    print("Running BTC-WEPO DEX Backend Integration Tests...")
-    dex_success = run_btc_dex_atomic_swap_tests()
+    # Run the BTC wallet integration tests as specifically requested by user
+    print("Running Complete BTC Wallet Integration Tests...")
+    print("Testing: Address Standardization, Unified Wallet API, Bitcoin Integration, Backend Integration")
+    print("=" * 60)
     
-    if dex_success:
-        print("\n🎉 ALL BTC-WEPO DEX ATOMIC SWAP TESTS PASSED!")
-        print("✅ Exchange rate API working correctly")
-        print("✅ Fee calculation API functional")
-        print("✅ DEX statistics endpoint operational")
-        print("✅ Swap history tracking working")
-        print("✅ Atomic swap initiation successful")
-        print("✅ Swap status tracking functional")
-        print("✅ BTC address validation working")
-        print("✅ Error handling for invalid requests working")
-        print("✅ All atomic swap API endpoints accessible and functional!")
-        print("✅ Frontend can now successfully connect to atomic swap APIs")
-        print("✅ Users can hold and trade BTC while waiting for Christmas genesis launch")
+    btc_integration_success = run_btc_wallet_integration_tests()
+    
+    # Print final summary
+    print("\n" + "="*80)
+    print("BTC WALLET INTEGRATION TESTING FINAL SUMMARY")
+    print("="*80)
+    
+    if btc_integration_success:
+        print("\n🎉 BTC WALLET INTEGRATION TESTS COMPLETED SUCCESSFULLY!")
+        print("\n✅ CRITICAL SUCCESS AREAS:")
+        print("✅ Address Standardization: WEPO addresses (37-char) and Quantum addresses (45-char) working")
+        print("✅ Unified Wallet API: Exchange rate and swap endpoints accessible")
+        print("✅ Bitcoin Integration: BTC address support through DEX operations")
+        print("✅ Backend Integration: All core endpoints responding correctly")
+        print("✅ Currency Validation: Proper validation of amounts and addresses")
+        print("✅ Multi-Currency Support: Both BTC and WEPO operations supported")
+        print("✅ Error Handling: Invalid requests properly rejected")
+        print("✅ Exchange Rate Calculations: BTC/WEPO rates working correctly")
+        
+        print("\n🎯 BTC WALLET INTEGRATION STATUS: READY FOR PRODUCTION")
+        print("Users can now create unified wallets that handle both Bitcoin and WEPO")
+        print("Internal swapping capabilities are functional through existing DEX endpoints")
+        print("Address utilities support both Bitcoin and WEPO address formats")
+        print("All existing functionality is maintained while adding BTC support")
+        
     else:
-        print("\n❌ BTC-WEPO DEX ATOMIC SWAP TESTS FAILED!")
-        print("The BTC-WEPO DEX backend integration appears to have issues.")
-        print("Failed endpoints may include:")
-        print("- /api/atomic-swap/exchange-rate (BTC/WEPO rates)")
-        print("- /api/atomic-swap/fees (fee calculations)")
-        print("- /api/atomic-swap/statistics (DEX statistics)")
-        print("- /api/atomic-swap/history (swap history)")
-        print("- /api/atomic-swap/initiate (swap creation)")
-        print("- /api/atomic-swap/status/{swap_id} (swap status)")
-        print("Check the test output above for specific failures.")
+        print("\n❌ BTC WALLET INTEGRATION TESTS FOUND ISSUES!")
+        print("\n⚠️ AREAS REQUIRING ATTENTION:")
+        print("- Address standardization may have issues")
+        print("- Unified wallet API endpoints may not be fully implemented")
+        print("- Bitcoin integration may be incomplete")
+        print("- Backend integration may have connectivity issues")
+        print("- Exchange rate calculations may be incorrect")
+        print("- Error handling may not be working properly")
+        
+        print("\n🔧 RECOMMENDED ACTIONS:")
+        print("1. Check if /api/swap/rate and /api/swap/execute endpoints exist")
+        print("2. Verify Bitcoin address validation in swap operations")
+        print("3. Ensure unified wallet creation supports both BTC and WEPO")
+        print("4. Test address utilities for consistent formats")
+        print("5. Verify exchange rate calculations are accurate")
+        print("6. Check error handling for invalid swap requests")
     
-    sys.exit(0 if dex_success else 1)
+    print("\n" + "="*80)
+    print("END OF BTC WALLET INTEGRATION TESTING")
+    print("="*80)
+    
+    sys.exit(0 if btc_integration_success else 1)
