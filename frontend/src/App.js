@@ -55,12 +55,21 @@ const MainApp = () => {
         );
 
       case 'setup':
-        return (
-          <WalletSetup
-            onWalletCreated={() => setCurrentView('dashboard')}
-            onBack={() => setCurrentView('mode-selector')}
-          />
-        );
+        if (walletMode === 'unified') {
+          return (
+            <UnifiedWalletSetup
+              onWalletCreated={() => setCurrentView('dashboard')}
+              onBack={() => setCurrentView('mode-selector')}
+            />
+          );
+        } else {
+          return (
+            <WalletSetup
+              onWalletCreated={() => setCurrentView('dashboard')}
+              onBack={() => setCurrentView('mode-selector')}
+            />
+          );
+        }
 
       case 'login':
         return (
