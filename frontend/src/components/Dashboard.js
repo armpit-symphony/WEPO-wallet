@@ -19,7 +19,8 @@ import {
   ToggleRight,
   MessageCircle,
   Package,
-  Pickaxe
+  Pickaxe,
+  Bitcoin
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { useQuantum } from '../contexts/QuantumContext';
