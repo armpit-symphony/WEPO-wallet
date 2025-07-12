@@ -309,22 +309,32 @@ export const WalletProvider = ({ children }) => {
   };
 
   const value = {
+    // State
     wallet,
     balance,
-    isLoading,
+    btcBalance,
     transactions,
+    btcTransactions,
+    isLoading,
     posEnabled,
     masternodesEnabled,
+    showSeedPhrase,
+    setShowSeedPhrase,
+    
+    // Actions
     generateMnemonic,
     createWallet,
     loginWallet,
-    changePassword,
-    sendWepo,
-    logout,
+    logoutWallet,
+    sendTransaction,
     loadWalletData,
-    setWallet,
-    setBalance,
-    setTransactions
+    
+    // Utilities
+    validateAddress,
+    
+    // BTC-related (to be implemented)
+    setBtcBalance,
+    setBtcTransactions
   };
 
   return (
