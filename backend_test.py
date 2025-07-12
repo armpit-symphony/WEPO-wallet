@@ -1404,15 +1404,12 @@ def run_btc_dex_atomic_swap_tests():
                     passed = False
                 
                 # Check volume
-                if "total_volume" in stats:
-                    volume = stats["total_volume"]
-                    if "btc" in volume and "wepo" in volume:
-                        print(f"  ✓ Volume: {volume['btc']} BTC, {volume['wepo']} WEPO")
-                    else:
-                        print("  ✗ Volume structure incomplete")
-                        passed = False
+                if "total_btc_volume" in stats and "total_wepo_volume" in stats:
+                    btc_volume = stats["total_btc_volume"]
+                    wepo_volume = stats["total_wepo_volume"]
+                    print(f"  ✓ Volume: {btc_volume} BTC, {wepo_volume} WEPO")
                 else:
-                    print("  ✗ Total volume missing")
+                    print("  ✗ Volume fields missing")
                     passed = False
                 
                 # Check active swaps
