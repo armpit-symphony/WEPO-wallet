@@ -17,6 +17,7 @@ import uvicorn
 sys.path.append('/app/wepo-blockchain/core')
 from atomic_swaps import atomic_swap_engine, SwapType, SwapState, validate_btc_address, validate_wepo_address
 from rwa_tokens import rwa_system
+from address_utils import validate_wepo_address as validate_address_std, generate_wepo_address
 
 # Import mining coordinator
 sys.path.append('/app')
