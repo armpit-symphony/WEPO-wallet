@@ -173,6 +173,8 @@ const Dashboard = () => {
         return <QuantumMessaging onBack={() => setActiveTab('dashboard')} />;
       case 'rwa':
         return <RWADashboard onBack={() => setActiveTab('dashboard')} />;
+      case 'mining':
+        return <CommunityMining onBack={() => setActiveTab('dashboard')} miningMode={miningMode} />;
       default:
         return renderDashboard();
     }
