@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import WalletModeSelector from './components/WalletModeSelector';
+import UnifiedWalletModeSelector from './components/UnifiedWalletModeSelector';
 import WalletLogin from './components/WalletLogin';
 import WalletSetup from './components/WalletSetup';
 import UnifiedDashboard from './components/UnifiedDashboard';
