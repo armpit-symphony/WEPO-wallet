@@ -26,7 +26,6 @@ import UnifiedExchange from './UnifiedExchange';
 
 const RWADashboard = ({ onBack }) => {
   const { wallet } = useWallet();
-  const { quantumWallet, isQuantumMode } = useQuantum();
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [portfolio, setPortfolio] = useState(null);
