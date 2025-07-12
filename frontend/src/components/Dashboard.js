@@ -162,7 +162,7 @@ const Dashboard = ({ onLogout }) => {
       case 'receive':
         return <ReceiveWepo onBack={() => setActiveTab('dashboard')} />;
       case 'btc-dex':
-        return <EnhancedDEX onClose={() => setActiveTab('dashboard')} />;
+        return <UnifiedExchange onBack={() => setActiveTab('dashboard')} />;
       case 'staking':
         return <StakingInterface onBack={() => setActiveTab('dashboard')} />;
       case 'masternode':
