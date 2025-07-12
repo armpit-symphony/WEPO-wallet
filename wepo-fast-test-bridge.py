@@ -19,6 +19,7 @@ from atomic_swaps import atomic_swap_engine, SwapType, SwapState, validate_btc_a
 from rwa_tokens import rwa_system
 
 # Import mining coordinator
+sys.path.append('/app')
 from wepo_community_mining_backend import mining_coordinator, setup_mining_routes
 
 class FastTestBlockchain:
