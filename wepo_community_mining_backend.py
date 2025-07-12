@@ -102,7 +102,8 @@ class CommunityMiningCoordinator:
         self.dual_layer_engine = DualLayerMiningEngine()
         
         # Christmas Day 2025 3pm EST = 8pm UTC
-        self.LAUNCH_TIMESTAMP = int(datetime(2025, 12, 25, 20, 0, 0, timezone.utc).timestamp())
+        launch_datetime = datetime(2025, 12, 25, 20, 0, 0, timezone.utc)
+        self.LAUNCH_TIMESTAMP = int(launch_datetime.timestamp())
         
         # Genesis mining state
         self.genesis_found = False
