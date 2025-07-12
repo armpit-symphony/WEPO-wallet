@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 WEPO Fast Test Blockchain Bridge
-Instant blockchain for testing functionality with BTC atomic swaps
+Instant blockchain for testing functionality with BTC atomic swaps and community mining
 """
 
 import time
@@ -17,6 +17,9 @@ import uvicorn
 sys.path.append('/app/wepo-blockchain/core')
 from atomic_swaps import atomic_swap_engine, SwapType, SwapState, validate_btc_address, validate_wepo_address
 from rwa_tokens import rwa_system
+
+# Import mining coordinator
+from wepo_community_mining_backend import mining_coordinator, setup_mining_routes
 
 class FastTestBlockchain:
     """Fast test blockchain with instant operations"""
