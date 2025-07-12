@@ -57,7 +57,7 @@ export const generateBitcoinAddress = (seed, addressType = 'legacy') => {
     const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex');
     
     // Create key pair
-    const keyPair = bitcoin.ECPair.fromPrivateKey(privateKeyBuffer);
+    const keyPair = ECPair.fromPrivateKey(privateKeyBuffer);
     
     let address;
     if (addressType === 'segwit') {
