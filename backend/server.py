@@ -504,35 +504,163 @@ async def get_mining_info():
         "block_time": "2 minutes" if height > 52560 else "10 minutes"
     }
 
-# Internal BTC ↔ WEPO Swap Endpoints (Unified Wallet)
-@api_router.get("/swap/rate")
-async def get_internal_swap_rate():
-    """Get current BTC/WEPO exchange rate for internal swaps - market determined"""
-    try:
-        # Market-based rate calculation - this should be determined by:
-        # 1. Supply and demand within the WEPO network
-        # 2. External BTC price feeds
-        # 3. Trading volume and liquidity
+# Community-Driven AMM System (No Admin)
+import math
+from typing import Dict, Optional
+
+class LiquidityPool:
+    """Community-driven liquidity pool with no admin control"""
+    
+    def __init__(self):
+        self.btc_reserve = 0.0
+        self.wepo_reserve = 0.0
+        self.total_shares = 0.0
+        self.lp_positions = {}  # user_address: shares
+        self.fee_rate = 0.003  # 0.3% trading fee
+    
+    def get_price(self) -> Optional[float]:
+        """Get current WEPO per BTC price"""
+        if self.btc_reserve == 0:
+            return None
+        return self.wepo_reserve / self.btc_reserve
+    
+    def get_output_amount(self, input_amount: float, input_is_btc: bool) -> float:
+        """Calculate output amount using constant product formula"""
+        if input_is_btc:
+            # BTC → WEPO
+            input_reserve = self.btc_reserve
+            output_reserve = self.wepo_reserve
+        else:
+            # WEPO → BTC  
+            input_reserve = self.wepo_reserve
+            output_reserve = self.btc_reserve
         
-        # For now, return a placeholder that indicates rates should be market-based
-        # In production, this would connect to:
-        # - External price oracles
-        # - Internal trading data
-        # - Liquidity pool information
+        # Apply fee to input
+        input_after_fee = input_amount * (1 - self.fee_rate)
+        
+        # Constant product formula: x * y = k
+        # (x + input_after_fee) * (y - output) = x * y
+        # output = (y * input_after_fee) / (x + input_after_fee)
+        output_amount = (output_reserve * input_after_fee) / (input_reserve + input_after_fee)
+        
+        return output_amount
+    
+    def bootstrap_pool(self, user_address: str, btc_amount: float, wepo_amount: float):
+        """First user creates the market - no admin required"""
+        if self.total_shares > 0:
+            raise Exception("Pool already exists")
+        
+        if btc_amount <= 0 or wepo_amount <= 0:
+            raise Exception("Invalid amounts")
+        
+        # Set initial reserves (user determines initial price)
+        self.btc_reserve = btc_amount
+        self.wepo_reserve = wepo_amount
+        
+        # Initial shares = geometric mean of reserves
+        self.total_shares = math.sqrt(btc_amount * wepo_amount)
+        self.lp_positions[user_address] = self.total_shares
         
         return {
-            "error": "Market-based pricing not yet implemented",
-            "message": "BTC/WEPO exchange rates should be determined by market forces, not hardcoded",
-            "todo": [
-                "Implement price oracle integration",
-                "Add liquidity pool mechanics", 
-                "Connect to external BTC price feeds",
-                "Implement supply/demand based pricing"
-            ],
-            "current_status": "placeholder_endpoint"
+            "initial_price": wepo_amount / btc_amount,
+            "shares_minted": self.total_shares,
+            "pool_created": True,
+            "btc_reserve": self.btc_reserve,
+            "wepo_reserve": self.wepo_reserve
+        }
+    
+    def add_liquidity(self, user_address: str, btc_amount: float, wepo_amount: float):
+        """Add liquidity to existing pool"""
+        if self.total_shares == 0:
+            return self.bootstrap_pool(user_address, btc_amount, wepo_amount)
+        
+        # Calculate required ratio
+        current_ratio = self.wepo_reserve / self.btc_reserve
+        provided_ratio = wepo_amount / btc_amount
+        
+        # Allow small tolerance for ratio mismatch
+        if abs(current_ratio - provided_ratio) / current_ratio > 0.02:  # 2% tolerance
+            raise Exception(f"Ratio mismatch. Current: {current_ratio:.6f}, Provided: {provided_ratio:.6f}")
+        
+        # Calculate shares to mint proportionally
+        btc_share = btc_amount / self.btc_reserve
+        shares_to_mint = self.total_shares * btc_share
+        
+        # Update reserves
+        self.btc_reserve += btc_amount
+        self.wepo_reserve += wepo_amount
+        self.total_shares += shares_to_mint
+        
+        # Update user position
+        if user_address in self.lp_positions:
+            self.lp_positions[user_address] += shares_to_mint
+        else:
+            self.lp_positions[user_address] = shares_to_mint
+        
+        return {
+            "shares_minted": shares_to_mint,
+            "total_shares": self.total_shares,
+            "new_price": self.get_price(),
+            "btc_reserve": self.btc_reserve,
+            "wepo_reserve": self.wepo_reserve
+        }
+    
+    def execute_swap(self, input_amount: float, input_is_btc: bool) -> Dict:
+        """Execute swap and update reserves"""
+        if self.total_shares == 0:
+            raise Exception("No liquidity in pool")
+        
+        output_amount = self.get_output_amount(input_amount, input_is_btc)
+        fee_amount = input_amount * self.fee_rate
+        
+        # Update reserves
+        if input_is_btc:
+            self.btc_reserve += input_amount
+            self.wepo_reserve -= output_amount
+        else:
+            self.wepo_reserve += input_amount
+            self.btc_reserve -= output_amount
+        
+        return {
+            "input_amount": input_amount,
+            "output_amount": output_amount,
+            "fee_amount": fee_amount,
+            "new_price": self.get_price(),
+            "btc_reserve": self.btc_reserve,
+            "wepo_reserve": self.wepo_reserve
+        }
+
+# Global pool instance (in production, this would be in database)
+btc_wepo_pool = LiquidityPool()
+
+# Community-Driven AMM Endpoints
+@api_router.get("/swap/rate")
+async def get_market_rate():
+    """Get current market-determined BTC/WEPO rate"""
+    try:
+        price = btc_wepo_pool.get_price()
+        
+        if price is None:
+            return {
+                "pool_exists": False,
+                "message": "No liquidity pool exists yet. Any user can create the market.",
+                "btc_reserve": 0,
+                "wepo_reserve": 0,
+                "can_bootstrap": True
+            }
+        
+        return {
+            "pool_exists": True,
+            "btc_to_wepo": price,
+            "wepo_to_btc": 1 / price,
+            "btc_reserve": btc_wepo_pool.btc_reserve,
+            "wepo_reserve": btc_wepo_pool.wepo_reserve,
+            "total_liquidity_shares": btc_wepo_pool.total_shares,
+            "fee_rate": btc_wepo_pool.fee_rate,
+            "last_updated": int(time.time())
         }
     except Exception as e:
-        logger.error(f"Error getting swap rate: {str(e)}")
+        logger.error(f"Error getting market rate: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/swap/execute")
