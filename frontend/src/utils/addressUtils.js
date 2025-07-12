@@ -190,6 +190,12 @@ export const validateBitcoinAddress = (address) => {
     error: 'Invalid Bitcoin address format' 
   };
 };
+/**
+ * Validate WEPO address format
+ * @param {string} address - Address to validate
+ * @returns {object} Validation result with type detection
+ */
+export const validateWepoAddress = (address) => {
   if (!address || typeof address !== 'string') {
     return { 
       valid: false, 
