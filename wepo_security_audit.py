@@ -275,6 +275,10 @@ class SecurityAuditor:
         
         # Test 4: Block reward calculation
         try:
+            import os
+            import sys
+            sys.path.insert(0, '/app/wepo-blockchain/core')
+            
             from blockchain import WepoBlockchain
             
             with tempfile.TemporaryDirectory() as temp_dir:
