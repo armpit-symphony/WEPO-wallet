@@ -261,10 +261,11 @@ def validate_wepo_address(address: str) -> bool:
         return False
 
 # Main functions for easy integration
-def generate_dilithium_keypair() -> DilithiumKeyPair:
-    """Generate a new Dilithium key pair"""
+def generate_dilithium_keypair() -> Tuple[bytes, bytes]:
+    """Generate a new Dilithium key pair - returns (private_key, public_key)"""
     signer = DilithiumSigner()
-    return signer.generate_keypair()
+    keypair = signer.generate_keypair()
+    return keypair.private_key, keypair.public_key
 
 def sign_message(message: bytes, private_key: bytes) -> bytes:
     """Sign a message with Dilithium private key"""
