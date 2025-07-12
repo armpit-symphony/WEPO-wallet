@@ -35,7 +35,7 @@ const RWADashboard = ({ onBack }) => {
   const [error, setError] = useState('');
   
   // Get current wallet address
-  const currentWallet = isQuantumMode ? quantumWallet : wallet;
+  const currentWallet = wallet;
   const currentAddress = currentWallet?.address;
 
   useEffect(() => {
