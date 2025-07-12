@@ -279,12 +279,12 @@ WEPO implements cutting-edge cryptographic technologies. While we've conducted e
 WEPO uses **Argon2** - a memory-hard, ASIC-resistant mining algorithm that ensures fair distribution and prevents mining centralization.
 
 ### Mining Rewards:
-- **Q1 (Blocks 0-13,139)**: 400 WEPO per block (~$TBD)
-- **Q2 (Blocks 13,140-26,279)**: 200 WEPO per block  
-- **Q3 (Blocks 26,280-39,419)**: 100 WEPO per block
-- **Q4 (Blocks 39,420-52,559)**: 50 WEPO per block
-- **Year 2+**: 12.4 WEPO per block
-- **PLUS**: All network fees redistributed to miners (additional income!)
+- **Months 1-6**: 400 WEPO per block (~$TBD)
+- **Months 7-12**: 200 WEPO per block  
+- **Months 13-18**: 100 WEPO per block
+- **Month 19+**: PoS/Masternode transition
+- **PLUS**: 25% of ALL network fees go to current block miner!
+- **ADDITIONAL**: Real-time fee distribution every block
 
 ### 🏭 Mining Pool Information
 
