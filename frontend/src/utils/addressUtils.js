@@ -369,8 +369,13 @@ export const validateAddressBatch = (addresses) => {
 export default {
   ADDRESS_FORMATS,
   generateWepoAddress,
+  generateBitcoinAddress,
+  validateAddress,
   validateWepoAddress,
+  validateBitcoinAddress,
   getAddressType,
+  isBitcoinAddress,
+  isWepoAddress,
   isQuantumAddress,
   formatAddressForDisplay,
   standardizeAddress,
