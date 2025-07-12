@@ -13,9 +13,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-# Add atomic swaps to the path
+# Add atomic swaps and RWA to the path
 sys.path.append('/app/wepo-blockchain/core')
 from atomic_swaps import atomic_swap_engine, SwapType, SwapState, validate_btc_address, validate_wepo_address
+from rwa_tokens import rwa_system
 
 class FastTestBlockchain:
     """Fast test blockchain with instant operations"""
