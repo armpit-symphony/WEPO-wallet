@@ -537,69 +537,37 @@ async def get_internal_swap_rate():
 
 @api_router.post("/swap/execute")
 async def execute_internal_swap(request: dict):
-    """Execute internal BTC ↔ WEPO swap within unified wallet"""
+    """Execute internal BTC ↔ WEPO swap within unified wallet - PLACEHOLDER"""
     try:
         wallet_address = request.get("wallet_address")
         from_currency = request.get("from_currency")  # BTC or WEPO
         to_currency = request.get("to_currency")      # WEPO or BTC
         from_amount = float(request.get("from_amount", 0))
-        to_amount = float(request.get("to_amount", 0))
-        exchange_rate = float(request.get("exchange_rate", 1.007))
         
         if not wallet_address or not from_currency or not to_currency:
             raise HTTPException(status_code=400, detail="Missing required fields")
         
-        if from_amount <= 0 or to_amount <= 0:
+        if from_amount <= 0:
             raise HTTPException(status_code=400, detail="Invalid amounts")
         
-        # Validate the exchange calculation
-        if from_currency == "BTC" and to_currency == "WEPO":
-            expected_output = from_amount * exchange_rate
-            if abs(to_amount - expected_output) > 0.000001:
-                raise HTTPException(status_code=400, detail="Exchange rate mismatch")
-        elif from_currency == "WEPO" and to_currency == "BTC":
-            expected_output = from_amount / exchange_rate
-            if abs(to_amount - expected_output) > 0.00000001:
-                raise HTTPException(status_code=400, detail="Exchange rate mismatch")
-        else:
-            raise HTTPException(status_code=400, detail="Invalid currency pair")
-        
-        # In production this would:
-        # 1. Verify wallet balances in both currencies
-        # 2. Execute the internal swap transaction
-        # 3. Update balances in MongoDB
-        # 4. Record the swap transaction
-        
-        swap_id = f"swap_{int(time.time())}_{wallet_address[:8]}"
-        
-        # Store swap record in database
-        swap_record = {
-            "swap_id": swap_id,
-            "wallet_address": wallet_address,
-            "from_currency": from_currency,
-            "to_currency": to_currency,
-            "from_amount": from_amount,
-            "to_amount": to_amount,
-            "exchange_rate": exchange_rate,
-            "fee": 0.001,  # 0.1% fee
-            "status": "completed",
-            "timestamp": int(time.time()),
-            "created_at": datetime.now()
-        }
-        
-        await db.internal_swaps.insert_one(swap_record)
-        
+        # CRITICAL ISSUES TO ADDRESS:
         return {
-            "swap_id": swap_id,
-            "status": "completed",
-            "from_currency": from_currency,
-            "to_currency": to_currency,
-            "from_amount": from_amount,
-            "to_amount": to_amount,
-            "exchange_rate": exchange_rate,
-            "fee": 0.001,  # 0.1% fee
-            "timestamp": int(time.time()),
-            "message": f"Successfully swapped {from_amount} {from_currency} for {to_amount} {to_currency}"
+            "error": "Internal swap not properly implemented",
+            "issues": [
+                "Exchange rate must be market-determined, not hardcoded",
+                "All fees must go to 3-way redistribution system (60% masternodes, 25% miners, 15% stakers)",
+                "Need proper liquidity mechanisms",
+                "Requires integration with existing fee redistribution pool"
+            ],
+            "required_implementation": [
+                "Market-based pricing mechanism",
+                "Integration with /api/rwa/redistribute-fees system",
+                "Proper balance verification and updates",
+                "Real transaction recording in blockchain",
+                "Liquidity pool management"
+            ],
+            "fee_redistribution_note": "All swap fees must use existing 3-way redistribution: 60% masternodes, 25% miners, 15% stakers",
+            "status": "placeholder_requires_proper_implementation"
         }
         
     except HTTPException:
