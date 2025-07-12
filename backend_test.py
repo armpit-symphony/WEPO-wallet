@@ -4700,17 +4700,20 @@ if __name__ == "__main__":
     print("WEPO Backend Testing Suite")
     print("=" * 50)
     
-    # Run the new WEPO tokenomics implementation tests as requested
-    success = run_new_tokenomics_tests()
+    # Run the focused RWA endpoints integration tests as requested
+    success = run_rwa_tokenomics_integration_tests()
     
     if success:
-        print("\n🎉 ALL TESTS PASSED! New WEPO tokenomics implementation working correctly.")
-        print("✅ 6-month mining schedule implemented")
-        print("✅ 3-way fee distribution (60/25/15) working")
-        print("✅ Complete tokenomics overview available")
-        print("✅ Zero burning policy enforced")
-        print("✅ Sustainable, fair, participant-rewarding ecosystem achieved!")
+        print("\n🎉 ALL RWA INTEGRATION TESTS PASSED!")
+        print("✅ RWA endpoints integration fixed and working")
+        print("✅ /api/rwa/fee-info returning correct 3-way distribution")
+        print("✅ /api/tokenomics/overview showing mining schedule (400→200→100)")
+        print("✅ /api/rwa/statistics endpoint accessible")
+        print("✅ Zero burning policy implemented and displayed")
+        print("✅ All RWA tokenization endpoints working properly")
+        print("✅ Redistribution pool information endpoints working")
+        print("✅ Backend integration issue resolved successfully!")
     else:
-        print("\n❌ SOME TESTS FAILED! Check the results above for details.")
+        print("\n❌ SOME RWA INTEGRATION TESTS FAILED! Check the results above for details.")
     
     sys.exit(0 if success else 1)
