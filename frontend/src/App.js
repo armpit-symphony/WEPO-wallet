@@ -10,168 +10,121 @@ import { QuantumProvider } from './contexts/QuantumContext';
 import { UnifiedWalletProvider, useUnifiedWallet } from './contexts/UnifiedWalletContext';
 import './App.css';
 
-function App() {
-  const [isWalletSetup, setIsWalletSetup] = useState(false);
-  const [isQuantumWalletSetup, setIsQuantumWalletSetup] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isQuantumMode, setIsQuantumMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+// Main App Component with Unified Wallet
+const MainApp = () => {
+  const { wallet } = useUnifiedWallet();
+  const [currentView, setCurrentView] = useState('mode-selector');
+  const [walletMode, setWalletMode] = useState('unified'); // 'unified', 'quantum', 'legacy'
 
   useEffect(() => {
-    // Initialize authentication state
-    const initAuth = async () => {
-      try {
-        // Check if regular wallet exists
-        const walletExists = localStorage.getItem('wepo_wallet_exists');
-        const sessionActive = sessionStorage.getItem('wepo_session_active');
-        
-        // Check if quantum wallet exists
-        const quantumWalletExists = localStorage.getItem('wepo_quantum_wallet_exists');
-        const quantumSessionActive = sessionStorage.getItem('wepo_quantum_session_active');
-        const quantumMode = localStorage.getItem('wepo_quantum_mode') === 'true';
-        
-        setIsWalletSetup(!!walletExists);
-        setIsQuantumWalletSetup(!!quantumWalletExists);
-        setIsQuantumMode(quantumMode);
-        
-        // Simplified login check
-        const shouldBeLoggedIn = (quantumMode && quantumSessionActive) || (!quantumMode && sessionActive);
-        setIsLoggedIn(shouldBeLoggedIn);
-        
-        console.log('Auth initialized:', {
-          walletExists: !!walletExists,
-          quantumWalletExists: !!quantumWalletExists,
-          quantumMode,
-          sessionActive: !!sessionActive,
-          quantumSessionActive: !!quantumSessionActive,
-          isLoggedIn: shouldBeLoggedIn
-        });
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Check if user has existing wallet sessions
+    const currentUser = localStorage.getItem('wepo_current_user');
+    const quantumSession = sessionStorage.getItem('wepo_quantum_session_active');
+    const legacySession = sessionStorage.getItem('wepo_current_wallet');
 
-    initAuth();
-  }, []);
-
-  const handleSetupComplete = () => {
-    // Simplified setup completion
-    const quantumMode = localStorage.getItem('wepo_quantum_mode') === 'true';
-    const walletExists = localStorage.getItem('wepo_wallet_exists');
-    const quantumWalletExists = localStorage.getItem('wepo_quantum_wallet_exists');
-    
-    // Update wallet setup states
-    setIsWalletSetup(!!walletExists);
-    setIsQuantumWalletSetup(!!quantumWalletExists);
-    setIsQuantumMode(quantumMode);
-    
-    // Auto-login after setup - simplified logic
-    if (quantumMode) {
-      sessionStorage.setItem('wepo_quantum_session_active', 'true');
-    } else {
-      sessionStorage.setItem('wepo_session_active', 'true');
+    if (wallet) {
+      setCurrentView('dashboard');
+    } else if (currentUser) {
+      setCurrentView('login');
+      setWalletMode('unified');
+    } else if (quantumSession) {
+      setCurrentView('quantum-login');
+      setWalletMode('quantum');
+    } else if (legacySession) {
+      setCurrentView('login');
+      setWalletMode('legacy');
     }
-    
-    setIsLoggedIn(true);
-    
-    console.log('Setup complete - auto-login successful:', {
-      quantumMode,
-      walletExists: !!walletExists,
-      quantumWalletExists: !!quantumWalletExists
-    });
-  };
+  }, [wallet]);
 
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true);
-  };
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'mode-selector':
+        return (
+          <WalletModeSelector
+            onModeSelect={(mode) => {
+              setWalletMode(mode);
+              setCurrentView(mode === 'quantum' ? 'quantum-setup' : 'setup');
+            }}
+            onLoginSelect={(mode) => {
+              setWalletMode(mode);
+              setCurrentView(mode === 'quantum' ? 'quantum-login' : 'login');
+            }}
+          />
+        );
 
-  const renderAuthFlow = () => {
-    // Show loading state
-    if (isLoading) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-4">
-          <div className="text-white text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
-            <p>Loading WEPO Wallet...</p>
-          </div>
-        </div>
-      );
+      case 'setup':
+        return (
+          <WalletSetup
+            onWalletCreated={() => setCurrentView('dashboard')}
+            onBack={() => setCurrentView('mode-selector')}
+          />
+        );
+
+      case 'login':
+        return (
+          <WalletLogin
+            onWalletLoaded={() => setCurrentView('dashboard')}
+            onBack={() => setCurrentView('mode-selector')}
+          />
+        );
+
+      case 'quantum-setup':
+        return (
+          <QuantumWalletSetup
+            onWalletCreated={() => setCurrentView('quantum-dashboard')}
+            onBack={() => setCurrentView('mode-selector')}
+          />
+        );
+
+      case 'quantum-login':
+        return (
+          <QuantumWalletLogin
+            onWalletLoaded={() => setCurrentView('quantum-dashboard')}
+            onBack={() => setCurrentView('mode-selector')}
+          />
+        );
+
+      case 'dashboard':
+        return <UnifiedDashboard />;
+
+      case 'quantum-dashboard':
+        // For backward compatibility, still use the old quantum dashboard
+        return <Dashboard />;
+
+      default:
+        return (
+          <WalletModeSelector
+            onModeSelect={(mode) => {
+              setWalletMode(mode);
+              setCurrentView(mode === 'quantum' ? 'quantum-setup' : 'setup');
+            }}
+            onLoginSelect={(mode) => {
+              setWalletMode(mode);
+              setCurrentView(mode === 'quantum' ? 'quantum-login' : 'login');
+            }}
+          />
+        );
     }
-
-    // Show dashboard if logged in
-    if (isLoggedIn) {
-      return <Dashboard />;
-    }
-
-    // Show wallet setup if no wallets exist
-    if (!isWalletSetup && !isQuantumWalletSetup) {
-      return <WalletModeSelector onSetupComplete={handleSetupComplete} />;
-    }
-
-    // Show appropriate login screen
-    if (isQuantumMode && isQuantumWalletSetup) {
-      return (
-        <QuantumWalletLogin 
-          onLoginSuccess={handleLoginSuccess}
-          onBackToRegular={() => {
-            setIsQuantumMode(false);
-            localStorage.setItem('wepo_quantum_mode', 'false');
-          }}
-        />
-      );
-    }
-
-    if (!isQuantumMode && isWalletSetup) {
-      return (
-        <WalletLogin 
-          onLoginSuccess={handleLoginSuccess}
-        />
-      );
-    }
-
-    // Fallback to wallet mode selector
-    return <WalletModeSelector onSetupComplete={handleSetupComplete} />;
   };
 
   return (
-    <WalletProvider>
-      <QuantumProvider>
-        <div className="App">
-          <Router>
-            <Routes>
-              <Route 
-                path="/" 
-                element={renderAuthFlow()}
-              />
-              <Route 
-                path="/setup" 
-                element={
-                  (isWalletSetup || isQuantumWalletSetup) ? (
-                    <Navigate to="/" replace />
-                  ) : (
-                    <WalletModeSelector onSetupComplete={handleSetupComplete} />
-                  )
-                } 
-              />
-              <Route 
-                path="/login" 
-                element={
-                  (!isWalletSetup && !isQuantumWalletSetup) ? (
-                    <Navigate to="/setup" replace />
-                  ) : isLoggedIn ? (
-                    <Navigate to="/" replace />
-                  ) : (
-                    renderAuthFlow()
-                  )
-                } 
-              />
-            </Routes>
-          </Router>
-        </div>
-      </QuantumProvider>
-    </WalletProvider>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
+      {renderCurrentView()}
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <div className="App">
+      <WalletProvider>
+        <QuantumProvider>
+          <UnifiedWalletProvider>
+            <MainApp />
+          </UnifiedWalletProvider>
+        </QuantumProvider>
+      </WalletProvider>
+    </div>
   );
 }
 
