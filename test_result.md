@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Build WEPO cryptocurrency - a revolutionary privacy-focused digital currency with hybrid PoW/PoS consensus, masternodes, and built-in BTC-to-WEPO DEX. Features include 63.9M supply, advanced privacy (zk-STARKs, ring signatures), wallet with 16-word seed recovery, and PoS/masternode activation at 18 months after first PoW block."
+user_problem_statement: "Build WEPO cryptocurrency - a revolutionary privacy-focused digital currency with hybrid PoW/PoS consensus, masternodes, and built-in BTC-to-WEPO DEX. Features include 63.9M supply, advanced privacy (zk-STARKs, ring signatures), wallet with 16-word seed recovery, and PoS/masternode activation at 18 months after first PoW block. Create the community mining software required for the community-mined genesis block for a Christmas Day 2025 launch."
 
 backend:
   - task: "WEPO Staking Mechanism"
