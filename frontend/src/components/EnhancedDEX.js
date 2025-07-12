@@ -81,6 +81,19 @@ const EnhancedDEX = ({ onClose }) => {
     }
   };
 
+  const fetchFeeInfo = async () => {
+    if (!btcAmount || parseFloat(btcAmount) <= 0) return;
+    
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/atomic-swap/fees?btc_amount=${btcAmount}&swap_type=btc_to_wepo&priority=${priorityFee}`);
+      const data = await response.json();
+      setFeeInfo(data.fees);
+    } catch (err) {
+      console.error('Error fetching fee info:', err);
+    }
+  };
+
   const fetchTradeableTokens = async () => {
     try {
       const response = await fetch('/api/rwa/tokens/tradeable');
