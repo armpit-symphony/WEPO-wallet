@@ -33,18 +33,18 @@ import QuantumMessaging from './QuantumMessaging';
 import RWADashboard from './RWADashboard';
 import CommunityMining from './CommunityMining';
 
-const Dashboard = () => {
+const Dashboard = ({ onLogout }) => {
   const { 
     wallet, 
     balance, 
+    btcBalance,
     transactions, 
+    btcTransactions,
     posEnabled, 
     masternodesEnabled,
-    logout,
-    setWallet,
+    loadWalletData,
     setBalance,
-    setTransactions,
-    loadWalletData
+    setTransactions 
   } = useWallet();
   
   const {
