@@ -1479,58 +1479,84 @@ def run_btc_dex_atomic_swap_tests():
     try:
         print("\n[TEST] Swap Initiation - Testing /api/atomic-swap/initiate")
         
-        swap_data = {
-            "btc_address": test_btc_address,
-            "wepo_address": test_wepo_address,
-            "btc_amount": 0.001,
-            "swap_type": "btc_to_wepo",
-            "timelock_hours": 24
-        }
+        # First create test wallets to get valid addresses
+        wallet1_response = requests.post(f"{API_URL}/wallet/create", json={
+            "username": generate_random_username(),
+            "address": generate_random_address(),
+            "encrypted_private_key": generate_encrypted_key()
+        })
         
-        print(f"  Initiating swap: {swap_data}")
-        response = requests.post(f"{API_URL}/atomic-swap/initiate", json=swap_data)
-        print(f"  Response: {response.status_code}")
+        wallet2_response = requests.post(f"{API_URL}/wallet/create", json={
+            "username": generate_random_username(),
+            "address": generate_random_address(),
+            "encrypted_private_key": generate_encrypted_key()
+        })
         
-        if response.status_code == 200:
-            data = response.json()
-            print(f"  Swap Initiation: {json.dumps(data, indent=2)}")
+        if wallet1_response.status_code == 200 and wallet2_response.status_code == 200:
+            wallet1_address = wallet1_response.json()["address"]
+            wallet2_address = wallet2_response.json()["address"]
             
-            passed = True
+            swap_data = {
+                "swap_type": "btc_to_wepo",
+                "btc_amount": 0.001,
+                "initiator_btc_address": test_btc_address,
+                "initiator_wepo_address": wallet1_address,
+                "participant_btc_address": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+                "participant_wepo_address": wallet2_address
+            }
             
-            # Check swap creation response
-            if "swap_id" in data:
-                test_swap_id = data["swap_id"]
-                print(f"  ✓ Swap ID created: {test_swap_id}")
+            print(f"  Initiating swap with correct parameters")
+            response = requests.post(f"{API_URL}/atomic-swap/initiate", json=swap_data)
+            print(f"  Response: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"  Swap Initiation: {json.dumps(data, indent=2)}")
+                
+                passed = True
+                
+                # Check swap creation response
+                if "swap_id" in data:
+                    test_swap_id = data["swap_id"]
+                    print(f"  ✓ Swap ID created: {test_swap_id}")
+                else:
+                    print("  ✗ Swap ID missing")
+                    passed = False
+                
+                # Check HTLC addresses
+                if "btc_htlc_address" in data:
+                    print(f"  ✓ BTC HTLC address: {data['btc_htlc_address']}")
+                else:
+                    print("  ✗ BTC HTLC address missing")
+                    passed = False
+                
+                if "wepo_htlc_address" in data:
+                    print(f"  ✓ WEPO HTLC address: {data['wepo_htlc_address']}")
+                else:
+                    print("  ✗ WEPO HTLC address missing")
+                    passed = False
+                
+                # Check secret hash
+                if "secret_hash" in data:
+                    print(f"  ✓ Secret hash provided")
+                else:
+                    print("  ✗ Secret hash missing")
+                    passed = False
+                
+                # Check amounts
+                if "btc_amount" in data and "wepo_amount" in data:
+                    print(f"  ✓ Amounts: {data['btc_amount']} BTC → {data['wepo_amount']} WEPO")
+                else:
+                    print("  ✗ Swap amounts missing")
+                    passed = False
+                
+                log_test("Swap Initiation", passed, response)
             else:
-                print("  ✗ Swap ID missing")
-                passed = False
-            
-            # Check HTLC address
-            if "htlc_address" in data:
-                htlc_address = data["htlc_address"]
-                print(f"  ✓ HTLC address: {htlc_address}")
-            else:
-                print("  ✗ HTLC address missing")
-                passed = False
-            
-            # Check secret hash
-            if "secret_hash" in data:
-                print(f"  ✓ Secret hash provided")
-            else:
-                print("  ✗ Secret hash missing")
-                passed = False
-            
-            # Check timelock
-            if "timelock" in data:
-                print(f"  ✓ Timelock: {data['timelock']}")
-            else:
-                print("  ✗ Timelock missing")
-                passed = False
-            
-            log_test("Swap Initiation", passed, response)
+                log_test("Swap Initiation", False, response)
+                print(f"  ✗ Failed with status code: {response.status_code}")
         else:
-            log_test("Swap Initiation", False, response)
-            print(f"  ✗ Failed with status code: {response.status_code}")
+            log_test("Swap Initiation", False, error="Failed to create test wallets")
+            print("  ✗ Failed to create test wallets")
     except Exception as e:
         log_test("Swap Initiation", False, error=str(e))
         print(f"  ✗ Exception: {str(e)}")
