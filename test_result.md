@@ -346,6 +346,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "RWA Endpoints Integration with New Tokenomics"
     - "WEPO New Tokenomics Frontend Integration"
   stuck_tasks:
     - "Frontend Authentication Flow"
