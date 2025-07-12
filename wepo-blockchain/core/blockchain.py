@@ -52,6 +52,16 @@ REWARD_YEAR2_BASE = 12.4 * COIN # 12.4 WEPO per block year 2+
 HALVING_INTERVAL = 1051200    # Blocks between halvings (4 years)
 POS_ACTIVATION_HEIGHT = int(POW_BLOCKS_YEAR1 * 1.5)  # 18 months
 MIN_STAKE_AMOUNT = 1000 * COIN
+
+# Dynamic Masternode Collateral System - Progressive reduction for accessibility
+DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE = {
+    0: 10000 * COIN,          # Genesis - Year 5: 10,000 WEPO (High security threshold)
+    262800: 5000 * COIN,      # Year 5 (during halving): 5,000 WEPO (50% reduction - broader access)
+    525600: 1000 * COIN,      # Year 10 (during halving): 1,000 WEPO (80% reduction - mass adoption)
+    1051200: 500 * COIN,      # Year 20 (during halving): 500 WEPO (95% reduction - maximum decentralization)
+}
+
+# Legacy constant for backward compatibility (now dynamic)
 MASTERNODE_COLLATERAL = 10000 * COIN
 
 @dataclass
