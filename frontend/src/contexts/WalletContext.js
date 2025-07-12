@@ -325,12 +325,13 @@ export const WalletProvider = ({ children }) => {
     generateMnemonic,
     createWallet,
     loginWallet,
-    logoutWallet,
-    sendTransaction,
+    logout,
+    sendWepo,
     loadWalletData,
-    
-    // Utilities
-    validateAddress,
+    changePassword,
+    setWallet,
+    setBalance,
+    setTransactions,
     
     // BTC-related (to be implemented)
     setBtcBalance,
