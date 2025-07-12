@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import UnifiedWalletModeSelector from './components/UnifiedWalletModeSelector';
 import WalletLogin from './components/WalletLogin';
 import WalletSetup from './components/WalletSetup';
+import UnifiedWalletSetup from './components/UnifiedWalletSetup';
 import UnifiedDashboard from './components/UnifiedDashboard';
 import Dashboard from './components/Dashboard';
 import QuantumWalletSetup from './components/QuantumWalletSetup';
