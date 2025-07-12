@@ -216,6 +216,10 @@ class SecurityAuditor:
         
         # Test 2: Difficulty adjustment
         try:
+            import os
+            import sys
+            sys.path.insert(0, '/app/wepo-blockchain/core')
+            
             from blockchain import WepoBlockchain
             
             with tempfile.TemporaryDirectory() as temp_dir:
