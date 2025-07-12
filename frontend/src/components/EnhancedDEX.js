@@ -43,8 +43,8 @@ const UnifiedExchange = ({ onBack }) => {
   const [swapHistory, setSwapHistory] = useState([]);
   const [activeSwap, setActiveSwap] = useState(null);
   
-  // BTC and WEPO addresses (in real implementation, these would come from wallet)
-  const [btcAddress, setBtcAddress] = useState('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa');
+  // BTC address from wallet (remove the hardcoded one)
+  // const [btcAddress, setBtcAddress] = useState('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa');
 
   useEffect(() => {
     fetchExchangeRate();
