@@ -1654,6 +1654,9 @@ class WepoBlockchain:
             rewards_cursor = self.conn.execute("SELECT SUM(amount) FROM staking_rewards")
             total_rewards = rewards_cursor.fetchone()[0] or 0
             
+            # Get dynamic masternode collateral info
+            collateral_info = self.get_masternode_collateral_info(current_height)
+            
             return {
                 'pos_activated': current_height >= POS_ACTIVATION_HEIGHT,
                 'activation_height': POS_ACTIVATION_HEIGHT,
@@ -1664,7 +1667,8 @@ class WepoBlockchain:
                 'active_masternodes_count': masternodes_count,
                 'total_rewards_distributed': total_rewards / COIN,
                 'min_stake_amount': MIN_STAKE_AMOUNT / COIN,
-                'masternode_collateral': MASTERNODE_COLLATERAL / COIN,
+                'masternode_collateral': collateral_info['current_collateral'],  # Dynamic collateral
+                'masternode_collateral_info': collateral_info,  # Complete collateral info
                 'staking_reward_percentage': 60,
                 'masternode_reward_percentage': 40
             }
