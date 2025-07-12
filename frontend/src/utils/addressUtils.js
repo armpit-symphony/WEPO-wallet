@@ -4,6 +4,7 @@
  */
 
 import CryptoJS from 'crypto-js';
+import * as bitcoin from 'bitcoinjs-lib';
 
 // Address format constants
 export const ADDRESS_FORMATS = {
@@ -19,11 +20,17 @@ export const ADDRESS_FORMATS = {
     totalLength: 45, // wepo1q + 39 chars  
     type: 'quantum'
   },
-  BTC: {
+  BTC_LEGACY: {
     prefix: '1',
-    payloadLength: 25,
-    totalLength: 34, // Future BTC integration
-    type: 'bitcoin'
+    minLength: 26,
+    maxLength: 35,
+    type: 'bitcoin-legacy'
+  },
+  BTC_SEGWIT: {
+    prefix: 'bc1',
+    minLength: 14,
+    maxLength: 74,
+    type: 'bitcoin-segwit'
   }
 };
 
