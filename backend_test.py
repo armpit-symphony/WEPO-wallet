@@ -1660,27 +1660,31 @@ def run_btc_dex_atomic_swap_tests():
         print("\n[TEST] Error Handling - Testing invalid swap request")
         
         invalid_request = {
-            "btc_address": test_btc_address,
-            "wepo_address": test_wepo_address,
-            "btc_amount": -1,  # Invalid negative amount
             "swap_type": "invalid_type",
-            "timelock_hours": 0  # Invalid timelock
+            "btc_amount": -1,  # Invalid negative amount
+            "initiator_btc_address": test_btc_address,
+            "initiator_wepo_address": test_wepo_address,
+            "participant_btc_address": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+            "participant_wepo_address": generate_random_address()
         }
         
         response = requests.post(f"{API_URL}/atomic-swap/initiate", json=invalid_request)
         print(f"  Response: {response.status_code}")
         
-        if response.status_code in [400, 422]:
-            print("  ✓ Correctly rejected invalid swap request")
-            passed = True
-        elif response.status_code == 200:
+        if response.status_code == 400:
             data = response.json()
-            if "error" in data or "invalid" in str(data).lower():
-                print("  ✓ Correctly identified invalid swap request")
+            if "invalid" in str(data).lower() and ("swap type" in str(data).lower() or "type" in str(data).lower()):
+                print("  ✓ Correctly rejected invalid swap type")
                 passed = True
             else:
-                print("  ✗ Failed to validate swap request")
-                passed = False
+                print("  ✓ Correctly rejected invalid request (generic validation)")
+                passed = True
+        elif response.status_code == 422:
+            print("  ✓ Correctly rejected invalid request with validation error")
+            passed = True
+        elif response.status_code == 200:
+            print("  ✗ Failed to validate swap request - invalid swap was created")
+            passed = False
         else:
             print(f"  ✗ Unexpected response for invalid request: {response.status_code}")
             passed = False
