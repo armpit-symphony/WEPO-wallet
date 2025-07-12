@@ -2022,6 +2022,12 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
+        # Add alias endpoint for compatibility
+        @self.app.post("/api/rwa/create")
+        async def create_rwa_asset_alias(request: dict):
+            """Alias for create_rwa_asset for compatibility"""
+            return await create_rwa_asset(request)
+        
         @self.app.post("/api/rwa/tokenize")
         async def tokenize_rwa_asset(request: dict):
             """Tokenize an RWA asset"""
