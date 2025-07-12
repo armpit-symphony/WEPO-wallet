@@ -42,7 +42,8 @@ const BtcDexSwap = ({ onClose }) => {
 
   const fetchExchangeRate = async () => {
     try {
-      const response = await fetch('/api/atomic-swap/exchange-rate');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/atomic-swap/exchange-rate`);
       const data = await response.json();
       setExchangeRate(data.btc_to_wepo);
     } catch (err) {
