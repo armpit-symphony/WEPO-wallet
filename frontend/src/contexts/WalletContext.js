@@ -199,12 +199,7 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
-  const generateWepoAddress = (seed) => {
-    // Generate WEPO address from seed
-    // In real implementation, this would use WEPO's address format
-    const hash = CryptoJS.SHA256(seed.toString('hex')).toString();
-    return `wepo1${hash.substring(0, 32)}`;
-  };
+  // Remove old generateWepoAddress - now handled by addressUtils
 
   const loadWalletData = async (address) => {
     setIsLoading(true);
