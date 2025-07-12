@@ -1968,24 +1968,20 @@ class WepoFastTestBridge:
         
         @self.app.post("/api/rwa/create-asset")
         async def create_rwa_asset(request: dict):
-            """Create a new RWA asset with WEPO balance check and fee"""
+            """Create a new RWA asset with WEPO balance check and fee deduction"""
             try:
                 name = request.get('name')
                 description = request.get('description')
-                asset_type = request.get('asset_type')  # 'document', 'image', 'property', etc.
+                asset_type = request.get('asset_type')
                 owner_address = request.get('owner_address')
-                file_data = request.get('file_data')  # Base64 encoded
+                file_data = request.get('file_data')
                 file_name = request.get('file_name')
-                file_type = request.get('file_type')  # MIME type
+                file_type = request.get('file_type')
                 metadata = request.get('metadata', {})
-                valuation = request.get('valuation')  # USD value
+                valuation = request.get('valuation')
                 
                 if not all([name, description, asset_type, owner_address]):
-                    raise HTTPException(status_code=400, detail="Missing required fields")
-                
-                # Validate owner address
-                if not owner_address.startswith("wepo1"):
-                    raise HTTPException(status_code=400, detail="Invalid WEPO address format")
+                    raise HTTPException(status_code=400, detail="Missing required fields: name, description, asset_type, owner_address")
                 
                 # Check WEPO balance for RWA creation fee
                 user_balance = self.blockchain.get_balance(owner_address)
