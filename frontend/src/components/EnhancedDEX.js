@@ -646,4 +646,4 @@ const UnifiedExchange = ({ onBack }) => {
   );
 };
 
-export default EnhancedDEX;
+export default UnifiedExchange;
