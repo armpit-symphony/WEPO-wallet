@@ -51,9 +51,10 @@ const UnifiedExchange = ({ onBack }) => {
 
   useEffect(() => {
     fetchExchangeRate();
+    fetchFeeInfo();
     fetchStatistics();
-    fetchSwapHistory();
     fetchTradeableTokens();
+    fetchPoolStats();
   }, []);
 
   // Update amounts when exchange rate changes
