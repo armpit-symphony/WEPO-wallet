@@ -600,12 +600,14 @@ const UnifiedExchange = ({ onBack }) => {
   );
 
   const renderRWADEX = () => (
-      <div className="bg-emerald-900/30 rounded-lg p-4 border border-emerald-500/30">
-        <div className="flex items-center gap-2 mb-2">
-          <Package className="h-4 w-4 text-emerald-400" />
-          <span className="text-sm font-medium text-emerald-200">RWA Token DEX</span>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-3 mb-2">
+          <Package className="h-6 w-6" />
+          <h3 className="text-xl font-bold">RWA Token Trading</h3>
         </div>
-        <p className="text-sm text-gray-300">
+        <p className="text-sm text-emerald-100">
           Trade Real World Asset tokens for WEPO. Each token represents ownership in physical assets.
         </p>
       </div>
