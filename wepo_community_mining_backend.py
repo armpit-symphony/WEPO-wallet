@@ -371,6 +371,10 @@ def setup_mining_routes(app: FastAPI):
     @app.get("/api/mining/status")
     async def get_mining_status():
         """Get current mining status"""
+        # Start background tasks if not already started
+        if not mining_coordinator.stats_update_task:
+            await mining_coordinator.start_background_tasks()
+        
         return mining_coordinator.get_mining_status()
     
     @app.post("/api/mining/connect")
