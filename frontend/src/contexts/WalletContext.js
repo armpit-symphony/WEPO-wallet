@@ -16,13 +16,12 @@ export const useWallet = () => {
 export const WalletProvider = ({ children }) => {
   const [wallet, setWallet] = useState(null);
   const [balance, setBalance] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [btcBalance, setBtcBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
-  
-  // WEPO specific state
-  const [wepoLaunched, setWepoLaunched] = useState(false);
+  const [btcTransactions, setBtcTransactions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [posEnabled, setPosEnabled] = useState(false);
-  const [masternodesEnabled, setMasternodesEnabled] = useState(false);
+  const [showSeedPhrase, setShowSeedPhrase] = useState(false);
 
   useEffect(() => {
     // Check if 18 months have passed since first PoW block (simulated for demo)
