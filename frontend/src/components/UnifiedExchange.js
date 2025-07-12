@@ -778,6 +778,258 @@ const UnifiedExchange = ({ onBack }) => {
     </div>
   );
 
+  const renderRWADEX = () => (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-3 mb-2">
+          <Package className="h-6 w-6" />
+          <h3 className="text-xl font-bold">RWA Token Trading</h3>
+        </div>
+        <p className="text-sm text-emerald-100">
+          Trade Real World Asset tokens for WEPO. Each token represents ownership in physical assets.
+        </p>
+      </div>
+
+      {/* Token Selection */}
+      <div>
+        <label className="block text-sm font-medium text-purple-200 mb-2">
+          Select RWA Token
+        </label>
+        <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto">
+          {tradeableTokens.map((token) => (
+            <button
+              key={token.token_id}
+              onClick={() => setSelectedToken(token)}
+              className={`p-4 rounded-lg border-2 transition-all duration-200 text-left ${
+                selectedToken?.token_id === token.token_id
+                  ? 'border-emerald-500 bg-emerald-900/30 text-emerald-200'
+                  : 'border-gray-600 bg-gray-700/30 text-gray-300 hover:border-emerald-400'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="text-emerald-400">
+                    {getAssetIcon(token.asset_type)}
+                  </div>
+                  <div>
+                    <div className="font-medium">{token.symbol}</div>
+                    <div className="text-sm opacity-80">{token.asset_name}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-medium">
+                    {rwaRates[token.token_id]?.rate_wepo_per_token?.toFixed(6) || 'N/A'} WEPO
+                  </div>
+                  <div className="text-xs opacity-80">per token</div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {selectedToken && (
+        <>
+          {/* Swap Type Toggle */}
+          <div className="flex bg-gray-700 rounded-lg p-1">
+            <button
+              onClick={() => setSwapType('buy')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                swapType === 'buy' 
+                  ? 'bg-green-600 text-white' 
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              Buy {selectedToken.symbol}
+            </button>
+            <button
+              onClick={() => setSwapType('sell')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                swapType === 'sell' 
+                  ? 'bg-red-600 text-white' 
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              Sell {selectedToken.symbol}
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {/* Token Amount */}
+            <div>
+              <label className="block text-sm font-medium text-purple-200 mb-2">
+                {swapType === 'buy' ? `${selectedToken.symbol} to Buy` : `${selectedToken.symbol} to Sell`}
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={tokenAmount}
+                  onChange={(e) => {
+                    setTokenAmount(e.target.value);
+                    const rate = rwaRates[selectedToken.token_id]?.rate_wepo_per_token || 1;
+                    setWepoAmount((parseFloat(e.target.value) * rate || 0).toFixed(8));
+                  }}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-20"
+                  placeholder="0.00000000"
+                  step="0.00000001"
+                  min="0"
+                />
+                <div className="absolute right-3 top-3 text-gray-400 font-medium">
+                  {selectedToken.symbol}
+                </div>
+              </div>
+            </div>
+
+            {/* WEPO Amount */}
+            <div>
+              <label className="block text-sm font-medium text-purple-200 mb-2">
+                WEPO Amount
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={wepoAmount}
+                  onChange={(e) => setWepoAmount(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-20"
+                  placeholder="0.000000"
+                  step="0.000001"
+                  min="0"
+                />
+                <div className="absolute right-3 top-3 text-gray-400 font-medium">WEPO</div>
+              </div>
+            </div>
+
+            {/* Trade Button */}
+            <button
+              onClick={handleRwaTrade}
+              disabled={isLoading || !tokenAmount || !wepoAmount}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <Package size={20} />
+              {isLoading ? 'Processing Trade...' : `${swapType === 'buy' ? 'Buy' : 'Sell'} ${selectedToken.symbol}`}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const renderLiquidityInterface = () => (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-3 mb-2">
+          <Coins className="h-6 w-6" />
+          <h3 className="text-xl font-bold">Add Liquidity</h3>
+        </div>
+        <p className="text-sm text-purple-100">
+          {poolStats?.pool_exists 
+            ? 'Add liquidity to earn fees from trades'
+            : 'Create the market by providing initial liquidity'
+          }
+        </p>
+      </div>
+
+      {/* Pool Statistics */}
+      {poolStats?.pool_exists && (
+        <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+          <h4 className="text-lg font-semibold text-white mb-3">Pool Statistics</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-gray-400">BTC Reserve:</span>
+              <div className="text-white font-medium">{poolStats.btc_reserve?.toFixed(6)} BTC</div>
+            </div>
+            <div>
+              <span className="text-gray-400">WEPO Reserve:</span>
+              <div className="text-white font-medium">{poolStats.wepo_reserve?.toFixed(2)} WEPO</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Current Price:</span>
+              <div className="text-white font-medium">{poolStats.current_price?.toFixed(6)} WEPO/BTC</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Total LPs:</span>
+              <div className="text-white font-medium">{poolStats.total_lp_count}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Liquidity Form */}
+      <div className="space-y-4">
+        {/* BTC Amount */}
+        <div>
+          <label className="block text-sm font-medium text-purple-200 mb-2">
+            BTC Amount
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              value={liquidityBtcAmount}
+              onChange={(e) => {
+                setLiquidityBtcAmount(e.target.value);
+                // Auto-calculate WEPO amount if pool exists
+                if (poolStats?.pool_exists && poolStats.current_price && e.target.value) {
+                  setLiquidityWepoAmount((parseFloat(e.target.value) * poolStats.current_price).toFixed(6));
+                }
+              }}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-16"
+              placeholder="0.00000000"
+              step="0.00000001"
+              min="0"
+            />
+            <div className="absolute right-3 top-3 text-gray-400 font-medium">BTC</div>
+          </div>
+        </div>
+
+        {/* WEPO Amount */}
+        <div>
+          <label className="block text-sm font-medium text-purple-200 mb-2">
+            WEPO Amount
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              value={liquidityWepoAmount}
+              onChange={(e) => setLiquidityWepoAmount(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-20"
+              placeholder="0.000000"
+              step="0.000001"
+              min="0"
+            />
+            <div className="absolute right-3 top-3 text-gray-400 font-medium">WEPO</div>
+          </div>
+        </div>
+
+        {/* Pool Creation Notice */}
+        {!poolStats?.pool_exists && (
+          <div className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-500/30">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-4 w-4 text-yellow-400" />
+              <span className="text-sm font-medium text-yellow-200">Create Market</span>
+            </div>
+            <p className="text-sm text-gray-300">
+              No liquidity pool exists yet. You will create the market and set the initial BTC/WEPO price ratio.
+            </p>
+          </div>
+        )}
+
+        {/* Add Liquidity Button */}
+        <button
+          onClick={handleAddLiquidity}
+          disabled={isLoading || !liquidityBtcAmount || !liquidityWepoAmount}
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          <Coins size={20} />
+          {isLoading ? 'Processing...' : 
+           poolStats?.pool_exists ? 'Add Liquidity' : 'Create Market'
+          }
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
