@@ -3,6 +3,7 @@ import WalletModeSelector from './components/WalletModeSelector';
 import WalletLogin from './components/WalletLogin';
 import WalletSetup from './components/WalletSetup';
 import UnifiedDashboard from './components/UnifiedDashboard';
+import Dashboard from './components/Dashboard';
 import QuantumWalletSetup from './components/QuantumWalletSetup';
 import QuantumWalletLogin from './components/QuantumWalletLogin';
 import { WalletProvider } from './contexts/WalletContext';
