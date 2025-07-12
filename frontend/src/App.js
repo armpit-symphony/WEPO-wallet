@@ -94,7 +94,7 @@ const MainApp = () => {
 
       default:
         return (
-          <WalletModeSelector
+          <UnifiedWalletModeSelector
             onModeSelect={(mode) => {
               setWalletMode(mode);
               setCurrentView(mode === 'quantum' ? 'quantum-setup' : 'setup');
