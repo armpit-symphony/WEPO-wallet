@@ -123,7 +123,7 @@ export const WalletProvider = ({ children }) => {
       // Create wallet object
       const walletData = {
         username,
-        address: generateWepoAddress(seed),
+        address: generateWepoAddress(seed, 'regular'),
         encryptedMnemonic,
         createdAt: new Date().toISOString(),
         balance: 0
