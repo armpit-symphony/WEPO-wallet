@@ -61,6 +61,7 @@ const Dashboard = () => {
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showBalance, setShowBalance] = useState(true);
+  const [miningMode, setMiningMode] = useState('genesis'); // 'genesis' or 'pow'
 
   // Get current wallet data based on mode
   const currentWallet = isQuantumMode ? quantumWallet : wallet;
