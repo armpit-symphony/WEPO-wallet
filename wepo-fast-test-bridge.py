@@ -785,16 +785,34 @@ class WepoFastTestBridge:
         
         @self.app.get("/api/rwa/fee-info")
         async def get_rwa_fee_info():
-            """Get RWA creation fee information"""
+            """Get comprehensive fee information for all WEPO network operations"""
             try:
                 fee_info = rwa_system.get_rwa_creation_fee_info()
                 
-                # Add information about normal transaction fees
-                fee_info['normal_transaction_redistribution'] = {
-                    'policy': 'Normal transaction fees (0.0001 WEPO) are also redistributed to network participants',
-                    'first_18_months': 'All transaction fees redistributed to miners as additional block rewards',
-                    'after_18_months': 'All transaction fees redistributed to masternode operators',
-                    'no_fees_burned': 'No transaction fees are ever burned - all support the network'
+                # Add comprehensive network fee information
+                fee_info['network_fee_distribution'] = {
+                    'all_network_fees': 'Every fee in WEPO network follows 3-way distribution',
+                    'distribution_weights': {
+                        'masternodes': '60% of all fees (split equally among active nodes)',
+                        'miners': '25% of all fees (goes to current block miner)',
+                        'stakers': '15% of all fees (proportional to stake amount)'
+                    },
+                    'fee_types_included': [
+                        'Normal transaction fees (0.0001 WEPO each)',
+                        'RWA creation fees (0.0002 WEPO each)',
+                        'All other network operation fees'
+                    ],
+                    'zero_burning_policy': 'No fees are ever burned - 100% distributed to network participants',
+                    'distribution_timing': 'Real-time per-block distribution'
+                }
+                
+                # Add mining schedule information
+                fee_info['mining_schedule'] = {
+                    'months_1_6': '400 WEPO per block (26,280 blocks)',
+                    'months_7_12': '200 WEPO per block (26,280 blocks)', 
+                    'months_13_18': '100 WEPO per block (26,280 blocks)',
+                    'total_mining': '18,396,000 WEPO (28.8% of supply)',
+                    'post_mining': 'PoS and Masternode rewards (71.2% of supply)'
                 }
                 
                 return {
