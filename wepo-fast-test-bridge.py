@@ -1639,6 +1639,14 @@ class WepoFastTestBridge:
                 if current_height < 78840:
                     raise HTTPException(status_code=400, detail=f"Masternode not activated yet. Activation at block 78,840, current: {current_height}")
                 
+                # Get dynamic collateral requirement
+                required_collateral = self.get_dynamic_masternode_collateral(current_height)
+                
+                # Check operator balance (simplified check for testing)
+                balance = self.blockchain.get_balance(operator_address)
+                if balance < required_collateral:
+                    raise HTTPException(status_code=400, detail=f"Insufficient collateral. Required: {required_collateral} WEPO, balance: {balance} WEPO")
+                
                 # Create masternode
                 masternode_id = f"mn_{int(time.time())}_{operator_address}"
                 
