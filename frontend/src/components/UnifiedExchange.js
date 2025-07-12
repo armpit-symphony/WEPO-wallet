@@ -598,7 +598,8 @@ const UnifiedExchange = ({ onBack }) => {
       </div>
     </div>
   );
-    <div className="space-y-6">
+
+  const renderRWADEX = () => (
       <div className="bg-emerald-900/30 rounded-lg p-4 border border-emerald-500/30">
         <div className="flex items-center gap-2 mb-2">
           <Package className="h-4 w-4 text-emerald-400" />
