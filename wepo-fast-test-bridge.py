@@ -74,6 +74,28 @@ class FastTestBlockchain:
                 balance += utxo["value"]
         return balance / 100000000.0  # Convert to WEPO
     
+    def calculate_block_reward(self, height):
+        """Calculate block reward based on new WEPO tokenomics schedule"""
+        # New 6-month mining schedule
+        PHASE_1_BLOCKS = 26280  # Months 1-6
+        PHASE_2_BLOCKS = 26280  # Months 7-12  
+        PHASE_3_BLOCKS = 26280  # Months 13-18
+        TOTAL_MINING_BLOCKS = PHASE_1_BLOCKS + PHASE_2_BLOCKS + PHASE_3_BLOCKS  # 78,840
+        COIN = 100000000  # Satoshis per WEPO
+        
+        if height <= PHASE_1_BLOCKS:
+            # Months 1-6: 400 WEPO per block
+            return 400 * COIN
+        elif height <= (PHASE_1_BLOCKS + PHASE_2_BLOCKS):
+            # Months 7-12: 200 WEPO per block
+            return 200 * COIN
+        elif height <= TOTAL_MINING_BLOCKS:
+            # Months 13-18: 100 WEPO per block
+            return 100 * COIN
+        else:
+            # After 18 months: PoS/Masternode phase (minimal mining rewards)
+            return 0  # No more mining rewards, transition to PoS
+    
     def get_transactions(self, address):
         """Get transactions for address"""
         result = []
