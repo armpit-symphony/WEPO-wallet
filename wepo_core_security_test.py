@@ -157,8 +157,8 @@ def test_rwa_validation():
         
         # Test valid addresses
         valid_addresses = [
-            "wepo1test000000000000000000000000000",  # 37 chars
-            "wepo1quantum000000000000000000000000000000000"  # 45 chars
+            "wepo1test0000000000000000000000000000",  # 37 chars - Regular
+            "wepo1quantum000000000000000000000000000000000"  # 45 chars - Quantum
         ]
         
         for addr in valid_addresses:
