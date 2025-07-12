@@ -2755,20 +2755,6 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
-        @self.app.get("/api/rwa/tokens/tradeable")
-        async def get_tradeable_rwa_tokens():
-            """Get all tradeable RWA tokens"""
-            try:
-                tokens = rwa_system.get_tradeable_tokens()
-                
-                return {
-                    'success': True,
-                    'tokens': tokens,
-                    'count': len(tokens)
-                }
-                
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
         
         @self.app.post("/api/rwa/transfer")
         async def transfer_rwa_tokens(request: dict):
