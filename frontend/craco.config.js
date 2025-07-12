@@ -1,5 +1,6 @@
 // Load configuration from environment or config file
 const path = require('path');
+const webpack = require('webpack');
 
 // Environment variable overrides
 const config = {
@@ -32,7 +33,6 @@ module.exports = {
       };
 
       // Add buffer global for bitcoinjs-lib
-      const webpack = require('webpack');
       webpackConfig.plugins.push(
         new webpack.ProvidePlugin({
           Buffer: ['buffer', 'Buffer'],
