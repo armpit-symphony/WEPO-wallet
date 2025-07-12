@@ -392,7 +392,8 @@ const Dashboard = ({ onLogout }) => {
           className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50"
         >
           <ArrowRightLeft className="h-6 w-6 text-orange-400 mx-auto mb-2" />
-          <span className="text-white font-medium">Enhanced DEX</span>
+          <span className="text-white font-medium">Unified Exchange</span>
+          <div className="text-xs text-gray-400 mt-1">BTC + RWA Trading</div>
         </button>
         
         <button 
