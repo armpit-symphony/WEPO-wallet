@@ -264,11 +264,13 @@ const RWACreateAsset = ({ onBack, userAddress, onAssetCreated }) => {
             </div>
             <div className="bg-blue-900/50 border border-blue-500/50 rounded p-2 mt-2">
               <div className="text-blue-200 text-xs">
-                💡 <strong>Fee Redistribution:</strong> Your fee supports the network! 
+                💡 <strong>3-Way Fee Distribution:</strong> Your fee supports ALL network participants!
                 {feeInfo.redistribution_info && (
                   <>
-                    <br />• <strong>First 18 months:</strong> {feeInfo.redistribution_info.first_18_months}
-                    <br />• <strong>After 18 months:</strong> {feeInfo.redistribution_info.after_18_months}
+                    <br />• <strong>Masternodes (60%):</strong> {feeInfo.redistribution_info.masternodes}
+                    <br />• <strong>Miners (25%):</strong> {feeInfo.redistribution_info.miners}
+                    <br />• <strong>Stakers (15%):</strong> {feeInfo.redistribution_info.stakers}
+                    <br />• <strong>Policy:</strong> {feeInfo.redistribution_info.policy}
                   </>
                 )}
               </div>
