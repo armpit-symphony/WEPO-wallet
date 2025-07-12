@@ -106,12 +106,12 @@ user_problem_statement: "Build WEPO cryptocurrency - a revolutionary privacy-foc
 
 backend:
   - task: "Unified Exchange Interface - Backend API"
-    implemented: true
-    working: true
+    implemented: false
+    working: false
     file: "wepo-fast-test-bridge.py, UnifiedExchange.js, backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
