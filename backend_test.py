@@ -5099,20 +5099,28 @@ if __name__ == "__main__":
     print("WEPO Backend Testing Suite")
     print("=" * 50)
     
-    # Run the focused RWA endpoints integration tests as requested
-    success = run_rwa_tokenomics_integration_tests()
+    # Run the Genesis Mining tests as specifically requested
+    print("Running WEPO Community Genesis Mining Software Tests...")
+    genesis_success = run_genesis_mining_tests()
     
-    if success:
-        print("\n🎉 ALL RWA INTEGRATION TESTS PASSED!")
-        print("✅ RWA endpoints integration fixed and working")
-        print("✅ /api/rwa/fee-info returning correct 3-way distribution")
-        print("✅ /api/tokenomics/overview showing mining schedule (400→200→100)")
-        print("✅ /api/rwa/statistics endpoint accessible")
-        print("✅ Zero burning policy implemented and displayed")
-        print("✅ All RWA tokenization endpoints working properly")
-        print("✅ Redistribution pool information endpoints working")
-        print("✅ Backend integration issue resolved successfully!")
+    if genesis_success:
+        print("\n🎉 ALL GENESIS MINING TESTS PASSED!")
+        print("✅ Christmas launch countdown working (Dec 25, 2025)")
+        print("✅ Miner connection system functional")
+        print("✅ Pre-launch mining prevention working")
+        print("✅ Dual-layer mining system configured (Argon2 60% + SHA-256 40%)")
+        print("✅ Mining coordinator tracking connected miners")
+        print("✅ Genesis block transition system ready")
+        print("✅ All Genesis Mining API endpoints working properly!")
     else:
-        print("\n❌ SOME RWA INTEGRATION TESTS FAILED! Check the results above for details.")
+        print("\n❌ GENESIS MINING TESTS FAILED!")
+        print("The WEPO Community Genesis Mining Software implementation appears to be missing or incomplete.")
+        print("Expected endpoints not found:")
+        print("- /api/mining/status (Christmas launch countdown)")
+        print("- /api/mining/connect (miner connection)")
+        print("- /api/mining/start and /api/mining/stop (mining control)")
+        print("- /api/mining/algorithms (dual-layer system)")
+        print("- /api/mining/stats (mining coordinator)")
+        print("- /api/mining/transition-status (genesis transition)")
     
-    sys.exit(0 if success else 1)
+    sys.exit(0 if genesis_success else 1)
