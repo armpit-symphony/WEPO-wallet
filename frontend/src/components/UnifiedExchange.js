@@ -71,7 +71,7 @@ const UnifiedExchange = ({ onBack }) => {
   const fetchExchangeRate = async () => {
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-      const response = await fetch(`${backendUrl}/api/atomic-swap/exchange-rate`);
+      const response = await fetch(`${backendUrl}/api/swap/rate`);
       const data = await response.json();
       setExchangeRate(data.btc_to_wepo);
     } catch (err) {
