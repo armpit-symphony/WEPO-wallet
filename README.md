@@ -21,12 +21,13 @@ WEPO is a groundbreaking cryptocurrency platform that combines quantum-resistant
 - **DEX Integration**: Trade RWA tokens for WEPO on integrated exchange
 - **Economic Spam Prevention**: 0.0002 WEPO fee requirement (redistributed to network)
 
-### 💰 Sustainable Tokenomics & Fee Redistribution
-- **Zero Coin Burning**: All fees redistributed to network participants
-- **Miner Rewards (First 18 Months)**: All fees distributed to miners as additional rewards
-- **Masternode Rewards (After 18 Months)**: Fees distributed equally among masternodes
-- **Complete Fee Coverage**: Both normal transaction fees (0.0001 WEPO) and RWA creation fees (0.0002 WEPO)
-- **Sustainable Economics**: Network operations support participants instead of reducing supply
+### 💰 Sustainable Tokenomics & 3-Way Fee Distribution
+- **Zero Fee Burning**: ALL fees distributed to network participants (60% masternodes, 25% miners, 15% stakers)
+- **Real-time Distribution**: Fees distributed every block to all participant types
+- **Miner Income Security**: Miners always receive 25% of fees (never lose all income)
+- **Masternode Rewards**: 60% of all network fees + service-based rewards
+- **Staker Participation**: 15% of fees from day one, proportional to stake
+- **Sustainable Economics**: Network activity directly benefits all participants
 
 ### 🔒 Advanced Privacy Features
 - **zk-STARKs**: Zero-knowledge proofs for transaction privacy
