@@ -18,13 +18,12 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 
-const EnhancedDEX = ({ onClose }) => {
+const UnifiedExchange = ({ onBack }) => {
   const { wallet } = useWallet();
-  const { quantumWallet, isQuantumMode } = useQuantum();
   
   // Get current wallet address
-  const currentWallet = isQuantumMode ? quantumWallet : wallet;
-  const currentAddress = currentWallet?.address;
+  const currentAddress = wallet?.wepo?.address;
+  const btcAddress = wallet?.btc?.address;
   
   const [activeTab, setActiveTab] = useState('btc'); // 'btc' or 'rwa'
   const [swapType, setSwapType] = useState('buy'); // 'buy' or 'sell'
