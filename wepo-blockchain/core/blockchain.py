@@ -31,6 +31,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 import sqlite3
 import os
+from .address_utils import validate_wepo_address, is_quantum_address, is_regular_address
 
 # WEPO Network Constants
 WEPO_VERSION = 70001
