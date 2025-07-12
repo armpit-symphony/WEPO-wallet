@@ -159,7 +159,7 @@ const RWADashboard = ({ onBack }) => {
   );
 
   const renderDEXTrading = () => (
-    <EnhancedDEX 
+    <UnifiedExchange 
       onClose={() => setActiveTab('dashboard')}
     />
   );
