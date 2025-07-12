@@ -106,7 +106,25 @@ const Dashboard = () => {
         }
       }
     };
+
+    // Check mining mode based on genesis status
+    const checkMiningMode = async () => {
+      try {
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+        const response = await fetch(`${backendUrl}/api/mining/status`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.genesis_status === 'found') {
+            setMiningMode('pow');
+          }
+        }
+      } catch (error) {
+        console.log('Mining status check failed, defaulting to genesis mode');
+      }
+    };
+
     loadData();
+    checkMiningMode();
   }, [isQuantumMode, wallet, quantumWallet, setWallet, setBalance, setTransactions, loadWalletData, loadQuantumWalletData]);
 
   const handleLogout = () => {
