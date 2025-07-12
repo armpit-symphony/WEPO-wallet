@@ -309,7 +309,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Normal Transaction Fee Redistribution Implementation"
+    - "WEPO New Tokenomics Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
