@@ -16,7 +16,6 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
-import { useQuantum } from '../contexts/QuantumContext';
 
 const CommunityMining = ({ onBack, miningMode = 'genesis' }) => {
   const { wallet } = useWallet();
