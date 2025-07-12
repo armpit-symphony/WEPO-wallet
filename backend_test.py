@@ -1624,27 +1624,28 @@ def run_btc_dex_atomic_swap_tests():
         print("\n[TEST] BTC Address Validation - Testing invalid BTC address")
         
         invalid_swap_data = {
-            "btc_address": "invalid_btc_address",
-            "wepo_address": test_wepo_address,
-            "btc_amount": 0.001,
             "swap_type": "btc_to_wepo",
-            "timelock_hours": 24
+            "btc_amount": 0.001,
+            "initiator_btc_address": "invalid_btc_address",
+            "initiator_wepo_address": test_wepo_address,
+            "participant_btc_address": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+            "participant_wepo_address": generate_random_address()
         }
         
         response = requests.post(f"{API_URL}/atomic-swap/initiate", json=invalid_swap_data)
         print(f"  Response: {response.status_code}")
         
         if response.status_code == 400:
-            print("  ✓ Correctly rejected invalid BTC address")
-            passed = True
-        elif response.status_code == 200:
             data = response.json()
-            if "error" in data or "invalid" in str(data).lower():
-                print("  ✓ Correctly identified invalid BTC address")
+            if "invalid" in str(data).lower() and "bitcoin" in str(data).lower():
+                print("  ✓ Correctly rejected invalid BTC address")
                 passed = True
             else:
-                print("  ✗ Failed to validate BTC address")
+                print("  ✗ Error message doesn't mention invalid Bitcoin address")
                 passed = False
+        elif response.status_code == 200:
+            print("  ✗ Failed to validate BTC address - swap was created")
+            passed = False
         else:
             print(f"  ✗ Unexpected response for invalid address: {response.status_code}")
             passed = False
