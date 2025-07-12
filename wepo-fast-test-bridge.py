@@ -97,6 +97,27 @@ class FastTestBlockchain:
             # After 18 months: PoS/Masternode phase (minimal mining rewards)
             return 0  # No more mining rewards, transition to PoS
     
+    def get_dynamic_masternode_collateral(self, block_height):
+        """Get masternode collateral required at specific block height"""
+        
+        # Dynamic Masternode Collateral Schedule
+        collateral_schedule = {
+            0: 10000.0,          # Genesis - Year 5: 10,000 WEPO
+            262800: 5000.0,      # Year 5 (during halving): 5,000 WEPO
+            525600: 1000.0,      # Year 10 (during halving): 1,000 WEPO
+            1051200: 500.0,      # Year 20 (during halving): 500 WEPO
+        }
+        
+        # Find the applicable collateral amount
+        applicable_collateral = 10000.0  # Default
+        
+        for milestone_height in sorted(collateral_schedule.keys(), reverse=True):
+            if block_height >= milestone_height:
+                applicable_collateral = collateral_schedule[milestone_height]
+                break
+        
+        return applicable_collateral
+    
     def get_transactions(self, address):
         """Get transactions for address"""
         result = []
