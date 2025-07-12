@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  MessageCircle, 
+  ArrowLeft, 
   Send, 
+  Users, 
+  MessageCircle, 
   Shield, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  User, 
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Zap,
-  ArrowLeft,
-  Plus
+  Key,
+  Lock,
+  Plus,
+  X,
+  AlertTriangle
 } from 'lucide-react';
-import { useWallet } from '../contexts/WalletContext';
 import { useQuantum } from '../contexts/QuantumContext';
+import { validateWepoAddress } from '../utils/addressUtils';
 
 const QuantumMessaging = ({ onBack }) => {
   const { wallet } = useWallet();
