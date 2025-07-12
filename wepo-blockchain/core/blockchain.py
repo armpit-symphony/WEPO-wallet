@@ -832,6 +832,26 @@ class WepoBlockchain:
         new_block.header.merkle_root = new_block.calculate_merkle_root()
         
         return new_block
+
+    def get_active_masternodes(self) -> List[str]:
+        """Get list of active masternode addresses"""
+        # TODO: Implement proper masternode tracking
+        # For now, return mock data for development
+        return [
+            "wepo1masternode1000000000000000000000",
+            "wepo1masternode2000000000000000000000",
+            "wepo1masternode3000000000000000000000"
+        ]
+    
+    def get_active_stakers(self) -> List[Dict]:
+        """Get list of active stakers with their stake amounts"""
+        # TODO: Implement proper PoS staking tracking  
+        # For now, return mock data for development
+        return [
+            {"address": "wepo1staker1000000000000000000000000", "amount": 1000 * COIN},
+            {"address": "wepo1staker2000000000000000000000000", "amount": 5000 * COIN},
+            {"address": "wepo1staker3000000000000000000000000", "amount": 2000 * COIN}
+        ]
     
     def validate_block(self, block: Block) -> bool:
         """Validate a block"""
