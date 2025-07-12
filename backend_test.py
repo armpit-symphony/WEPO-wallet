@@ -1328,7 +1328,7 @@ def run_btc_dex_atomic_swap_tests():
     # 2. Test Fees Endpoint
     try:
         print("\n[TEST] Atomic Swap Fees - Testing /api/atomic-swap/fees")
-        response = requests.get(f"{API_URL}/atomic-swap/fees")
+        response = requests.get(f"{API_URL}/atomic-swap/fees?btc_amount=0.001&swap_type=btc_to_wepo")
         print(f"  Response: {response.status_code}")
         
         if response.status_code == 200:
@@ -1341,38 +1341,35 @@ def run_btc_dex_atomic_swap_tests():
             if "fees" in data:
                 fees = data["fees"]
                 
-                # Check BTC fees
-                if "btc" in fees:
-                    btc_fees = fees["btc"]
-                    if "network_fee" in btc_fees and "service_fee" in btc_fees:
-                        print(f"  ✓ BTC fees: Network {btc_fees['network_fee']}, Service {btc_fees['service_fee']}")
-                    else:
-                        print("  ✗ BTC fee structure incomplete")
-                        passed = False
+                # Check fee components
+                if "base_fee_btc" in fees and "network_fee_btc" in fees:
+                    print(f"  ✓ BTC fees: Base {fees['base_fee_btc']}, Network {fees['network_fee_btc']}")
                 else:
-                    print("  ✗ BTC fees missing")
+                    print("  ✗ BTC fee structure incomplete")
                     passed = False
                 
                 # Check WEPO fees
-                if "wepo" in fees:
-                    wepo_fees = fees["wepo"]
-                    if "network_fee" in wepo_fees and "service_fee" in wepo_fees:
-                        print(f"  ✓ WEPO fees: Network {wepo_fees['network_fee']}, Service {wepo_fees['service_fee']}")
-                    else:
-                        print("  ✗ WEPO fee structure incomplete")
-                        passed = False
+                if "base_fee_wepo" in fees and "network_fee_wepo" in fees:
+                    print(f"  ✓ WEPO fees: Base {fees['base_fee_wepo']}, Network {fees['network_fee_wepo']}")
                 else:
-                    print("  ✗ WEPO fees missing")
+                    print("  ✗ WEPO fee structure incomplete")
+                    passed = False
+                
+                # Check total fees
+                if "total_fee_btc" in fees and "total_fee_wepo" in fees:
+                    print(f"  ✓ Total fees: {fees['total_fee_btc']} BTC, {fees['total_fee_wepo']} WEPO")
+                else:
+                    print("  ✗ Total fees missing")
                     passed = False
             else:
                 print("  ✗ Fees structure missing")
                 passed = False
             
             # Check fee calculation info
-            if "calculation" in data:
-                print(f"  ✓ Fee calculation info provided")
+            if "btc_amount" in data:
+                print(f"  ✓ Fee calculation for amount: {data['btc_amount']} BTC")
             else:
-                print("  ✗ Fee calculation info missing")
+                print("  ✗ Fee calculation amount missing")
                 passed = False
             
             log_test("Atomic Swap Fees", passed, response)
