@@ -13,65 +13,71 @@ function App() {
   const [isQuantumWalletSetup, setIsQuantumWalletSetup] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isQuantumMode, setIsQuantumMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if regular wallet exists
-    const walletExists = localStorage.getItem('wepo_wallet_exists');
-    const sessionActive = sessionStorage.getItem('wepo_session_active');
-    
-    // Check if quantum wallet exists
-    const quantumWalletExists = localStorage.getItem('wepo_quantum_wallet_exists');
-    const quantumSessionActive = sessionStorage.getItem('wepo_quantum_session_active');
-    const quantumMode = localStorage.getItem('wepo_quantum_mode') === 'true';
-    
-    setIsWalletSetup(!!walletExists);
-    setIsQuantumWalletSetup(!!quantumWalletExists);
-    setIsQuantumMode(quantumMode);
-    
-    // Determine login status based on mode
-    if (quantumMode && quantumSessionActive) {
-      setIsLoggedIn(true);
-    } else if (!quantumMode && sessionActive) {
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-    }
-    
-    // Debug logging
-    console.log('Auth state check:', {
-      walletExists: !!walletExists,
-      quantumWalletExists: !!quantumWalletExists,
-      quantumMode,
-      sessionActive: !!sessionActive,
-      quantumSessionActive: !!quantumSessionActive,
-      isLoggedIn: (quantumMode && quantumSessionActive) || (!quantumMode && sessionActive)
-    });
+    // Initialize authentication state
+    const initAuth = async () => {
+      try {
+        // Check if regular wallet exists
+        const walletExists = localStorage.getItem('wepo_wallet_exists');
+        const sessionActive = sessionStorage.getItem('wepo_session_active');
+        
+        // Check if quantum wallet exists
+        const quantumWalletExists = localStorage.getItem('wepo_quantum_wallet_exists');
+        const quantumSessionActive = sessionStorage.getItem('wepo_quantum_session_active');
+        const quantumMode = localStorage.getItem('wepo_quantum_mode') === 'true';
+        
+        setIsWalletSetup(!!walletExists);
+        setIsQuantumWalletSetup(!!quantumWalletExists);
+        setIsQuantumMode(quantumMode);
+        
+        // Simplified login check
+        const shouldBeLoggedIn = (quantumMode && quantumSessionActive) || (!quantumMode && sessionActive);
+        setIsLoggedIn(shouldBeLoggedIn);
+        
+        console.log('Auth initialized:', {
+          walletExists: !!walletExists,
+          quantumWalletExists: !!quantumWalletExists,
+          quantumMode,
+          sessionActive: !!sessionActive,
+          quantumSessionActive: !!quantumSessionActive,
+          isLoggedIn: shouldBeLoggedIn
+        });
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   const handleSetupComplete = () => {
-    // Check which type of wallet was created
+    // Simplified setup completion
     const quantumMode = localStorage.getItem('wepo_quantum_mode') === 'true';
     const walletExists = localStorage.getItem('wepo_wallet_exists');
     const quantumWalletExists = localStorage.getItem('wepo_quantum_wallet_exists');
     
+    // Update wallet setup states
     setIsWalletSetup(!!walletExists);
     setIsQuantumWalletSetup(!!quantumWalletExists);
     setIsQuantumMode(quantumMode);
     
-    // Auto-login after setup for better UX
-    if (quantumMode && quantumWalletExists) {
+    // Auto-login after setup - simplified logic
+    if (quantumMode) {
       sessionStorage.setItem('wepo_quantum_session_active', 'true');
-      setIsLoggedIn(true);
-    } else if (!quantumMode && walletExists) {
+    } else {
       sessionStorage.setItem('wepo_session_active', 'true');
-      setIsLoggedIn(true);
     }
     
-    console.log('Setup complete:', {
+    setIsLoggedIn(true);
+    
+    console.log('Setup complete - auto-login successful:', {
       quantumMode,
       walletExists: !!walletExists,
-      quantumWalletExists: !!quantumWalletExists,
-      autoLogin: true
+      quantumWalletExists: !!quantumWalletExists
     });
   };
 
