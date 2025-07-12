@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
-import { generateWepoAddress, validateWepoAddress } from '../utils/addressUtils';
+import { generateWepoAddress, generateBitcoinAddress, validateAddress } from '../utils/addressUtils';
 
 const WalletContext = createContext();
 
