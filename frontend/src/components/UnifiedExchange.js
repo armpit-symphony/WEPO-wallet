@@ -25,7 +25,7 @@ const UnifiedExchange = ({ onBack }) => {
   const currentAddress = wallet?.wepo?.address;
   const btcAddress = wallet?.btc?.address;
   
-  const [activeTab, setActiveTab] = useState('btc'); // 'btc' or 'rwa'
+  const [activeTab, setActiveTab] = useState('btc'); // 'btc', 'rwa', or 'liquidity'
   const [swapType, setSwapType] = useState('buy'); // 'buy' or 'sell'
   const [btcAmount, setBtcAmount] = useState('');
   const [wepoAmount, setWepoAmount] = useState('');
