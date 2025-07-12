@@ -2755,6 +2755,74 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
+        @self.app.get("/api/rwa/tokens/tradeable")
+        async def get_tradeable_rwa_tokens():
+            """Get all tradeable RWA tokens"""
+            try:
+                tokens = rwa_system.get_tradeable_tokens()
+                
+                return {
+                    'success': True,
+                    'tokens': tokens,
+                    'count': len(tokens)
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        # Add simplified endpoint for easier API access
+        @self.app.get("/api/rwa/tokens")
+        async def get_rwa_tokens():
+            """Get all RWA tokens (alias for tradeable tokens)"""
+            try:
+                tokens = rwa_system.get_tradeable_tokens()
+                
+                return {
+                    'success': True,
+                    'tokens': tokens,
+                    'count': len(tokens)
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        # Add RWA rates endpoint for unified exchange
+        @self.app.get("/api/rwa/rates")
+        async def get_rwa_rates():
+            """Get RWA token exchange rates against WEPO"""
+            try:
+                tokens = rwa_system.get_tradeable_tokens()
+                rates = {}
+                
+                # Calculate basic exchange rates for each token
+                for token in tokens:
+                    # Simple rate calculation based on token supply and WEPO value
+                    # In a real system, this would be based on market data
+                    base_rate = 1.0  # 1 token = 1 WEPO as base
+                    
+                    # Adjust rate based on token supply (scarcer tokens worth more)
+                    if token.get('total_supply', 1000) < 100:
+                        base_rate = 5.0  # Rare tokens
+                    elif token.get('total_supply', 1000) < 500:
+                        base_rate = 2.0  # Uncommon tokens
+                    
+                    rates[token.get('token_id', '')] = {
+                        'rate_wepo_per_token': base_rate,
+                        'rate_token_per_wepo': 1.0 / base_rate,
+                        'last_updated': int(time.time()),
+                        'token_symbol': token.get('symbol', ''),
+                        'token_name': token.get('asset_name', '')
+                    }
+                
+                return {
+                    'success': True,
+                    'rates': rates,
+                    'base_currency': 'WEPO',
+                    'last_updated': int(time.time())
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
         
         @self.app.post("/api/rwa/transfer")
         async def transfer_rwa_tokens(request: dict):
