@@ -83,12 +83,16 @@ const UnifiedExchange = ({ onBack }) => {
     if (!btcAmount || parseFloat(btcAmount) <= 0) return;
     
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-      const response = await fetch(`${backendUrl}/api/atomic-swap/fees?btc_amount=${btcAmount}&swap_type=btc_to_wepo&priority=${priorityFee}`);
-      const data = await response.json();
-      setFeeInfo(data.fees);
+      // For internal swaps, fee is simple 0.1%
+      const fee = parseFloat(btcAmount) * 0.001; // 0.1% fee
+      setFeeInfo({
+        total_fee: fee,
+        network_fee: fee * 0.5,
+        platform_fee: fee * 0.5,
+        priority_fee: priorityFee ? fee * 0.2 : 0
+      });
     } catch (err) {
-      console.error('Error fetching fee info:', err);
+      console.error('Error calculating fees:', err);
     }
   };
 
