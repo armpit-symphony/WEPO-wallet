@@ -253,8 +253,28 @@ export const validateWepoAddress = (address) => {
  * @returns {string|null} Address type or null if invalid
  */
 export const getAddressType = (address) => {
-  const validation = validateWepoAddress(address);
+  const validation = validateAddress(address);
   return validation.valid ? validation.type : null;
+};
+
+/**
+ * Check if address is Bitcoin
+ * @param {string} address - Address to check
+ * @returns {boolean} True if Bitcoin address
+ */
+export const isBitcoinAddress = (address) => {
+  const type = getAddressType(address);
+  return type && type.startsWith('bitcoin');
+};
+
+/**
+ * Check if address is WEPO
+ * @param {string} address - Address to check
+ * @returns {boolean} True if WEPO address
+ */
+export const isWepoAddress = (address) => {
+  const type = getAddressType(address);
+  return type === 'regular' || type === 'quantum';
 };
 
 /**
