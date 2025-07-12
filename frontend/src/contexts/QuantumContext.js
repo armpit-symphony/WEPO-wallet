@@ -286,6 +286,11 @@ export const QuantumProvider = ({ children }) => {
     sessionStorage.removeItem('wepo_quantum_session_active');
   };
 
+  const generateQuantumAddress = (seed) => {
+    // Use standardized quantum address generation
+    return generateWepoAddress(seed, 'quantum');
+  };
+
   const value = {
     // State
     quantumWallet,
