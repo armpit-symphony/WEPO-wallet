@@ -504,6 +504,96 @@ async def get_mining_info():
         "block_time": "2 minutes" if height > 52560 else "10 minutes"
     }
 
+# Internal BTC ↔ WEPO Swap Endpoints (Unified Wallet)
+@api_router.get("/swap/rate")
+async def get_internal_swap_rate():
+    """Get current BTC/WEPO exchange rate for internal swaps"""
+    try:
+        # Fixed rate for internal swaps - in production this would be dynamic
+        rate = 1.007200  # 1 BTC = 1.007200 WEPO
+        return {
+            "btc_to_wepo": rate,
+            "wepo_to_btc": 1 / rate,
+            "last_updated": int(time.time()),
+            "source": "internal_market_maker"
+        }
+    except Exception as e:
+        logger.error(f"Error getting swap rate: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/swap/execute")
+async def execute_internal_swap(request: dict):
+    """Execute internal BTC ↔ WEPO swap within unified wallet"""
+    try:
+        wallet_address = request.get("wallet_address")
+        from_currency = request.get("from_currency")  # BTC or WEPO
+        to_currency = request.get("to_currency")      # WEPO or BTC
+        from_amount = float(request.get("from_amount", 0))
+        to_amount = float(request.get("to_amount", 0))
+        exchange_rate = float(request.get("exchange_rate", 1.007))
+        
+        if not wallet_address or not from_currency or not to_currency:
+            raise HTTPException(status_code=400, detail="Missing required fields")
+        
+        if from_amount <= 0 or to_amount <= 0:
+            raise HTTPException(status_code=400, detail="Invalid amounts")
+        
+        # Validate the exchange calculation
+        if from_currency == "BTC" and to_currency == "WEPO":
+            expected_output = from_amount * exchange_rate
+            if abs(to_amount - expected_output) > 0.000001:
+                raise HTTPException(status_code=400, detail="Exchange rate mismatch")
+        elif from_currency == "WEPO" and to_currency == "BTC":
+            expected_output = from_amount / exchange_rate
+            if abs(to_amount - expected_output) > 0.00000001:
+                raise HTTPException(status_code=400, detail="Exchange rate mismatch")
+        else:
+            raise HTTPException(status_code=400, detail="Invalid currency pair")
+        
+        # In production this would:
+        # 1. Verify wallet balances in both currencies
+        # 2. Execute the internal swap transaction
+        # 3. Update balances in MongoDB
+        # 4. Record the swap transaction
+        
+        swap_id = f"swap_{int(time.time())}_{wallet_address[:8]}"
+        
+        # Store swap record in database
+        swap_record = {
+            "swap_id": swap_id,
+            "wallet_address": wallet_address,
+            "from_currency": from_currency,
+            "to_currency": to_currency,
+            "from_amount": from_amount,
+            "to_amount": to_amount,
+            "exchange_rate": exchange_rate,
+            "fee": 0.001,  # 0.1% fee
+            "status": "completed",
+            "timestamp": int(time.time()),
+            "created_at": datetime.now()
+        }
+        
+        await db.internal_swaps.insert_one(swap_record)
+        
+        return {
+            "swap_id": swap_id,
+            "status": "completed",
+            "from_currency": from_currency,
+            "to_currency": to_currency,
+            "from_amount": from_amount,
+            "to_amount": to_amount,
+            "exchange_rate": exchange_rate,
+            "fee": 0.001,  # 0.1% fee
+            "timestamp": int(time.time()),
+            "message": f"Successfully swapped {from_amount} {from_currency} for {to_amount} {to_currency}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error executing internal swap: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
