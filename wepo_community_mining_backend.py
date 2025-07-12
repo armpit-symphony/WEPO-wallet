@@ -122,6 +122,11 @@ class CommunityMiningCoordinator:
         # The FastAPI app will handle the async context
         pass
     
+    async def start_background_tasks(self):
+        """Start background tasks when in async context"""
+        if not self.stats_update_task:
+            self.stats_update_task = asyncio.create_task(self._update_stats_loop())
+    
     async def _update_stats_loop(self):
         """Background task to update mining statistics"""
         while True:
