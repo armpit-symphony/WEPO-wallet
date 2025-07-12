@@ -277,17 +277,7 @@ def main():
     print("   Year 20+:             500 WEPO (95% reduction)")
     print()
     
-    # Ask for confirmation
-    try:
-        confirm = input("Do you want to implement this dynamic collateral system? (Y/n): ").lower()
-        if confirm == 'n':
-            print("Implementation postponed.")
-            return 0
-    except KeyboardInterrupt:
-        print("\nImplementation cancelled.")
-        return 0
-    
-    # Implement the system
+    # Implement the system automatically
     success = implement_dynamic_collateral()
     
     if success:
