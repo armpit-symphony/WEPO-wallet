@@ -176,18 +176,18 @@ const UnifiedExchange = ({ onBack }) => {
   };
 
   const handleBtcSwap = async () => {
-    if (!btcAmount || !wepoAmount) {
+    if (!btcAmount) {
       setError('Please enter an amount to swap');
       return;
     }
 
-    if (parseFloat(btcAmount) <= 0 || parseFloat(wepoAmount) <= 0) {
+    if (parseFloat(btcAmount) <= 0) {
       setError('Amount must be greater than 0');
       return;
     }
 
-    if (parseFloat(btcAmount) < 0.001) {
-      setError('Minimum swap amount is 0.001 BTC');
+    if (!exchangeRate) {
+      setError('No liquidity pool exists. Add liquidity to create the market.');
       return;
     }
 
@@ -197,11 +197,9 @@ const UnifiedExchange = ({ onBack }) => {
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
       
-      // Determine swap direction based on swapType
+      // Determine swap direction and currency
       const fromCurrency = swapType === 'buy' ? 'BTC' : 'WEPO';
-      const toCurrency = swapType === 'buy' ? 'WEPO' : 'BTC';
-      const fromAmount = swapType === 'buy' ? parseFloat(btcAmount) : parseFloat(wepoAmount);
-      const toAmount = swapType === 'buy' ? parseFloat(wepoAmount) : parseFloat(btcAmount);
+      const inputAmount = swapType === 'buy' ? parseFloat(btcAmount) : parseFloat(wepoAmount);
       
       const response = await fetch(`${backendUrl}/api/swap/execute`, {
         method: 'POST',
@@ -211,24 +209,26 @@ const UnifiedExchange = ({ onBack }) => {
         body: JSON.stringify({
           wallet_address: currentAddress,
           from_currency: fromCurrency,
-          to_currency: toCurrency,
-          from_amount: fromAmount,
-          to_amount: toAmount,
-          exchange_rate: exchangeRate
+          input_amount: inputAmount
         }),
       });
 
       const data = await response.json();
       
       if (response.ok && data.status === 'completed') {
-        setSuccess(`Swap completed successfully! ${data.message}`);
+        setSuccess(`Swap completed! Exchanged ${data.input_amount} ${data.from_currency} for ${data.output_amount} ${data.to_currency}. Fee: ${data.fee_amount} ${data.from_currency}`);
+        
+        // Update exchange rate with new market price
+        setExchangeRate(data.market_price);
         
         // Clear form
         setBtcAmount('');
         setWepoAmount('');
         
-        // Refresh balances if needed
-        // TODO: Add balance refresh functionality
+        // Refresh market data
+        fetchExchangeRate();
+        
+        // TODO: Refresh wallet balances
         
         // Reset form
         setBtcAmount('');
