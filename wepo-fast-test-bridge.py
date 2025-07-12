@@ -732,6 +732,77 @@ class WepoFastTestBridge:
                 "total_wepo": total / 100000000.0
             }
         
+        # Add unified wallet swap endpoints
+        @self.app.get("/api/swap/rate")
+        async def get_swap_rate():
+            """Get current BTC/WEPO exchange rate"""
+            try:
+                # For now, return a fixed rate - in production this would be dynamic
+                rate = 1.007200  # 1 BTC = 1.007200 WEPO
+                return {
+                    "btc_to_wepo": rate,
+                    "wepo_to_btc": 1 / rate,
+                    "last_updated": int(time.time()),
+                    "source": "internal_market_maker"
+                }
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/swap/execute")
+        async def execute_swap(request: dict):
+            """Execute internal BTC ↔ WEPO swap"""
+            try:
+                wallet_address = request.get("wallet_address")
+                from_currency = request.get("from_currency")  # BTC or WEPO
+                to_currency = request.get("to_currency")      # WEPO or BTC
+                from_amount = float(request.get("from_amount", 0))
+                to_amount = float(request.get("to_amount", 0))
+                exchange_rate = float(request.get("exchange_rate", 1.007))
+                
+                if not wallet_address or not from_currency or not to_currency:
+                    raise HTTPException(status_code=400, detail="Missing required fields")
+                
+                if from_amount <= 0 or to_amount <= 0:
+                    raise HTTPException(status_code=400, detail="Invalid amounts")
+                
+                # Validate the exchange calculation
+                if from_currency == "BTC" and to_currency == "WEPO":
+                    expected_output = from_amount * exchange_rate
+                    if abs(to_amount - expected_output) > 0.000001:
+                        raise HTTPException(status_code=400, detail="Exchange rate mismatch")
+                elif from_currency == "WEPO" and to_currency == "BTC":
+                    expected_output = from_amount / exchange_rate
+                    if abs(to_amount - expected_output) > 0.00000001:
+                        raise HTTPException(status_code=400, detail="Exchange rate mismatch")
+                else:
+                    raise HTTPException(status_code=400, detail="Invalid currency pair")
+                
+                # For now, simulate the swap - in production this would:
+                # 1. Verify wallet balances
+                # 2. Execute the swap transaction
+                # 3. Update balances in both currencies
+                # 4. Record the transaction
+                
+                swap_id = f"swap_{int(time.time())}_{wallet_address[:8]}"
+                
+                return {
+                    "swap_id": swap_id,
+                    "status": "completed",
+                    "from_currency": from_currency,
+                    "to_currency": to_currency,
+                    "from_amount": from_amount,
+                    "to_amount": to_amount,
+                    "exchange_rate": exchange_rate,
+                    "fee": 0.001,  # 0.1% fee
+                    "timestamp": int(time.time()),
+                    "message": f"Successfully swapped {from_amount} {from_currency} for {to_amount} {to_currency}"
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.get("/api/dex/rate")
         async def get_exchange_rate():
             """Get current exchange rates"""
