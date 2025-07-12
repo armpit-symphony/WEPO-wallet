@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { generateBitcoinAddress } from '../utils/addressUtils';
-import { useQuantum } from '../contexts/QuantumContext';
 import SendWepo from './SendWepo';
 import ReceiveWepo from './ReceiveWepo';
 import BtcDexSwap from './BtcDexSwap';
