@@ -90,6 +90,12 @@ export const generateBitcoinAddress = (seed, addressType = 'legacy') => {
     };
   }
 };
+/**
+ * Generate standardized WEPO address from seed
+ * @param {string|Buffer} seed - Wallet seed
+ * @param {string} type - 'regular' or 'quantum'
+ * @returns {string} Standardized WEPO address
+ */
 export const generateWepoAddress = (seed, type = 'regular') => {
   const seedString = typeof seed === 'string' ? seed : seed.toString('hex');
   const hash = CryptoJS.SHA256(seedString).toString();
