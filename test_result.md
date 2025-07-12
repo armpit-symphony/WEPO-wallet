@@ -349,7 +349,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "WEPO New Tokenomics Frontend Integration"
+    - "WEPO Community Genesis Mining Software"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
