@@ -126,24 +126,19 @@ class TransactionOutput:
         if not self.is_valid_address():
             raise ValueError(f"Invalid address format: {self.address}")
     
-    def is_valid_address(self) -> bool:
-        """Validate both regular and quantum address formats"""
-        if not self.address or not isinstance(self.address, str):
-            return False
-        
-        # Regular WEPO address (32 characters after wepo1)
-        if self.address.startswith("wepo1") and len(self.address) == 37:
-            return True
-        
-        # Quantum WEPO address (40 characters after wepo1)
-        if self.address.startswith("wepo1") and len(self.address) == 45:
-            return True
-        
-        return False
+    def is_valid_address(self):
+        """Validate address using standardized system"""
+        validation = validate_wepo_address(self.address)
+        return validation["valid"]
     
-    def is_quantum_address(self) -> bool:
-        """Check if this is a quantum address"""
-        return self.address.startswith("wepo1") and len(self.address) == 45
+    def get_address_type(self):
+        """Get address type using standardized system"""
+        validation = validate_wepo_address(self.address)
+        return validation["type"] if validation["valid"] else None
+        
+    def is_quantum_resistant(self):
+        """Check if address is quantum-resistant"""
+        return is_quantum_address(self.address)
 
 @dataclass
 class Transaction:
