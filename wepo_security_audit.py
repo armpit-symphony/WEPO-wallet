@@ -247,6 +247,10 @@ class SecurityAuditor:
         
         # Test 3: Double spending prevention
         try:
+            import os
+            import sys
+            sys.path.insert(0, '/app/wepo-blockchain/core')
+            
             from blockchain import WepoBlockchain
             
             with tempfile.TemporaryDirectory() as temp_dir:
