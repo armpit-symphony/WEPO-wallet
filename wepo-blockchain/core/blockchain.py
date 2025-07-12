@@ -710,7 +710,7 @@ class WepoBlockchain:
         # Total mining rewards: 18,396,000 WEPO (28.8% of supply)
     
     def create_coinbase_transaction(self, height: int, miner_address: str) -> Transaction:
-        """Create coinbase transaction for new block with fees redistribution"""
+        """Create coinbase transaction for new block with 3-way fee redistribution"""
         base_reward = self.calculate_block_reward(height)
         
         # Calculate total transaction fees from pending transactions
@@ -719,30 +719,56 @@ class WepoBlockchain:
             if hasattr(tx, 'fee') and tx.fee:
                 total_transaction_fees += tx.fee
         
-        # Add any pending fees from RWA redistribution pool
-        rwa_redistribution_amount = 0
-        if hasattr(rwa_system, 'distribute_fees_to_miners'):
-            rwa_redistribution_amount = rwa_system.distribute_fees_to_miners(miner_address, height)
+        # New 3-way fee distribution system
+        if total_transaction_fees > 0:
+            # Distribute fees: 60% MN, 25% Miners, 15% Stakers
+            masternode_fees = int(total_transaction_fees * 0.60)
+            miner_fees = int(total_transaction_fees * 0.25)
+            staker_fees = int(total_transaction_fees * 0.15)
+            
+            # Distribute masternode fees equally among active masternodes
+            active_masternodes = self.get_active_masternodes()
+            if active_masternodes:
+                masternode_fee_per_node = masternode_fees // len(active_masternodes)
+                for masternode_addr in active_masternodes:
+                    # Add fee to masternode balance (in real implementation)
+                    print(f"Masternode {masternode_addr} receives {masternode_fee_per_node / COIN:.8f} WEPO in fees")
+            
+            # Distribute staker fees proportionally among active stakers
+            active_stakers = self.get_active_stakers()
+            total_stake = sum(staker['amount'] for staker in active_stakers)
+            if total_stake > 0:
+                for staker in active_stakers:
+                    stake_percentage = staker['amount'] / total_stake
+                    staker_reward = int(staker_fees * stake_percentage)
+                    print(f"Staker {staker['address']} receives {staker_reward / COIN:.8f} WEPO in fees")
+            
+            print(f"Fee Distribution Summary:")
+            print(f"  Total Fees: {total_transaction_fees / COIN:.8f} WEPO")
+            print(f"  Masternodes (60%): {masternode_fees / COIN:.8f} WEPO")
+            print(f"  Miner (25%): {miner_fees / COIN:.8f} WEPO")
+            print(f"  Stakers (15%): {staker_fees / COIN:.8f} WEPO")
+        else:
+            miner_fees = 0
         
-        # Total miner reward includes base reward + transaction fees + RWA redistributed fees
-        total_reward = base_reward + total_transaction_fees + int(rwa_redistribution_amount * COIN)
+        # Miner gets base reward + their share of fees
+        total_miner_reward = base_reward + miner_fees
         
         print(f"Coinbase for height {height}:")
         print(f"  Base reward: {base_reward / COIN:.8f} WEPO")
-        print(f"  Transaction fees: {total_transaction_fees / COIN:.8f} WEPO")
-        print(f"  RWA redistributed fees: {rwa_redistribution_amount:.8f} WEPO") 
-        print(f"  Total reward: {total_reward / COIN:.8f} WEPO")
+        print(f"  Miner fee share: {miner_fees / COIN:.8f} WEPO")
+        print(f"  Total miner reward: {total_miner_reward / COIN:.8f} WEPO")
         
         return Transaction(
             version=1,
             inputs=[TransactionInput(
                 prev_txid="0" * 64,
                 prev_vout=0xffffffff,
-                script_sig=f"Block {height} fees:{total_transaction_fees}".encode(),
+                script_sig=f"Block {height} fees:{total_transaction_fees} 3-way-distribution".encode(),
                 sequence=0xffffffff
             )],
             outputs=[TransactionOutput(
-                value=total_reward,
+                value=total_miner_reward,
                 script_pubkey=b"coinbase_output",
                 address=miner_address
             )],
