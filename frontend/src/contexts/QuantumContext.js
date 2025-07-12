@@ -268,13 +268,9 @@ export const QuantumProvider = ({ children }) => {
   };
 
   const validateQuantumAddress = (address) => {
-    // Validate quantum WEPO address format
-    if (!address || typeof address !== 'string') {
-      return false;
-    }
-    
-    // Must start with wepo1 and be 45 characters
-    return address.startsWith('wepo1') && address.length === 45;
+    // Use standardized validation
+    const validation = validateWepoAddress(address);
+    return validation.valid && validation.type === 'quantum';
   };
 
   const logoutQuantum = () => {
