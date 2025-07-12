@@ -154,14 +154,13 @@ class RWATokenSystem:
             if user_balance < rwa_creation_fee:
                 raise ValueError(f"Insufficient WEPO balance. RWA creation requires {rwa_creation_fee} WEPO (current balance: {user_balance} WEPO)")
             
-            # Add fee to redistribution pool instead of burning
+            # Create transaction that will be distributed via 3-way fee system
             try:
-                # Create transaction to temporary holding address (will be redistributed)
-                redistribution_address = "wepo1redistribution000000000000000000"
-                fee_tx_id = blockchain.create_transaction(owner_address, redistribution_address, rwa_creation_fee)
+                # Create transaction - fees will be automatically distributed by blockchain
+                fee_tx_id = blockchain.create_transaction(owner_address, "wepo1feecollection00000000000000000000", rwa_creation_fee)
                 
-                # Add to redistribution pool
-                self.fee_redistribution_pool.total_collected += rwa_creation_fee
+                # Note: Fee distribution (60% MN, 25% Miners, 15% Stakers) happens automatically in coinbase
+                print(f"RWA creation fee of {rwa_creation_fee} WEPO will be distributed via 3-way system")
                 
                 # Mine the fee transaction immediately in test mode
                 if hasattr(blockchain, 'mine_block'):
