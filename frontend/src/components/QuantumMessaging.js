@@ -174,7 +174,9 @@ const QuantumMessaging = ({ onBack }) => {
   };
 
   const validateAddress = (address) => {
-    return address.startsWith('wepo1') && (address.length === 37 || address.length === 45);
+    // Use standardized address validation
+    const validation = validateWepoAddress(address);
+    return validation.valid; // Accept both regular and quantum addresses
   };
 
   if (activeTab === 'conversation' && selectedConversation) {
