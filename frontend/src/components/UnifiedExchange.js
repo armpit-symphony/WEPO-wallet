@@ -158,26 +158,39 @@ const UnifiedExchange = ({ onBack }) => {
     
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-      const response = await fetch(`${backendUrl}/api/atomic-swap/initiate`, {
+      
+      // Determine swap direction based on swapType
+      const fromCurrency = swapType === 'buy' ? 'BTC' : 'WEPO';
+      const toCurrency = swapType === 'buy' ? 'WEPO' : 'BTC';
+      const fromAmount = swapType === 'buy' ? parseFloat(btcAmount) : parseFloat(wepoAmount);
+      const toAmount = swapType === 'buy' ? parseFloat(wepoAmount) : parseFloat(btcAmount);
+      
+      const response = await fetch(`${backendUrl}/api/swap/execute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          swap_type: 'btc_to_wepo',
-          btc_amount: parseFloat(btcAmount),
-          initiator_btc_address: btcAddress,
-          initiator_wepo_address: currentAddress,
-          participant_btc_address: '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy', // Mock participant
-          participant_wepo_address: 'wepo1participant123456789abcdef0123456789ab'
+          wallet_address: currentAddress,
+          from_currency: fromCurrency,
+          to_currency: toCurrency,
+          from_amount: fromAmount,
+          to_amount: toAmount,
+          exchange_rate: exchangeRate
         }),
       });
 
       const data = await response.json();
       
-      if (response.ok && data.success) {
-        setActiveSwap(data);
-        setSuccess(`Swap initiated successfully! Swap ID: ${data.swap_id}`);
+      if (response.ok && data.status === 'completed') {
+        setSuccess(`Swap completed successfully! ${data.message}`);
+        
+        // Clear form
+        setBtcAmount('');
+        setWepoAmount('');
+        
+        // Refresh balances if needed
+        // TODO: Add balance refresh functionality
         
         // Reset form
         setBtcAmount('');
