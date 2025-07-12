@@ -720,7 +720,9 @@ const UnifiedExchange = ({ onBack }) => {
       </div>
 
       {/* Content */}
-      {activeTab === 'btc' ? renderBTCDEX() : renderRWADEX()}
+      {activeTab === 'btc' ? renderBTCDEX() : 
+       activeTab === 'rwa' ? renderRWADEX() : 
+       renderLiquidityInterface()}
 
       {/* Error/Success Messages */}
       {error && (
