@@ -476,12 +476,17 @@ GRUB_CMDLINE_LINUX="mitigations=off"
 #### Fee Redistribution Benefits:
 Mining WEPO is more profitable than traditional cryptocurrencies because miners receive:
 
-1. **Block Rewards**: Standard mining rewards per schedule
-2. **Transaction Fees**: All 0.0001 WEPO transaction fees
-3. **RWA Creation Fees**: All 0.0002 WEPO asset creation fees
-4. **Network Operations**: All other network fees
+1. **Block Rewards**: Standard mining rewards per 6-month schedule
+2. **Real-time Fee Share**: 25% of ALL network fees every block
+3. **Transaction Fees**: 25% of all 0.0001 WEPO transaction fees
+4. **RWA Creation Fees**: 25% of all 0.0002 WEPO asset creation fees
+5. **Network Operations**: 25% of all other network fees
 
-**No fees are ever burned - 100% goes to miners during PoW phase!**
+**Plus, when mining ends (Month 19), you can:**
+- **Become a Masternode**: 10,000 WEPO collateral → 60% of all fees
+- **Stake WEPO**: Any amount → 15% of all fees (proportional)
+
+**No fees are ever burned - 100% goes to network participants!**
 
 ### 🆘 Mining Support
 
