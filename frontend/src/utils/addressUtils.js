@@ -112,11 +112,84 @@ export const generateWepoAddress = (seed, type = 'regular') => {
 };
 
 /**
- * Validate WEPO address format
+ * Validate address format (WEPO or Bitcoin)
  * @param {string} address - Address to validate
  * @returns {object} Validation result with type detection
  */
-export const validateWepoAddress = (address) => {
+export const validateAddress = (address) => {
+  if (!address || typeof address !== 'string') {
+    return { 
+      valid: false, 
+      type: null, 
+      error: 'Address must be a string' 
+    };
+  }
+
+  // Check for Bitcoin addresses first
+  const btcValidation = validateBitcoinAddress(address);
+  if (btcValidation.valid) {
+    return btcValidation;
+  }
+
+  // Check for WEPO addresses
+  return validateWepoAddress(address);
+};
+
+/**
+ * Validate Bitcoin address format
+ * @param {string} address - Bitcoin address to validate
+ * @returns {object} Validation result
+ */
+export const validateBitcoinAddress = (address) => {
+  if (!address || typeof address !== 'string') {
+    return { 
+      valid: false, 
+      type: null, 
+      error: 'Address must be a string' 
+    };
+  }
+
+  // Legacy Bitcoin address (P2PKH)
+  if (address.startsWith('1')) {
+    const format = ADDRESS_FORMATS.BTC_LEGACY;
+    if (address.length >= format.minLength && address.length <= format.maxLength) {
+      return { 
+        valid: true, 
+        type: 'bitcoin-legacy', 
+        format: format 
+      };
+    }
+  }
+
+  // Segwit Bitcoin address (P2WPKH)
+  if (address.startsWith('bc1')) {
+    const format = ADDRESS_FORMATS.BTC_SEGWIT;
+    if (address.length >= format.minLength && address.length <= format.maxLength) {
+      return { 
+        valid: true, 
+        type: 'bitcoin-segwit', 
+        format: format 
+      };
+    }
+  }
+
+  // Multisig Bitcoin address (P2SH)
+  if (address.startsWith('3')) {
+    if (address.length >= 26 && address.length <= 35) {
+      return { 
+        valid: true, 
+        type: 'bitcoin-multisig', 
+        format: { prefix: '3', type: 'bitcoin-multisig' }
+      };
+    }
+  }
+
+  return { 
+    valid: false, 
+    type: null, 
+    error: 'Invalid Bitcoin address format' 
+  };
+};
   if (!address || typeof address !== 'string') {
     return { 
       valid: false, 
