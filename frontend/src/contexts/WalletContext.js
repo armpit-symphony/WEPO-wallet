@@ -294,7 +294,6 @@ export const WalletProvider = ({ children }) => {
     transactions,
     posEnabled,
     masternodesEnabled,
-    wepoLaunched,
     generateMnemonic,
     createWallet,
     loginWallet,
