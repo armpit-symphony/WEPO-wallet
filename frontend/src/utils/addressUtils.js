@@ -4,15 +4,6 @@
  */
 
 import CryptoJS from 'crypto-js';
-import * as bitcoin from 'bitcoinjs-lib';
-import ECPairFactory from 'ecpair';
-import * as ecc from 'tiny-secp256k1';
-
-// Initialize ECC library for bitcoinjs-lib
-bitcoin.initEccLib(ecc);
-
-// Initialize ECPair with secp256k1 implementation
-const ECPair = ECPairFactory(ecc);
 
 // Address format constants
 export const ADDRESS_FORMATS = {
@@ -43,7 +34,7 @@ export const ADDRESS_FORMATS = {
 };
 
 /**
- * Generate Bitcoin address from seed
+ * Generate Bitcoin address from seed (simplified version)
  * @param {string|Buffer} seed - Wallet seed
  * @param {string} addressType - 'legacy' or 'segwit'
  * @returns {object} Bitcoin address and private key
@@ -56,39 +47,23 @@ export const generateBitcoinAddress = (seed, addressType = 'legacy') => {
     const hash = CryptoJS.SHA256(seedString + 'bitcoin').toString();
     const privateKeyHex = hash.substring(0, 64);
     
-    // Convert to Buffer for bitcoinjs-lib
-    const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex');
-    
-    // Create key pair
-    const keyPair = ECPair.fromPrivateKey(privateKeyBuffer);
-    
-    let address;
-    if (addressType === 'segwit') {
-      // Generate P2WPKH (native segwit) address
-      const { address: segwitAddress } = bitcoin.payments.p2wpkh({ 
-        pubkey: keyPair.publicKey 
-      });
-      address = segwitAddress;
-    } else {
-      // Generate P2PKH (legacy) address
-      const { address: legacyAddress } = bitcoin.payments.p2pkh({ 
-        pubkey: keyPair.publicKey 
-      });
-      address = legacyAddress;
-    }
+    // Generate a simple Bitcoin-like address for testing
+    // This is a simplified implementation for demo purposes
+    const addressHash = CryptoJS.SHA256(privateKeyHex + 'address').toString();
+    const simpleAddress = '1' + addressHash.substring(0, 33); // Simple 34-char address
     
     return {
-      address,
+      address: simpleAddress,
       privateKey: privateKeyHex,
-      publicKey: keyPair.publicKey.toString('hex'),
+      publicKey: hash.substring(0, 66),
       type: addressType
     };
   } catch (error) {
     console.error('Bitcoin address generation error:', error);
-    // Fallback to simple hash-based address for testing
+    // Fallback to simple hash-based address
     const seedString = typeof seed === 'string' ? seed : seed.toString('hex');
     const hash = CryptoJS.SHA256(seedString + 'bitcoin').toString();
-    const simpleAddress = '1' + hash.substring(0, 33); // Simple 34-char address
+    const simpleAddress = '1' + hash.substring(0, 33);
     
     return {
       address: simpleAddress,
