@@ -665,4 +665,40 @@ Mining WEPO is more profitable than traditional cryptocurrencies because miners 
 4. **Explore Features**: Try RWA tokenization, quantum messaging, and DEX trading
 5. **Join Community**: Connect with other WEPO users and developers
 
+---
+
+## 🧪 **IMMEDIATE TESTING CHECKLIST (Priority #1)**
+
+### **Backend AMM Testing:**
+- [ ] **Test `/api/swap/rate`**: Verify market-determined pricing (should show no pool exists initially)
+- [ ] **Test `/api/liquidity/add`**: Create first BTC-WEPO pool (bootstrap market)
+- [ ] **Test Pool Creation**: Verify initial price setting and pool statistics
+- [ ] **Test `/api/swap/execute`**: Execute BTC ↔ WEPO swaps using AMM pricing
+- [ ] **Test Fee Integration**: Verify trading fees go to 3-way redistribution pool
+- [ ] **Test `/api/liquidity/stats`**: Pool statistics and liquidity tracking
+
+### **Frontend Unified Exchange Testing:**
+- [ ] **BTC DEX Tab**: Market creation interface when no pool exists
+- [ ] **Liquidity Tab**: Add initial liquidity and bootstrap BTC-WEPO market
+- [ ] **BTC DEX Tab**: Trading interface after market creation
+- [ ] **RWA DEX Tab**: RWA token trading functionality  
+- [ ] **Market Statistics**: Pool stats, pricing, and fee information display
+- [ ] **User Flow**: Complete end-to-end trading and liquidity provision
+
+### **Integration Testing:**
+- [ ] **Market Bootstrap**: First user creates BTC-WEPO pool and sets initial price
+- [ ] **Price Discovery**: Verify prices change based on trading activity
+- [ ] **Fee Distribution**: Confirm all trading fees reach redistribution system
+- [ ] **Balance Updates**: Wallet balances update correctly after trades
+- [ ] **Error Handling**: Proper error messages for edge cases
+
+### **Edge Case Testing:**
+- [ ] **Empty Pools**: Proper handling when no liquidity exists
+- [ ] **Ratio Mismatch**: Liquidity provision with incorrect ratios
+- [ ] **Insufficient Balance**: Trading with insufficient funds
+- [ ] **Rate Calculations**: AMM math accuracy and slippage calculation
+- [ ] **Concurrent Trading**: Multiple users trading simultaneously
+
+---
+
 **Welcome to the future of cryptocurrency - Welcome to WEPO!** 🚀
