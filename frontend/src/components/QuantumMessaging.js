@@ -11,7 +11,6 @@ import {
   X,
   AlertTriangle
 } from 'lucide-react';
-import { useQuantum } from '../contexts/QuantumContext';
 import { useWallet } from '../contexts/WalletContext';
 import { validateWepoAddress } from '../utils/addressUtils';
 
