@@ -1436,7 +1436,7 @@ def run_rwa_quantum_vault_tests():
         try:
             print("\n[TEST] RWA Asset Listing - Testing private RWA asset portfolio display")
             
-            response = requests.get(f"{BRIDGE_URL}/vault/rwa/assets/{test_vault_id}")
+            response = requests.get(f"{API_URL}/vault/rwa/assets/{test_vault_id}")
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
