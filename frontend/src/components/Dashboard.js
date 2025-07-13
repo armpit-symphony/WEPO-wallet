@@ -22,7 +22,9 @@ import {
   Shield,
   AlertCircle,
   LogOut,
-  Server
+  Server,
+  ToggleRight,
+  ToggleLeft
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { generateBitcoinAddress } from '../utils/addressUtils';
