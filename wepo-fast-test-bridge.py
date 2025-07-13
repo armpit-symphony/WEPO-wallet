@@ -1470,7 +1470,7 @@ class WepoFastTestBridge:
                 
                 return {
                     "success": result["success"],
-                    "staking_activated": result["success"],
+                    "staking_enabled": result["success"],  # Fixed: renamed from staking_activated
                     "message": result.get("message", "Staking activation completed"),
                     "pos_activation_height": result.get("pos_activation_height"),
                     "min_stake_amount": result.get("min_stake_amount"),
