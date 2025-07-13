@@ -67,9 +67,12 @@ class GhostTransfer:
     transfer_id: str
     sender_vault_id: str
     receiver_vault_id: str
+    asset_type: str  # 'WEPO' or 'RWA_TOKEN'
+    asset_id: str    # 'WEPO' for WEPO, token_id for RWA tokens
     amount: float
     privacy_level: str  # 'standard' or 'maximum'
     hide_amount: bool
+    hide_asset_type: bool  # NEW: Option to hide what type of asset is being transferred
     status: str  # 'initiated', 'pending', 'accepted', 'rejected', 'completed'
     created_at: int
     accepted_at: Optional[int] = None
@@ -78,6 +81,7 @@ class GhostTransfer:
     receiver_proof: Optional[ZKProof] = None
     transfer_nullifier: Optional[str] = None
     encrypted_amount: Optional[str] = None  # For maximum privacy
+    encrypted_asset_info: Optional[str] = None  # For hiding asset type and metadata
 
 class GhostTransferStatus(str, Enum):
     INITIATED = "initiated"
