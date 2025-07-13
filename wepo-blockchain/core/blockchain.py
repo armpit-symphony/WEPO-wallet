@@ -51,7 +51,22 @@ REWARD_Q3 = 100 * COIN        # 100 WEPO per block Q3
 REWARD_Q4 = 50 * COIN         # 50 WEPO per block Q4
 REWARD_YEAR2_BASE = 12.4 * COIN # 12.4 WEPO per block year 2+
 HALVING_INTERVAL = 1051200    # Blocks between halvings (4 years)
-POS_ACTIVATION_HEIGHT = int(POW_BLOCKS_YEAR1 * 1.5)  # 18 months
+
+# PRODUCTION STAKING ACTIVATION SYSTEM
+CHRISTMAS_GENESIS_TIMESTAMP = 1735138800  # December 25, 2025, 3:00 PM EST
+STAKING_ACTIVATION_DELAY = 18 * 30 * 24 * 60 * 60  # 18 months in seconds
+PRODUCTION_MODE = True  # Set to True for immediate staking activation (testing)
+
+# Calculate PoS activation based on genesis launch
+if PRODUCTION_MODE:
+    # For production testing: activate staking immediately
+    POS_ACTIVATION_HEIGHT = 1  # Activate after first block
+    print("🚀 PRODUCTION MODE: Staking activated immediately for testing")
+else:
+    # For mainnet: activate after 18 months from Christmas launch
+    POS_ACTIVATION_HEIGHT = int(POW_BLOCKS_YEAR1 * 1.5)  # 18 months
+    print(f"📅 MAINNET MODE: Staking activates at block {POS_ACTIVATION_HEIGHT} (18 months)")
+
 MIN_STAKE_AMOUNT = 1000 * COIN
 
 # Dynamic Masternode Collateral System - Progressive reduction for accessibility
