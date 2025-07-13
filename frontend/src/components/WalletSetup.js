@@ -146,7 +146,7 @@ const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
         localStorage.setItem('wepo_launch_date', new Date().toISOString());
       }
       
-      onSetupComplete();
+      onWalletCreated();
     } catch (error) {
       console.error('Wallet finalization error:', error);
       setError('Failed to create wallet: ' + error.message);
