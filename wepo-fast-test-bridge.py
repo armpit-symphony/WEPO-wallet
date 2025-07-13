@@ -1273,6 +1273,147 @@ class WepoFastTestBridge:
                     raise HTTPException(status_code=404, detail=str(e))
                 raise HTTPException(status_code=500, detail=str(e))
 
+        # ===== PRODUCTION STAKING ENDPOINTS - ECONOMIC ECOSYSTEM COMPLETION =====
+        
+        @self.app.get("/api/staking/info")
+        async def get_staking_info():
+            """Get comprehensive staking system information"""
+            try:
+                staking_info = self.blockchain.get_staking_info()
+                
+                return {
+                    "success": True,
+                    "staking_system_info": staking_info,
+                    "production_ready": True,
+                    "message": "WEPO Staking System - Complete Economic Ecosystem"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/staking/activate")
+        async def activate_production_staking():
+            """Activate production staking for testing"""
+            try:
+                result = self.blockchain.activate_production_staking()
+                
+                return {
+                    "success": result["success"],
+                    "staking_activated": result["success"],
+                    "message": result.get("message", "Staking activation completed"),
+                    "pos_activation_height": result.get("pos_activation_height"),
+                    "min_stake_amount": result.get("min_stake_amount"),
+                    "fee_distribution_active": result.get("fee_distribution_active", True),
+                    "economic_ecosystem": "Complete"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/staking/create")
+        async def create_stake(request: dict):
+            """Create a new stake"""
+            try:
+                staker_address = request.get("staker_address")
+                amount = float(request.get("amount", 0))
+                
+                if not staker_address or amount <= 0:
+                    raise HTTPException(status_code=400, detail="Valid staker address and amount required")
+                
+                # Create stake
+                stake_id = self.blockchain.create_stake(staker_address, amount)
+                
+                if stake_id:
+                    return {
+                        "success": True,
+                        "stake_created": True,
+                        "stake_id": stake_id,
+                        "staker_address": staker_address,
+                        "amount_staked": amount,
+                        "min_stake_amount": self.blockchain.MIN_STAKE_AMOUNT / self.blockchain.COIN,
+                        "rewards_start": "Next block",
+                        "fee_share": "15% of all network fees",
+                        "message": f"Successfully staked {amount} WEPO"
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": "Failed to create stake - check balance and requirements"
+                    }
+                
+            except Exception as e:
+                if "minimum" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                elif "insufficient" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                elif "not activated" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/staking/stakes/{address}")
+        async def get_address_stakes(address: str):
+            """Get all stakes for a specific address"""
+            try:
+                stakes = []
+                active_stakes = self.blockchain.get_active_stakes()
+                
+                for stake in active_stakes:
+                    if stake.staker_address == address:
+                        stakes.append({
+                            "stake_id": stake.stake_id,
+                            "amount": stake.amount / self.blockchain.COIN,
+                            "start_height": stake.start_height,
+                            "start_time": stake.start_time,
+                            "total_rewards": stake.total_rewards / self.blockchain.COIN,
+                            "status": stake.status
+                        })
+                
+                return {
+                    "success": True,
+                    "address": address,
+                    "stakes_count": len(stakes),
+                    "stakes": stakes,
+                    "total_staked": sum(stake["amount"] for stake in stakes),
+                    "total_rewards_earned": sum(stake["total_rewards"] for stake in stakes)
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/staking/rewards/distribute")
+        async def distribute_staking_rewards():
+            """Manually distribute staking rewards (for testing)"""
+            try:
+                current_height = self.blockchain.get_block_height()
+                
+                # Calculate and distribute rewards
+                rewards = self.blockchain.calculate_staking_rewards(current_height)
+                
+                if rewards:
+                    # Create block hash for reward distribution
+                    block_hash = f"manual_distribution_{current_height}_{int(time.time())}"
+                    self.blockchain.distribute_staking_rewards(current_height, block_hash)
+                    
+                    return {
+                        "success": True,
+                        "rewards_distributed": True,
+                        "block_height": current_height,
+                        "total_rewards": sum(rewards.values()) / self.blockchain.COIN,
+                        "recipients_count": len(rewards),
+                        "distribution_details": {
+                            addr: amount / self.blockchain.COIN 
+                            for addr, amount in rewards.items()
+                        }
+                    }
+                else:
+                    return {
+                        "success": True,
+                        "message": "No staking rewards to distribute at this time"
+                    }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.post("/api/test/mine-block")
         async def mine_test_block(request: dict):
             """Mine a block for testing fee redistribution"""
