@@ -1517,7 +1517,7 @@ def run_rwa_quantum_vault_tests():
             receiver_wallet_address = "wepo1rwareceiver" + "0" * 19  # Make it 37 chars
             receiver_vault_data = {"wallet_address": receiver_wallet_address}
             
-            receiver_response = requests.post(f"{BRIDGE_URL}/vault/create", json=receiver_vault_data)
+            receiver_response = requests.post(f"{API_URL}/vault/create", json=receiver_vault_data)
             if receiver_response.status_code == 200:
                 receiver_data = receiver_response.json()
                 receiver_vault_id = receiver_data.get("vault_id")
