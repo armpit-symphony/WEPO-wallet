@@ -964,7 +964,7 @@ const QuantumVault = ({ onClose }) => {
               <div className="flex bg-gray-700 rounded-lg p-1 mb-6">
                 <button
                   onClick={() => setActiveTab('overview')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'overview' 
                       ? 'bg-purple-600 text-white' 
                       : 'text-gray-300 hover:text-white'
@@ -974,7 +974,7 @@ const QuantumVault = ({ onClose }) => {
                 </button>
                 <button
                   onClick={() => setActiveTab('deposit')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'deposit' 
                       ? 'bg-purple-600 text-white' 
                       : 'text-gray-300 hover:text-white'
@@ -984,7 +984,7 @@ const QuantumVault = ({ onClose }) => {
                 </button>
                 <button
                   onClick={() => setActiveTab('withdraw')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'withdraw' 
                       ? 'bg-purple-600 text-white' 
                       : 'text-gray-300 hover:text-white'
@@ -993,8 +993,19 @@ const QuantumVault = ({ onClose }) => {
                   Withdraw
                 </button>
                 <button
+                  onClick={() => setActiveTab('ghost')}
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
+                    activeTab === 'ghost' 
+                      ? 'bg-purple-600 text-white' 
+                      : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  <Ghost size={14} />
+                  Ghost
+                </button>
+                <button
                   onClick={() => setActiveTab('settings')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'settings' 
                       ? 'bg-purple-600 text-white' 
                       : 'text-gray-300 hover:text-white'
