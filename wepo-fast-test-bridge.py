@@ -920,6 +920,190 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
+        # ===== GHOST TRANSFER ENDPOINTS - REVOLUTIONARY PRIVACY TRANSFERS =====
+        
+        @self.app.post("/api/vault/ghost-transfer/initiate")
+        async def initiate_ghost_transfer(request: dict):
+            """Initiate a completely private vault-to-vault transfer (Ghost Transfer)"""
+            try:
+                sender_vault_id = request.get("sender_vault_id")
+                receiver_vault_id = request.get("receiver_vault_id")
+                amount = float(request.get("amount", 0))
+                privacy_level = request.get("privacy_level", "maximum")
+                hide_amount = request.get("hide_amount", True)
+                
+                if not sender_vault_id or not receiver_vault_id or amount <= 0:
+                    raise HTTPException(status_code=400, detail="Invalid transfer parameters")
+                
+                if privacy_level not in ["standard", "maximum"]:
+                    raise HTTPException(status_code=400, detail="Invalid privacy level")
+                
+                # Initiate ghost transfer
+                result = quantum_vault_system.initiate_ghost_transfer(
+                    sender_vault_id=sender_vault_id,
+                    receiver_vault_id=receiver_vault_id,
+                    amount=amount,
+                    privacy_level=privacy_level,
+                    hide_amount=hide_amount
+                )
+                
+                return {
+                    "success": True,
+                    "transfer_initiated": True,
+                    "transfer_id": result["transfer_id"],
+                    "status": result["status"],
+                    "privacy_level": result["privacy_level"],
+                    "amount_hidden": result["amount_hidden"],
+                    "sender_proof_generated": result["sender_proof_generated"],
+                    "awaiting_receiver_acceptance": result["awaiting_receiver_acceptance"],
+                    "ghost_transfer": result["ghost_transfer"],
+                    "privacy_protection": result["privacy_protection"],
+                    "message": f"Ghost transfer initiated with {privacy_level} privacy - completely untraceable"
+                }
+                
+            except Exception as e:
+                if "insufficient" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                elif "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/vault/ghost-transfer/accept")
+        async def accept_ghost_transfer(request: dict):
+            """Accept an incoming ghost transfer and complete the private transfer"""
+            try:
+                transfer_id = request.get("transfer_id")
+                receiver_vault_id = request.get("receiver_vault_id")
+                
+                if not transfer_id or not receiver_vault_id:
+                    raise HTTPException(status_code=400, detail="Transfer ID and receiver vault ID required")
+                
+                # Accept ghost transfer
+                result = quantum_vault_system.accept_ghost_transfer(transfer_id, receiver_vault_id)
+                
+                return {
+                    "success": True,
+                    "transfer_completed": True,
+                    "transfer_id": result["transfer_id"],
+                    "status": result["status"],
+                    "amount_received": result["amount_received"],
+                    "privacy_level": result["privacy_level"],
+                    "sender_commitment_updated": result["sender_commitment_updated"],
+                    "receiver_commitment_updated": result["receiver_commitment_updated"],
+                    "ghost_transfer_completed": result["ghost_transfer_completed"],
+                    "untraceable": result["untraceable"],
+                    "privacy_protection": result["privacy_protection"],
+                    "message": f"Ghost transfer completed - {result['amount_received']} WEPO received privately"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                elif "invalid" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/vault/ghost-transfer/reject")
+        async def reject_ghost_transfer(request: dict):
+            """Reject an incoming ghost transfer"""
+            try:
+                transfer_id = request.get("transfer_id")
+                receiver_vault_id = request.get("receiver_vault_id")
+                
+                if not transfer_id or not receiver_vault_id:
+                    raise HTTPException(status_code=400, detail="Transfer ID and receiver vault ID required")
+                
+                # Reject ghost transfer
+                result = quantum_vault_system.reject_ghost_transfer(transfer_id, receiver_vault_id)
+                
+                return {
+                    "success": True,
+                    "transfer_rejected": True,
+                    "transfer_id": result["transfer_id"],
+                    "status": result["status"],
+                    "rejected_at": result["rejected_at"],
+                    "message": "Ghost transfer rejected"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                elif "invalid" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/vault/ghost-transfer/pending/{vault_id}")
+        async def get_pending_ghost_transfers(vault_id: str):
+            """Get all pending ghost transfers for a vault"""
+            try:
+                # Get pending ghost transfers
+                pending_transfers = quantum_vault_system.get_pending_ghost_transfers(vault_id)
+                
+                return {
+                    "success": True,
+                    "vault_id": vault_id,
+                    "pending_count": len(pending_transfers),
+                    "pending_transfers": pending_transfers,
+                    "privacy_protected": True,
+                    "message": f"Found {len(pending_transfers)} pending ghost transfers"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/vault/ghost-transfer/status/{transfer_id}/{vault_id}")
+        async def get_ghost_transfer_status(transfer_id: str, vault_id: str):
+            """Get status of a specific ghost transfer"""
+            try:
+                # Get ghost transfer status
+                status = quantum_vault_system.get_ghost_transfer_status(transfer_id, vault_id)
+                
+                return {
+                    "success": True,
+                    "transfer_found": True,
+                    "transfer_id": transfer_id,
+                    "vault_id": vault_id,
+                    "status": status["status"],
+                    "privacy_level": status["privacy_level"],
+                    "created_at": status["created_at"],
+                    "is_sender": status["is_sender"],
+                    "is_receiver": status["is_receiver"],
+                    "amount": status["amount"],
+                    "accepted_at": status.get("accepted_at"),
+                    "completed_at": status.get("completed_at"),
+                    "privacy_protected": status["privacy_protected"],
+                    "message": f"Ghost transfer status: {status['status']}"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                elif "not involved" in str(e).lower():
+                    raise HTTPException(status_code=403, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/vault/ghost-transfer/history/{vault_id}")
+        async def get_vault_ghost_history(vault_id: str):
+            """Get ghost transfer history for a vault (privacy-protected)"""
+            try:
+                # Get ghost transfer history
+                history = quantum_vault_system.get_vault_ghost_history(vault_id)
+                
+                return {
+                    "success": True,
+                    "vault_id": vault_id,
+                    "transfer_count": len(history),
+                    "ghost_history": history,
+                    "privacy_protected": True,
+                    "untraceable": True,
+                    "message": f"Retrieved {len(history)} ghost transfers from vault history"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.post("/api/test/mine-block")
         async def mine_test_block(request: dict):
             """Mine a block for testing fee redistribution"""
