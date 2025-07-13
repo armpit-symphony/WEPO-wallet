@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, Copy, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 
-const WalletSetup = ({ onSetupComplete }) => {
+const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     username: '',
