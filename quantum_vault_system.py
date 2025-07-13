@@ -548,22 +548,29 @@ class QuantumVaultSystem:
     
     def initiate_ghost_transfer(self, sender_vault_id: str, receiver_vault_id: str, 
                                amount: float, privacy_level: str = "maximum", 
-                               hide_amount: bool = True) -> Dict:
+                               hide_amount: bool = True, asset_type: str = "WEPO", 
+                               asset_id: str = "WEPO", hide_asset_type: bool = False) -> Dict:
         """
         Initiate a completely private vault-to-vault transfer (Ghost Transfer)
+        
+        REVOLUTIONARY ENHANCEMENT: Now supports both WEPO and RWA tokens
         
         This creates the most private cryptocurrency transfer possible:
         - Sender identity: Completely hidden via zk-proof
         - Receiver identity: Only known to receiver
         - Transfer amount: Optionally hidden 
+        - Asset type: Optionally hidden (NEW!)
         - No on-chain linkability: Zero trace between vaults
         
         Args:
             sender_vault_id: Source vault identifier
             receiver_vault_id: Destination vault identifier  
-            amount: Amount of WEPO to transfer privately
+            amount: Amount to transfer privately
             privacy_level: 'standard' or 'maximum' privacy
             hide_amount: Whether to hide the transfer amount
+            asset_type: 'WEPO' or 'RWA_TOKEN'
+            asset_id: 'WEPO' for WEPO, token_id for RWA tokens
+            hide_asset_type: Whether to hide what type of asset is being transferred
             
         Returns:
             Dictionary containing ghost transfer initiation details
@@ -580,48 +587,69 @@ class QuantumVaultSystem:
             sender_vault = self.vaults[sender_vault_id]
             receiver_vault = self.vaults[receiver_vault_id]
             
-            # Validate sender has sufficient balance
-            if sender_vault["private_balance"] < amount:
+            # Validate sender has the asset and sufficient balance
+            if asset_id not in sender_vault["assets"]:
+                raise Exception(f"Asset {asset_id} not found in sender vault")
+            
+            if sender_vault["assets"][asset_id]["balance"] < amount:
                 raise Exception("Insufficient vault balance for ghost transfer")
             
             # Generate unique transfer ID
-            transfer_id = f"ghost_{int(time.time())}_{secrets.token_hex(16)}"
+            transfer_id = f"ghost_{asset_type.lower()}_{int(time.time())}_{secrets.token_hex(16)}"
             
             # Generate transfer nullifier (prevents double-spending across transfers)
-            transfer_nullifier = self._generate_ghost_nullifier(sender_vault_id, amount, transfer_id)
+            transfer_nullifier = self._generate_ghost_nullifier(sender_vault_id, amount, transfer_id, asset_id)
             
             if transfer_nullifier in self.ghost_nullifiers:
                 raise Exception("Invalid ghost transfer - nullifier already used")
             
-            # Create sender zk-proof: "I have ≥amount WEPO without revealing actual balance"
+            # Create sender zk-proof: "I have ≥amount of asset_type without revealing actual balance"
             sender_proof = self._generate_cross_vault_proof(
                 sender_vault_id=sender_vault_id,
-                operation="ghost_send",
+                operation=f"ghost_send_{asset_type.lower()}",
                 amount=amount,
                 privacy_level=privacy_level,
-                hide_amount=hide_amount
+                hide_amount=hide_amount,
+                asset_type=asset_type,
+                asset_id=asset_id
             )
             
-            # Encrypt amount for maximum privacy
+            # Encrypt amount and asset info for maximum privacy
             encrypted_amount = None
+            encrypted_asset_info = None
             display_amount = amount
+            display_asset_type = asset_type
+            display_asset_id = asset_id
+            
             if hide_amount and privacy_level == "maximum":
                 encrypted_amount = str(amount)  # Store actual amount in encrypted field for simulation
                 display_amount = 0.0  # Hide the amount in the transfer record
+            
+            if hide_asset_type and privacy_level == "maximum":
+                encrypted_asset_info = json.dumps({
+                    "asset_type": asset_type,
+                    "asset_id": asset_id
+                })
+                display_asset_type = "HIDDEN"
+                display_asset_id = "HIDDEN"
             
             # Create ghost transfer record
             ghost_transfer = GhostTransfer(
                 transfer_id=transfer_id,
                 sender_vault_id=sender_vault_id,
                 receiver_vault_id=receiver_vault_id,
+                asset_type=display_asset_type,
+                asset_id=display_asset_id,
                 amount=display_amount,  # Hidden amount shows as 0.0
                 privacy_level=privacy_level,
                 hide_amount=hide_amount,
+                hide_asset_type=hide_asset_type,
                 status=GhostTransferStatus.PENDING,
                 created_at=int(time.time()),
                 sender_proof=sender_proof,
                 transfer_nullifier=transfer_nullifier,
-                encrypted_amount=encrypted_amount
+                encrypted_amount=encrypted_amount,
+                encrypted_asset_info=encrypted_asset_info
             )
             
             # Store ghost transfer
@@ -632,16 +660,20 @@ class QuantumVaultSystem:
                 self.pending_ghost_transfers[receiver_vault_id] = []
             self.pending_ghost_transfers[receiver_vault_id].append(transfer_id)
             
-            logger.info(f"Ghost transfer initiated: {transfer_id} ({privacy_level} privacy)")
+            logger.info(f"RWA Ghost transfer initiated: {transfer_id} ({asset_type} - {privacy_level} privacy)")
             
             return {
                 "transfer_id": transfer_id,
                 "status": "initiated",
+                "asset_type": asset_type,
+                "asset_id": asset_id,
                 "privacy_level": privacy_level,
                 "amount_hidden": hide_amount,
+                "asset_type_hidden": hide_asset_type,
                 "sender_proof_generated": True,
                 "awaiting_receiver_acceptance": True,
                 "ghost_transfer": True,
+                "rwa_support": asset_type == "RWA_TOKEN",
                 "privacy_protection": "maximum"
             }
             
