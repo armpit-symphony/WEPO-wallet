@@ -646,8 +646,229 @@ const QuantumVault = ({ onClose }) => {
             <CheckCircle className="h-4 w-4 text-green-400" />
             <span className="text-gray-300">Auto-deposit functionality</span>
           </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-green-400" />
+            <span className="text-gray-300">Ghost transfers (untraceable)</span>
+          </div>
         </div>
       </div>
+    </div>
+  );
+
+  const renderGhostTransfer = () => (
+    <div className="space-y-6">
+      {/* Ghost Transfer Header */}
+      <div className="bg-gradient-to-r from-purple-900/50 to-gray-900/50 rounded-lg p-4 border border-purple-500/30">
+        <div className="flex items-center gap-2 mb-2">
+          <Ghost className="h-5 w-5 text-purple-400" />
+          <span className="text-sm font-medium text-purple-200">Ghost Transfers</span>
+        </div>
+        <p className="text-sm text-gray-300">
+          Completely private vault-to-vault transfers. Zero traceability, mathematical privacy guarantees.
+        </p>
+      </div>
+
+      {/* Ghost Transfer Mode Selector */}
+      <div className="flex bg-gray-700 rounded-lg p-1">
+        <button
+          onClick={() => setGhostTransferMode('send')}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+            ghostTransferMode === 'send' 
+              ? 'bg-purple-600 text-white' 
+              : 'text-gray-300 hover:text-white'
+          }`}
+        >
+          <Send size={16} />
+          Send Ghost
+        </button>
+        <button
+          onClick={() => setGhostTransferMode('receive')}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+            ghostTransferMode === 'receive' 
+              ? 'bg-purple-600 text-white' 
+              : 'text-gray-300 hover:text-white'
+          }`}
+        >
+          <Inbox size={16} />
+          Receive ({pendingGhostTransfers.length})
+        </button>
+        <button
+          onClick={() => setGhostTransferMode('history')}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+            ghostTransferMode === 'history' 
+              ? 'bg-purple-600 text-white' 
+              : 'text-gray-300 hover:text-white'
+          }`}
+        >
+          <History size={16} />
+          History ({ghostHistory.length})
+        </button>
+      </div>
+
+      {/* Ghost Transfer Content */}
+      {ghostTransferMode === 'send' && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-purple-200 mb-2">
+              Target Vault ID
+            </label>
+            <input
+              type="text"
+              value={targetVaultId}
+              onChange={(e) => setTargetVaultId(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="vault_abc123..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-purple-200 mb-2">
+              WEPO Amount
+            </label>
+            <input
+              type="number"
+              value={ghostAmount}
+              onChange={(e) => setGhostAmount(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="0.000000"
+              step="0.000001"
+              min="0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-purple-200 mb-2">
+              Privacy Level
+            </label>
+            <select
+              value={privacyLevel}
+              onChange={(e) => setPrivacyLevel(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="maximum">Maximum Privacy</option>
+              <option value="standard">Standard Privacy</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="hideAmount"
+              checked={hideAmount}
+              onChange={(e) => setHideAmount(e.target.checked)}
+              className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+            />
+            <label htmlFor="hideAmount" className="text-sm text-gray-300">
+              Hide transfer amount (recommended)
+            </label>
+          </div>
+
+          <button
+            onClick={initiateGhostTransfer}
+            disabled={loading || !targetVaultId || !ghostAmount || parseFloat(ghostAmount) <= 0 || !selectedVault}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            <Ghost size={20} />
+            {loading ? 'Initiating...' : 'Send Ghost Transfer'}
+          </button>
+        </div>
+      )}
+
+      {ghostTransferMode === 'receive' && (
+        <div className="space-y-4">
+          {pendingGhostTransfers.length === 0 ? (
+            <div className="text-center py-8">
+              <Inbox className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">No Pending Ghost Transfers</h3>
+              <p className="text-gray-400">
+                Incoming ghost transfers will appear here for your review.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {pendingGhostTransfers.map((transfer) => (
+                <div key={transfer.transfer_id} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h4 className="text-white font-medium">Ghost Transfer</h4>
+                      <p className="text-sm text-gray-400">ID: {transfer.transfer_id.slice(0, 12)}...</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-semibold text-green-400">
+                        {transfer.amount} WEPO
+                      </div>
+                      <div className="text-sm text-purple-400">{transfer.privacy_level} privacy</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => acceptGhostTransfer(transfer.transfer_id)}
+                      disabled={loading}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      <UserCheck size={16} />
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => rejectGhostTransfer(transfer.transfer_id)}
+                      disabled={loading}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      <UserX size={16} />
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {ghostTransferMode === 'history' && (
+        <div className="space-y-4">
+          {ghostHistory.length === 0 ? (
+            <div className="text-center py-8">
+              <History className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">No Ghost Transfer History</h3>
+              <p className="text-gray-400">
+                Your ghost transfer history will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {ghostHistory.map((transfer) => (
+                <div key={transfer.transfer_id} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Ghost className="h-4 w-4 text-purple-400" />
+                        <span className="text-white font-medium capitalize">{transfer.type.replace('_', ' ')}</span>
+                      </div>
+                      <p className="text-sm text-gray-400">ID: {transfer.transfer_id.slice(0, 12)}...</p>
+                      <p className="text-sm text-gray-400">
+                        {new Date(transfer.created_at * 1000).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-lg font-semibold ${transfer.type === 'ghost_send' ? 'text-red-400' : 'text-green-400'}`}>
+                        {transfer.type === 'ghost_send' ? '-' : '+'}{transfer.amount} WEPO
+                      </div>
+                      <div className="text-sm text-purple-400">{transfer.privacy_level}</div>
+                      <div className={`text-sm capitalize ${
+                        transfer.status === 'completed' ? 'text-green-400' : 
+                        transfer.status === 'rejected' ? 'text-red-400' : 'text-yellow-400'
+                      }`}>
+                        {transfer.status}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 
