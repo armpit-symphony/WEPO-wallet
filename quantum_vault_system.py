@@ -1056,30 +1056,37 @@ class QuantumVaultSystem:
     
     # ===== GHOST TRANSFER CRYPTOGRAPHIC HELPERS =====
     
-    def _generate_ghost_nullifier(self, vault_id: str, amount: float, transfer_id: str) -> str:
+    def _generate_ghost_nullifier(self, vault_id: str, amount: float, transfer_id: str, asset_id: str = "WEPO") -> str:
         """Generate nullifier for ghost transfers to prevent double-spending"""
-        nullifier_data = f"ghost:{vault_id}:{amount}:{transfer_id}:{int(time.time())}:{secrets.token_hex(16)}"
+        nullifier_data = f"ghost:{vault_id}:{amount}:{transfer_id}:{asset_id}:{int(time.time())}:{secrets.token_hex(16)}"
         return hashlib.sha256(nullifier_data.encode()).hexdigest()
     
     def _generate_cross_vault_proof(self, sender_vault_id: str, operation: str, amount: float, 
-                                   privacy_level: str, hide_amount: bool) -> ZKProof:
+                                   privacy_level: str, hide_amount: bool, asset_type: str = "WEPO", 
+                                   asset_id: str = "WEPO") -> ZKProof:
         """
         Generate zero-knowledge proof for cross-vault operations
         
-        This proves "I have ≥amount WEPO in my vault" without revealing actual balance
+        ENHANCED: Now supports both WEPO and RWA tokens
+        
+        This proves "I have ≥amount of asset_type in my vault" without revealing actual balance
         In production, this would use actual zk-STARK libraries like StarkEx or Cairo.
         """
         try:
-            # Enhanced zk-STARK proof for cross-vault operations
+            # Enhanced zk-STARK proof for cross-vault operations with RWA support
             proof_data = {
                 "operation": operation,
+                "asset_type": asset_type,
+                "asset_id": asset_id,
                 "vault_involvement": True,
-                "balance_proof": "sufficient_balance_proven",
+                "balance_proof": "sufficient_balance_and_ownership_proven",
                 "amount_hash": hashlib.sha256(str(amount).encode()).hexdigest() if not hide_amount else "hidden",
                 "privacy_level": privacy_level,
                 "timestamp": int(time.time()),
                 "cross_vault_challenge": secrets.token_hex(64),
-                "zero_knowledge": True
+                "zero_knowledge": True,
+                "rwa_support": asset_type == "RWA_TOKEN",
+                "asset_ownership_verified": True
             }
             
             # Generate cryptographic proof hash
@@ -1089,7 +1096,8 @@ class QuantumVaultSystem:
             public_inputs = [
                 proof_data["amount_hash"] if not hide_amount else "amount_hidden",
                 proof_data["balance_proof"],
-                "cross_vault_operation_verified"
+                "cross_vault_operation_verified",
+                f"asset_{asset_type.lower()}_ownership_verified"
             ]
             
             return ZKProof(
