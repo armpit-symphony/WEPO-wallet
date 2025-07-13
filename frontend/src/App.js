@@ -38,7 +38,7 @@ const MainApp = () => {
         );
 
       case 'dashboard':
-        return <Dashboard onLogout={() => setCurrentView('setup')} />;
+        return <SimpleDashboard onLogout={() => setCurrentView('setup')} />;
 
       default:
         return (
