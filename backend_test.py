@@ -1606,7 +1606,7 @@ def run_rwa_quantum_vault_tests():
                 "destination_address": "wepo1rwadestination" + "0" * 17  # Make it 37 chars
             }
             
-            response = requests.post(f"{BRIDGE_URL}/vault/rwa/withdraw", json=withdrawal_data)
+            response = requests.post(f"{API_URL}/vault/rwa/withdraw", json=withdrawal_data)
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
