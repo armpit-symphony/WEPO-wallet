@@ -105,18 +105,10 @@ const Dashboard = ({ onLogout }) => {
 
     loadData();
     checkMiningMode();
-  }, [isQuantumMode, wallet, quantumWallet, setWallet, setBalance, setTransactions, loadWalletData, loadQuantumWalletData]);
+  }, [wallet, setWallet, setBalance, setTransactions, loadWalletData]);
 
   const handleLogout = () => {
-    if (isQuantumMode) {
-      logoutQuantum();
-    } else {
-      logout();
-    }
-  };
-
-  const handleModeToggle = () => {
-    toggleQuantumMode();
+    logout();
   };
 
   const formatBalance = (amount) => {
