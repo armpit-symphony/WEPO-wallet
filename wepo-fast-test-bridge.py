@@ -164,6 +164,12 @@ class FastTestBlockchain:
         self.stakes = {}  # Add stakes tracking
         self.masternodes = {}  # Add masternodes tracking
         
+        # Staking constants for testing
+        self.COIN = 100000000  # 1 WEPO = 100M satoshis  
+        self.MIN_STAKE_AMOUNT = 1000 * self.COIN
+        self.PRODUCTION_MODE = True  # Enable for testing
+        self.POS_ACTIVATION_HEIGHT = 1  # Activate immediately
+        
         # Create instant genesis block
         self.create_genesis_block()
     
