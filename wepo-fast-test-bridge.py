@@ -674,6 +674,10 @@ class FastTestBlockchain:
             self.wallets[address]["balance"] = new_balance
         except Exception as e:
             print(f"Error setting balance: {e}")
+    
+    def get_block_height(self) -> int:
+        """Get current block height"""
+        return len(self.blocks) - 1
 
 class WepoFastTestBridge:
     """Fast test bridge for instant blockchain operations"""
