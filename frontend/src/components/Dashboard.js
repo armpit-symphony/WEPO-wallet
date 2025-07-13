@@ -63,8 +63,19 @@ const Dashboard = ({ onLogout }) => {
   const [showBalance, setShowBalance] = useState(true);
   const [miningMode, setMiningMode] = useState('genesis'); // 'genesis' or 'pow'
   
+  // Quantum Vault state
+  const [showQuantumVault, setShowQuantumVault] = useState(false);
+  
   // Simplified quantum mode state (disabled for now)
   const isQuantumMode = false;
+  
+  // Dilithium info for quantum security display
+  const dilithiumInfo = {
+    algorithm: 'Dilithium2',
+    signature_size: 2420,
+    hash_function: 'SHAKE-256',
+    security_level: 'Post-Quantum'
+  };
 
   useEffect(() => {
     // Load wallet data if not already loaded
