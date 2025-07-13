@@ -534,15 +534,17 @@ class QuantumVaultSystem:
             
             # Encrypt amount for maximum privacy
             encrypted_amount = None
+            display_amount = amount
             if hide_amount and privacy_level == "maximum":
-                encrypted_amount = self._encrypt_amount(amount, receiver_vault_id)
+                encrypted_amount = str(amount)  # Store actual amount in encrypted field for simulation
+                display_amount = 0.0  # Hide the amount in the transfer record
             
             # Create ghost transfer record
             ghost_transfer = GhostTransfer(
                 transfer_id=transfer_id,
                 sender_vault_id=sender_vault_id,
                 receiver_vault_id=receiver_vault_id,
-                amount=amount if not hide_amount else 0.0,  # Hide amount if requested
+                amount=display_amount,  # Hidden amount shows as 0.0
                 privacy_level=privacy_level,
                 hide_amount=hide_amount,
                 status=GhostTransferStatus.PENDING,
