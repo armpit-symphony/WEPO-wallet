@@ -34,7 +34,16 @@ const QuantumVault = ({ onClose }) => {
   // UI states
   const [showBalance, setShowBalance] = useState(false);
   const [autoDepositEnabled, setAutoDepositEnabled] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'deposit', 'withdraw', 'settings'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'deposit', 'withdraw', 'settings', 'ghost'
+  
+  // Ghost Transfer states
+  const [ghostTransferMode, setGhostTransferMode] = useState('send'); // 'send', 'receive', 'history'
+  const [targetVaultId, setTargetVaultId] = useState('');
+  const [ghostAmount, setGhostAmount] = useState('');
+  const [privacyLevel, setPrivacyLevel] = useState('maximum');
+  const [hideAmount, setHideAmount] = useState(true);
+  const [pendingGhostTransfers, setPendingGhostTransfers] = useState([]);
+  const [ghostHistory, setGhostHistory] = useState([]);
   
   const currentAddress = wallet?.address;
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
