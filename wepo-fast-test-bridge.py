@@ -861,18 +861,31 @@ class WepoFastTestBridge:
                 "total_wepo": total / 100000000.0
             }
         
-        # Add unified wallet swap endpoints
+        # Community-Driven AMM Endpoints (No Admin)
         @self.app.get("/api/swap/rate")
-        async def get_swap_rate():
-            """Get current BTC/WEPO exchange rate"""
+        async def get_market_rate():
+            """Get current market-determined BTC/WEPO rate"""
             try:
-                # For now, return a fixed rate - in production this would be dynamic
-                rate = 1.007200  # 1 BTC = 1.007200 WEPO
+                price = btc_wepo_pool.get_price()
+                
+                if price is None:
+                    return {
+                        "pool_exists": False,
+                        "message": "No liquidity pool exists yet. Any user can create the market.",
+                        "btc_reserve": 0,
+                        "wepo_reserve": 0,
+                        "can_bootstrap": True
+                    }
+                
                 return {
-                    "btc_to_wepo": rate,
-                    "wepo_to_btc": 1 / rate,
-                    "last_updated": int(time.time()),
-                    "source": "internal_market_maker"
+                    "pool_exists": True,
+                    "btc_to_wepo": price,
+                    "wepo_to_btc": 1 / price,
+                    "btc_reserve": btc_wepo_pool.btc_reserve,
+                    "wepo_reserve": btc_wepo_pool.wepo_reserve,
+                    "total_liquidity_shares": btc_wepo_pool.total_shares,
+                    "fee_rate": btc_wepo_pool.fee_rate,
+                    "last_updated": int(time.time())
                 }
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
