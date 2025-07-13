@@ -8274,68 +8274,6 @@ def run_complete_fee_redistribution_tests():
     
     return test_results["failed"] == 0
 
-if __name__ == "__main__":
-    print("WEPO QUANTUM VAULT RWA INTEGRATION TESTING SUITE")
-    print("=" * 60)
-    
-    # Run the RWA Quantum Vault tests as specifically requested
-    print("Running WEPO Quantum Vault RWA Integration Tests...")
-    print("Testing: World's first private real-world asset storage solution")
-    print("Testing: RWA tokenization + Quantum Vault privacy combination")
-    print("Testing: Multi-asset support, RWA ghost transfers, asset type hiding")
-    print("=" * 60)
-    
-    # Execute RWA Quantum Vault tests
-    rwa_quantum_vault_success = run_rwa_quantum_vault_tests()
-    
-    # Print final summary
-    print("\n" + "="*80)
-    print("WEPO QUANTUM VAULT RWA INTEGRATION FINAL SUMMARY")
-    print("="*80)
-    
-    if rwa_quantum_vault_success:
-        print("🎉 RWA QUANTUM VAULT INTEGRATION SYSTEM FULLY OPERATIONAL!")
-        print("✅ All revolutionary RWA privacy features working correctly")
-        print("✅ Multi-asset quantum vault creation confirmed")
-        print("✅ RWA token deposit with privacy protection functional")
-        print("✅ Private RWA asset portfolio display working")
-        print("✅ RWA ghost transfers (untraceable asset transfers) operational")
-        print("✅ RWA token withdrawal with privacy protection verified")
-        print("✅ Multi-asset vault status with enhanced features confirmed")
-        print("✅ World's first private real-world asset storage solution ready!")
-        
-        print("\nREVOLUTIONARY ACHIEVEMENT:")
-        print("WEPO RWA Quantum Vault Integration combines RWA tokenization with Quantum Vault privacy")
-        print("First-ever private RWA token storage with complete asset portfolio anonymity")
-        print("Revolutionary combination creates the ultimate private real-world asset solution")
-        
-    else:
-        print("❌ RWA QUANTUM VAULT INTEGRATION SYSTEM NEEDS ATTENTION!")
-        print("Some critical RWA privacy features are not working correctly")
-        
-        print("\n⚠️ AREAS REQUIRING ATTENTION:")
-        print("- Multi-asset vault creation may not be accessible")
-        print("- RWA token deposit endpoints may have issues")
-        print("- RWA asset listing may not be working")
-        print("- RWA ghost transfer initiation may be failing")
-        print("- RWA token withdrawal may have problems")
-        print("- Multi-asset vault status may need fixes")
-        
-        print("\n🔧 RECOMMENDED ACTIONS:")
-        print("1. Check Multi-Asset Quantum Vault endpoints: /api/vault/create")
-        print("2. Verify RWA deposit endpoints: /api/vault/rwa/deposit")
-        print("3. Test RWA asset listing: /api/vault/rwa/assets/{vault_id}")
-        print("4. Check RWA ghost transfers: /api/vault/rwa/ghost-transfer/initiate")
-        print("5. Verify RWA withdrawal: /api/vault/rwa/withdraw")
-        print("6. Test multi-asset vault status: /api/vault/status/{vault_id}")
-        print("7. Ensure asset type hiding and privacy features are working")
-    
-    print("\n" + "="*80)
-    print("END OF WEPO QUANTUM VAULT RWA INTEGRATION TESTING")
-    print("="*80)
-    
-    sys.exit(0 if rwa_quantum_vault_success else 1)
-
 def run_quantum_vault_tests():
     """Run comprehensive WEPO Quantum Vault backend implementation tests"""
     print("\n" + "="*80)
