@@ -186,11 +186,6 @@ const Dashboard = ({ onLogout }) => {
           </div>
           <div className="text-right">
             <Shield className="h-12 w-12 text-purple-200 mb-2" />
-            {isQuantumMode && dilithiumInfo && (
-              <div className="text-xs text-purple-100">
-                {dilithiumInfo.algorithm}
-              </div>
-            )}
           </div>
         </div>
         
