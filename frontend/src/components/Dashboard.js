@@ -368,7 +368,19 @@ const Dashboard = ({ onLogout }) => {
       </div>
 
       {/* Secondary Action Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <button 
+          onClick={() => setShowQuantumVault(true)}
+          className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50 relative"
+        >
+          <Shield className="h-6 w-6 text-purple-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Quantum Vault</span>
+          <div className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs px-2 py-1 rounded-full">
+            PRIVATE
+          </div>
+          <div className="text-xs text-gray-400 mt-1">Ultimate Privacy</div>
+        </button>
+        
         <button 
           onClick={() => setActiveTab('rwa')}
           className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50 relative"
