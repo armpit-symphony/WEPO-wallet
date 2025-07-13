@@ -1532,7 +1532,7 @@ def run_rwa_quantum_vault_tests():
                     "hide_asset_type": True
                 }
                 
-                response = requests.post(f"{BRIDGE_URL}/vault/rwa/ghost-transfer/initiate", json=transfer_data)
+                response = requests.post(f"{API_URL}/vault/rwa/ghost-transfer/initiate", json=transfer_data)
                 print(f"  Response: {response.status_code}")
                 
                 if response.status_code == 200:
