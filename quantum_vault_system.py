@@ -982,9 +982,13 @@ class QuantumVaultSystem:
         nullifier_data = f"{vault_id}:{amount}:{asset_id}:{int(time.time())}:{secrets.token_hex(16)}"
         return hashlib.sha256(nullifier_data.encode()).hexdigest()
     
-    def _hash_proof_data(self, vault_id: str, amount: float, operation: str) -> str:
-        """Generate hash for proof data"""
-        proof_data = f"{vault_id}:{amount}:{operation}:{int(time.time())}"
+    def _hash_proof_data(self, vault_id: str, amount: float, operation: str, asset_id: str = "WEPO") -> str:
+        """
+        Generate hash for proof data
+        
+        ENHANCED: Now includes asset_id for asset-specific proofs
+        """
+        proof_data = f"{vault_id}:{amount}:{operation}:{asset_id}:{int(time.time())}"
         return hashlib.sha256(proof_data.encode()).hexdigest()
     
     def _generate_zk_proof(self, vault_id: str, operation: str, amount: float, 
