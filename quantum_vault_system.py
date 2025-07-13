@@ -95,6 +95,12 @@ class QuantumVaultSystem:
         self.auto_deposit_settings = {}  # wallet_address -> auto_deposit_enabled
         self.vault_transactions = {}  # vault_id -> List[VaultTransaction]
         
+        # Ghost Transfer System
+        self.ghost_transfers = {}  # transfer_id -> GhostTransfer
+        self.pending_ghost_transfers = {}  # receiver_vault_id -> List[transfer_id]
+        self.ghost_nullifiers = set()  # spent ghost transfer nullifiers
+        self.cross_vault_commitments = {}  # Special commitments for cross-vault operations
+        
     def create_vault(self, wallet_address: str, initial_commitment: str = None) -> Dict:
         """
         Create a new Quantum Vault for a wallet address
