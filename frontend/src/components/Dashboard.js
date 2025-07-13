@@ -18,7 +18,11 @@ import {
   Settings,
   Users,
   Zap,
-  Lock
+  Lock,
+  Shield,
+  AlertCircle,
+  LogOut,
+  Server
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { generateBitcoinAddress } from '../utils/addressUtils';
@@ -44,29 +48,15 @@ const Dashboard = ({ onLogout }) => {
     masternodesEnabled,
     loadWalletData,
     setBalance,
-    setTransactions 
+    setTransactions,
+    logout,
+    setWallet
   } = useWallet();
   
-  const {
-    quantumWallet,
-    quantumBalance,
-    quantumTransactions,
-    isQuantumMode,
-    toggleQuantumMode,
-    logoutQuantum,
-    loadQuantumWalletData,
-    quantumStatus,
-    dilithiumInfo
-  } = useQuantum();
-  
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [showBalance, setShowBalance] = useState(true);
-  const [miningMode, setMiningMode] = useState('genesis'); // 'genesis' or 'pow'
-
-  // Get current wallet data based on mode
-  const currentWallet = isQuantumMode ? quantumWallet : wallet;
-  const currentBalance = isQuantumMode ? quantumBalance : balance;
-  const currentTransactions = isQuantumMode ? quantumTransactions : transactions;
+  // Simplified without quantum features for now
+  const currentWallet = wallet;
+  const currentBalance = balance;
+  const currentTransactions = transactions;
 
   useEffect(() => {
     // Load wallet data if not already loaded
