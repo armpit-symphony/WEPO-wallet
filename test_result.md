@@ -393,10 +393,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Unified Exchange Interface - Backend API"
+    - "Unified Exchange Interface - Complete Testing"
   stuck_tasks: []
   test_all: false
-  test_priority: "high_first"
+  test_priority: "critical"
   backend_tested: false
 
 backend:
