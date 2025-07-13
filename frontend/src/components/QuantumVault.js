@@ -880,6 +880,8 @@ const QuantumVault = ({ onClose }) => {
         return renderDeposit();
       case 'withdraw':
         return renderWithdraw();
+      case 'ghost':
+        return renderGhostTransfer();
       case 'settings':
         return renderSettings();
       default:
