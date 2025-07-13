@@ -1515,7 +1515,7 @@ class WepoFastTestBridge:
                         "stake_created": True,
                         "stake_id": stake_id,
                         "staker_address": staker_address,
-                        "amount_staked": amount,
+                        "stake_amount": amount,  # Fixed: renamed from amount_staked
                         "min_stake_amount": self.blockchain.MIN_STAKE_AMOUNT / self.blockchain.COIN,
                         "rewards_start": "Next block",
                         "fee_share": "15% of all network fees",
