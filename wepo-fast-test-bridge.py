@@ -23,6 +23,135 @@ from address_utils import validate_wepo_address as validate_address_std, generat
 sys.path.append('/app')
 from wepo_community_mining_backend import mining_coordinator, setup_mining_routes
 
+# Community-Driven AMM System (No Admin)
+import math
+from typing import Dict, Optional
+
+class LiquidityPool:
+    """Community-driven liquidity pool with no admin control"""
+    
+    def __init__(self):
+        self.btc_reserve = 0.0
+        self.wepo_reserve = 0.0
+        self.total_shares = 0.0
+        self.lp_positions = {}  # user_address: shares
+        self.fee_rate = 0.003  # 0.3% trading fee
+    
+    def get_price(self) -> Optional[float]:
+        """Get current WEPO per BTC price"""
+        if self.btc_reserve == 0:
+            return None
+        return self.wepo_reserve / self.btc_reserve
+    
+    def get_output_amount(self, input_amount: float, input_is_btc: bool) -> float:
+        """Calculate output amount using constant product formula"""
+        if input_is_btc:
+            # BTC → WEPO
+            input_reserve = self.btc_reserve
+            output_reserve = self.wepo_reserve
+        else:
+            # WEPO → BTC  
+            input_reserve = self.wepo_reserve
+            output_reserve = self.btc_reserve
+        
+        # Apply fee to input
+        input_after_fee = input_amount * (1 - self.fee_rate)
+        
+        # Constant product formula: x * y = k
+        # (x + input_after_fee) * (y - output) = x * y
+        # output = (y * input_after_fee) / (x + input_after_fee)
+        output_amount = (output_reserve * input_after_fee) / (input_reserve + input_after_fee)
+        
+        return output_amount
+    
+    def bootstrap_pool(self, user_address: str, btc_amount: float, wepo_amount: float):
+        """First user creates the market - no admin required"""
+        if self.total_shares > 0:
+            raise Exception("Pool already exists")
+        
+        if btc_amount <= 0 or wepo_amount <= 0:
+            raise Exception("Invalid amounts")
+        
+        # Set initial reserves (user determines initial price)
+        self.btc_reserve = btc_amount
+        self.wepo_reserve = wepo_amount
+        
+        # Initial shares = geometric mean of reserves
+        self.total_shares = math.sqrt(btc_amount * wepo_amount)
+        self.lp_positions[user_address] = self.total_shares
+        
+        return {
+            "initial_price": wepo_amount / btc_amount,
+            "shares_minted": self.total_shares,
+            "pool_created": True,
+            "btc_reserve": self.btc_reserve,
+            "wepo_reserve": self.wepo_reserve
+        }
+    
+    def add_liquidity(self, user_address: str, btc_amount: float, wepo_amount: float):
+        """Add liquidity to existing pool"""
+        if self.total_shares == 0:
+            return self.bootstrap_pool(user_address, btc_amount, wepo_amount)
+        
+        # Calculate required ratio
+        current_ratio = self.wepo_reserve / self.btc_reserve
+        provided_ratio = wepo_amount / btc_amount
+        
+        # Allow small tolerance for ratio mismatch
+        if abs(current_ratio - provided_ratio) / current_ratio > 0.02:  # 2% tolerance
+            raise Exception(f"Ratio mismatch. Current: {current_ratio:.6f}, Provided: {provided_ratio:.6f}")
+        
+        # Calculate shares to mint proportionally
+        btc_share = btc_amount / self.btc_reserve
+        shares_to_mint = self.total_shares * btc_share
+        
+        # Update reserves
+        self.btc_reserve += btc_amount
+        self.wepo_reserve += wepo_amount
+        self.total_shares += shares_to_mint
+        
+        # Update user position
+        if user_address in self.lp_positions:
+            self.lp_positions[user_address] += shares_to_mint
+        else:
+            self.lp_positions[user_address] = shares_to_mint
+        
+        return {
+            "shares_minted": shares_to_mint,
+            "total_shares": self.total_shares,
+            "new_price": self.get_price(),
+            "btc_reserve": self.btc_reserve,
+            "wepo_reserve": self.wepo_reserve
+        }
+    
+    def execute_swap(self, input_amount: float, input_is_btc: bool) -> Dict:
+        """Execute swap and update reserves"""
+        if self.total_shares == 0:
+            raise Exception("No liquidity in pool")
+        
+        output_amount = self.get_output_amount(input_amount, input_is_btc)
+        fee_amount = input_amount * self.fee_rate
+        
+        # Update reserves
+        if input_is_btc:
+            self.btc_reserve += input_amount
+            self.wepo_reserve -= output_amount
+        else:
+            self.wepo_reserve += input_amount
+            self.btc_reserve -= output_amount
+        
+        return {
+            "input_amount": input_amount,
+            "output_amount": output_amount,
+            "fee_amount": fee_amount,
+            "new_price": self.get_price(),
+            "btc_reserve": self.btc_reserve,
+            "wepo_reserve": self.wepo_reserve
+        }
+
+# Global pool instance for the bridge
+btc_wepo_pool = LiquidityPool()
+
 class FastTestBlockchain:
     """Fast test blockchain with instant operations"""
     
