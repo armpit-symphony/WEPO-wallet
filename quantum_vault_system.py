@@ -33,12 +33,13 @@ logger = logging.getLogger(__name__)
 class VaultTransaction:
     """Represents a private vault transaction"""
     vault_id: str
-    transaction_type: str  # 'deposit', 'withdrawal', 'auto_deposit'
+    transaction_type: str  # 'deposit', 'withdrawal', 'auto_deposit', 'ghost_send', 'ghost_receive'
     amount: float
     timestamp: int
     proof_hash: str
     commitment: str
     nullifier: str
+    ghost_transfer_id: Optional[str] = None  # For ghost transfers
 
 @dataclass
 class ZKProof:
@@ -47,6 +48,36 @@ class ZKProof:
     public_inputs: List[str]
     verification_key: str
     created_at: int
+
+@dataclass  
+class GhostTransfer:
+    """Ghost transfer between vaults - completely private and untraceable"""
+    transfer_id: str
+    sender_vault_id: str
+    receiver_vault_id: str
+    amount: float
+    privacy_level: str  # 'standard' or 'maximum'
+    hide_amount: bool
+    status: str  # 'initiated', 'pending', 'accepted', 'rejected', 'completed'
+    created_at: int
+    accepted_at: Optional[int] = None
+    completed_at: Optional[int] = None
+    sender_proof: Optional[ZKProof] = None
+    receiver_proof: Optional[ZKProof] = None
+    transfer_nullifier: Optional[str] = None
+    encrypted_amount: Optional[str] = None  # For maximum privacy
+
+class GhostTransferStatus(str, Enum):
+    INITIATED = "initiated"
+    PENDING = "pending" 
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+class PrivacyLevel(str, Enum):
+    STANDARD = "standard"
+    MAXIMUM = "maximum"
 
 class QuantumVaultSystem:
     """
