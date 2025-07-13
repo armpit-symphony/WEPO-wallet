@@ -279,14 +279,19 @@ class QuantumVaultSystem:
             logger.error(f"Error depositing to vault: {str(e)}")
             raise Exception(f"Vault deposit failed: {str(e)}")
     
-    def withdraw_from_vault(self, vault_id: str, amount: float, destination_address: str) -> Dict:
+    def withdraw_from_vault(self, vault_id: str, amount: float, destination_address: str,
+                          asset_type: str = "WEPO", asset_id: str = "WEPO") -> Dict:
         """
-        Withdraw WEPO from Quantum Vault with privacy protection
+        Withdraw WEPO or RWA tokens from Quantum Vault with privacy protection
+        
+        REVOLUTIONARY ENHANCEMENT: Now supports both WEPO and RWA tokens
         
         Args:
             vault_id: Source vault identifier
-            amount: Amount of WEPO to withdraw
+            amount: Amount to withdraw
             destination_address: Target wallet address
+            asset_type: 'WEPO' or 'RWA_TOKEN'
+            asset_id: 'WEPO' for WEPO, token_id for RWA tokens
             
         Returns:
             Dictionary containing withdrawal confirmation
@@ -297,65 +302,81 @@ class QuantumVaultSystem:
             
             vault = self.vaults[vault_id]
             
-            if vault["private_balance"] < amount:
-                raise Exception("Insufficient vault balance")
+            # Check if asset exists in vault
+            if asset_id not in vault["assets"]:
+                raise Exception(f"Asset {asset_id} not found in vault")
+            
+            current_balance = vault["assets"][asset_id]["balance"]
+            
+            if current_balance < amount:
+                raise Exception(f"Insufficient {asset_type} balance in vault")
+            
+            # Calculate new balance
+            new_balance = current_balance - amount
+            
+            # Generate new commitment for privacy
+            secret = secrets.token_hex(32)
+            new_commitment = self._generate_commitment(new_balance, secret)
+            
+            # Generate zk-proof for withdrawal
+            proof = self._generate_zk_proof(
+                vault_id=vault_id,
+                operation=f"withdraw_{asset_type.lower()}",
+                amount=amount,
+                commitment=new_commitment,
+                asset_type=asset_type,
+                asset_id=asset_id
+            )
             
             # Generate nullifier to prevent double-spending
-            nullifier = self._generate_nullifier(vault_id, amount)
+            nullifier = self._generate_nullifier(vault_id, amount, asset_id)
             
             if nullifier in self.nullifiers:
                 raise Exception("Invalid withdrawal - nullifier already used")
-            
-            # Create new commitment for remaining balance
-            secret = secrets.token_hex(32)
-            new_balance = vault["private_balance"] - amount
-            new_commitment = self._generate_commitment(new_balance, secret)
             
             # Create transaction record
             transaction = VaultTransaction(
                 vault_id=vault_id,
                 transaction_type="withdrawal",
+                asset_type=asset_type,
+                asset_id=asset_id,
                 amount=amount,
                 timestamp=int(time.time()),
-                proof_hash=self._hash_proof_data(vault_id, amount, "withdrawal"),
+                proof_hash=self._hash_proof_data(vault_id, amount, f"withdraw_{asset_type.lower()}"),
                 commitment=new_commitment,
                 nullifier=nullifier
             )
             
-            # Generate zk-proof for withdrawal
-            proof = self._generate_zk_proof(
-                vault_id=vault_id,
-                operation="withdrawal",
-                amount=amount,
-                commitment=new_commitment
-            )
-            
             # Update vault state
-            vault["private_balance"] = new_balance
-            vault["commitment"] = new_commitment
+            vault["assets"][asset_id]["balance"] = new_balance
+            vault["assets"][asset_id]["commitment"] = new_commitment
+            vault["assets"][asset_id]["last_updated"] = int(time.time())
             vault["transaction_count"] += 1
             
-            # Mark nullifier as used
-            self.nullifiers.add(nullifier)
-            
-            # Store transaction
+            # Store transaction and nullifier
             self.vault_transactions[vault_id].append(transaction)
+            self.nullifiers.add(nullifier)
             self.commitments[new_commitment] = {
                 "vault_id": vault_id,
+                "asset_id": asset_id,
                 "balance": new_balance,
                 "created_at": int(time.time())
             }
             
-            logger.info(f"Vault withdrawal: {amount} WEPO from {vault_id}")
+            logger.info(f"Vault withdrawal: {amount} {asset_type} ({asset_id}) from {vault_id} to {destination_address}")
             
             return {
                 "transaction_id": transaction.proof_hash,
                 "status": "confirmed",
+                "asset_type": asset_type,
+                "asset_id": asset_id,
                 "amount_withdrawn": amount,
                 "destination_address": destination_address,
                 "new_commitment": new_commitment,
                 "proof": proof,
-                "privacy_protected": True
+                "nullifier": nullifier,
+                "privacy_protected": True,
+                "rwa_support": asset_type == "RWA_TOKEN"
             }
             
         except Exception as e:
