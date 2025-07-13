@@ -30,16 +30,28 @@ from enum import Enum
 logger = logging.getLogger(__name__)
 
 @dataclass
+class VaultAsset:
+    """Represents an asset in a vault (WEPO or RWA token)"""
+    asset_type: str  # 'WEPO' or 'RWA_TOKEN'
+    asset_id: str    # 'WEPO' for WEPO, token_id for RWA tokens
+    balance: float
+    commitment: str
+    last_updated: int
+
+@dataclass
 class VaultTransaction:
     """Represents a private vault transaction"""
     vault_id: str
     transaction_type: str  # 'deposit', 'withdrawal', 'auto_deposit', 'ghost_send', 'ghost_receive'
+    asset_type: str  # 'WEPO' or 'RWA_TOKEN'
+    asset_id: str    # 'WEPO' for WEPO, token_id for RWA tokens
     amount: float
     timestamp: int
     proof_hash: str
     commitment: str
     nullifier: str
     ghost_transfer_id: Optional[str] = None  # For ghost transfers
+    asset_metadata: Optional[Dict] = None   # Additional asset information
 
 @dataclass
 class ZKProof:
