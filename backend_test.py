@@ -1298,7 +1298,7 @@ def run_rwa_quantum_vault_tests():
             "wallet_address": test_wallet_address
         }
         
-        response = requests.post(f"{BRIDGE_URL}/vault/create", json=vault_data)
+        response = requests.post(f"{API_URL}/vault/create", json=vault_data)
         print(f"  Response: {response.status_code}")
         
         if response.status_code == 200:
