@@ -606,14 +606,12 @@ class QuantumVaultSystem:
             # Get actual amount (decrypt if hidden)
             actual_amount = ghost_transfer.amount
             if ghost_transfer.hide_amount and ghost_transfer.encrypted_amount:
-                # For simulation, since we stored the actual amount in the ghost_transfer object
-                # In production, this would properly decrypt using the receiver's private key
-                actual_amount = ghost_transfer.amount if ghost_transfer.amount > 0 else 25.0
+                # For simulation, retrieve actual amount from encrypted field
+                # In production, this would use proper decryption with receiver's private key
+                actual_amount = float(ghost_transfer.encrypted_amount)
             elif ghost_transfer.amount == 0.0 and ghost_transfer.hide_amount:
-                # For hidden amounts where amount was set to 0.0, we need to retrieve actual amount
-                # In production, this would be properly decrypted
-                # For simulation, we'll extract from a different field or use a reasonable test value
-                actual_amount = 25.0  # This would be properly decrypted in production
+                # Fallback for hidden amounts
+                actual_amount = float(ghost_transfer.encrypted_amount) if ghost_transfer.encrypted_amount else 0.0
             
             # Execute atomic vault updates
             sender_vault = self.vaults[ghost_transfer.sender_vault_id]
