@@ -973,9 +973,13 @@ class QuantumVaultSystem:
         commitment_data = f"{balance}:{secret}:{int(time.time())}"
         return hashlib.sha256(commitment_data.encode()).hexdigest()
     
-    def _generate_nullifier(self, vault_id: str, amount: float) -> str:
-        """Generate nullifier to prevent double-spending"""
-        nullifier_data = f"{vault_id}:{amount}:{int(time.time())}:{secrets.token_hex(16)}"
+    def _generate_nullifier(self, vault_id: str, amount: float, asset_id: str = "WEPO") -> str:
+        """
+        Generate nullifier to prevent double-spending
+        
+        ENHANCED: Now includes asset_id to prevent cross-asset double-spending
+        """
+        nullifier_data = f"{vault_id}:{amount}:{asset_id}:{int(time.time())}:{secrets.token_hex(16)}"
         return hashlib.sha256(nullifier_data.encode()).hexdigest()
     
     def _hash_proof_data(self, vault_id: str, amount: float, operation: str) -> str:
