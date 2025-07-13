@@ -1104,6 +1104,175 @@ class WepoFastTestBridge:
                     raise HTTPException(status_code=404, detail=str(e))
                 raise HTTPException(status_code=500, detail=str(e))
 
+        # ===== RWA QUANTUM VAULT ENDPOINTS - REVOLUTIONARY PRIVATE RWA STORAGE =====
+        
+        @self.app.post("/api/vault/rwa/deposit")
+        async def deposit_rwa_to_vault(request: dict):
+            """Deposit RWA tokens to Quantum Vault with privacy protection"""
+            try:
+                vault_id = request.get("vault_id")
+                asset_id = request.get("asset_id")  # RWA token ID
+                amount = float(request.get("amount", 0))
+                asset_metadata = request.get("asset_metadata", {})
+                
+                if not vault_id or not asset_id or amount <= 0:
+                    raise HTTPException(status_code=400, detail="Invalid RWA deposit parameters")
+                
+                # Deposit RWA token to vault
+                result = quantum_vault_system.deposit_to_vault(
+                    vault_id=vault_id,
+                    amount=amount,
+                    source_type="manual_rwa",
+                    asset_type="RWA_TOKEN",
+                    asset_id=asset_id,
+                    asset_metadata=asset_metadata
+                )
+                
+                return {
+                    "success": True,
+                    "rwa_deposited": True,
+                    "transaction_id": result["transaction_id"],
+                    "asset_type": result["asset_type"],
+                    "asset_id": result["asset_id"],
+                    "amount_deposited": result["amount_deposited"],
+                    "new_commitment": result["new_commitment"],
+                    "privacy_protected": result["privacy_protected"],
+                    "rwa_support": result["rwa_support"],
+                    "message": f"RWA token {asset_id} deposited to vault with privacy protection"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                elif "invalid" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/vault/rwa/withdraw")
+        async def withdraw_rwa_from_vault(request: dict):
+            """Withdraw RWA tokens from Quantum Vault with privacy protection"""
+            try:
+                vault_id = request.get("vault_id")
+                asset_id = request.get("asset_id")  # RWA token ID
+                amount = float(request.get("amount", 0))
+                destination_address = request.get("destination_address")
+                
+                if not vault_id or not asset_id or amount <= 0 or not destination_address:
+                    raise HTTPException(status_code=400, detail="Invalid RWA withdrawal parameters")
+                
+                # Withdraw RWA token from vault
+                result = quantum_vault_system.withdraw_from_vault(
+                    vault_id=vault_id,
+                    amount=amount,
+                    destination_address=destination_address,
+                    asset_type="RWA_TOKEN",
+                    asset_id=asset_id
+                )
+                
+                return {
+                    "success": True,
+                    "rwa_withdrawn": True,
+                    "transaction_id": result["transaction_id"],
+                    "asset_type": result["asset_type"],
+                    "asset_id": result["asset_id"],
+                    "amount_withdrawn": result["amount_withdrawn"],
+                    "destination_address": result["destination_address"],
+                    "new_commitment": result["new_commitment"],
+                    "privacy_protected": result["privacy_protected"],
+                    "rwa_support": result["rwa_support"],
+                    "message": f"RWA token {asset_id} withdrawn from vault to {destination_address}"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                elif "insufficient" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/vault/rwa/ghost-transfer/initiate")
+        async def initiate_rwa_ghost_transfer(request: dict):
+            """Initiate completely private RWA token transfer between vaults"""
+            try:
+                sender_vault_id = request.get("sender_vault_id")
+                receiver_vault_id = request.get("receiver_vault_id")
+                asset_id = request.get("asset_id")  # RWA token ID
+                amount = float(request.get("amount", 0))
+                privacy_level = request.get("privacy_level", "maximum")
+                hide_amount = request.get("hide_amount", True)
+                hide_asset_type = request.get("hide_asset_type", True)
+                
+                if not sender_vault_id or not receiver_vault_id or not asset_id or amount <= 0:
+                    raise HTTPException(status_code=400, detail="Invalid RWA ghost transfer parameters")
+                
+                # Initiate RWA ghost transfer
+                result = quantum_vault_system.initiate_ghost_transfer(
+                    sender_vault_id=sender_vault_id,
+                    receiver_vault_id=receiver_vault_id,
+                    amount=amount,
+                    privacy_level=privacy_level,
+                    hide_amount=hide_amount,
+                    asset_type="RWA_TOKEN",
+                    asset_id=asset_id,
+                    hide_asset_type=hide_asset_type
+                )
+                
+                return {
+                    "success": True,
+                    "rwa_ghost_transfer_initiated": True,
+                    "transfer_id": result["transfer_id"],
+                    "asset_type": result["asset_type"],
+                    "asset_id": result["asset_id"],
+                    "privacy_level": result["privacy_level"],
+                    "amount_hidden": result["amount_hidden"],
+                    "asset_type_hidden": result["asset_type_hidden"],
+                    "rwa_support": result["rwa_support"],
+                    "privacy_protection": result["privacy_protection"],
+                    "message": f"RWA ghost transfer initiated with {privacy_level} privacy - completely untraceable"
+                }
+                
+            except Exception as e:
+                if "insufficient" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                elif "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/vault/rwa/assets/{vault_id}")
+        async def get_vault_rwa_assets(vault_id: str):
+            """Get all RWA assets stored in a Quantum Vault"""
+            try:
+                # Get vault status with multi-asset information
+                status = quantum_vault_system.get_vault_status(vault_id)
+                
+                # Filter for RWA assets only
+                rwa_assets = {
+                    asset_id: asset_data 
+                    for asset_id, asset_data in status["assets"].items() 
+                    if asset_data["asset_type"] == "RWA_TOKEN"
+                }
+                
+                return {
+                    "success": True,
+                    "vault_id": vault_id,
+                    "rwa_asset_count": len(rwa_assets),
+                    "rwa_assets": rwa_assets,
+                    "privacy_protected": True,
+                    "portfolio_value_hidden": True,
+                    "features": {
+                        "private_rwa_storage": True,
+                        "rwa_ghost_transfers": True,
+                        "asset_type_hiding": True,
+                        "mathematical_privacy_proofs": True
+                    },
+                    "message": f"Found {len(rwa_assets)} RWA assets in vault"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.post("/api/test/mine-block")
         async def mine_test_block(request: dict):
             """Mine a block for testing fee redistribution"""
