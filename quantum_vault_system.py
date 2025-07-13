@@ -25,6 +25,7 @@ from dataclasses import dataclass
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 import logging
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 
