@@ -204,9 +204,10 @@ class QuantumVaultSystem:
             
             # Initialize asset in vault if not exists (for RWA tokens)
             if asset_id not in vault["assets"]:
+                initial_commitment = hashlib.sha256(f"0.0:{secrets.token_hex(32)}:{int(time.time())}".encode()).hexdigest()
                 vault["assets"][asset_id] = {
                     "balance": 0.0,
-                    "commitment": self._generate_commitment(0.0, secrets.token_hex(32)),
+                    "commitment": initial_commitment,
                     "last_updated": int(time.time()),
                     "asset_type": asset_type,
                     "metadata": asset_metadata or {}
