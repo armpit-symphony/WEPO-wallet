@@ -28,6 +28,7 @@ import { useWallet } from '../contexts/WalletContext';
 import { generateBitcoinAddress } from '../utils/addressUtils';
 import SendWepo from './SendWepo';
 import ReceiveWepo from './ReceiveWepo';
+import QuantumVault from './QuantumVault';
 import BtcDexSwap from './BtcDexSwap';
 import QuantumMessaging from './QuantumMessaging';
 import RWADashboard from './RWADashboard';
