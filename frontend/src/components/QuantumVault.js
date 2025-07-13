@@ -269,6 +269,121 @@ const QuantumVault = ({ onClose }) => {
     }
   };
 
+  // ===== GHOST TRANSFER FUNCTIONS - REVOLUTIONARY PRIVACY =====
+
+  const initiateGhostTransfer = async () => {
+    if (!selectedVault || !targetVaultId || !ghostAmount || parseFloat(ghostAmount) <= 0) {
+      setError('Please fill in all ghost transfer fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await fetch(`${backendUrl}/api/vault/ghost-transfer/initiate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender_vault_id: selectedVault.vault_id,
+          receiver_vault_id: targetVaultId,
+          amount: parseFloat(ghostAmount),
+          privacy_level: privacyLevel,
+          hide_amount: hideAmount
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSuccess(`Ghost transfer initiated! Transfer ID: ${data.transfer_id.slice(0, 12)}... Completely untraceable with ${data.privacy_level} privacy.`);
+        setTargetVaultId('');
+        setGhostAmount('');
+        await loadWalletVaults();
+        await loadGhostHistory();
+      } else {
+        setError(data.message || 'Failed to initiate ghost transfer');
+      }
+    } catch (err) {
+      console.error('Error initiating ghost transfer:', err);
+      setError('Failed to initiate ghost transfer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const acceptGhostTransfer = async (transferId) => {
+    if (!selectedVault) return;
+
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await fetch(`${backendUrl}/api/vault/ghost-transfer/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transfer_id: transferId,
+          receiver_vault_id: selectedVault.vault_id
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSuccess(`Ghost transfer accepted! Received ${data.amount_received} WEPO privately. Transfer completely untraceable.`);
+        await loadWalletVaults();
+        await loadPendingGhostTransfers();
+        await loadGhostHistory();
+      } else {
+        setError(data.message || 'Failed to accept ghost transfer');
+      }
+    } catch (err) {
+      console.error('Error accepting ghost transfer:', err);
+      setError('Failed to accept ghost transfer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const rejectGhostTransfer = async (transferId) => {
+    if (!selectedVault) return;
+
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await fetch(`${backendUrl}/api/vault/ghost-transfer/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transfer_id: transferId,
+          receiver_vault_id: selectedVault.vault_id
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSuccess('Ghost transfer rejected');
+        await loadPendingGhostTransfers();
+      } else {
+        setError(data.message || 'Failed to reject ghost transfer');
+      }
+    } catch (err) {
+      console.error('Error rejecting ghost transfer:', err);
+      setError('Failed to reject ghost transfer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatBalance = (balance) => {
     return showBalance ? balance.toFixed(6) : '••••••';
   };
