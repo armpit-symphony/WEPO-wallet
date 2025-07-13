@@ -54,6 +54,43 @@ const QuantumVault = ({ onClose }) => {
     }
   }, [currentAddress]);
 
+  useEffect(() => {
+    if (selectedVault && activeTab === 'ghost') {
+      loadPendingGhostTransfers();
+      loadGhostHistory();
+    }
+  }, [selectedVault, activeTab]);
+
+  const loadPendingGhostTransfers = async () => {
+    if (!selectedVault) return;
+    
+    try {
+      const response = await fetch(`${backendUrl}/api/vault/ghost-transfer/pending/${selectedVault.vault_id}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setPendingGhostTransfers(data.pending_transfers || []);
+      }
+    } catch (err) {
+      console.error('Error loading pending ghost transfers:', err);
+    }
+  };
+
+  const loadGhostHistory = async () => {
+    if (!selectedVault) return;
+    
+    try {
+      const response = await fetch(`${backendUrl}/api/vault/ghost-transfer/history/${selectedVault.vault_id}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setGhostHistory(data.ghost_history || []);
+      }
+    } catch (err) {
+      console.error('Error loading ghost history:', err);
+    }
+  };
+
   const loadWalletVaults = async () => {
     try {
       setLoading(true);
