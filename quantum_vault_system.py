@@ -174,71 +174,105 @@ class QuantumVaultSystem:
             logger.error(f"Error creating vault: {str(e)}")
             raise Exception(f"Vault creation failed: {str(e)}")
     
-    def deposit_to_vault(self, vault_id: str, amount: float, source_type: str = "manual") -> Dict:
+    def deposit_to_vault(self, vault_id: str, amount: float, source_type: str = "manual", 
+                        asset_type: str = "WEPO", asset_id: str = "WEPO", 
+                        asset_metadata: Optional[Dict] = None) -> Dict:
         """
-        Deposit WEPO to Quantum Vault with privacy protection
+        Deposit WEPO or RWA tokens to Quantum Vault with privacy protection
+        
+        REVOLUTIONARY ENHANCEMENT: Now supports both WEPO and RWA tokens
         
         Args:
             vault_id: Target vault identifier
-            amount: Amount of WEPO to deposit
-            source_type: Type of deposit ('manual', 'auto', 'reward', 'trading')
+            amount: Amount to deposit
+            source_type: Source of the deposit ('manual', 'auto_transaction', etc.)
+            asset_type: 'WEPO' or 'RWA_TOKEN'
+            asset_id: 'WEPO' for WEPO, token_id for RWA tokens
+            asset_metadata: Additional information for RWA tokens
             
         Returns:
-            Dictionary containing deposit confirmation and new commitment
+            Dictionary containing deposit confirmation with privacy protection
         """
         try:
             if vault_id not in self.vaults:
                 raise Exception("Vault not found")
             
+            if amount <= 0:
+                raise Exception("Invalid amount")
+                
             vault = self.vaults[vault_id]
+            
+            # Initialize asset in vault if not exists (for RWA tokens)
+            if asset_id not in vault["assets"]:
+                vault["assets"][asset_id] = {
+                    "balance": 0.0,
+                    "commitment": self._generate_commitment(0.0, secrets.token_hex(32)),
+                    "last_updated": int(time.time()),
+                    "asset_type": asset_type,
+                    "metadata": asset_metadata or {}
+                }
+                logger.info(f"New {asset_type} asset {asset_id} added to vault {vault_id}")
+            
+            # Update asset balance
+            current_balance = vault["assets"][asset_id]["balance"]
+            new_balance = current_balance + amount
             
             # Generate new commitment for privacy
             secret = secrets.token_hex(32)
-            new_balance = vault["private_balance"] + amount
             new_commitment = self._generate_commitment(new_balance, secret)
-            
-            # Create transaction record
-            transaction = VaultTransaction(
-                vault_id=vault_id,
-                transaction_type=f"deposit_{source_type}",
-                amount=amount,
-                timestamp=int(time.time()),
-                proof_hash=self._hash_proof_data(vault_id, amount, "deposit"),
-                commitment=new_commitment,
-                nullifier=secrets.token_hex(32)
-            )
             
             # Generate zk-proof for deposit
             proof = self._generate_zk_proof(
                 vault_id=vault_id,
-                operation="deposit",
+                operation=f"deposit_{asset_type.lower()}",
                 amount=amount,
-                commitment=new_commitment
+                commitment=new_commitment,
+                asset_type=asset_type,
+                asset_id=asset_id
+            )
+            
+            # Create transaction record
+            transaction = VaultTransaction(
+                vault_id=vault_id,
+                transaction_type="deposit",
+                asset_type=asset_type,
+                asset_id=asset_id,
+                amount=amount,
+                timestamp=int(time.time()),
+                proof_hash=self._hash_proof_data(vault_id, amount, f"deposit_{asset_type.lower()}"),
+                commitment=new_commitment,
+                nullifier=secrets.token_hex(32),
+                asset_metadata=asset_metadata
             )
             
             # Update vault state
-            vault["private_balance"] = new_balance
-            vault["commitment"] = new_commitment
+            vault["assets"][asset_id]["balance"] = new_balance
+            vault["assets"][asset_id]["commitment"] = new_commitment
+            vault["assets"][asset_id]["last_updated"] = int(time.time())
             vault["transaction_count"] += 1
             
             # Store transaction
             self.vault_transactions[vault_id].append(transaction)
             self.commitments[new_commitment] = {
                 "vault_id": vault_id,
+                "asset_id": asset_id,
                 "balance": new_balance,
                 "created_at": int(time.time())
             }
             
-            logger.info(f"Vault deposit: {amount} WEPO to {vault_id} ({source_type})")
+            logger.info(f"Vault deposit: {amount} {asset_type} ({asset_id}) to {vault_id} ({source_type})")
             
             return {
                 "transaction_id": transaction.proof_hash,
                 "status": "confirmed",
+                "asset_type": asset_type,
+                "asset_id": asset_id,
                 "amount_deposited": amount,
                 "new_commitment": new_commitment,
                 "proof": proof,
                 "privacy_protected": True,
-                "source_type": source_type
+                "source_type": source_type,
+                "rwa_support": asset_type == "RWA_TOKEN"
             }
             
         except Exception as e:
