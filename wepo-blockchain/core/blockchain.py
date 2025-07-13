@@ -1650,43 +1650,133 @@ class WepoBlockchain:
             print(f"Error distributing staking rewards: {e}")
     
     def get_staking_info(self) -> dict:
-        """Get comprehensive staking information"""
+        """Get comprehensive staking system information"""
         try:
             current_height = self.get_block_height()
+            total_staked = self.get_total_staked()
+            active_stakes = self.get_active_stakes()
             
-            # Count active stakes and masternodes
-            stakes_cursor = self.conn.execute("SELECT COUNT(*), SUM(amount) FROM stakes WHERE status = 'active'")
-            stakes_data = stakes_cursor.fetchone()
-            
-            masternodes_cursor = self.conn.execute("SELECT COUNT(*) FROM masternodes WHERE status = 'active'")
-            masternodes_count = masternodes_cursor.fetchone()[0]
-            
-            # Calculate total rewards distributed
-            rewards_cursor = self.conn.execute("SELECT SUM(amount) FROM staking_rewards")
-            total_rewards = rewards_cursor.fetchone()[0] or 0
-            
-            # Get dynamic masternode collateral info
-            collateral_info = self.get_masternode_collateral_info(current_height)
+            # Calculate time until PoS activation (for mainnet)
+            activation_info = self.get_pos_activation_info()
             
             return {
-                'pos_activated': current_height >= POS_ACTIVATION_HEIGHT,
-                'activation_height': POS_ACTIVATION_HEIGHT,
-                'current_height': current_height,
-                'blocks_until_activation': max(0, POS_ACTIVATION_HEIGHT - current_height),
-                'active_stakes_count': stakes_data[0] or 0,
-                'total_staked_amount': (stakes_data[1] or 0) / COIN,
-                'active_masternodes_count': masternodes_count,
-                'total_rewards_distributed': total_rewards / COIN,
-                'min_stake_amount': MIN_STAKE_AMOUNT / COIN,
-                'masternode_collateral': collateral_info['current_collateral'],  # Dynamic collateral
-                'masternode_collateral_info': collateral_info,  # Complete collateral info
-                'staking_reward_percentage': 60,
-                'masternode_reward_percentage': 40
+                "staking_enabled": current_height >= POS_ACTIVATION_HEIGHT,
+                "pos_activation_height": POS_ACTIVATION_HEIGHT,
+                "current_height": current_height,
+                "blocks_until_activation": max(0, POS_ACTIVATION_HEIGHT - current_height),
+                "production_mode": PRODUCTION_MODE,
+                "christmas_launch": datetime.fromtimestamp(CHRISTMAS_GENESIS_TIMESTAMP).isoformat(),
+                "staking_activation_date": activation_info["activation_date"],
+                "days_until_staking": activation_info["days_until_activation"],
+                "min_stake_amount": MIN_STAKE_AMOUNT / COIN,
+                "min_masternode_collateral": self.get_masternode_collateral_for_height(current_height) / COIN,
+                "total_staked": total_staked / COIN,
+                "active_stakes_count": len(active_stakes),
+                "total_stakers": len(set(stake.staker_address for stake in active_stakes)),
+                "staking_apy": self.calculate_staking_apy(),
+                "fee_distribution": {
+                    "masternodes": "60%",
+                    "miners": "25%", 
+                    "stakers": "15%"
+                }
             }
             
         except Exception as e:
             print(f"Error getting staking info: {e}")
-            return {}
+            return {"error": str(e)}
+    
+    def get_pos_activation_info(self) -> dict:
+        """Get PoS activation timing information"""
+        try:
+            if PRODUCTION_MODE:
+                return {
+                    "activation_date": "Immediately (Production Mode)",
+                    "days_until_activation": 0,
+                    "activation_timestamp": int(time.time())
+                }
+            else:
+                # Calculate activation date from Christmas launch
+                activation_timestamp = CHRISTMAS_GENESIS_TIMESTAMP + STAKING_ACTIVATION_DELAY
+                activation_date = datetime.fromtimestamp(activation_timestamp)
+                days_until = max(0, (activation_timestamp - time.time()) / (24 * 60 * 60))
+                
+                return {
+                    "activation_date": activation_date.strftime("%B %d, %Y at %I:%M %p EST"),
+                    "days_until_activation": int(days_until),
+                    "activation_timestamp": activation_timestamp
+                }
+                
+        except Exception as e:
+            return {
+                "activation_date": "Error calculating date",
+                "days_until_activation": -1,
+                "activation_timestamp": 0
+            }
+    
+    def calculate_staking_apy(self) -> float:
+        """Calculate estimated annual percentage yield for staking"""
+        try:
+            # Simplified APY calculation based on 15% of all fees
+            # This would be more sophisticated in production with historical data
+            total_staked = self.get_total_staked()
+            if total_staked == 0:
+                return 0.0
+            
+            # Estimate based on network activity and fee generation
+            # Assumption: Network generates fees worth 1% of total supply annually
+            estimated_annual_fees = 21000000 * 0.01 * COIN  # 1% of 21M WEPO
+            staker_share = estimated_annual_fees * 0.15  # 15% goes to stakers
+            
+            if total_staked > 0:
+                apy = (staker_share / total_staked) * 100
+                return min(apy, 25.0)  # Cap at 25% APY for display
+            
+            return 0.0
+            
+        except Exception as e:
+            print(f"Error calculating staking APY: {e}")
+            return 0.0
+    
+    def activate_production_staking(self) -> dict:
+        """Activate staking for production testing"""
+        try:
+            global PRODUCTION_MODE, POS_ACTIVATION_HEIGHT
+            
+            if not PRODUCTION_MODE:
+                PRODUCTION_MODE = True
+                POS_ACTIVATION_HEIGHT = max(1, self.get_block_height())
+                
+                return {
+                    "success": True,
+                    "message": "Production staking activated immediately",
+                    "pos_activation_height": POS_ACTIVATION_HEIGHT,
+                    "staking_enabled": True,
+                    "min_stake_amount": MIN_STAKE_AMOUNT / COIN,
+                    "fee_distribution_active": True
+                }
+            else:
+                return {
+                    "success": True,
+                    "message": "Production staking already active",
+                    "pos_activation_height": POS_ACTIVATION_HEIGHT,
+                    "staking_enabled": True
+                }
+                
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    def get_total_staked(self) -> int:
+        """Get total amount staked across all stakers"""
+        try:
+            cursor = self.conn.execute('SELECT SUM(amount) FROM stakes WHERE status = "active"')
+            result = cursor.fetchone()
+            return result[0] if result and result[0] else 0
+        except Exception as e:
+            print(f"Error getting total staked: {e}")
+            return 0
 
     def get_blockchain_info(self) -> dict:
         """Get blockchain information"""
