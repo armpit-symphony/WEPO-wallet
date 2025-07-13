@@ -84,6 +84,11 @@ const Dashboard = ({ onLogout }) => {
     last_update: Date.now()
   };
 
+  const handleModeToggle = () => {
+    // For now, quantum mode switching is disabled since we removed quantum context
+    console.log('Quantum mode toggle disabled in current version');
+  };
+
   useEffect(() => {
     // Load wallet data if not already loaded
     const loadData = async () => {
