@@ -707,6 +707,219 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
+        # Quantum Vault Endpoints - "Be Your Own Bank" Privacy Feature
+        # Import quantum vault system
+        sys.path.append('/app')
+        from quantum_vault_system import quantum_vault_system
+
+        @self.app.post("/api/vault/create")
+        async def create_quantum_vault(request: dict):
+            """Create a new Quantum Vault for ultimate WEPO privacy"""
+            try:
+                wallet_address = request.get("wallet_address")
+                
+                if not wallet_address:
+                    raise HTTPException(status_code=400, detail="Wallet address required")
+                
+                # Create quantum vault
+                result = quantum_vault_system.create_vault(wallet_address)
+                
+                return {
+                    "success": True,
+                    "vault_created": True,
+                    "vault_id": result["vault_id"],
+                    "commitment": result["commitment"],
+                    "privacy_enabled": result["privacy_enabled"],
+                    "auto_deposit_available": result["auto_deposit_available"],
+                    "message": "Quantum Vault created - ultimate privacy enabled"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/vault/deposit")
+        async def deposit_to_quantum_vault(request: dict):
+            """Deposit WEPO to Quantum Vault with privacy protection"""
+            try:
+                vault_id = request.get("vault_id")
+                amount = float(request.get("amount", 0))
+                source_type = request.get("source_type", "manual")
+                
+                if not vault_id or amount <= 0:
+                    raise HTTPException(status_code=400, detail="Invalid vault ID or amount")
+                
+                # Process vault deposit
+                result = quantum_vault_system.deposit_to_vault(vault_id, amount, source_type)
+                
+                return {
+                    "success": True,
+                    "deposited": True,
+                    "transaction_id": result["transaction_id"],
+                    "amount_deposited": result["amount_deposited"],
+                    "new_commitment": result["new_commitment"],
+                    "privacy_protected": result["privacy_protected"],
+                    "source_type": result["source_type"],
+                    "message": f"Successfully deposited {amount} WEPO to Quantum Vault"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/vault/withdraw")
+        async def withdraw_from_quantum_vault(request: dict):
+            """Withdraw WEPO from Quantum Vault with privacy protection"""
+            try:
+                vault_id = request.get("vault_id")
+                amount = float(request.get("amount", 0))
+                destination_address = request.get("destination_address")
+                
+                if not vault_id or amount <= 0 or not destination_address:
+                    raise HTTPException(status_code=400, detail="Invalid parameters")
+                
+                # Process vault withdrawal
+                result = quantum_vault_system.withdraw_from_vault(vault_id, amount, destination_address)
+                
+                return {
+                    "success": True,
+                    "withdrawn": True,
+                    "transaction_id": result["transaction_id"],
+                    "amount_withdrawn": result["amount_withdrawn"],
+                    "destination_address": result["destination_address"],
+                    "new_commitment": result["new_commitment"],
+                    "privacy_protected": result["privacy_protected"],
+                    "message": f"Successfully withdrew {amount} WEPO from Quantum Vault"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/vault/auto-deposit/enable")
+        async def enable_vault_auto_deposit(request: dict):
+            """Enable auto-deposit for all incoming WEPO to go to Quantum Vault"""
+            try:
+                wallet_address = request.get("wallet_address")
+                vault_id = request.get("vault_id")
+                
+                if not wallet_address or not vault_id:
+                    raise HTTPException(status_code=400, detail="Wallet address and vault ID required")
+                
+                # Enable auto-deposit
+                result = quantum_vault_system.enable_auto_deposit(wallet_address, vault_id)
+                
+                return {
+                    "success": True,
+                    "auto_deposit_enabled": True,
+                    "wallet_address": result["wallet_address"],
+                    "vault_id": result["vault_id"],
+                    "auto_deposit_types": result["auto_deposit_types"],
+                    "privacy_enhanced": result["privacy_enhanced"],
+                    "message": "Auto-deposit enabled - all incoming WEPO will be privately stored"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/vault/auto-deposit/disable")
+        async def disable_vault_auto_deposit(request: dict):
+            """Disable auto-deposit for incoming WEPO"""
+            try:
+                wallet_address = request.get("wallet_address")
+                
+                if not wallet_address:
+                    raise HTTPException(status_code=400, detail="Wallet address required")
+                
+                # Disable auto-deposit
+                result = quantum_vault_system.disable_auto_deposit(wallet_address)
+                
+                return {
+                    "success": True,
+                    "auto_deposit_disabled": True,
+                    "status": result["status"],
+                    "wallet_address": result["wallet_address"],
+                    "message": "Auto-deposit disabled - incoming WEPO will go to regular wallet"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/vault/status/{vault_id}")
+        async def get_vault_status(vault_id: str):
+            """Get Quantum Vault status and statistics"""
+            try:
+                # Get vault status
+                result = quantum_vault_system.get_vault_status(vault_id)
+                
+                return {
+                    "success": True,
+                    "vault_found": True,
+                    "vault_id": result["vault_id"],
+                    "wallet_address": result["wallet_address"],
+                    "created_at": result["created_at"],
+                    "private_balance": result["private_balance"],
+                    "transaction_count": result["transaction_count"],
+                    "auto_deposit_enabled": result["auto_deposit_enabled"],
+                    "privacy_level": result["privacy_level"],
+                    "statistics": result["statistics"],
+                    "privacy_protected": result["privacy_protected"]
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail="Vault not found")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/vault/wallet/{wallet_address}")
+        async def get_wallet_vaults(wallet_address: str):
+            """Get all Quantum Vaults for a wallet address"""
+            try:
+                # Get wallet vaults
+                vaults = quantum_vault_system.get_wallet_vaults(wallet_address)
+                
+                return {
+                    "success": True,
+                    "wallet_address": wallet_address,
+                    "vault_count": len(vaults),
+                    "vaults": vaults,
+                    "privacy_enabled": len(vaults) > 0
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/vault/auto-deposit/process")
+        async def process_auto_deposit_internal(request: dict):
+            """Internal endpoint to process auto-deposits (called by other systems)"""
+            try:
+                wallet_address = request.get("wallet_address")
+                amount = float(request.get("amount", 0))
+                source_type = request.get("source_type", "transaction")
+                
+                if not wallet_address or amount <= 0:
+                    raise HTTPException(status_code=400, detail="Invalid parameters")
+                
+                # Process auto-deposit
+                result = quantum_vault_system.process_auto_deposit(wallet_address, amount, source_type)
+                
+                if result:
+                    return {
+                        "success": True,
+                        "auto_deposited": result["auto_deposited"],
+                        "amount": result["amount"],
+                        "source_type": result["source_type"],
+                        "vault_id": result["vault_id"],
+                        "transaction_id": result["transaction_id"],
+                        "message": f"Auto-deposited {amount} WEPO to Quantum Vault"
+                    }
+                else:
+                    return {
+                        "success": True,
+                        "auto_deposited": False,
+                        "message": "Auto-deposit not configured or not enabled"
+                    }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.post("/api/test/mine-block")
         async def mine_test_block(request: dict):
             """Mine a block for testing fee redistribution"""
