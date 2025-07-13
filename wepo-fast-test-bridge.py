@@ -934,6 +934,60 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
+        @self.app.post("/api/liquidity/add")
+        async def add_liquidity_to_pool(request: dict):
+            """Add liquidity to BTC-WEPO pool (or create if first)"""
+            try:
+                wallet_address = request.get("wallet_address")
+                btc_amount = float(request.get("btc_amount", 0))
+                wepo_amount = float(request.get("wepo_amount", 0))
+                
+                if not wallet_address or btc_amount <= 0 or wepo_amount <= 0:
+                    raise HTTPException(status_code=400, detail="Invalid amounts")
+                
+                # Add liquidity
+                result = btc_wepo_pool.add_liquidity(wallet_address, btc_amount, wepo_amount)
+                
+                return {
+                    "lp_id": f"lp_{int(time.time())}_{wallet_address[:8]}",
+                    "status": "success",
+                    "btc_amount": btc_amount,
+                    "wepo_amount": wepo_amount,
+                    "shares_minted": result["shares_minted"],
+                    "total_shares": result["total_shares"],
+                    "market_price": result.get("new_price") or result.get("initial_price"),
+                    "pool_created": result.get("pool_created", False),
+                    "btc_reserve": result["btc_reserve"],
+                    "wepo_reserve": result["wepo_reserve"]
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/liquidity/stats")
+        async def get_liquidity_stats():
+            """Get current pool statistics"""
+            try:
+                if btc_wepo_pool.total_shares == 0:
+                    return {
+                        "pool_exists": False,
+                        "message": "No liquidity pool exists. Any user can create the market."
+                    }
+                
+                return {
+                    "pool_exists": True,
+                    "btc_reserve": btc_wepo_pool.btc_reserve,
+                    "wepo_reserve": btc_wepo_pool.wepo_reserve,
+                    "total_shares": btc_wepo_pool.total_shares,
+                    "current_price": btc_wepo_pool.get_price(),
+                    "fee_rate": btc_wepo_pool.fee_rate,
+                    "total_lp_count": len(btc_wepo_pool.lp_positions)
+                }
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         @self.app.get("/api/dex/rate")
         async def get_exchange_rate():
             """Get current exchange rates"""
