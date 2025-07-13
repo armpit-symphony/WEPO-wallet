@@ -597,6 +597,11 @@ const Dashboard = ({ onLogout }) => {
           {renderTabContent()}
         </div>
       </div>
+      
+      {/* Quantum Vault Modal */}
+      {showQuantumVault && (
+        <QuantumVault onClose={() => setShowQuantumVault(false)} />
+      )}
     </div>
   );
 };
