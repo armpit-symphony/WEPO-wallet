@@ -317,7 +317,7 @@ class QuantumVaultSystem:
             
             # Generate new commitment for privacy
             secret = secrets.token_hex(32)
-            new_commitment = self._generate_commitment(new_balance, secret)
+            new_commitment = hashlib.sha256(f"{new_balance}:{secret}:{int(time.time())}".encode()).hexdigest()
             
             # Generate zk-proof for withdrawal
             proof = self._generate_zk_proof(
