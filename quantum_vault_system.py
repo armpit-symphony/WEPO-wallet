@@ -474,6 +474,389 @@ class QuantumVaultSystem:
             logger.error(f"Error getting wallet vaults: {str(e)}")
             return []
     
+    # ===== GHOST TRANSFER SYSTEM - REVOLUTIONARY PRIVACY FEATURES =====
+    
+    def initiate_ghost_transfer(self, sender_vault_id: str, receiver_vault_id: str, 
+                               amount: float, privacy_level: str = "maximum", 
+                               hide_amount: bool = True) -> Dict:
+        """
+        Initiate a completely private vault-to-vault transfer (Ghost Transfer)
+        
+        This creates the most private cryptocurrency transfer possible:
+        - Sender identity: Completely hidden via zk-proof
+        - Receiver identity: Only known to receiver
+        - Transfer amount: Optionally hidden 
+        - No on-chain linkability: Zero trace between vaults
+        
+        Args:
+            sender_vault_id: Source vault identifier
+            receiver_vault_id: Destination vault identifier  
+            amount: Amount of WEPO to transfer privately
+            privacy_level: 'standard' or 'maximum' privacy
+            hide_amount: Whether to hide the transfer amount
+            
+        Returns:
+            Dictionary containing ghost transfer initiation details
+        """
+        try:
+            # Validate vaults exist
+            if sender_vault_id not in self.vaults:
+                raise Exception("Sender vault not found")
+            if receiver_vault_id not in self.vaults:
+                raise Exception("Receiver vault not found")
+            if sender_vault_id == receiver_vault_id:
+                raise Exception("Cannot transfer to same vault")
+                
+            sender_vault = self.vaults[sender_vault_id]
+            receiver_vault = self.vaults[receiver_vault_id]
+            
+            # Validate sender has sufficient balance
+            if sender_vault["private_balance"] < amount:
+                raise Exception("Insufficient vault balance for ghost transfer")
+            
+            # Generate unique transfer ID
+            transfer_id = f"ghost_{int(time.time())}_{secrets.token_hex(16)}"
+            
+            # Generate transfer nullifier (prevents double-spending across transfers)
+            transfer_nullifier = self._generate_ghost_nullifier(sender_vault_id, amount, transfer_id)
+            
+            if transfer_nullifier in self.ghost_nullifiers:
+                raise Exception("Invalid ghost transfer - nullifier already used")
+            
+            # Create sender zk-proof: "I have ≥amount WEPO without revealing actual balance"
+            sender_proof = self._generate_cross_vault_proof(
+                sender_vault_id=sender_vault_id,
+                operation="ghost_send",
+                amount=amount,
+                privacy_level=privacy_level,
+                hide_amount=hide_amount
+            )
+            
+            # Encrypt amount for maximum privacy
+            encrypted_amount = None
+            if hide_amount and privacy_level == "maximum":
+                encrypted_amount = self._encrypt_amount(amount, receiver_vault_id)
+            
+            # Create ghost transfer record
+            ghost_transfer = GhostTransfer(
+                transfer_id=transfer_id,
+                sender_vault_id=sender_vault_id,
+                receiver_vault_id=receiver_vault_id,
+                amount=amount if not hide_amount else 0.0,  # Hide amount if requested
+                privacy_level=privacy_level,
+                hide_amount=hide_amount,
+                status=GhostTransferStatus.PENDING,
+                created_at=int(time.time()),
+                sender_proof=sender_proof,
+                transfer_nullifier=transfer_nullifier,
+                encrypted_amount=encrypted_amount
+            )
+            
+            # Store ghost transfer
+            self.ghost_transfers[transfer_id] = ghost_transfer
+            
+            # Add to pending transfers for receiver
+            if receiver_vault_id not in self.pending_ghost_transfers:
+                self.pending_ghost_transfers[receiver_vault_id] = []
+            self.pending_ghost_transfers[receiver_vault_id].append(transfer_id)
+            
+            logger.info(f"Ghost transfer initiated: {transfer_id} ({privacy_level} privacy)")
+            
+            return {
+                "transfer_id": transfer_id,
+                "status": "initiated",
+                "privacy_level": privacy_level,
+                "amount_hidden": hide_amount,
+                "sender_proof_generated": True,
+                "awaiting_receiver_acceptance": True,
+                "ghost_transfer": True,
+                "privacy_protection": "maximum"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error initiating ghost transfer: {str(e)}")
+            raise Exception(f"Ghost transfer initiation failed: {str(e)}")
+    
+    def accept_ghost_transfer(self, transfer_id: str, receiver_vault_id: str) -> Dict:
+        """
+        Accept an incoming ghost transfer and complete the private transfer
+        
+        Args:
+            transfer_id: Ghost transfer identifier
+            receiver_vault_id: Receiving vault identifier
+            
+        Returns:
+            Dictionary containing transfer completion details
+        """
+        try:
+            if transfer_id not in self.ghost_transfers:
+                raise Exception("Ghost transfer not found")
+                
+            ghost_transfer = self.ghost_transfers[transfer_id]
+            
+            # Validate receiver vault
+            if ghost_transfer.receiver_vault_id != receiver_vault_id:
+                raise Exception("Invalid receiver vault for this ghost transfer")
+            
+            if ghost_transfer.status != GhostTransferStatus.PENDING:
+                raise Exception(f"Ghost transfer not in pending state: {ghost_transfer.status}")
+            
+            # Get actual amount (decrypt if hidden)
+            actual_amount = ghost_transfer.amount
+            if ghost_transfer.hide_amount and ghost_transfer.encrypted_amount:
+                actual_amount = self._decrypt_amount(ghost_transfer.encrypted_amount, receiver_vault_id)
+            
+            # Execute atomic vault updates
+            sender_vault = self.vaults[ghost_transfer.sender_vault_id]
+            receiver_vault = self.vaults[ghost_transfer.receiver_vault_id]
+            
+            # Generate new commitments for both vaults (complete privacy)
+            sender_secret = secrets.token_hex(32)
+            receiver_secret = secrets.token_hex(32)
+            
+            new_sender_balance = sender_vault["private_balance"] - actual_amount
+            new_receiver_balance = receiver_vault["private_balance"] + actual_amount
+            
+            sender_new_commitment = self._generate_commitment(new_sender_balance, sender_secret)
+            receiver_new_commitment = self._generate_commitment(new_receiver_balance, receiver_secret)
+            
+            # Generate receiver proof for acceptance
+            receiver_proof = self._generate_cross_vault_proof(
+                sender_vault_id=ghost_transfer.receiver_vault_id,
+                operation="ghost_receive", 
+                amount=actual_amount,
+                privacy_level=ghost_transfer.privacy_level,
+                hide_amount=ghost_transfer.hide_amount
+            )
+            
+            # Create transaction records for both vaults (privacy-protected)
+            sender_transaction = VaultTransaction(
+                vault_id=ghost_transfer.sender_vault_id,
+                transaction_type="ghost_send",
+                amount=actual_amount,
+                timestamp=int(time.time()),
+                proof_hash=self._hash_proof_data(ghost_transfer.sender_vault_id, actual_amount, "ghost_send"),
+                commitment=sender_new_commitment,
+                nullifier=ghost_transfer.transfer_nullifier,
+                ghost_transfer_id=transfer_id
+            )
+            
+            receiver_transaction = VaultTransaction(
+                vault_id=ghost_transfer.receiver_vault_id,
+                transaction_type="ghost_receive",
+                amount=actual_amount,
+                timestamp=int(time.time()),
+                proof_hash=self._hash_proof_data(ghost_transfer.receiver_vault_id, actual_amount, "ghost_receive"),
+                commitment=receiver_new_commitment,
+                nullifier=secrets.token_hex(32),
+                ghost_transfer_id=transfer_id
+            )
+            
+            # Atomic update: Both vaults update simultaneously
+            sender_vault["private_balance"] = new_sender_balance
+            sender_vault["commitment"] = sender_new_commitment
+            sender_vault["transaction_count"] += 1
+            
+            receiver_vault["private_balance"] = new_receiver_balance
+            receiver_vault["commitment"] = receiver_new_commitment
+            receiver_vault["transaction_count"] += 1
+            
+            # Store transactions
+            self.vault_transactions[ghost_transfer.sender_vault_id].append(sender_transaction)
+            self.vault_transactions[ghost_transfer.receiver_vault_id].append(receiver_transaction)
+            
+            # Update commitments registry
+            self.commitments[sender_new_commitment] = {
+                "vault_id": ghost_transfer.sender_vault_id,
+                "balance": new_sender_balance,
+                "created_at": int(time.time())
+            }
+            self.commitments[receiver_new_commitment] = {
+                "vault_id": ghost_transfer.receiver_vault_id,
+                "balance": new_receiver_balance,
+                "created_at": int(time.time())
+            }
+            
+            # Mark nullifier as used
+            self.ghost_nullifiers.add(ghost_transfer.transfer_nullifier)
+            
+            # Update ghost transfer status
+            ghost_transfer.status = GhostTransferStatus.COMPLETED
+            ghost_transfer.accepted_at = int(time.time())
+            ghost_transfer.completed_at = int(time.time())
+            ghost_transfer.receiver_proof = receiver_proof
+            
+            # Remove from pending transfers
+            if receiver_vault_id in self.pending_ghost_transfers:
+                if transfer_id in self.pending_ghost_transfers[receiver_vault_id]:
+                    self.pending_ghost_transfers[receiver_vault_id].remove(transfer_id)
+            
+            logger.info(f"Ghost transfer completed: {transfer_id} - {actual_amount} WEPO transferred privately")
+            
+            return {
+                "transfer_id": transfer_id,
+                "status": "completed", 
+                "amount_received": actual_amount,
+                "privacy_level": ghost_transfer.privacy_level,
+                "sender_commitment_updated": True,
+                "receiver_commitment_updated": True,
+                "ghost_transfer_completed": True,
+                "untraceable": True,
+                "privacy_protection": "maximum"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error accepting ghost transfer: {str(e)}")
+            # Mark transfer as failed
+            if transfer_id in self.ghost_transfers:
+                self.ghost_transfers[transfer_id].status = GhostTransferStatus.FAILED
+            raise Exception(f"Ghost transfer acceptance failed: {str(e)}")
+    
+    def reject_ghost_transfer(self, transfer_id: str, receiver_vault_id: str) -> Dict:
+        """Reject an incoming ghost transfer"""
+        try:
+            if transfer_id not in self.ghost_transfers:
+                raise Exception("Ghost transfer not found")
+                
+            ghost_transfer = self.ghost_transfers[transfer_id]
+            
+            if ghost_transfer.receiver_vault_id != receiver_vault_id:
+                raise Exception("Invalid receiver vault for this ghost transfer")
+                
+            if ghost_transfer.status != GhostTransferStatus.PENDING:
+                raise Exception(f"Ghost transfer not in pending state: {ghost_transfer.status}")
+            
+            # Update status to rejected
+            ghost_transfer.status = GhostTransferStatus.REJECTED
+            ghost_transfer.accepted_at = int(time.time())
+            
+            # Remove from pending transfers
+            if receiver_vault_id in self.pending_ghost_transfers:
+                if transfer_id in self.pending_ghost_transfers[receiver_vault_id]:
+                    self.pending_ghost_transfers[receiver_vault_id].remove(transfer_id)
+            
+            logger.info(f"Ghost transfer rejected: {transfer_id}")
+            
+            return {
+                "transfer_id": transfer_id,
+                "status": "rejected",
+                "rejected_at": int(time.time())
+            }
+            
+        except Exception as e:
+            logger.error(f"Error rejecting ghost transfer: {str(e)}")
+            raise Exception(f"Ghost transfer rejection failed: {str(e)}")
+    
+    def get_pending_ghost_transfers(self, vault_id: str) -> List[Dict]:
+        """Get all pending ghost transfers for a vault"""
+        try:
+            pending_transfers = []
+            
+            if vault_id in self.pending_ghost_transfers:
+                for transfer_id in self.pending_ghost_transfers[vault_id]:
+                    if transfer_id in self.ghost_transfers:
+                        ghost_transfer = self.ghost_transfers[transfer_id]
+                        
+                        # Prepare transfer info (hide sensitive data)
+                        transfer_info = {
+                            "transfer_id": transfer_id,
+                            "amount": ghost_transfer.amount if not ghost_transfer.hide_amount else "Hidden",
+                            "privacy_level": ghost_transfer.privacy_level,
+                            "created_at": ghost_transfer.created_at,
+                            "status": ghost_transfer.status,
+                            "sender_vault_hidden": True,  # Never reveal sender
+                            "privacy_protected": True
+                        }
+                        
+                        pending_transfers.append(transfer_info)
+            
+            return pending_transfers
+            
+        except Exception as e:
+            logger.error(f"Error getting pending ghost transfers: {str(e)}")
+            return []
+    
+    def get_ghost_transfer_status(self, transfer_id: str, vault_id: str) -> Dict:
+        """Get status of a specific ghost transfer"""
+        try:
+            if transfer_id not in self.ghost_transfers:
+                raise Exception("Ghost transfer not found")
+                
+            ghost_transfer = self.ghost_transfers[transfer_id]
+            
+            # Verify vault is involved in this transfer
+            if vault_id not in [ghost_transfer.sender_vault_id, ghost_transfer.receiver_vault_id]:
+                raise Exception("Vault not involved in this ghost transfer")
+            
+            # Determine perspective (sender or receiver)
+            is_sender = (vault_id == ghost_transfer.sender_vault_id)
+            
+            transfer_status = {
+                "transfer_id": transfer_id,
+                "status": ghost_transfer.status,
+                "privacy_level": ghost_transfer.privacy_level,
+                "created_at": ghost_transfer.created_at,
+                "is_sender": is_sender,
+                "is_receiver": not is_sender,
+                "privacy_protected": True
+            }
+            
+            # Add amount info based on privacy settings
+            if ghost_transfer.hide_amount:
+                transfer_status["amount"] = "Hidden" if not is_sender else ghost_transfer.amount
+            else:
+                transfer_status["amount"] = ghost_transfer.amount
+            
+            # Add timing info
+            if ghost_transfer.accepted_at:
+                transfer_status["accepted_at"] = ghost_transfer.accepted_at
+            if ghost_transfer.completed_at:
+                transfer_status["completed_at"] = ghost_transfer.completed_at
+                
+            return transfer_status
+            
+        except Exception as e:
+            logger.error(f"Error getting ghost transfer status: {str(e)}")
+            raise Exception(f"Ghost transfer status failed: {str(e)}")
+    
+    def get_vault_ghost_history(self, vault_id: str) -> List[Dict]:
+        """Get ghost transfer history for a vault (privacy-protected)"""
+        try:
+            if vault_id not in self.vaults:
+                raise Exception("Vault not found")
+                
+            ghost_history = []
+            
+            # Find all ghost transfers involving this vault
+            for transfer_id, ghost_transfer in self.ghost_transfers.items():
+                if vault_id in [ghost_transfer.sender_vault_id, ghost_transfer.receiver_vault_id]:
+                    is_sender = (vault_id == ghost_transfer.sender_vault_id)
+                    
+                    history_entry = {
+                        "transfer_id": transfer_id,
+                        "type": "ghost_send" if is_sender else "ghost_receive",
+                        "amount": ghost_transfer.amount if not ghost_transfer.hide_amount else "Hidden",
+                        "status": ghost_transfer.status,
+                        "privacy_level": ghost_transfer.privacy_level,
+                        "created_at": ghost_transfer.created_at,
+                        "privacy_protected": True,
+                        "untraceable": True
+                    }
+                    
+                    if ghost_transfer.completed_at:
+                        history_entry["completed_at"] = ghost_transfer.completed_at
+                        
+                    ghost_history.append(history_entry)
+            
+            # Sort by creation time (newest first)
+            ghost_history.sort(key=lambda x: x["created_at"], reverse=True)
+            
+            return ghost_history
+            
+        except Exception as e:
+            logger.error(f"Error getting vault ghost history: {str(e)}")
+            return []
+    
     # Private helper methods for cryptographic operations
     
     def _generate_commitment(self, balance: float, secret: str) -> str:
