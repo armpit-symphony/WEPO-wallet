@@ -708,6 +708,8 @@ python -m core.wepo_node
 - ✅ **🆕 Community-Driven AMM System (No Admin)**
 - ✅ **🆕 Market-Based Pricing (No Hardcoded Rates)**
 - ✅ **Advanced privacy features (zk-STARKs, Ring Signatures)**
+- ✅ **Ghost Transfers**: Revolutionary vault-to-vault private transfers
+- ✅ **Quantum Vault System**: Complete zk-STARK protected storage
 - ✅ **🆕 Internal BTC ↔ WEPO Swaps (Unified Wallet)**
 - ✅ **Modern wallet interface with dual security modes**
 
