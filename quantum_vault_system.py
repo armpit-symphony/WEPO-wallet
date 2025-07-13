@@ -139,7 +139,7 @@ class QuantumVaultSystem:
                 "assets": {
                     "WEPO": {
                         "balance": 0.0,
-                        "commitment": self._generate_commitment(0.0, secrets.token_hex(32)),
+                        "commitment": hashlib.sha256(f"0.0:{secrets.token_hex(32)}:{int(time.time())}".encode()).hexdigest(),
                         "last_updated": int(time.time())
                     }
                     # RWA tokens will be added dynamically as they are deposited
