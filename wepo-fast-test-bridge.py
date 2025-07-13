@@ -156,21 +156,21 @@ class FastTestBlockchain:
     """Fast test blockchain with instant operations"""
     
     def __init__(self):
-        self.blocks = []
-        self.transactions = {}
-        self.mempool = {}
-        self.utxos = {}
-        self.wallets = {}
-        self.stakes = {}  # Add stakes tracking
-        self.masternodes = {}  # Add masternodes tracking
+        self.blocks = []  # CLEAN STATE FOR MAINNET LAUNCH
+        self.transactions = {}  # CLEAN STATE FOR MAINNET LAUNCH
+        self.mempool = {}  # CLEAN STATE FOR MAINNET LAUNCH
+        self.utxos = {}  # CLEAN STATE FOR MAINNET LAUNCH
+        self.wallets = {}  # CLEAN STATE FOR MAINNET LAUNCH  
+        self.stakes = {}  # CLEAN STATE FOR MAINNET LAUNCH
+        self.masternodes = {}  # CLEAN STATE FOR MAINNET LAUNCH
         
-        # Staking constants for testing
+        # Staking constants - MAINNET READY
         self.COIN = 100000000  # 1 WEPO = 100M satoshis  
-        self.MIN_STAKE_AMOUNT = 1000 * self.COIN
-        self.PRODUCTION_MODE = True  # Enable for testing
-        self.POS_ACTIVATION_HEIGHT = 1  # Activate immediately
+        self.MIN_STAKE_AMOUNT = 1000 * self.COIN  # 1,000 WEPO minimum
+        self.PRODUCTION_MODE = False  # MAINNET CONFIGURATION (False = 18 month delay)
+        self.POS_ACTIVATION_HEIGHT = 78840  # 18 months (mainnet)
         
-        # Create instant genesis block
+        # Create instant genesis block for testing (mainnet will have proper genesis)
         self.create_genesis_block()
     
     def create_genesis_block(self):
