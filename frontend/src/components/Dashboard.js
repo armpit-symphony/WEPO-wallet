@@ -76,6 +76,13 @@ const Dashboard = ({ onLogout }) => {
     hash_function: 'SHAKE-256',
     security_level: 'Post-Quantum'
   };
+  
+  // Quantum status info
+  const quantumStatus = {
+    current_height: 12500,
+    quantum_ready: true,
+    last_update: Date.now()
+  };
 
   useEffect(() => {
     // Load wallet data if not already loaded
