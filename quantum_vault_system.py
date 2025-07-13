@@ -105,17 +105,17 @@ class QuantumVaultSystem:
     """
     
     def __init__(self):
-        self.vaults = {}  # vault_address -> VaultData - RESET TO CLEAN STATE
-        self.commitments = {}  # commitment_hash -> commitment_data - RESET TO CLEAN STATE
-        self.nullifiers = set()  # spent nullifiers - RESET TO CLEAN STATE
-        self.auto_deposit_settings = {}  # wallet_address -> auto_deposit_enabled - RESET TO CLEAN STATE
-        self.vault_transactions = {}  # vault_id -> List[VaultTransaction] - RESET TO CLEAN STATE
+        self.vaults = {}  # vault_address -> VaultData - CLEAN STATE FOR LAUNCH
+        self.commitments = {}  # commitment_hash -> commitment_data - CLEAN STATE FOR LAUNCH
+        self.nullifiers = set()  # spent nullifiers - CLEAN STATE FOR LAUNCH
+        self.auto_deposit_settings = {}  # wallet_address -> auto_deposit_enabled - CLEAN STATE FOR LAUNCH
+        self.vault_transactions = {}  # vault_id -> List[VaultTransaction] - CLEAN STATE FOR LAUNCH
         
-        # Ghost Transfer System - RESET TO CLEAN STATE
-        self.ghost_transfers = {}  # transfer_id -> GhostTransfer - RESET TO CLEAN STATE
-        self.pending_ghost_transfers = {}  # receiver_vault_id -> List[transfer_id] - RESET TO CLEAN STATE
-        self.ghost_nullifiers = set()  # spent ghost transfer nullifiers - RESET TO CLEAN STATE
-        self.cross_vault_commitments = {}  # Special commitments for cross-vault operations - RESET TO CLEAN STATE
+        # Ghost Transfer System - CLEAN STATE FOR LAUNCH
+        self.ghost_transfers = {}  # transfer_id -> GhostTransfer - CLEAN STATE FOR LAUNCH
+        self.pending_ghost_transfers = {}  # receiver_vault_id -> List[transfer_id] - CLEAN STATE FOR LAUNCH
+        self.ghost_nullifiers = set()  # spent ghost transfer nullifiers - CLEAN STATE FOR LAUNCH
+        self.cross_vault_commitments = {}  # Special commitments for cross-vault operations - CLEAN STATE FOR LAUNCH
         
     def create_vault(self, wallet_address: str) -> Dict:
         """
