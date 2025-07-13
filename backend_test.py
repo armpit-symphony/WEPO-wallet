@@ -1275,6 +1275,10 @@ def run_ghost_transfer_tests():
     print("Revolutionary Features: zk-STARK proofs, hidden amounts, complete anonymity")
     print("="*80 + "\n")
     
+    # Use the bridge URL for Ghost Transfer tests since that's where the endpoints are implemented
+    BRIDGE_URL = "http://localhost:8001/api"
+    print(f"Using WEPO Bridge API at: {BRIDGE_URL}")
+    
     # Test variables to store data between tests
     sender_vault_id = None
     receiver_vault_id = None
@@ -1296,7 +1300,7 @@ def run_ghost_transfer_tests():
             "wallet_address": sender_wallet_address
         }
         
-        response = requests.post(f"{API_URL}/vault/create", json=vault_data)
+        response = requests.post(f"{BRIDGE_URL}/vault/create", json=vault_data)
         print(f"  Response: {response.status_code}")
         
         if response.status_code == 200:
@@ -1343,7 +1347,7 @@ def run_ghost_transfer_tests():
             "wallet_address": receiver_wallet_address
         }
         
-        response = requests.post(f"{API_URL}/vault/create", json=vault_data)
+        response = requests.post(f"{BRIDGE_URL}/vault/create", json=vault_data)
         print(f"  Response: {response.status_code}")
         
         if response.status_code == 200:
@@ -1385,7 +1389,7 @@ def run_ghost_transfer_tests():
                 "source_type": "manual"
             }
             
-            response = requests.post(f"{API_URL}/vault/deposit", json=deposit_data)
+            response = requests.post(f"{BRIDGE_URL}/vault/deposit", json=deposit_data)
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
@@ -1447,7 +1451,7 @@ def run_ghost_transfer_tests():
             print(f"  Privacy level: {ghost_transfer_data['privacy_level']}")
             print(f"  Hide amount: {ghost_transfer_data['hide_amount']}")
             
-            response = requests.post(f"{API_URL}/vault/ghost-transfer/initiate", json=ghost_transfer_data)
+            response = requests.post(f"{BRIDGE_URL}/vault/ghost-transfer/initiate", json=ghost_transfer_data)
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
@@ -1518,7 +1522,7 @@ def run_ghost_transfer_tests():
         try:
             print("\n[TEST] Check Pending Ghost Transfers - Verifying receiver sees pending transfer")
             
-            response = requests.get(f"{API_URL}/vault/ghost-transfer/pending/{receiver_vault_id}")
+            response = requests.get(f"{BRIDGE_URL}/vault/ghost-transfer/pending/{receiver_vault_id}")
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
@@ -1595,7 +1599,7 @@ def run_ghost_transfer_tests():
             
             print(f"  Accepting ghost transfer: {ghost_transfer_id}")
             
-            response = requests.post(f"{API_URL}/vault/ghost-transfer/accept", json=accept_data)
+            response = requests.post(f"{BRIDGE_URL}/vault/ghost-transfer/accept", json=accept_data)
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
@@ -1678,7 +1682,7 @@ def run_ghost_transfer_tests():
         try:
             print("\n[TEST] Ghost Transfer Status (Sender) - Testing sender perspective")
             
-            response = requests.get(f"{API_URL}/vault/ghost-transfer/status/{ghost_transfer_id}/{sender_vault_id}")
+            response = requests.get(f"{BRIDGE_URL}/vault/ghost-transfer/status/{ghost_transfer_id}/{sender_vault_id}")
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
@@ -1737,7 +1741,7 @@ def run_ghost_transfer_tests():
         try:
             print("\n[TEST] Ghost Transfer Status (Receiver) - Testing receiver perspective")
             
-            response = requests.get(f"{API_URL}/vault/ghost-transfer/status/{ghost_transfer_id}/{receiver_vault_id}")
+            response = requests.get(f"{BRIDGE_URL}/vault/ghost-transfer/status/{ghost_transfer_id}/{receiver_vault_id}")
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
@@ -1787,7 +1791,7 @@ def run_ghost_transfer_tests():
         try:
             print("\n[TEST] Ghost Transfer History (Sender) - Testing sender vault history")
             
-            response = requests.get(f"{API_URL}/vault/ghost-transfer/history/{sender_vault_id}")
+            response = requests.get(f"{BRIDGE_URL}/vault/ghost-transfer/history/{sender_vault_id}")
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
@@ -1853,7 +1857,7 @@ def run_ghost_transfer_tests():
         try:
             print("\n[TEST] Ghost Transfer History (Receiver) - Testing receiver vault history")
             
-            response = requests.get(f"{API_URL}/vault/ghost-transfer/history/{receiver_vault_id}")
+            response = requests.get(f"{BRIDGE_URL}/vault/ghost-transfer/history/{receiver_vault_id}")
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
