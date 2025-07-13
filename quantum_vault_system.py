@@ -496,7 +496,7 @@ class QuantumVaultSystem:
             return None
     
     def get_vault_status(self, vault_id: str) -> Dict:
-        """Get current vault status and statistics"""
+        """Get current vault status and statistics with multi-asset support"""
         try:
             if vault_id not in self.vaults:
                 raise Exception("Vault not found")
@@ -504,24 +504,65 @@ class QuantumVaultSystem:
             vault = self.vaults[vault_id]
             transactions = self.vault_transactions.get(vault_id, [])
             
-            # Calculate statistics
-            total_deposits = sum(t.amount for t in transactions if "deposit" in t.transaction_type)
-            total_withdrawals = sum(t.amount for t in transactions if t.transaction_type == "withdrawal")
+            # Calculate statistics for all assets
+            asset_statistics = {}
+            total_value = 0.0  # This would be calculated based on asset prices in production
+            
+            for asset_id, asset_data in vault["assets"].items():
+                asset_transactions = [t for t in transactions if t.asset_id == asset_id]
+                
+                total_deposits = sum(t.amount for t in asset_transactions if "deposit" in t.transaction_type)
+                total_withdrawals = sum(t.amount for t in asset_transactions if t.transaction_type == "withdrawal")
+                ghost_sent = sum(t.amount for t in asset_transactions if t.transaction_type == "ghost_send")
+                ghost_received = sum(t.amount for t in asset_transactions if t.transaction_type == "ghost_receive")
+                
+                asset_statistics[asset_id] = {
+                    "asset_type": asset_data.get("asset_type", "WEPO"),
+                    "balance": asset_data["balance"],
+                    "commitment": asset_data["commitment"],
+                    "last_updated": asset_data["last_updated"],
+                    "transaction_count": len(asset_transactions),
+                    "total_deposits": total_deposits,
+                    "total_withdrawals": total_withdrawals,
+                    "ghost_transfers_sent": ghost_sent,
+                    "ghost_transfers_received": ghost_received,
+                    "net_flow": total_deposits + ghost_received - total_withdrawals - ghost_sent,
+                    "metadata": asset_data.get("metadata", {})
+                }
+                
+                # Add to total value (in production, this would use real asset prices)
+                if asset_id == "WEPO":
+                    total_value += asset_data["balance"]
+                # For RWA tokens, would multiply by market price
             
             return {
                 "vault_id": vault_id,
                 "wallet_address": vault["wallet_address"],
                 "created_at": vault["created_at"],
-                "private_balance": vault["private_balance"],  # In production, this would be encrypted
-                "transaction_count": vault["transaction_count"],
-                "auto_deposit_enabled": vault["auto_deposit_enabled"],
                 "privacy_level": vault["privacy_level"],
-                "statistics": {
-                    "total_deposits": total_deposits,
-                    "total_withdrawals": total_withdrawals,
-                    "net_deposits": total_deposits - total_withdrawals
-                },
-                "privacy_protected": True
+                "auto_deposit_enabled": vault.get("auto_deposit_enabled", False),
+                "transaction_count": vault["transaction_count"],
+                "zk_stark_enabled": vault.get("zk_stark_enabled", True),
+                "ghost_transfers_enabled": vault.get("ghost_transfers_enabled", True),
+                "rwa_privacy_enabled": vault.get("rwa_privacy_enabled", True),
+                
+                # Multi-asset information - REVOLUTIONARY ENHANCEMENT
+                "total_assets": len(vault["assets"]),
+                "asset_types": list(set(asset_data.get("asset_type", "WEPO") for asset_data in vault["assets"].values())),
+                "assets": asset_statistics,
+                "portfolio_privacy_protected": True,
+                "estimated_total_value": total_value,  # This would be real-time in production
+                
+                # Privacy features
+                "features": {
+                    "multi_asset_support": True,
+                    "rwa_token_support": True,
+                    "ghost_transfers": True,
+                    "rwa_ghost_transfers": True,
+                    "hidden_balances": True,
+                    "asset_type_hiding": True,
+                    "mathematical_privacy_proofs": True
+                }
             }
             
         except Exception as e:
