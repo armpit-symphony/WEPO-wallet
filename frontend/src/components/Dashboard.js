@@ -57,6 +57,13 @@ const Dashboard = ({ onLogout }) => {
   const currentWallet = wallet;
   const currentBalance = balance;
   const currentTransactions = transactions;
+  
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [showBalance, setShowBalance] = useState(true);
+  const [miningMode, setMiningMode] = useState('genesis'); // 'genesis' or 'pow'
+  
+  // Simplified quantum mode state (disabled for now)
+  const isQuantumMode = false;
 
   useEffect(() => {
     // Load wallet data if not already loaded
