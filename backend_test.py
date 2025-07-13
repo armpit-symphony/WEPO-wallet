@@ -8808,93 +8808,61 @@ def run_quantum_vault_tests():
     
     return test_results["failed"] == 0
 
+if __name__ == "__main__":
+    print("WEPO PRODUCTION STAKING ACTIVATION TESTING SUITE")
     print("=" * 60)
     
-    quantum_vault_success = run_quantum_vault_tests()
+    # Run the WEPO Production Staking tests as specifically requested
+    print("Running WEPO Production Staking Activation Tests...")
+    print("Testing: Final component of WEPO's revolutionary 'We The People' economic model")
+    print("Testing: Christmas 2025 launch, 3-way fee redistribution, immediate activation")
+    print("Testing: Complete economic ecosystem for fair-launch cryptocurrency")
+    print("=" * 60)
     
-    unified_exchange_success = run_unified_exchange_interface_tests()
+    # Execute WEPO Production Staking tests
+    staking_success = run_wepo_production_staking_tests()
     
     # Print final summary
     print("\n" + "="*80)
-    print("WEPO QUANTUM VAULT & UNIFIED EXCHANGE TESTING FINAL SUMMARY")
+    print("WEPO PRODUCTION STAKING ACTIVATION FINAL SUMMARY")
     print("="*80)
     
-    if quantum_vault_success and unified_exchange_success:
-        print("\n🎉 ALL TESTS COMPLETED SUCCESSFULLY!")
-        print("\n✅ QUANTUM VAULT SYSTEM:")
-        print("✅ Vault Creation: Working with privacy commitments and zk-STARK features")
-        print("✅ Vault Status: Complete vault information and statistics")
-        print("✅ Vault Deposit: Privacy-protected deposits with commitment generation")
-        print("✅ Vault Withdrawal: Privacy-protected withdrawals with new commitments")
-        print("✅ Auto-Deposit Enable: All incoming WEPO types supported")
-        print("✅ Auto-Deposit Disable: Proper auto-deposit management")
+    if staking_success:
+        print("🎉 WEPO PRODUCTION STAKING SYSTEM FULLY OPERATIONAL!")
+        print("✅ Staking system status and activation confirmed")
+        print("✅ Production mode activation working correctly")
+        print("✅ Christmas 2025 launch timing verified")
+        print("✅ 3-way fee redistribution (60% MN, 25% miners, 15% stakers) implemented")
+        print("✅ Minimum stake requirement (1000 WEPO) enforced")
+        print("✅ Staking reward distribution functional")
+        print("✅ Address stake tracking operational")
+        print("✅ Complete economic ecosystem integration achieved")
         
-        print("\n✅ UNIFIED EXCHANGE INTERFACE:")
-        print("✅ BTC-WEPO Exchange APIs: All atomic swap endpoints working correctly")
-        print("✅ RWA-WEPO Exchange APIs: All RWA trading endpoints functional")
-        print("✅ Unified Exchange Rate APIs: Both BTC and RWA exchange rate calculations working")
-        print("✅ Trading Functionality: Buy and sell operations working for both BTC and RWA")
-        print("✅ Fee Calculation: 3-way redistribution (60% masternodes, 25% miners, 15% stakers)")
-        
-        print("\n🎯 WEPO PHASE 1 STATUS: READY FOR CHRISTMAS DAY 2025 LAUNCH")
-        print("The 'Be Your Own Bank' Quantum Vault system is fully operational")
-        print("All privacy features, commitment generation, and auto-deposit functionality working")
-        print("Complete trading infrastructure ready with unified exchange interface")
-        
-    elif quantum_vault_success and not unified_exchange_success:
-        print("\n🎉 QUANTUM VAULT TESTS COMPLETED SUCCESSFULLY!")
-        print("❌ UNIFIED EXCHANGE INTERFACE TESTS FOUND ISSUES!")
-        
-        print("\n✅ QUANTUM VAULT SYSTEM: FULLY OPERATIONAL")
-        print("✅ All 6 Quantum Vault endpoints working correctly")
-        print("✅ zk-STARK privacy features implemented")
-        print("✅ Commitment generation and verification working")
-        print("✅ Auto-deposit functionality complete")
-        
-        print("\n⚠️ UNIFIED EXCHANGE AREAS REQUIRING ATTENTION:")
-        print("- Some atomic swap endpoints may not be working")
-        print("- RWA trading endpoints may have issues")
-        print("- Exchange rate calculations may be incorrect")
-        
-    elif not quantum_vault_success and unified_exchange_success:
-        print("\n❌ QUANTUM VAULT TESTS FOUND ISSUES!")
-        print("🎉 UNIFIED EXCHANGE INTERFACE TESTS COMPLETED SUCCESSFULLY!")
-        
-        print("\n⚠️ QUANTUM VAULT AREAS REQUIRING ATTENTION:")
-        print("- Vault creation may not be working")
-        print("- Privacy commitments may not be generating")
-        print("- Auto-deposit functionality may have issues")
-        print("- zk-STARK features may not be implemented")
-        
-        print("\n✅ UNIFIED EXCHANGE INTERFACE: FULLY OPERATIONAL")
-        print("✅ All trading functionalities working correctly")
-        print("✅ Both BTC and RWA trading functional")
-        print("✅ 3-way fee redistribution implemented")
+        print("\nREVOLUTIONARY ACHIEVEMENT:")
+        print("WEPO Production Staking completes the revolutionary 'We The People' economic model")
+        print("Fair-launch cryptocurrency providing income to all network participants")
+        print("Zero coin burning - 100% fee redistribution to masternodes, miners, and stakers")
+        print("Ready for Christmas Day 2025 genesis launch!")
         
     else:
-        print("\n❌ BOTH QUANTUM VAULT AND UNIFIED EXCHANGE TESTS FOUND ISSUES!")
+        print("❌ WEPO PRODUCTION STAKING SYSTEM NEEDS ATTENTION!")
+        print("Some critical staking features are not working correctly")
         
-        print("\n⚠️ QUANTUM VAULT AREAS REQUIRING ATTENTION:")
-        print("- Vault creation endpoints may not be accessible")
-        print("- Privacy features may not be implemented")
-        print("- Auto-deposit functionality may be missing")
-        print("- zk-STARK commitment generation may not be working")
-        
-        print("\n⚠️ UNIFIED EXCHANGE AREAS REQUIRING ATTENTION:")
-        print("- Atomic swap endpoints may not be working")
-        print("- RWA trading endpoints may have issues")
-        print("- Fee redistribution may not be properly implemented")
+        print("\n⚠️ AREAS REQUIRING ATTENTION:")
+        print("- Staking system info endpoint may have issues")
+        print("- Production mode activation may not be working")
+        print("- Stake creation validation may be failing")
+        print("- Reward distribution system may need fixes")
         
         print("\n🔧 RECOMMENDED ACTIONS:")
-        print("1. Check Quantum Vault endpoints: /api/vault/*")
-        print("2. Verify zk-STARK privacy implementation")
-        print("3. Test auto-deposit functionality")
-        print("4. Check atomic swap endpoints: /api/atomic-swap/*")
-        print("5. Verify RWA trading endpoints: /api/rwa/*")
-        print("6. Ensure 3-way fee redistribution is working")
+        print("1. Check staking info endpoint: /api/staking/info")
+        print("2. Verify production activation: /api/staking/activate")
+        print("3. Test stake creation: /api/staking/create")
+        print("4. Check reward distribution: /api/staking/rewards/distribute")
+        print("5. Verify stake tracking: /api/staking/stakes/{address}")
     
     print("\n" + "="*80)
-    print("END OF WEPO QUANTUM VAULT & UNIFIED EXCHANGE TESTING")
+    print("END OF WEPO PRODUCTION STAKING ACTIVATION TESTING")
     print("="*80)
     
-    sys.exit(0 if (quantum_vault_success and unified_exchange_success) else 1)
+    sys.exit(0 if staking_success else 1)
