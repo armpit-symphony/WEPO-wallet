@@ -1373,7 +1373,7 @@ def run_rwa_quantum_vault_tests():
                 }
             }
             
-            response = requests.post(f"{BRIDGE_URL}/vault/rwa/deposit", json=deposit_data)
+            response = requests.post(f"{API_URL}/vault/rwa/deposit", json=deposit_data)
             print(f"  Response: {response.status_code}")
             
             if response.status_code == 200:
