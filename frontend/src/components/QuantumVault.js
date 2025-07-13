@@ -12,7 +12,13 @@ import {
   Plus,
   TrendingUp,
   Zap,
-  DollarSign
+  DollarSign,
+  Ghost,
+  Send,
+  Inbox,
+  History,
+  UserX,
+  UserCheck
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 
