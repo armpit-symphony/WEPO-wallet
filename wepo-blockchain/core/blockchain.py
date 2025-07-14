@@ -37,11 +37,50 @@ from .address_utils import validate_wepo_address, is_quantum_address, is_regular
 WEPO_VERSION = 70001
 NETWORK_MAGIC = b'WEPO'
 DEFAULT_PORT = 22567
-GENESIS_TIME = 1704067200  # Jan 1, 2024
-BLOCK_TIME_TARGET = 120    # 2 minutes (after year 1)
-BLOCK_TIME_YEAR1 = 600     # 10 minutes (year 1)
-MAX_BLOCK_SIZE = 2 * 1024 * 1024  # 2MB
 COIN = 100000000  # 1 WEPO = 100,000,000 satoshis
+MAX_BLOCK_SIZE = 2 * 1024 * 1024  # 2MB
+
+# REVISED WEPO MINING SCHEDULE - SUSTAINABLE LONG-TERM POW
+# Genesis: December 25, 2025, 3:00 PM EST
+GENESIS_TIME = 1735138800  # Christmas Day 2025
+
+# Block Time Configuration - REVISED
+BLOCK_TIME_TARGET = BLOCK_TIME_INITIAL_18_MONTHS = 360  # 6 minutes per block (first 18 months)
+BLOCK_TIME_YEAR1 = BLOCK_TIME_INITIAL_18_MONTHS  # For backward compatibility
+BLOCK_TIME_LONGTERM = 540           # 9 minutes per block (post-18 months)
+
+# Initial 18-Month Mining Schedule (10% of supply = 6.9M WEPO)
+INITIAL_MINING_PHASE_DURATION = 18 * 30.4 * 24 * 60 / 6  # 18 months in 6-min blocks
+BLOCKS_PER_PHASE = int(INITIAL_MINING_PHASE_DURATION / 3)  # 43,800 blocks per phase
+
+PHASE_1_BLOCKS = BLOCKS_PER_PHASE    # Months 1-6: 43,800 blocks
+PHASE_2_BLOCKS = BLOCKS_PER_PHASE    # Months 7-12: 43,800 blocks  
+PHASE_3_BLOCKS = BLOCKS_PER_PHASE    # Months 13-18: 43,800 blocks
+TOTAL_INITIAL_BLOCKS = PHASE_1_BLOCKS + PHASE_2_BLOCKS + PHASE_3_BLOCKS  # 131,400 blocks
+
+# Calculate rewards to reach exactly 6.9M WEPO in 18 months
+# Phase 1: R, Phase 2: R/2, Phase 3: R/4
+# Total: 43,800R + 43,800R/2 + 43,800R/4 = 43,800R × 1.75 = 6,900,000 WEPO
+# R = 6,900,000 ÷ (43,800 × 1.75) = 90 WEPO per block
+PHASE_1_REWARD = 90 * COIN   # 90 WEPO per block (months 1-6)
+PHASE_2_REWARD = 45 * COIN   # 45 WEPO per block (months 7-12)
+PHASE_3_REWARD = 22.5 * COIN # 22.5 WEPO per block (months 13-18)
+
+# Long-term Mining Schedule (post-18 months) - 90% of remaining supply
+# Halving intervals: 3 years → 6 years → 3 years → 3 years
+BLOCKS_PER_YEAR_LONGTERM = int(365.25 * 24 * 60 / 9)  # 58,400 blocks per year (9-min blocks)
+
+LONGTERM_HALVING_1 = TOTAL_INITIAL_BLOCKS + (3 * BLOCKS_PER_YEAR_LONGTERM)    # 3 years post-18m
+LONGTERM_HALVING_2 = LONGTERM_HALVING_1 + (6 * BLOCKS_PER_YEAR_LONGTERM)     # 6 years
+LONGTERM_HALVING_3 = LONGTERM_HALVING_2 + (3 * BLOCKS_PER_YEAR_LONGTERM)     # 3 years
+LONGTERM_HALVING_4 = LONGTERM_HALVING_3 + (3 * BLOCKS_PER_YEAR_LONGTERM)     # 3 years
+
+# Long-term rewards (starting at 12 WEPO, halving schedule)
+LONGTERM_INITIAL_REWARD = 12 * COIN  # 12 WEPO per block (years 1.5-4.5)
+LONGTERM_REWARD_2 = 6 * COIN         # 6 WEPO per block (years 4.5-10.5)
+LONGTERM_REWARD_3 = 3 * COIN         # 3 WEPO per block (years 10.5-13.5)
+LONGTERM_REWARD_4 = 1.5 * COIN       # 1.5 WEPO per block (years 13.5-16.5)
+LONGTERM_REWARD_FINAL = 0.75 * COIN  # 0.75 WEPO per block (years 16.5+)
 
 # Consensus Parameters
 POW_BLOCKS_YEAR1 = 52560      # 10-min blocks for 1 year
