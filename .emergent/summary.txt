@@ -1,30 +1,30 @@
 <analysis>
-The previous AI engineer successfully brought the WEPO project from conception to a near-complete state. Initially, they integrated quantum resistance and RWA tokenization, establishing a complex tokenomics model. Key early tasks included fixing frontend issues, enhancing P2P networking, boosting security, and implementing a dynamic masternode system. The focus then shifted to the Community-Mined Genesis Block, culminating in the Community Mining Software.
+The previous AI engineer effectively transitioned the WEPO project from initial concept to a feature-rich application. Key developments included integrating quantum resistance, RWA tokenization, and a dynamic masternode system, culminating in the Community Mining Software. The focus then shifted to unifying the wallet for WEPO and BTC, extensively refactoring the exchange interface for a community-driven AMM with zero-admin principles.
 
-The user then pivoted, requesting BTC functionality into a unified wallet, leading to significant refactoring by removing redundant wallet types and atomic swap logic. The primary challenge became unifying WEPO-BTC and WEPO-RWA exchange functions. The AI engineer debugged and refactored the frontend (, ) and backend (, ) extensively. They discovered conflicting backend processes and adapted the  to correctly host the new Community-Driven AMM endpoints. Upon user feedback, hardcoded exchange rates and incorrect fee handling were rectified by implementing a zero-admin AMM system where market pricing is user-determined, and fees are redistributed. Comprehensive backend and frontend testing confirmed the AMM's functionality. The final task in this trajectory involved initiating the Quantum Vault implementation, including backend APIs and frontend integration, which is currently underway.
+The current trajectory details several major feature implementations: the completion and extensive testing of the Quantum Vault for private WEPO storage; the groundbreaking Ghost Transfers for completely private, untraceable vault-to-vault WEPO transactions; and the revolutionary RWA Quantum Vault integration, enabling private storage and transfers of Real-World Assets. Subsequently, the engineer successfully activated and tested the Production Staking mechanism. The immediate past efforts have been focused on a critical re-evaluation and re-design of the entire tokenomics, specifically the PoW mining schedule and total supply, due to inconsistencies and new user requirements. The current task is to align the system with a total supply of 69,000,003 WEPO and a revised, long-term sustainable PoW mining schedule.
 </analysis>
 
 <product_requirements>
-The WEPO project aims to be a privacy-focused, decentralized cryptocurrency (We The People) with hybrid PoW/PoS consensus and Masternodes, emphasizing financial freedom and a fair launch. Key requirements included:
-1.  **Core Wallet**: 16-word seed, username/password login, PoS/Masternode options (locked until activation), feeless quantum-resistant private messaging.
+The WEPO project is a privacy-focused, decentralized cryptocurrency with a hybrid PoW/PoS consensus and Masternodes, aiming for financial freedom and a fair launch.
+1.  **Core Wallet**: 16-word seed, username/password login, PoS/Masternode options, feeless quantum-resistant private messaging.
 2.  **Quantum Resistance**: Dilithium signatures and a no-fee universal quantum messaging system.
-3.  **RWA Tokenization**: Ability to create Real World Assets with DEX trading, including a WEPO balance requirement and creation fee, with document/image uploads.
-4.  **Tokenomics**: No-burn fee redistribution (60% Masternodes, 25% Miners, 15% PoS Stakers), 18 months pure PoW mining (3 halvings), then PoS/Masternodes activate.
-5.  **Community-Mined Genesis Block**: Technical framework and mining software for a decentralized launch (Christmas 2025, 3:00 PM NY time).
-6.  **Unified Wallet**: Consolidate multiple wallet types into a single WEPO wallet capable of managing both WEPO and Bitcoin, eliminating complex atomic swaps in favor of internal exchanges.
-7.  **Unified Exchange Interface**: Consolidate all trading functionalities (BTC-WEPO and RWA-WEPO) into a single, comprehensive exchange page with market-determined pricing (no hardcoded rates) and 100% fee redistribution.
-8.  **Quantum Vault**: Transform Quantum Wallet into a Quantum Vault for private, zk-STARK-protected WEPO storage, with Auto-Deposit for all incoming funds.
+3.  **RWA Tokenization**: Creation of Real World Assets with DEX trading, WEPO balance requirement, creation fee, and document/image uploads.
+4.  **Tokenomics**: No-burn fee redistribution (60% Masternodes, 25% Miners, 15% PoS Stakers), with an initial 18-month PoW period and subsequent PoS/Masternode activation. The total supply is now set at **69,000,003 WEPO**.
+5.  **Community-Mined Genesis Block**: Technical framework and mining software for a decentralized launch (Christmas 2025).
+6.  **Unified Wallet & Exchange**: Single wallet for WEPO and BTC, with a unified exchange interface for BTC-WEPO and RWA-WEPO trading, featuring market-determined pricing and 100% fee redistribution.
+7.  **Quantum Vault**: Private, zk-STARK-protected WEPO storage with Auto-Deposit functionality for all incoming funds. This has been **extended to support RWA tokens**, allowing private storage and Ghost Transfers (untraceable vault-to-vault transactions) for both WEPO and RWA assets.
+8.  **Revised PoW Mining Schedule**: The first 18 months of PoW mining should yield approximately 6.9 million WEPO (10% of total supply), with a 6-minute block time. After 18 months, PoW mining continues indefinitely alongside PoS/Masternodes at a 9-minute block time, with further halvings at 3, 6, 3, and 3-year intervals.
 </product_requirements>
 
 <key_technical_concepts>
 -   **Full-Stack**: React frontend, FastAPI backend, Custom Python Blockchain (SQLite).
--   **Cryptography**: Dilithium Signatures (quantum resistance), zk-STARKs (for Quantum Vault), BIP39.
--   **Consensus & Economics**: Hybrid PoW/PoS, Masternodes (dynamic collateral), UTXO, Tokenomics (no-burn fee redistribution, phased mining), Community-Driven AMM.
--   **Features**: RWA Tokenization, Quantum Messaging, P2P Networking, Unified Wallet (WEPO+BTC), Unified Exchange.
+-   **Cryptography**: Dilithium Signatures, zk-STARKs (Quantum Vault, Ghost Transfers), BIP39.
+-   **Consensus & Economics**: Hybrid PoW/PoS, Dynamic Masternodes, UTXO, Zero-burn Fee Redistribution, Community-Driven AMM.
+-   **Core Features**: RWA Tokenization, Quantum Messaging, P2P Networking, Unified Wallet (WEPO+BTC), Unified Exchange, Quantum Vault (Multi-Asset, Ghost Transfers).
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a full-stack architecture with a React frontend, a FastAPI backend, and a custom Python-based blockchain utilizing SQLite.
+The application utilizes a full-stack architecture comprising a React frontend, a FastAPI backend primarily handled by , and a custom Python-based blockchain using SQLite.
 
 **Detailed Directory Structure:**
 
@@ -32,73 +32,45 @@ The application uses a full-stack architecture with a React frontend, a FastAPI 
 
 **Key Files and Their Importance (with recent changes):**
 
--   : Main React entry. **Refactored** to streamline to a single wallet setup/dashboard.
--   : Central UI. **Updated** to consolidate features, integrate BTC, and include . **Recently updated** to import and integrate , adding a new Quantum Vault button and adjusting grid layout. Also fixed references to  and  and added  and icon imports (, ).
--   : **Newly created** for Community-Mined Genesis Block.
--    (renamed to ): **Renamed, extensively modified, and refactored** to be the single  interface for both BTC-WEPO and RWA-WEPO trading. **Crucially updated** to use  (internal swaps) instead of atomic swap endpoints. **Significantly refactored** to support the community-driven AMM model with a Liquidity tab, including functions for adding liquidity and fetching pool statistics. Extensive syntax fixes were performed to correct corrupted JSX and duplicate function definitions.
--   : **Fixed** import of  (from ) and removed all  hook references and quantum-related logic, aligning with the unified wallet and context cleanup.
--   : **Newly created** component for the frontend interface of the Quantum Vault.
--   : Manages wallet state. **Updated** to handle both WEPO and BTC addresses, balances, and transactions within a single context.
--   : **Newly created** utility for standardized frontend address generation and validation.
--   : Core blockchain logic. **Modified** for dynamic masternode collateral, 3-way fee redistribution, and imports .
--   : Core logic for RWA tokenization.
--   : Quantum resistance implementation.
--   : **Newly created** utility for standardized backend address generation and validation.
--   : FastAPI backend. **Heavily updated** to expose RWA, dynamic masternode collateral, governance, and community mining API endpoints. **Crucially updated** to incorporate the  class and implement the community-driven AMM endpoints (, , , ), replacing previous hardcoded/atomic swap logic for external routing.
--   : FastAPI backend. **Modified** to include the internal swap endpoints (, ) and the AMM endpoints (, ) along with the  class definition and necessary imports, anticipating its role as the primary backend. **Recently updated** to include Quantum Vault endpoints (, , , , ).
--   : **Newly created** backend component for community-mined genesis block.
--   : **Newly created** backend file for community mining endpoints.
--   : **Newly created** backend file for core Quantum Vault logic.
--   : Critical for tracking testing progress and user feedback.
--   : **Extensively updated** to capture a comprehensive snapshot of the WEPO vision, framework, functions, user experience, tokenomics, implementation status, and roadmap.
+-   : Central UI. Recently updated to integrate  and a new Quantum Vault button, adjusting the quick action button layout.
+-   : Renamed from , refactored for the community-driven AMM model with a Liquidity tab, replacing atomic swap logic.
+-   : **Newly created** component for the Quantum Vault frontend. **Extensively modified** to include a new Ghost Transfer tab, state variables, functions (, , ), and UI for private vault-to-vault transfers, including importing a Ghost icon.
+-   : Core blockchain logic. **Modified** for dynamic masternode collateral and 3-way fee redistribution. **Recently heavily modified** to implement the new long-term PoW mining schedule (6-min blocks for first 18 months, then 9-min blocks indefinitely with new halving schedule), and to add production staking activation logic (including , , , , , ). It contains conflicting  information which is currently being resolved.
+-   : Core logic for RWA tokenization. Reviewed to understand the RWA structure for Quantum Vault integration.
+-   : **Newly created** backend file for core Quantum Vault logic. **Extensively modified** to implement Ghost Transfer capabilities (classes , , methods , , , and cryptographic helpers). **Further modified** to support multi-asset (WEPO and RWA) storage, and to update , , and  for RWA functionality. Debugged and fixed commitment generation/handling during RWA integration.
+-   : FastAPI backend, acting as the primary backend for recent feature additions. **Heavily updated** to incorporate AMM endpoints. **Crucially updated** to include Quantum Vault endpoints, and then the new Ghost Transfer endpoints (). **Further updated** to include RWA-specific Quantum Vault and Ghost Transfer endpoints (). **Most recently updated** to include staking endpoints () and had  augmented with staking and block height methods for testing purposes.
+-   : FastAPI backend. Intended to be primary, but  often received the new endpoints.
+-   : Critical for tracking testing progress and user feedback. Regularly updated.
+-   : **Extensively updated** to capture a comprehensive snapshot of the WEPO vision, framework, functions, user experience, tokenomics, implementation status, and roadmap. Regularly updated to reflect completed features like Ghost Transfers and RWA Quantum Vault.
+-   , : Tokenomics documents. Conflicting information is present and currently being resolved with the user.
 
-**Deleted Files:**
--   
--   
--   
--   
--   
--   
--   
+**Deleted Files:** , , , , , ,  (reflecting the unification of wallets and contexts).
 </code_architecture>
 
 <pending_tasks>
--   Activate Production Staking Mechanism (90% complete, requires final activation).
--   Implement Community-Mined Genesis Block (core technical framework and mining software are implemented and tested, but the event is for Christmas 2025).
--   Anonymous launch via Tor/IPFS.
--   Complete privacy proof generation system.
+-   Complete the privacy proof generation system.
 -   Implement confidential transactions system.
 -   Conduct external security audits and penetration testing.
--   Finalize the Quantum Vault concept with zk-STARKs (including Auto-Deposit to Quantum Vault for all incoming funds).
+-   Implement anonymous launch via Tor/IPFS.
+-   Resolve existing tokenomics inconsistencies and implement the new PoW schedule and total supply (69,000,003 WEPO).
+-   Verify masternode rewards are strictly from transaction fees.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was actively implementing the **Quantum Vault** feature, which is designed as the be your own bank and ultimate privacy solution for WEPO. This involves integrating zk-STARK protected private storage with an auto-deposit functionality for all incoming WEPO.
+Immediately before this summary request, the AI engineer was deep in a critical re-evaluation and re-design of the WEPO project's core tokenomics and mining schedule. This was triggered by the user identifying inconsistencies in the stated total supply across different documentation and the implemented PoW schedule.
 
-The work completed on the Quantum Vault includes:
-1.  **Backend Implementation**:
-    *   Created a new file: , which will house the core logic for the Quantum Vault.
-    *   Added new FastAPI endpoints to  for Quantum Vault operations. These endpoints include:
-        *   : To initialize a user's Quantum Vault.
-        *   : To manually deposit WEPO into the vault.
-        *   : To withdraw WEPO from the vault back to the regular wallet.
-        *   : To check the current status and balance of the vault.
-        *   : To enable or disable automatic deposits of all incoming WEPO into the vault.
-    *   Successfully tested these backend endpoints, confirming their functionality for creation, status, deposit, and auto-deposit.
+Specifically, the work involved:
+1.  **PoW Mining Schedule Re-design**: The previous PoW schedule had inconsistencies (e.g., Phase 3 duration) and mined too much WEPO too quickly. The user requested a new schedule:
+    *   **First 18 Months**: Mine approximately 6.9 million WEPO (10% of total supply).
+    *   **Block Time**: Consistent 6 minutes per block for the initial 18 months, with 3 halving phases (6 months each).
+    *   **Long-term PoW**: Continue mining after 18 months alongside PoS/Masternodes at a 9-minute block time, with further halvings at 3, 6, 3, and 3-year intervals.
+    The AI engineer has successfully implemented this new schedule in  (updating , , removing old constants) and  (updating the fast test bridge to match).
+2.  **Total Supply Reconciliation**: There was conflicting information about the total supply (e.g., 21M, 63.9M, 63,900,006). The user explicitly clarified the definitive total supply to be **69,000,003 WEPO**, emphasizing the 3,6,9 numerology.
+3.  **Tokenomics Audit**: The AI engineer is currently auditing the existing PoS and Masternode reward mechanisms in  to ensure they align with the user's explicit requirement that Masternodes *only* receive rewards from transaction fees.
 
-2.  **Frontend Integration**:
-    *   Created a new React component: , which will provide the user interface for the vault.
-    *   Integrated this  component into the main . This involved:
-        *   Importing the  component.
-        *   Adding a new state variable () to control the visibility of the vault interface.
-        *   Adjusting the Dashboard's quick action buttons layout from a 3-column to a 4-column grid to accommodate a new Quantum Vault button.
-        *   Adding the Quantum Vault button to the Dashboard.
-        *   Rendering the  component conditionally within the .
-        *   Resolved several linting and reference errors in  related to outdated , , and missing  function and icon imports (ToggleLeft, ToggleRight) during the integration process.
-
-The frontend has successfully compiled after these changes. The last action was taking a screenshot which showed the wallet creation screen, implying the Quantum Vault feature is visually integrated, though navigating to it requires wallet setup. The AI engineer was about to clear the test market values, similar to how it was done for the AMM pools, likely in preparation for further testing or a clean state for the new feature.
+The immediate task involves auditing the current PoS and Masternode reward implementation to align with the new total supply and fee distribution rules, and then to plan options to fully integrate these changes into the codebase.
 </current_work>
 
 <optional_next_step>
-Reset test market values to zero in the backend to ensure a clean state for Quantum Vault testing or subsequent user interactions.
+Based on the user's explicit request, the next step is to continue auditing the PoS and Masternode reward systems to confirm their adherence to the masternodes only get rewards from transaction fees rule.
 </optional_next_step>
