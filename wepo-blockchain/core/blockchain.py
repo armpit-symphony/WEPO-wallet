@@ -40,11 +40,14 @@ DEFAULT_PORT = 22567
 COIN = 100000000  # 1 WEPO = 100,000,000 satoshis
 MAX_BLOCK_SIZE = 2 * 1024 * 1024  # 2MB
 
-# REVISED WEPO MINING SCHEDULE - SUSTAINABLE LONG-TERM POW
+# WEPO 20-YEAR MINING SCHEDULE - SUSTAINABLE LONG-TERM POW
 # Genesis: December 25, 2025, 3:00 PM EST
 GENESIS_TIME = 1735138800  # Christmas Day 2025
 
-# Block Time Configuration - REVISED
+# Total Supply - DEFINITIVE VALUE
+TOTAL_SUPPLY = 69000003  # 69,000,003 WEPO total supply
+
+# Block Time Configuration
 BLOCK_TIME_TARGET = BLOCK_TIME_INITIAL_18_MONTHS = 360  # 6 minutes per block (first 18 months)
 BLOCK_TIME_YEAR1 = BLOCK_TIME_INITIAL_18_MONTHS  # For backward compatibility
 BLOCK_TIME_LONGTERM = 540           # 9 minutes per block (post-18 months)
