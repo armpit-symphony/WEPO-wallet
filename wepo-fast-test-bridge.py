@@ -759,7 +759,7 @@ class WepoFastTestBridge:
                 "best_block_hash": self.blockchain.blocks[-1]["hash"],
                 "difficulty": 1,
                 "mempool_size": len(self.blockchain.mempool),
-                "total_supply": 63900006,
+                "total_supply": 69000003,
                 "network": "testnet",
                 "status": "ready",
                 "active_masternodes": 0,
