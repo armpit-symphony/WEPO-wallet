@@ -2095,7 +2095,7 @@ class WepoFastTestBridge:
                     remaining_blocks = 0
                 
                 tokenomics = {
-                    'total_supply': 63900006,
+                    'total_supply': 69000003,
                     'current_block_height': current_height,
                     'current_mining_phase': current_phase,
                     'current_block_reward': current_reward,
@@ -2103,47 +2103,65 @@ class WepoFastTestBridge:
                     
                     'supply_distribution': {
                         'mining_rewards': {
-                            'amount': 18396000,
-                            'percentage': 28.8,
-                            'duration': '18 months',
-                            'schedule': {
-                                'months_1_6': '400 WEPO × 26,280 blocks = 10,512,000 WEPO',
-                                'months_7_12': '200 WEPO × 26,280 blocks = 5,256,000 WEPO',
-                                'months_13_18': '100 WEPO × 26,280 blocks = 2,628,000 WEPO'
-                            }
+                            'amount': 20702037,
+                            'percentage': 30.0,
+                            'duration': '198 months (16.5 years)'
                         },
                         'pos_staking': {
-                            'amount': 30000000,
-                            'percentage': 47.0,
-                            'duration': 'Years 2-10',
-                            'description': 'PoS staking rewards distributed over 9 years'
+                            'amount': 30360002,
+                            'percentage': 44.0,
+                            'description': 'Long-term staking rewards'
                         },
                         'masternodes': {
-                            'amount': 12000000,
-                            'percentage': 18.8,
-                            'duration': 'Years 2-15',
-                            'collateral_required': 10000,
+                            'amount': 17938000,
+                            'percentage': 26.0,
                             'description': 'Masternode service rewards'
-                        },
-                        'development_ecosystem': {
-                            'amount': 3504006,
-                            'percentage': 5.5,
-                            'description': 'Protocol development and ecosystem growth'
                         }
                     },
                     
-                    'fee_distribution': {
-                        'masternodes': 60,
-                        'miners': 25,
-                        'stakers': 15,
-                        'method': 'Real-time per-block distribution',
-                        'policy': 'Zero burning - 100% distributed to participants'
+                    'mining_schedule': {
+                        'phase_1': {
+                            'name': 'Pre-PoS Mining',
+                            'duration': '18 months',
+                            'block_reward': 52.51,
+                            'total_supply': 6900000,
+                            'percentage': 10.0
+                        },
+                        'phase_2a': {
+                            'name': 'Post-PoS Years 1-3',
+                            'duration': '3 years',
+                            'block_reward': 33.17,
+                            'total_supply': 5811384,
+                            'percentage': 8.4
+                        },
+                        'phase_2b': {
+                            'name': 'Post-PoS Years 4-9',
+                            'duration': '6 years',
+                            'block_reward': 16.58,
+                            'total_supply': 5811384,
+                            'percentage': 8.4
+                        },
+                        'phase_2c': {
+                            'name': 'Post-PoS Years 10-12',
+                            'duration': '3 years',
+                            'block_reward': 8.29,
+                            'total_supply': 1452846,
+                            'percentage': 2.1
+                        },
+                        'phase_2d': {
+                            'name': 'Post-PoS Years 13-15',
+                            'duration': '3 years',
+                            'block_reward': 4.15,
+                            'total_supply': 726423,
+                            'percentage': 1.1
+                        }
                     },
                     
-                    'consensus_transition': {
-                        'phase_1': 'Pure PoW (Months 1-18)',
-                        'phase_2': 'Hybrid PoW/PoS (Month 19+)',
-                        'long_term': 'Fee-driven sustainable economy'
+                    'fee_redistribution': {
+                        'masternodes': '60%',
+                        'miners': '25%',
+                        'stakers': '15%',
+                        'burned': '0%'
                     }
                 }
                 
