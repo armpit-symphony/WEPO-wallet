@@ -82,14 +82,14 @@ LONGTERM_REWARD_3 = 3 * COIN         # 3 WEPO per block (years 10.5-13.5)
 LONGTERM_REWARD_4 = 1.5 * COIN       # 1.5 WEPO per block (years 13.5-16.5)
 LONGTERM_REWARD_FINAL = 0.75 * COIN  # 0.75 WEPO per block (years 16.5+)
 
-# Consensus Parameters
-POW_BLOCKS_YEAR1 = 52560      # 10-min blocks for 1 year
-REWARD_Q1 = 400 * COIN        # 400 WEPO per block Q1 (MEGA REWARDS!)
-REWARD_Q2 = 200 * COIN        # 200 WEPO per block Q2
-REWARD_Q3 = 100 * COIN        # 100 WEPO per block Q3  
-REWARD_Q4 = 50 * COIN         # 50 WEPO per block Q4
-REWARD_YEAR2_BASE = 12.4 * COIN # 12.4 WEPO per block year 2+
-HALVING_INTERVAL = 1051200    # Blocks between halvings (4 years)
+# Legacy constants - kept for backward compatibility but not used in new schedule
+POW_BLOCKS_YEAR1 = 52560      # OLD: 10-min blocks for 1 year (not used in new schedule)
+REWARD_Q1 = 400 * COIN        # OLD: 400 WEPO per block Q1 (not used in new schedule)
+REWARD_Q2 = 200 * COIN        # OLD: 200 WEPO per block Q2 (not used in new schedule)
+REWARD_Q3 = 100 * COIN        # OLD: 100 WEPO per block Q3 (not used in new schedule)
+REWARD_Q4 = 50 * COIN         # OLD: 50 WEPO per block Q4 (not used in new schedule)
+REWARD_YEAR2_BASE = 12.4 * COIN # OLD: 12.4 WEPO per block year 2+ (not used in new schedule)
+HALVING_INTERVAL = 1051200    # OLD: Blocks between halvings (not used in new schedule)
 
 # MAINNET CONFIGURATION - CHRISTMAS DAY 2025 GENESIS LAUNCH
 CHRISTMAS_GENESIS_TIMESTAMP = 1735138800  # December 25, 2025, 3:00 PM EST
