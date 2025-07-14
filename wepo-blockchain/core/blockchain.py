@@ -103,8 +103,9 @@ if PRODUCTION_MODE:
     print("🧪 DEVELOPMENT MODE: Staking activated immediately for testing")
 else:
     # MAINNET CONFIGURATION: activate after 18 months from Christmas launch
-    POS_ACTIVATION_HEIGHT = int(POW_BLOCKS_YEAR1 * 1.5)  # 78,840 blocks (18 months)
+    POS_ACTIVATION_HEIGHT = TOTAL_INITIAL_BLOCKS  # 131,400 blocks (18 months)
     print(f"🎄 MAINNET READY: Staking activates at block {POS_ACTIVATION_HEIGHT} (18 months post-genesis)")
+    print(f"🔄 PoW CONTINUES: Mining continues indefinitely alongside PoS/Masternodes")
 
 MIN_STAKE_AMOUNT = 1000 * COIN  # 1,000 WEPO minimum stake - accessible to community
 
