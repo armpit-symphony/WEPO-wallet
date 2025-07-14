@@ -164,11 +164,12 @@ class FastTestBlockchain:
         self.stakes = {}  # CLEAN STATE FOR MAINNET LAUNCH
         self.masternodes = {}  # CLEAN STATE FOR MAINNET LAUNCH
         
-        # Staking constants - MAINNET READY
+        # Staking constants - MAINNET READY (New Schedule)
         self.COIN = 100000000  # 1 WEPO = 100M satoshis  
         self.MIN_STAKE_AMOUNT = 1000 * self.COIN  # 1,000 WEPO minimum
         self.PRODUCTION_MODE = False  # MAINNET CONFIGURATION (False = 18 month delay)
-        self.POS_ACTIVATION_HEIGHT = 78840  # 18 months (mainnet)
+        self.POS_ACTIVATION_HEIGHT = 131400  # 18 months (131,400 blocks at 6 min each)
+        self.TOTAL_INITIAL_BLOCKS = 131400  # First 18 months
         
         # Create instant genesis block for testing (mainnet will have proper genesis)
         self.create_genesis_block()
