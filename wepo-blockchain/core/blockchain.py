@@ -875,7 +875,10 @@ class WepoBlockchain:
                 break
         
         # Determine block time target
-        block_time = BLOCK_TIME_YEAR1 if height <= POW_BLOCKS_YEAR1 else BLOCK_TIME_TARGET
+        if height <= TOTAL_INITIAL_BLOCKS:
+            block_time = BLOCK_TIME_INITIAL_18_MONTHS  # 6 minutes per block for first 18 months
+        else:
+            block_time = BLOCK_TIME_LONGTERM  # 9 minutes per block after 18 months
         
         # Create block header
         header = BlockHeader(
