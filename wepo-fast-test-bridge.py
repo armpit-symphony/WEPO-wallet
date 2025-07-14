@@ -2180,60 +2180,90 @@ class WepoFastTestBridge:
                 current_height = len(self.blockchain.blocks)
                 current_reward = self.blockchain.calculate_block_reward(current_height)
                 
+                # Determine current phase
+                if current_height <= 131400:
+                    current_phase = "Pre-PoS Mining"
+                    blocks_remaining = 131400 - current_height
+                elif current_height <= 306600:
+                    current_phase = "Phase 2A (Years 1-3)"
+                    blocks_remaining = 306600 - current_height
+                elif current_height <= 657000:
+                    current_phase = "Phase 2B (Years 4-9)"
+                    blocks_remaining = 657000 - current_height
+                elif current_height <= 832200:
+                    current_phase = "Phase 2C (Years 10-12)"
+                    blocks_remaining = 832200 - current_height
+                elif current_height <= 1007400:
+                    current_phase = "Phase 2D (Years 13-15)"
+                    blocks_remaining = 1007400 - current_height
+                else:
+                    current_phase = "PoW Complete"
+                    blocks_remaining = 0
+                
                 schedule = {
                     'current_status': {
                         'block_height': current_height,
                         'current_reward_wepo': current_reward / 100000000,
-                        'estimated_blocks_per_day': 576,  # 2.5 minute blocks
-                        'estimated_daily_issuance': (current_reward / 100000000) * 576
+                        'current_phase': current_phase,
+                        'blocks_remaining': blocks_remaining,
+                        'estimated_blocks_per_day': 240 if current_height <= 131400 else 160,  # 6min vs 9min blocks
+                        'estimated_daily_issuance': (current_reward / 100000000) * (240 if current_height <= 131400 else 160)
                     },
                     
                     'mining_phases': [
                         {
-                            'phase': 'Phase 1',
-                            'duration': 'Months 1-6',
-                            'blocks': '1 - 26,280',
-                            'reward_per_block': 400,
-                            'total_rewards': 10512000,
-                            'percentage_of_supply': 16.5
+                            'phase': 'Pre-PoS Mining',
+                            'duration': '18 months',
+                            'block_time': '6 minutes',
+                            'reward': 52.51,
+                            'total_blocks': 131400,
+                            'total_wepo': 6900000,
+                            'percentage': 10.0
                         },
                         {
-                            'phase': 'Phase 2', 
-                            'duration': 'Months 7-12',
-                            'blocks': '26,281 - 52,560',
-                            'reward_per_block': 200,
-                            'total_rewards': 5256000,
-                            'percentage_of_supply': 8.2
+                            'phase': 'Phase 2A (Years 1-3)',
+                            'duration': '3 years',
+                            'block_time': '9 minutes',
+                            'reward': 33.17,
+                            'total_blocks': 175200,
+                            'total_wepo': 5811384,
+                            'percentage': 8.4
                         },
                         {
-                            'phase': 'Phase 3',
-                            'duration': 'Months 13-18', 
-                            'blocks': '52,561 - 78,840',
-                            'reward_per_block': 100,
-                            'total_rewards': 2628000,
-                            'percentage_of_supply': 4.1
+                            'phase': 'Phase 2B (Years 4-9)',
+                            'duration': '6 years',
+                            'block_time': '9 minutes',
+                            'reward': 16.58,
+                            'total_blocks': 350400,
+                            'total_wepo': 5811384,
+                            'percentage': 8.4
                         },
                         {
-                            'phase': 'PoS Transition',
-                            'duration': 'Month 19+',
-                            'blocks': '78,841+',
-                            'reward_per_block': 0,
-                            'note': 'Mining ends, PoS and Masternode rewards begin'
+                            'phase': 'Phase 2C (Years 10-12)',
+                            'duration': '3 years',
+                            'block_time': '9 minutes',
+                            'reward': 8.29,
+                            'total_blocks': 175200,
+                            'total_wepo': 1452846,
+                            'percentage': 2.1
+                        },
+                        {
+                            'phase': 'Phase 2D (Years 13-15)',
+                            'duration': '3 years',
+                            'block_time': '9 minutes',
+                            'reward': 4.15,
+                            'total_blocks': 175200,
+                            'total_wepo': 726423,
+                            'percentage': 1.1
                         }
                     ],
                     
-                    'total_mining_summary': {
-                        'total_blocks': 78840,
-                        'total_rewards': 18396000,
-                        'percentage_of_supply': 28.8,
-                        'estimated_duration_days': 137  # 78,840 blocks / 576 blocks per day
-                    }
+                    'total_pow_supply': 20702037,
+                    'total_pow_percentage': 30.0,
+                    'total_duration': '198 months (16.5 years)'
                 }
                 
-                return {
-                    'success': True,
-                    'mining_schedule': schedule
-                }
+                return schedule
                 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
