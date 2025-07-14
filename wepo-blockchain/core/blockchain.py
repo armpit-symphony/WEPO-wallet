@@ -753,28 +753,42 @@ class WepoBlockchain:
         return len(self.chain) - 1 if self.chain else -1
     
     def calculate_block_reward(self, height: int) -> int:
-        """Calculate block reward based on new 18-month mining schedule"""
+        """Calculate block reward based on new sustainable long-term mining schedule"""
         
-        # New Mining Schedule (18 months total)
-        PHASE_1_BLOCKS = 26280  # Months 1-6: 400 WEPO
-        PHASE_2_BLOCKS = 26280  # Months 7-12: 200 WEPO
-        PHASE_3_BLOCKS = 26280  # Months 13-18: 100 WEPO
-        TOTAL_MINING_BLOCKS = PHASE_1_BLOCKS + PHASE_2_BLOCKS + PHASE_3_BLOCKS
-        
+        # INITIAL 18-MONTH MINING PHASE (6.9M WEPO total - 10% of supply)
         if height <= PHASE_1_BLOCKS:
-            # Months 1-6: 400 WEPO per block
-            return 400 * COIN
+            # Months 1-6: 90 WEPO per block (6-minute blocks)
+            return PHASE_1_REWARD
         elif height <= (PHASE_1_BLOCKS + PHASE_2_BLOCKS):
-            # Months 7-12: 200 WEPO per block
-            return 200 * COIN
-        elif height <= TOTAL_MINING_BLOCKS:
-            # Months 13-18: 100 WEPO per block
-            return 100 * COIN
-        else:
-            # After 18 months: PoS/Masternode phase (minimal mining rewards)
-            return 0  # No more mining rewards, transition to PoS
+            # Months 7-12: 45 WEPO per block (6-minute blocks)
+            return PHASE_2_REWARD
+        elif height <= TOTAL_INITIAL_BLOCKS:
+            # Months 13-18: 22.5 WEPO per block (6-minute blocks)
+            return PHASE_3_REWARD
         
-        # Total mining rewards: 18,396,000 WEPO (28.8% of supply)
+        # LONG-TERM MINING PHASE (post-18 months, 9-minute blocks)
+        # Continues alongside PoS/Masternodes with halving schedule
+        elif height <= LONGTERM_HALVING_1:
+            # Years 1.5-4.5: 12 WEPO per block (9-minute blocks)
+            return LONGTERM_INITIAL_REWARD
+        elif height <= LONGTERM_HALVING_2:
+            # Years 4.5-10.5: 6 WEPO per block (9-minute blocks)
+            return LONGTERM_REWARD_2
+        elif height <= LONGTERM_HALVING_3:
+            # Years 10.5-13.5: 3 WEPO per block (9-minute blocks)
+            return LONGTERM_REWARD_3
+        elif height <= LONGTERM_HALVING_4:
+            # Years 13.5-16.5: 1.5 WEPO per block (9-minute blocks)
+            return LONGTERM_REWARD_4
+        else:
+            # Years 16.5+: 0.75 WEPO per block (9-minute blocks)
+            return LONGTERM_REWARD_FINAL
+        
+        # TOTAL MINING TIMELINE:
+        # - First 18 months: 6.9M WEPO (10% of supply)
+        # - Long-term: Remaining 14.1M WEPO over decades
+        # - Mining continues indefinitely with decreasing rewards
+        # - PoS/Masternodes activate at 18 months and run alongside mining
     
     def create_coinbase_transaction(self, height: int, miner_address: str) -> Transaction:
         """Create coinbase transaction for new block with 3-way fee redistribution"""
