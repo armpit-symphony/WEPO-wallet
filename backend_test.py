@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+WEPO 20-Year Tokenomics Implementation Testing Suite
+Tests the new sustainable mining schedule and tokenomics system
+"""
 import requests
 import json
 import time
@@ -24,7 +28,10 @@ if not BACKEND_URL:
     sys.exit(1)
 
 API_URL = f"{BACKEND_URL}/api"
-print(f"Testing backend API at: {API_URL}")
+print(f"🎯 TESTING WEPO 20-YEAR TOKENOMICS IMPLEMENTATION")
+print(f"Backend API URL: {API_URL}")
+print(f"Expected Total Supply: 69,000,003 WEPO")
+print("=" * 80)
 
 # Test results tracking
 test_results = {
@@ -34,10 +41,13 @@ test_results = {
     "tests": []
 }
 
-def log_test(name, passed, response=None, error=None):
-    """Log test results"""
-    status = "PASSED" if passed else "FAILED"
-    print(f"[{status}] {name}")
+def log_test(name, passed, response=None, error=None, details=None):
+    """Log test results with enhanced details"""
+    status = "✅ PASSED" if passed else "❌ FAILED"
+    print(f"{status} {name}")
+    
+    if details:
+        print(f"  Details: {details}")
     
     if not passed and response:
         print(f"  Response: {response.status_code} - {response.text}")
@@ -45,6 +55,13 @@ def log_test(name, passed, response=None, error=None):
         print(f"  Error: {error}")
     
     test_results["total"] += 1
+    test_results["tests"].append({
+        "name": name,
+        "passed": passed,
+        "details": details,
+        "error": error if not passed else None
+    })
+    
     if passed:
         test_results["passed"] += 1
     else:
