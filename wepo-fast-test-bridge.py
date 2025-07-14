@@ -764,7 +764,7 @@ class WepoFastTestBridge:
                 "status": "ready",
                 "active_masternodes": 0,
                 "total_staked": 0,
-                "circulating_supply": len(self.blockchain.blocks) * 400
+                "circulating_supply": len(self.blockchain.blocks) * 52.51  # Updated for new schedule
             }
         
         @self.app.post("/api/wallet/create")
