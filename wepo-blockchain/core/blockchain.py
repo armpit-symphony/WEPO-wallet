@@ -52,40 +52,42 @@ BLOCK_TIME_TARGET = BLOCK_TIME_INITIAL_18_MONTHS = 360  # 6 minutes per block (f
 BLOCK_TIME_YEAR1 = BLOCK_TIME_INITIAL_18_MONTHS  # For backward compatibility
 BLOCK_TIME_LONGTERM = 540           # 9 minutes per block (post-18 months)
 
-# Initial 18-Month Mining Schedule (10% of supply = 6.9M WEPO)
-INITIAL_MINING_PHASE_DURATION = 18 * 30.4 * 24 * 60 / 6  # 18 months in 6-min blocks
-BLOCKS_PER_PHASE = int(INITIAL_MINING_PHASE_DURATION / 3)  # 43,800 blocks per phase
+# PHASE 1: Pre-PoS Mining (Months 1-18) - 10% of total supply
+PRE_POS_DURATION_BLOCKS = 131400    # 18 months in 6-minute blocks
+PRE_POS_REWARD = int(6900000 * COIN / PRE_POS_DURATION_BLOCKS)  # 52.51 WEPO per block
+PRE_POS_TOTAL_SUPPLY = 6900000 * COIN  # 6.9M WEPO (10% of total)
 
-PHASE_1_BLOCKS = BLOCKS_PER_PHASE    # Months 1-6: 43,800 blocks
-PHASE_2_BLOCKS = BLOCKS_PER_PHASE    # Months 7-12: 43,800 blocks  
-PHASE_3_BLOCKS = BLOCKS_PER_PHASE    # Months 13-18: 43,800 blocks
-TOTAL_INITIAL_BLOCKS = PHASE_1_BLOCKS + PHASE_2_BLOCKS + PHASE_3_BLOCKS  # 131,400 blocks
-
-# Calculate rewards to reach exactly 6.9M WEPO in 18 months
-# Phase 1: R, Phase 2: R/2, Phase 3: R/4
-# Total: 43,800R + 43,800R/2 + 43,800R/4 = 43,800R × 1.75 = 6,900,000 WEPO
-# R = 6,900,000 ÷ (43,800 × 1.75) = 90 WEPO per block
-PHASE_1_REWARD = 90 * COIN   # 90 WEPO per block (months 1-6)
-PHASE_2_REWARD = 45 * COIN   # 45 WEPO per block (months 7-12)
-PHASE_3_REWARD = 22.5 * COIN # 22.5 WEPO per block (months 13-18)
-
-# Long-term Mining Schedule (post-18 months) - 90% of remaining supply
-# Halving intervals: 3 years → 6 years → 3 years → 3 years
+# Long-term PoW phases (alongside PoS/Masternodes) - 20% of total supply
 BLOCKS_PER_YEAR_LONGTERM = int(365.25 * 24 * 60 / 9)  # 58,400 blocks per year (9-min blocks)
 
-LONGTERM_HALVING_1 = TOTAL_INITIAL_BLOCKS + (3 * BLOCKS_PER_YEAR_LONGTERM)    # 3 years post-18m
-LONGTERM_HALVING_2 = LONGTERM_HALVING_1 + (6 * BLOCKS_PER_YEAR_LONGTERM)     # 6 years
-LONGTERM_HALVING_3 = LONGTERM_HALVING_2 + (3 * BLOCKS_PER_YEAR_LONGTERM)     # 3 years
-LONGTERM_HALVING_4 = LONGTERM_HALVING_3 + (3 * BLOCKS_PER_YEAR_LONGTERM)     # 3 years
+# PHASE 2A: Post-PoS Years 1-3 (Months 19-54)
+PHASE_2A_BLOCKS = 3 * BLOCKS_PER_YEAR_LONGTERM  # 175,200 blocks
+PHASE_2A_REWARD = int(33.17 * COIN)  # 33.17 WEPO per block
+PHASE_2A_END_HEIGHT = PRE_POS_DURATION_BLOCKS + PHASE_2A_BLOCKS
 
-# Long-term rewards (starting at 12 WEPO, halving schedule)
-LONGTERM_INITIAL_REWARD = 12 * COIN  # 12 WEPO per block (years 1.5-4.5)
-LONGTERM_REWARD_2 = 6 * COIN         # 6 WEPO per block (years 4.5-10.5)
-LONGTERM_REWARD_3 = 3 * COIN         # 3 WEPO per block (years 10.5-13.5)
-LONGTERM_REWARD_4 = 1.5 * COIN       # 1.5 WEPO per block (years 13.5-16.5)
-LONGTERM_REWARD_FINAL = 0.75 * COIN  # 0.75 WEPO per block (years 16.5+)
+# PHASE 2B: Post-PoS Years 4-9 (Months 55-126) - First Halving
+PHASE_2B_BLOCKS = 6 * BLOCKS_PER_YEAR_LONGTERM  # 350,400 blocks
+PHASE_2B_REWARD = int(16.58 * COIN)  # 16.58 WEPO per block (halved)
+PHASE_2B_END_HEIGHT = PHASE_2A_END_HEIGHT + PHASE_2B_BLOCKS
 
-# Legacy constants - kept for backward compatibility but not used in new schedule
+# PHASE 2C: Post-PoS Years 10-12 (Months 127-162) - Second Halving
+PHASE_2C_BLOCKS = 3 * BLOCKS_PER_YEAR_LONGTERM  # 175,200 blocks
+PHASE_2C_REWARD = int(8.29 * COIN)  # 8.29 WEPO per block (halved)
+PHASE_2C_END_HEIGHT = PHASE_2B_END_HEIGHT + PHASE_2C_BLOCKS
+
+# PHASE 2D: Post-PoS Years 13-15 (Months 163-198) - Final Halving
+PHASE_2D_BLOCKS = 3 * BLOCKS_PER_YEAR_LONGTERM  # 175,200 blocks
+PHASE_2D_REWARD = int(4.15 * COIN)  # 4.15 WEPO per block (final halving)
+PHASE_2D_END_HEIGHT = PHASE_2C_END_HEIGHT + PHASE_2D_BLOCKS
+
+# Total PoW ends at block 1,007,400 (16.5 years after PoS activation)
+POW_END_HEIGHT = PHASE_2D_END_HEIGHT
+
+# Total mining allocation: 20,702,037 WEPO over 198 months (30% of total supply)
+TOTAL_POW_SUPPLY = 20702037 * COIN
+
+# Legacy constants - kept for backward compatibility
+TOTAL_INITIAL_BLOCKS = PRE_POS_DURATION_BLOCKS  # For PoS activation timing
 POW_BLOCKS_YEAR1 = 52560      # OLD: 10-min blocks for 1 year (not used in new schedule)
 REWARD_Q1 = 400 * COIN        # OLD: 400 WEPO per block Q1 (not used in new schedule)
 REWARD_Q2 = 200 * COIN        # OLD: 200 WEPO per block Q2 (not used in new schedule)
@@ -108,7 +110,7 @@ else:
     # MAINNET CONFIGURATION: activate after 18 months from Christmas launch
     POS_ACTIVATION_HEIGHT = TOTAL_INITIAL_BLOCKS  # 131,400 blocks (18 months)
     print(f"🎄 MAINNET READY: Staking activates at block {POS_ACTIVATION_HEIGHT} (18 months post-genesis)")
-    print(f"🔄 PoW CONTINUES: Mining continues indefinitely alongside PoS/Masternodes")
+    print(f"🔄 PoW CONTINUES: Mining continues for 198 months total alongside PoS/Masternodes")
 
 MIN_STAKE_AMOUNT = 1000 * COIN  # 1,000 WEPO minimum stake - accessible to community
 
@@ -757,42 +759,44 @@ class WepoBlockchain:
         return len(self.chain) - 1 if self.chain else -1
     
     def calculate_block_reward(self, height: int) -> int:
-        """Calculate block reward based on new sustainable long-term mining schedule"""
+        """Calculate block reward based on new 20-year sustainable mining schedule"""
         
-        # INITIAL 18-MONTH MINING PHASE (6.9M WEPO total - 10% of supply)
-        if height <= PHASE_1_BLOCKS:
-            # Months 1-6: 90 WEPO per block (6-minute blocks)
-            return PHASE_1_REWARD
-        elif height <= (PHASE_1_BLOCKS + PHASE_2_BLOCKS):
-            # Months 7-12: 45 WEPO per block (6-minute blocks)
-            return PHASE_2_REWARD
-        elif height <= TOTAL_INITIAL_BLOCKS:
-            # Months 13-18: 22.5 WEPO per block (6-minute blocks)
-            return PHASE_3_REWARD
+        # PHASE 1: Pre-PoS Mining (Months 1-18) - 10% of supply
+        if height <= PRE_POS_DURATION_BLOCKS:
+            # Months 1-18: 52.51 WEPO per block (6-minute blocks)
+            return PRE_POS_REWARD
         
-        # LONG-TERM MINING PHASE (post-18 months, 9-minute blocks)
-        # Continues alongside PoS/Masternodes with halving schedule
-        elif height <= LONGTERM_HALVING_1:
-            # Years 1.5-4.5: 12 WEPO per block (9-minute blocks)
-            return LONGTERM_INITIAL_REWARD
-        elif height <= LONGTERM_HALVING_2:
-            # Years 4.5-10.5: 6 WEPO per block (9-minute blocks)
-            return LONGTERM_REWARD_2
-        elif height <= LONGTERM_HALVING_3:
-            # Years 10.5-13.5: 3 WEPO per block (9-minute blocks)
-            return LONGTERM_REWARD_3
-        elif height <= LONGTERM_HALVING_4:
-            # Years 13.5-16.5: 1.5 WEPO per block (9-minute blocks)
-            return LONGTERM_REWARD_4
+        # PHASE 2A: Post-PoS Years 1-3 (Months 19-54)
+        elif height <= PHASE_2A_END_HEIGHT:
+            # Years 1-3: 33.17 WEPO per block (9-minute blocks)
+            return PHASE_2A_REWARD
+        
+        # PHASE 2B: Post-PoS Years 4-9 (Months 55-126) - First Halving
+        elif height <= PHASE_2B_END_HEIGHT:
+            # Years 4-9: 16.58 WEPO per block (9-minute blocks)
+            return PHASE_2B_REWARD
+        
+        # PHASE 2C: Post-PoS Years 10-12 (Months 127-162) - Second Halving  
+        elif height <= PHASE_2C_END_HEIGHT:
+            # Years 10-12: 8.29 WEPO per block (9-minute blocks)
+            return PHASE_2C_REWARD
+        
+        # PHASE 2D: Post-PoS Years 13-15 (Months 163-198) - Final Halving
+        elif height <= PHASE_2D_END_HEIGHT:
+            # Years 13-15: 4.15 WEPO per block (9-minute blocks)
+            return PHASE_2D_REWARD
+        
         else:
-            # Years 16.5+: 0.75 WEPO per block (9-minute blocks)
-            return LONGTERM_REWARD_FINAL
+            # PoW ENDS at block 1,007,400 (Month 198)
+            # Miners continue earning through 25% fee redistribution
+            return 0
         
         # TOTAL MINING TIMELINE:
-        # - First 18 months: 6.9M WEPO (10% of supply)
-        # - Long-term: Remaining 14.1M WEPO over decades
-        # - Mining continues indefinitely with decreasing rewards
-        # - PoS/Masternodes activate at 18 months and run alongside mining
+        # - Phase 1 (18 months): 6.9M WEPO (10% of supply)
+        # - Phase 2A-2D (16.5 years): 13.8M WEPO (20% of supply)
+        # - Total PoW: 20.7M WEPO over 198 months (30% of supply)
+        # - PoS/Masternodes: 48.3M WEPO (70% of supply)
+        # - Post-PoW: Miners earn via 25% transaction fee redistribution
     
     def create_coinbase_transaction(self, height: int, miner_address: str) -> Transaction:
         """Create coinbase transaction for new block with 3-way fee redistribution"""
@@ -910,192 +914,160 @@ class WepoBlockchain:
         )
         
         # Create block
-        new_block = Block(
+        block = Block(
             header=header,
             transactions=transactions,
             height=height
         )
         
         # Calculate merkle root
-        new_block.header.merkle_root = new_block.calculate_merkle_root()
+        block.header.merkle_root = block.calculate_merkle_root()
         
-        return new_block
-
-    def get_active_masternodes(self) -> List[str]:
-        """Get list of active masternode addresses"""
-        # TODO: Implement proper masternode tracking
-        # For now, return mock data for development
-        return [
-            "wepo1masternode1000000000000000000000",
-            "wepo1masternode2000000000000000000000",
-            "wepo1masternode3000000000000000000000"
-        ]
+        return block
     
-    def get_active_stakers(self) -> List[Dict]:
-        """Get list of active stakers with their stake amounts"""
-        # TODO: Implement proper PoS staking tracking  
-        # For now, return mock data for development
-        return [
-            {"address": "wepo1staker1000000000000000000000000", "amount": 1000 * COIN},
-            {"address": "wepo1staker2000000000000000000000000", "amount": 5000 * COIN},
-            {"address": "wepo1staker3000000000000000000000000", "amount": 2000 * COIN}
-        ]
-    
-    def validate_block(self, block: Block) -> bool:
-        """Validate a block"""
-        try:
-            # Basic validation
-            if block.height != self.get_block_height() + 1:
-                print(f"Invalid block height: {block.height}")
-                return False
-            
-            # Check previous hash
-            latest_block = self.get_latest_block()
-            expected_prev_hash = latest_block.get_block_hash() if latest_block else "0" * 64
-            if block.header.prev_hash != expected_prev_hash:
-                print(f"Invalid previous hash")
-                return False
-            
-            # Validate merkle root
-            calculated_merkle = block.calculate_merkle_root()
-            if block.header.merkle_root != calculated_merkle:
-                print(f"Invalid merkle root")
-                return False
-            
-            # Validate proof of work
-            block_hash = block.get_block_hash()
-            if not self.miner.check_difficulty(block_hash, self.current_difficulty):
-                print(f"Invalid proof of work")
-                return False
-            
-            # Validate coinbase transaction
-            if not block.transactions or not block.transactions[0].is_coinbase():
-                print(f"Missing or invalid coinbase transaction")
-                return False
-            
-            # Validate block reward
-            coinbase_output_value = sum(out.value for out in block.transactions[0].outputs)
-            expected_reward = self.calculate_block_reward(block.height)
-            if coinbase_output_value > expected_reward:
-                print(f"Invalid block reward: {coinbase_output_value} > {expected_reward}")
-                return False
-            
-            print(f"Block {block.height} validation passed")
-            return True
-            
-        except Exception as e:
-            print(f"Block validation error: {e}")
-            return False
+    def mine_block(self, miner_address: str) -> Optional[Block]:
+        """Mine a new block"""
+        block = self.create_new_block(miner_address)
+        
+        # Adjust difficulty if needed
+        self.adjust_difficulty()
+        
+        # Mine the block
+        mined_block = self.miner.mine_block(block, self.current_difficulty)
+        
+        if mined_block:
+            # Add block to chain
+            if self.add_block(mined_block):
+                return mined_block
+        
+        return None
     
     def add_block(self, block: Block, validate: bool = True) -> bool:
-        """Add a block to the blockchain with proper UTXO management"""
+        """Add a block to the blockchain"""
         if validate and not self.validate_block(block):
             return False
         
-        try:
-            # Add to chain
-            self.chain.append(block)
-            
-            # Process transactions and update UTXOs
-            for tx in block.transactions:
-                txid = tx.calculate_txid()
-                
-                # Mark input UTXOs as spent (except for coinbase)
-                if not tx.is_coinbase():
-                    for inp in tx.inputs:
-                        self.conn.execute('''
-                            UPDATE utxos 
-                            SET spent = TRUE, spent_txid = ?, spent_height = ?
-                            WHERE txid = ? AND vout = ?
-                        ''', (txid, block.height, inp.prev_txid, inp.prev_vout))
-                
-                # Create new UTXOs from outputs
-                for vout, output in enumerate(tx.outputs):
+        # Add to chain
+        self.chain.append(block)
+        
+        # Process transactions and update UTXOs
+        self.process_block_transactions(block)
+        
+        # Save to database
+        self.save_block(block)
+        
+        # Distribute staking rewards if PoS is active
+        if block.height >= POS_ACTIVATION_HEIGHT:
+            self.distribute_staking_rewards(block.height, block.get_block_hash())
+        
+        print(f"Block {block.height} added to chain: {block.get_block_hash()}")
+        return True
+    
+    def validate_block(self, block: Block) -> bool:
+        """Validate a block"""
+        # Basic validation
+        if not block.transactions:
+            return False
+        
+        # Check coinbase transaction
+        if not block.transactions[0].is_coinbase():
+            return False
+        
+        # Validate all transactions
+        for tx in block.transactions:
+            if not self.validate_transaction(tx):
+                return False
+        
+        return True
+    
+    def process_block_transactions(self, block: Block):
+        """Process all transactions in a block and update UTXOs"""
+        for tx in block.transactions:
+            # Process transaction inputs (spend UTXOs)
+            if not tx.is_coinbase():
+                for inp in tx.inputs:
+                    # Mark UTXO as spent
                     self.conn.execute('''
-                        INSERT INTO utxos (txid, vout, address, amount, script_pubkey, spent)
-                        VALUES (?, ?, ?, ?, ?, FALSE)
-                    ''', (txid, vout, output.address, output.value, output.script_pubkey))
+                        UPDATE utxos SET spent = TRUE, spent_txid = ?, spent_height = ?
+                        WHERE txid = ? AND vout = ?
+                    ''', (tx.calculate_txid(), block.height, inp.prev_txid, inp.prev_vout))
             
-            # Save block to database
+            # Process transaction outputs (create new UTXOs)
+            for i, out in enumerate(tx.outputs):
+                self.conn.execute('''
+                    INSERT INTO utxos (txid, vout, address, amount, script_pubkey, spent)
+                    VALUES (?, ?, ?, ?, ?, FALSE)
+                ''', (tx.calculate_txid(), i, out.address, out.value, out.script_pubkey))
+        
+        self.conn.commit()
+    
+    def save_block(self, block: Block):
+        """Save block to database"""
+        # Save block
+        self.conn.execute('''
+            INSERT INTO blocks (height, hash, prev_hash, merkle_root, timestamp, bits, nonce, version, size, tx_count, consensus_type, block_data)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            block.height,
+            block.get_block_hash(),
+            block.header.prev_hash,
+            block.header.merkle_root,
+            block.header.timestamp,
+            block.header.bits,
+            block.header.nonce,
+            block.header.version,
+            block.size,
+            len(block.transactions),
+            block.header.consensus_type,
+            self.serialize_block(block)
+        ))
+        
+        # Save transactions
+        for tx in block.transactions:
             self.conn.execute('''
-                INSERT INTO blocks (
-                    height, hash, prev_hash, merkle_root, timestamp, bits, nonce,
-                    version, size, tx_count, consensus_type, block_data
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO transactions (txid, block_height, block_hash, version, lock_time, fee, privacy_proof, ring_signature, tx_data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
+                tx.calculate_txid(),
                 block.height,
                 block.get_block_hash(),
-                block.header.prev_hash,
-                block.header.merkle_root,
-                block.header.timestamp,
-                block.header.bits,
-                block.header.nonce,
-                block.header.version,
-                block.size,
-                len(block.transactions),
-                block.header.consensus_type,
-                self.serialize_block(block)
+                tx.version,
+                tx.lock_time,
+                tx.fee,
+                tx.privacy_proof,
+                tx.ring_signature,
+                json.dumps(asdict(tx), default=str)
             ))
-            
-            # Save transactions
-            for tx in block.transactions:
-                txid = tx.calculate_txid()
-                self.conn.execute('''
-                    INSERT INTO transactions (
-                        txid, block_height, block_hash, version, lock_time, fee,
-                        privacy_proof, ring_signature, tx_data
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    txid,
-                    block.height,
-                    block.get_block_hash(),
-                    tx.version,
-                    tx.lock_time,
-                    tx.fee,
-                    tx.privacy_proof,
-                    tx.ring_signature,
-                    json.dumps(asdict(tx))
-                ))
-            
-            # Distribute staking rewards if PoS is active
-            if block.height >= POS_ACTIVATION_HEIGHT:
-                self.distribute_staking_rewards(block.height, block.get_block_hash())
-            
-            self.conn.commit()
-            
-            # Adjust difficulty every 1440 blocks (2 days)
-            if block.height % 1440 == 0:
-                self.adjust_difficulty()
-            
-            print(f"Block {block.height} added to blockchain: {block.get_block_hash()}")
-            print(f"Block contains {len(block.transactions)} transactions")
-            return True
-            
-        except Exception as e:
-            print(f"Error adding block: {e}")
-            self.conn.rollback()
-            return False
+        
+        self.conn.commit()
     
     def adjust_difficulty(self):
-        """Adjust mining difficulty based on block times"""
-        if len(self.chain) < 1440:
+        """Adjust mining difficulty based on block time"""
+        if len(self.chain) < 10:
             return
         
-        # Get last 1440 blocks
-        recent_blocks = self.chain[-1440:]
+        # Calculate average block time over last 10 blocks
+        recent_blocks = self.chain[-10:]
+        time_diffs = []
+        for i in range(1, len(recent_blocks)):
+            diff = recent_blocks[i].header.timestamp - recent_blocks[i-1].header.timestamp
+            time_diffs.append(diff)
         
-        # Calculate actual time taken
-        actual_time = recent_blocks[-1].header.timestamp - recent_blocks[0].header.timestamp
+        avg_time = sum(time_diffs) / len(time_diffs)
         
-        # Target time (2 days)
-        target_time = 2 * 24 * 60 * 60
+        # Determine target time based on current height
+        current_height = self.get_block_height()
+        if current_height <= TOTAL_INITIAL_BLOCKS:
+            target_time = BLOCK_TIME_INITIAL_18_MONTHS
+        else:
+            target_time = BLOCK_TIME_LONGTERM
         
         # Adjust difficulty
-        if actual_time < target_time * 0.75:
+        if avg_time < target_time * 0.75:
             # Blocks too fast, increase difficulty
             self.current_difficulty += 1
             print(f"Difficulty increased to {self.current_difficulty}")
-        elif actual_time > target_time * 1.25:
+        elif avg_time > target_time * 1.25:
             # Blocks too slow, decrease difficulty  
             self.current_difficulty = max(1, self.current_difficulty - 1)
             print(f"Difficulty decreased to {self.current_difficulty}")
@@ -1129,11 +1101,10 @@ class WepoBlockchain:
             
             # Check inputs exist and are unspent
             total_input_value = 0
-            for input_index, inp in enumerate(transaction.inputs):
-                # Look up UTXO in database
+            for inp in transaction.inputs:
+                # Check if UTXO exists and is unspent
                 cursor = self.conn.execute('''
-                    SELECT amount, spent FROM utxos 
-                    WHERE txid = ? AND vout = ?
+                    SELECT amount, spent FROM utxos WHERE txid = ? AND vout = ?
                 ''', (inp.prev_txid, inp.prev_vout))
                 
                 utxo = cursor.fetchone()
@@ -1145,34 +1116,26 @@ class WepoBlockchain:
                     print(f"UTXO already spent: {inp.prev_txid}:{inp.prev_vout}")
                     return False
                 
-                # Verify signature based on type
-                if inp.signature_type == "dilithium":
-                    if not transaction.verify_quantum_signature(input_index):
-                        print(f"Quantum signature verification failed for input {input_index}")
-                        return False
-                elif inp.signature_type == "ecdsa":
-                    # Regular ECDSA signature validation (existing logic)
-                    if not inp.script_sig:
-                        print(f"Missing ECDSA signature for input {input_index}")
-                        return False
-                    # TODO: Add ECDSA signature verification here
-                else:
-                    print(f"Unknown signature type: {inp.signature_type}")
-                    return False
-                
                 total_input_value += utxo[0]
             
             # Check outputs
             total_output_value = sum(out.value for out in transaction.outputs)
             
-            # Check sufficient funds (inputs >= outputs + fee)
-            if total_input_value < total_output_value + transaction.fee:
-                print(f"Insufficient funds: {total_input_value} < {total_output_value + transaction.fee}")
+            # Calculate fee
+            fee = total_input_value - total_output_value
+            if fee < 0:
+                print(f"Transaction outputs exceed inputs: {total_output_value} > {total_input_value}")
                 return False
             
-            # Log transaction type for debugging
-            if transaction.has_quantum_signatures():
-                print(f"✓ Quantum transaction validated: {transaction.calculate_txid()[:16]}...")
+            # Set fee on transaction
+            transaction.fee = fee
+            
+            # Validate quantum signatures if present
+            for i, inp in enumerate(transaction.inputs):
+                if inp.signature_type == "dilithium":
+                    if not transaction.verify_quantum_signature(i):
+                        print(f"Invalid quantum signature for input {i}")
+                        return False
             
             return True
             
@@ -1181,18 +1144,12 @@ class WepoBlockchain:
             return False
     
     def get_balance(self, address: str) -> int:
-        """Get balance for an address in satoshis"""
+        """Get balance for an address"""
         cursor = self.conn.execute('''
-            SELECT SUM(amount) FROM utxos 
-            WHERE address = ? AND spent = FALSE
-        ''', (address,))
-        
+            SELECT SUM(amount) FROM utxos WHERE address = ? AND spent = FALSE
+        ''')
         result = cursor.fetchone()
         return result[0] if result[0] else 0
-    
-    def get_balance_wepo(self, address: str) -> float:
-        """Get balance for an address in WEPO"""
-        return self.get_balance(address) / COIN
     
     def get_utxos_for_address(self, address: str) -> List[dict]:
         """Get all unspent UTXOs for an address"""
@@ -1207,370 +1164,160 @@ class WepoBlockchain:
                 'txid': row[0],
                 'vout': row[1],
                 'amount': row[2],
-                'script_pubkey': row[3],
-                'address': address
+                'script_pubkey': row[3]
             })
         
         return utxos
     
-    def mine_next_block(self, miner_address: str) -> Optional[Block]:
-        """Mine the next block"""
-        print(f"\nMining new block at height {self.get_block_height() + 1}")
-        print(f"Mempool size: {len(self.mempool)} transactions")
-        print(f"Current difficulty: {self.current_difficulty}")
+    def create_transaction(self, from_address: str, to_address: str, amount: int, fee: int = 10000) -> Optional[Transaction]:
+        """Create a transaction"""
+        # Get UTXOs for sender
+        utxos = self.get_utxos_for_address(from_address)
         
-        new_block = self.create_new_block(miner_address)
-        mined_block = self.miner.mine_block(new_block, self.current_difficulty)
-        
-        if mined_block and self.add_block(mined_block):
-            return mined_block
-        else:
+        if not utxos:
+            print(f"No UTXOs found for address {from_address}")
             return None
-    
-    def create_transaction(self, from_address: str, to_address: str, amount_wepo: float, fee_wepo: float = 0.0001) -> Optional[Transaction]:
-        """Create a transaction with proper UTXO selection"""
-        try:
-            amount_satoshis = int(amount_wepo * COIN)
-            fee_satoshis = int(fee_wepo * COIN)
-            total_needed = amount_satoshis + fee_satoshis
-            
-            # Get available UTXOs for sender
-            available_utxos = self.get_utxos_for_address(from_address)
-            
-            if not available_utxos:
-                print(f"No UTXOs available for address: {from_address}")
-                return None
-            
-            # Select UTXOs (simple algorithm: take all)
-            selected_utxos = []
-            total_input_value = 0
-            
-            for utxo in available_utxos:
-                selected_utxos.append(utxo)
-                total_input_value += utxo['amount']
-                if total_input_value >= total_needed:
-                    break
-            
-            if total_input_value < total_needed:
-                print(f"Insufficient funds: need {total_needed}, have {total_input_value}")
-                return None
-            
-            # Create transaction inputs
-            inputs = []
-            for utxo in selected_utxos:
-                inputs.append(TransactionInput(
-                    prev_txid=utxo['txid'],
-                    prev_vout=utxo['vout'],
-                    script_sig=b"signature_placeholder",
-                    sequence=0xffffffff
-                ))
-            
-            # Create transaction outputs
-            outputs = []
-            
-            # Output to recipient
-            outputs.append(TransactionOutput(
-                value=amount_satoshis,
-                script_pubkey=b"recipient_output",
-                address=to_address
+        
+        # Calculate total available
+        total_available = sum(utxo['amount'] for utxo in utxos)
+        
+        if total_available < amount + fee:
+            print(f"Insufficient balance: {total_available} < {amount + fee}")
+            return None
+        
+        # Create inputs
+        inputs = []
+        input_total = 0
+        
+        for utxo in utxos:
+            inputs.append(TransactionInput(
+                prev_txid=utxo['txid'],
+                prev_vout=utxo['vout'],
+                script_sig=b"signature_placeholder",
+                sequence=0xffffffff
             ))
+            input_total += utxo['amount']
             
-            # Change output (if needed)
-            change_amount = total_input_value - total_needed
-            if change_amount > 0:
-                outputs.append(TransactionOutput(
-                    value=change_amount,
-                    script_pubkey=b"change_output",
-                    address=from_address
-                ))
-            
-            # Create transaction
-            transaction = Transaction(
-                version=1,
-                inputs=inputs,
-                outputs=outputs,
-                lock_time=0,
-                fee=fee_satoshis
-            )
-            
-            return transaction
-            
-        except Exception as e:
-            print(f"Transaction creation error: {e}")
-            return None
-
-    def create_quantum_transaction(self, from_address: str, to_address: str, amount_wepo: float, 
-                                 private_key: bytes, public_key: bytes, fee_wepo: float = 0.0001) -> Optional[Transaction]:
-        """Create a quantum-signed transaction"""
-        try:
-            # Validate quantum address format
-            if not (from_address.startswith("wepo1") and len(from_address) == 45):
-                print(f"Invalid quantum address format: {from_address}")
-                return None
-            
-            amount_satoshis = int(amount_wepo * COIN)
-            fee_satoshis = int(fee_wepo * COIN)
-            total_needed = amount_satoshis + fee_satoshis
-            
-            # Get available UTXOs for sender
-            available_utxos = self.get_utxos_for_address(from_address)
-            
-            if not available_utxos:
-                print(f"No UTXOs available for quantum address: {from_address}")
-                return None
-            
-            # Select UTXOs
-            selected_utxos = []
-            total_input_value = 0
-            
-            for utxo in available_utxos:
-                selected_utxos.append(utxo)
-                total_input_value += utxo['amount']
-                if total_input_value >= total_needed:
-                    break
-            
-            if total_input_value < total_needed:
-                print(f"Insufficient funds: need {total_needed}, have {total_input_value}")
-                return None
-            
-            # Create transaction inputs (without signatures first)
-            inputs = []
-            for utxo in selected_utxos:
-                inputs.append(TransactionInput(
-                    prev_txid=utxo['txid'],
-                    prev_vout=utxo['vout'],
-                    script_sig=None,  # No script_sig for quantum transactions
-                    sequence=0xffffffff,
-                    quantum_signature=None,  # Will be filled after signing
-                    quantum_public_key=public_key,
-                    signature_type="dilithium"
-                ))
-            
-            # Create transaction outputs
-            outputs = []
-            
-            # Output to recipient
-            outputs.append(TransactionOutput(
-                value=amount_satoshis,
-                script_pubkey=None,  # No script_pubkey for quantum transactions
-                address=to_address
-            ))
-            
-            # Change output (if needed)
-            change_amount = total_input_value - total_needed
-            if change_amount > 0:
-                outputs.append(TransactionOutput(
-                    value=change_amount,
-                    script_pubkey=None,
-                    address=from_address
-                ))
-            
-            # Create transaction
-            transaction = Transaction(
-                version=1,
-                inputs=inputs,
-                outputs=outputs,
-                lock_time=0,
-                fee=fee_satoshis
-            )
-            
-            # Sign all inputs with quantum signatures
-            for i, inp in enumerate(transaction.inputs):
-                signing_message = transaction.get_signing_message_for_input(i)
-                
-                # Import quantum signing
-                from dilithium import sign_message
-                
-                # Create quantum signature
-                quantum_signature = sign_message(signing_message, private_key)
-                
-                # Update input with signature
-                inp.quantum_signature = quantum_signature
-            
-            print(f"✓ Quantum transaction created with {len(inputs)} inputs")
-            return transaction
-            
-        except Exception as e:
-            print(f"Quantum transaction creation error: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
-            
-            # Create transaction
-            transaction = Transaction(
-                version=1,
-                inputs=inputs,
-                outputs=outputs,
-                lock_time=0,
-                fee=fee_satoshis
-            )
-            
-            return transaction
-            
-        except Exception as e:
-            print(f"Error creating transaction: {e}")
-            return None
-    
-    def get_masternode_collateral_for_height(self, block_height: int) -> int:
-        """Get masternode collateral required at specific block height"""
-        
-        # Find the applicable collateral amount from the schedule
-        applicable_collateral = 10000 * COIN  # Default to genesis amount
-        
-        for milestone_height in sorted(DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE.keys(), reverse=True):
-            if block_height >= milestone_height:
-                applicable_collateral = DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE[milestone_height]
+            if input_total >= amount + fee:
                 break
         
-        return applicable_collateral
+        # Create outputs
+        outputs = [TransactionOutput(
+            value=amount,
+            script_pubkey=b"output_script",
+            address=to_address
+        )]
+        
+        # Add change output if needed
+        change = input_total - amount - fee
+        if change > 0:
+            outputs.append(TransactionOutput(
+                value=change,
+                script_pubkey=b"change_script", 
+                address=from_address
+            ))
+        
+        # Create transaction
+        transaction = Transaction(
+            version=1,
+            inputs=inputs,
+            outputs=outputs,
+            lock_time=0,
+            fee=fee
+        )
+        
+        return transaction
     
-    def get_masternode_collateral_info(self, block_height: int) -> dict:
-        """Get comprehensive masternode collateral information"""
-        
-        current_collateral = self.get_masternode_collateral_for_height(block_height)
-        
-        # Find next reduction
-        next_reduction = None
-        for milestone_height, collateral in sorted(DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE.items()):
-            if milestone_height > block_height:
-                next_reduction = {
-                    "block_height": milestone_height,
-                    "new_collateral": collateral / COIN,  # Convert to WEPO
-                    "blocks_until": milestone_height - block_height,
-                    "years_until": (milestone_height - block_height) / 525600  # Assuming 1 minute blocks
-                }
-                break
-        
-        return {
-            "current_collateral": current_collateral / COIN,  # Convert to WEPO
-            "current_height": block_height,
-            "next_reduction": next_reduction,
-            "schedule": {height: amount / COIN for height, amount in DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE.items()}
-        }
+    # ===== STAKING SYSTEM =====
     
-    def create_stake(self, staker_address: str, amount_wepo: float) -> Optional[str]:
+    def create_stake(self, staker_address: str, amount: int) -> str:
         """Create a new stake"""
-        try:
-            amount_satoshis = int(amount_wepo * COIN)
-            
-            # Check minimum stake amount
-            if amount_satoshis < MIN_STAKE_AMOUNT:
-                print(f"Minimum stake amount is {MIN_STAKE_AMOUNT / COIN} WEPO")
-                return None
-            
-            # Check if PoS is activated
-            current_height = self.get_block_height()
-            if current_height < POS_ACTIVATION_HEIGHT:
-                print(f"PoS not activated yet. Activation at height {POS_ACTIVATION_HEIGHT}")
-                return None
-            
-            # Check staker balance
-            balance = self.get_balance(staker_address)
-            if balance < amount_satoshis:
-                print(f"Insufficient balance for staking")
-                return None
-            
-            # Generate stake ID
-            stake_id = hashlib.sha256(f"{staker_address}{amount_satoshis}{time.time()}".encode()).hexdigest()
-            
-            # Create stake record
-            stake_info = StakeInfo(
-                stake_id=stake_id,
-                staker_address=staker_address,
-                amount=amount_satoshis,
-                start_height=current_height + 1,
-                start_time=int(time.time())
-            )
-            
-            # Save to database
-            self.conn.execute('''
-                INSERT INTO stakes (stake_id, staker_address, amount, start_height, start_time)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (stake_id, staker_address, amount_satoshis, current_height + 1, int(time.time())))
-            
-            self.conn.commit()
-            
-            print(f"✅ Stake created: {amount_wepo} WEPO from {staker_address}")
-            print(f"   Stake ID: {stake_id}")
-            
-            return stake_id
-            
-        except Exception as e:
-            print(f"Error creating stake: {e}")
-            return None
+        if amount < MIN_STAKE_AMOUNT:
+            raise ValueError(f"Minimum stake amount is {MIN_STAKE_AMOUNT / COIN} WEPO")
+        
+        # Check if user has sufficient balance
+        balance = self.get_balance(staker_address)
+        if balance < amount:
+            raise ValueError(f"Insufficient balance: {balance / COIN} WEPO")
+        
+        # Create stake
+        stake_id = f"stake_{staker_address}_{int(time.time())}"
+        current_height = self.get_block_height()
+        
+        stake = StakeInfo(
+            stake_id=stake_id,
+            staker_address=staker_address,
+            amount=amount,
+            start_height=current_height,
+            start_time=int(time.time())
+        )
+        
+        # Save to database
+        self.conn.execute('''
+            INSERT INTO stakes (stake_id, staker_address, amount, start_height, start_time)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (stake_id, staker_address, amount, current_height, int(time.time())))
+        
+        self.conn.commit()
+        
+        # Store in memory
+        self.stakes[stake_id] = asdict(stake)
+        
+        print(f"Created stake: {stake_id} for {amount / COIN} WEPO")
+        return stake_id
     
-    def create_masternode(self, operator_address: str, collateral_txid: str, collateral_vout: int, ip_address: str = None, port: int = 22567) -> Optional[str]:
+    def create_masternode(self, operator_address: str, collateral_txid: str, collateral_vout: int, ip_address: str = None) -> str:
         """Create a new masternode"""
-        try:
-            # Check if PoS is activated
-            current_height = self.get_block_height()
-            if current_height < POS_ACTIVATION_HEIGHT:
-                print(f"Masternode activation not available yet. Activation at height {POS_ACTIVATION_HEIGHT}")
-                return None
-            
-            # Verify collateral UTXO exists and has correct amount
-            cursor = self.conn.execute('''
-                SELECT amount, spent FROM utxos 
-                WHERE txid = ? AND vout = ?
-            ''', (collateral_txid, collateral_vout))
-            
-            utxo = cursor.fetchone()
-            if not utxo:
-                print(f"Collateral UTXO not found: {collateral_txid}:{collateral_vout}")
-                return None
-            
-            if utxo[1]:  # spent flag
-                print(f"Collateral UTXO already spent")
-                return None
-            
-            # Get dynamic collateral requirement for current height
-            required_collateral = self.get_masternode_collateral_for_height(current_height)
-            
-            if utxo[0] < required_collateral:
-                print(f"Insufficient collateral. Required: {required_collateral / COIN} WEPO")
-                return None
-            
-            # Generate masternode ID
-            masternode_id = hashlib.sha256(f"{operator_address}{collateral_txid}{time.time()}".encode()).hexdigest()
-            
-            # Create masternode record
-            masternode_info = MasternodeInfo(
-                masternode_id=masternode_id,
-                operator_address=operator_address,
-                collateral_txid=collateral_txid,
-                collateral_vout=collateral_vout,
-                ip_address=ip_address,
-                port=port,
-                start_height=current_height + 1,
-                start_time=int(time.time()),
-                last_ping=int(time.time())
-            )
-            
-            # Save to database
-            self.conn.execute('''
-                INSERT INTO masternodes (masternode_id, operator_address, collateral_txid, collateral_vout, 
-                                       ip_address, port, start_height, start_time, last_ping)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (masternode_id, operator_address, collateral_txid, collateral_vout, 
-                  ip_address, port, current_height + 1, int(time.time()), int(time.time())))
-            
-            self.conn.commit()
-            
-            print(f"✅ Masternode created: {operator_address}")
-            print(f"   Masternode ID: {masternode_id}")
-            print(f"   Collateral: {collateral_txid}:{collateral_vout}")
-            
-            return masternode_id
-            
-        except Exception as e:
-            print(f"Error creating masternode: {e}")
-            return None
+        current_height = self.get_block_height()
+        required_collateral = self.get_masternode_collateral_for_height(current_height)
+        
+        # Verify collateral UTXO exists and has correct amount
+        cursor = self.conn.execute('''
+            SELECT amount, spent FROM utxos WHERE txid = ? AND vout = ?
+        ''', (collateral_txid, collateral_vout))
+        
+        utxo = cursor.fetchone()
+        if not utxo or utxo[1] or utxo[0] < required_collateral:
+            raise ValueError(f"Invalid collateral UTXO or insufficient amount")
+        
+        # Create masternode
+        masternode_id = f"mn_{operator_address}_{int(time.time())}"
+        
+        masternode = MasternodeInfo(
+            masternode_id=masternode_id,
+            operator_address=operator_address,
+            collateral_txid=collateral_txid,
+            collateral_vout=collateral_vout,
+            ip_address=ip_address,
+            start_height=current_height,
+            start_time=int(time.time())
+        )
+        
+        # Save to database
+        self.conn.execute('''
+            INSERT INTO masternodes (masternode_id, operator_address, collateral_txid, collateral_vout, ip_address, start_height, start_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (masternode_id, operator_address, collateral_txid, collateral_vout, ip_address, current_height, int(time.time())))
+        
+        self.conn.commit()
+        
+        # Store in memory
+        self.masternodes[masternode_id] = asdict(masternode)
+        
+        print(f"Created masternode: {masternode_id}")
+        return masternode_id
+    
+    def get_masternode_collateral_for_height(self, height: int) -> int:
+        """Get required masternode collateral for a specific height"""
+        for trigger_height in sorted(DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE.keys(), reverse=True):
+            if height >= trigger_height:
+                return DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE[trigger_height]
+        return DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE[0]
     
     def get_active_stakes(self) -> List[StakeInfo]:
         """Get all active stakes"""
         cursor = self.conn.execute('''
-            SELECT stake_id, staker_address, amount, start_height, start_time, 
-                   last_reward_height, total_rewards, status, unlock_height
+            SELECT stake_id, staker_address, amount, start_height, start_time, last_reward_height, total_rewards, status, unlock_height
             FROM stakes WHERE status = 'active'
         ''')
         
@@ -1593,8 +1340,7 @@ class WepoBlockchain:
     def get_active_masternodes(self) -> List[MasternodeInfo]:
         """Get all active masternodes"""
         cursor = self.conn.execute('''
-            SELECT masternode_id, operator_address, collateral_txid, collateral_vout,
-                   ip_address, port, start_height, start_time, last_ping, status, total_rewards
+            SELECT masternode_id, operator_address, collateral_txid, collateral_vout, ip_address, port, start_height, start_time, last_ping, status, total_rewards
             FROM masternodes WHERE status = 'active'
         ''')
         
@@ -1654,24 +1400,30 @@ class WepoBlockchain:
         # Distribute masternode rewards equally
         if active_masternodes and masternode_reward_pool > 0:
             reward_per_masternode = masternode_reward_pool // len(active_masternodes)
-            
             for masternode in active_masternodes:
-                if reward_per_masternode > 0:
-                    rewards[masternode.operator_address] = rewards.get(masternode.operator_address, 0) + reward_per_masternode
+                rewards[masternode.operator_address] = rewards.get(masternode.operator_address, 0) + reward_per_masternode
         
         return rewards
     
     def calculate_pos_reward(self, block_height: int) -> int:
-        """Calculate PoS reward amount for a block"""
+        """Calculate PoS reward for a block height"""
         if block_height < POS_ACTIVATION_HEIGHT:
             return 0
         
-        # After year 1, PoS gets 50% of block rewards
-        if block_height >= POW_BLOCKS_YEAR1:
-            base_reward = REWARD_YEAR2_BASE
-            
-            # Apply halvings every 4 years
-            halvings = (block_height - POW_BLOCKS_YEAR1) // HALVING_INTERVAL
+        # After PoS activation, use a decreasing reward schedule
+        # This is separate from PoW rewards and represents newly minted coins for PoS
+        years_since_pos = (block_height - POS_ACTIVATION_HEIGHT) // (365 * 24 * 60 // 9)  # 9-min blocks
+        
+        if years_since_pos < 2:
+            base_reward = 25 * COIN  # 25 WEPO per block for first 2 years
+        elif years_since_pos < 5:
+            base_reward = 12.5 * COIN  # 12.5 WEPO per block for years 2-5
+        elif years_since_pos < 10:
+            base_reward = 6.25 * COIN  # 6.25 WEPO per block for years 5-10
+        else:
+            # Continue halving every 5 years
+            halvings = (years_since_pos - 10) // 5
+            base_reward = 6.25 * COIN
             for _ in range(halvings):
                 base_reward //= 2
             
@@ -1694,15 +1446,10 @@ class WepoBlockchain:
                 ''', (reward_txid, 0, address, reward_amount, b"pos_reward"))
                 
                 # Record reward in history
-                reward_id = hashlib.sha256(f"{reward_txid}{address}{block_height}".encode()).hexdigest()
-                
                 self.conn.execute('''
-                    INSERT INTO staking_rewards (reward_id, recipient_address, recipient_type, 
-                                               amount, block_height, block_hash, timestamp)
+                    INSERT INTO staking_rewards (reward_id, recipient_address, recipient_type, amount, block_height, block_hash, timestamp)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (reward_id, address, 'staker', reward_amount, block_height, block_hash, int(time.time())))
-                
-                print(f"💰 PoS reward: {reward_amount / COIN} WEPO to {address}")
+                ''', (f"reward_{block_height}_{address}", address, "staker", reward_amount, block_height, block_hash, int(time.time())))
             
             self.conn.commit()
             
@@ -1710,13 +1457,13 @@ class WepoBlockchain:
             print(f"Error distributing staking rewards: {e}")
     
     def get_staking_info(self) -> dict:
-        """Get comprehensive staking system information"""
+        """Get staking system information"""
         try:
             current_height = self.get_block_height()
-            total_staked = self.get_total_staked()
             active_stakes = self.get_active_stakes()
+            total_staked = sum(stake.amount for stake in active_stakes)
             
-            # Calculate time until PoS activation (for mainnet)
+            # Calculate activation info
             activation_info = self.get_pos_activation_info()
             
             return {
@@ -1752,24 +1499,26 @@ class WepoBlockchain:
                 return {
                     "activation_date": "Immediately (Production Mode)",
                     "days_until_activation": 0,
-                    "activation_timestamp": int(time.time())
+                    "activation_timestamp": 0
                 }
             else:
-                # Calculate activation date from Christmas launch
+                # Calculate 18 months from Christmas launch
                 activation_timestamp = CHRISTMAS_GENESIS_TIMESTAMP + STAKING_ACTIVATION_DELAY
-                activation_date = datetime.fromtimestamp(activation_timestamp)
-                days_until = max(0, (activation_timestamp - time.time()) / (24 * 60 * 60))
+                activation_date = datetime.fromtimestamp(activation_timestamp).isoformat()
+                
+                # Calculate days until activation
+                current_time = int(time.time())
+                days_until = max(0, (activation_timestamp - current_time) // (24 * 60 * 60))
                 
                 return {
-                    "activation_date": activation_date.strftime("%B %d, %Y at %I:%M %p EST"),
-                    "days_until_activation": int(days_until),
+                    "activation_date": activation_date,
+                    "days_until_activation": days_until,
                     "activation_timestamp": activation_timestamp
                 }
-                
         except Exception as e:
             return {
-                "activation_date": "Error calculating date",
-                "days_until_activation": -1,
+                "activation_date": "Error calculating",
+                "days_until_activation": 0,
                 "activation_timestamp": 0
             }
     
@@ -1784,7 +1533,7 @@ class WepoBlockchain:
             
             # Estimate based on network activity and fee generation
             # Assumption: Network generates fees worth 1% of total supply annually
-            estimated_annual_fees = 21000000 * 0.01 * COIN  # 1% of 21M WEPO
+            estimated_annual_fees = TOTAL_SUPPLY * 0.01  # 1% of total supply
             staker_share = estimated_annual_fees * 0.15  # 15% goes to stakers
             
             if total_staked > 0:
@@ -1829,17 +1578,15 @@ class WepoBlockchain:
             }
     
     def get_total_staked(self) -> int:
-        """Get total amount staked across all stakers"""
-        try:
-            cursor = self.conn.execute('SELECT SUM(amount) FROM stakes WHERE status = "active"')
-            result = cursor.fetchone()
-            return result[0] if result and result[0] else 0
-        except Exception as e:
-            print(f"Error getting total staked: {e}")
-            return 0
-
-    def get_blockchain_info(self) -> dict:
-        """Get blockchain information"""
+        """Get total amount staked in the network"""
+        cursor = self.conn.execute('''
+            SELECT SUM(amount) FROM stakes WHERE status = 'active'
+        ''')
+        result = cursor.fetchone()
+        return result[0] if result[0] else 0
+    
+    def get_network_info(self) -> dict:
+        """Get network information"""
         return {
             'height': self.get_block_height(),
             'best_block_hash': self.get_latest_block().get_block_hash() if self.chain else None,
@@ -1851,42 +1598,27 @@ class WepoBlockchain:
         }
 
 def main():
-    """Main function for testing the blockchain"""
-    print("=== WEPO Blockchain Core ===")
-    print("Revolutionary Cryptocurrency - We The People")
-    print()
-    
-    # Initialize blockchain
+    """Main function for testing"""
     blockchain = WepoBlockchain()
     
-    # Print initial state
-    info = blockchain.get_blockchain_info()
-    print("Initial blockchain state:")
-    for key, value in info.items():
-        print(f"  {key}: {value}")
-    print()
+    # Test mining a few blocks
+    test_address = "wepo1test00000000000000000000000000000"
     
-    # Mine some blocks
-    miner_address = "wepo1miner0000000000000000000000000"
-    
-    for i in range(3):
-        print(f"\n--- Mining Block {i + 1} ---")
-        mined_block = blockchain.mine_next_block(miner_address)
-        
-        if mined_block:
-            print(f"Successfully mined block {mined_block.height}")
-            print(f"Block hash: {mined_block.get_block_hash()}")
-            print(f"Transactions: {len(mined_block.transactions)}")
-            print(f"Block reward: {blockchain.calculate_block_reward(mined_block.height) / COIN} WEPO")
+    for i in range(5):
+        print(f"\n--- Mining block {i+1} ---")
+        block = blockchain.mine_block(test_address)
+        if block:
+            print(f"Block {block.height} mined successfully!")
+            print(f"Reward: {blockchain.calculate_block_reward(block.height) / COIN} WEPO")
         else:
-            print("Failed to mine block")
+            print("Mining failed")
             break
     
-    # Print final state
-    print("\n--- Final Blockchain State ---")
-    final_info = blockchain.get_blockchain_info()
-    for key, value in final_info.items():
-        print(f"  {key}: {value}")
+    # Display network info
+    print("\n--- Network Info ---")
+    info = blockchain.get_network_info()
+    for key, value in info.items():
+        print(f"{key}: {value}")
 
 if __name__ == "__main__":
     main()
