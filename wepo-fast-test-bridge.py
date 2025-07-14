@@ -2069,20 +2069,28 @@ class WepoFastTestBridge:
                 current_height = len(self.blockchain.blocks)
                 
                 # Calculate current mining phase
-                if current_height <= 26280:
-                    current_phase = "Phase 1 (Months 1-6)"
-                    current_reward = 400
-                    remaining_blocks = 26280 - current_height
-                elif current_height <= 52560:
-                    current_phase = "Phase 2 (Months 7-12)" 
-                    current_reward = 200
-                    remaining_blocks = 52560 - current_height
-                elif current_height <= 78840:
-                    current_phase = "Phase 3 (Months 13-18)"
-                    current_reward = 100
-                    remaining_blocks = 78840 - current_height
+                if current_height <= 131400:
+                    current_phase = "Pre-PoS Mining (Months 1-18)"
+                    current_reward = 52.51
+                    remaining_blocks = 131400 - current_height
+                elif current_height <= 306600:
+                    current_phase = "Phase 2A (Years 1-3)"
+                    current_reward = 33.17
+                    remaining_blocks = 306600 - current_height
+                elif current_height <= 657000:
+                    current_phase = "Phase 2B (Years 4-9)"
+                    current_reward = 16.58
+                    remaining_blocks = 657000 - current_height
+                elif current_height <= 832200:
+                    current_phase = "Phase 2C (Years 10-12)"
+                    current_reward = 8.29
+                    remaining_blocks = 832200 - current_height
+                elif current_height <= 1007400:
+                    current_phase = "Phase 2D (Years 13-15)"
+                    current_reward = 4.15
+                    remaining_blocks = 1007400 - current_height
                 else:
-                    current_phase = "PoS/Masternode Phase"
+                    current_phase = "PoW Complete - Fee Redistribution Only"
                     current_reward = 0
                     remaining_blocks = 0
                 
