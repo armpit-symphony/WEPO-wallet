@@ -1,5 +1,17 @@
 # WEPO - "We The People" Revolutionary Cryptocurrency Platform
 
+## 🚨 **CRITICAL SECURITY NOTICE**
+**⚠️ SECURITY AUDIT REQUIRED** - Before continuing development, please read `/app/SECURITY_AUDIT_REPORT.md`
+
+**Critical Issues Identified:**
+- **Messaging System**: Claims "end-to-end encryption" but server can read all messages
+- **Dilithium2 Signatures**: Uses RSA backend simulation, not actual post-quantum crypto
+- **Documentation**: Contains security claims that don't match implementation
+
+**Action Required**: Review security audit before making any changes or deployments.
+
+---
+
 ## 🗽 **THE VISION: TRUE FINANCIAL FREEDOM**
 
 WEPO (We The People) is a groundbreaking fair-launch cryptocurrency that embodies the principles of financial sovereignty, community governance, and economic justice. Built with no central authority, no pre-mine, and no admin control, WEPO represents the purest form of decentralized finance - where every participant is an equal stakeholder in the network's success.
