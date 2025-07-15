@@ -34,7 +34,7 @@ WEPO (We The People) is a groundbreaking fair-launch cryptocurrency that embodie
 - **Quantum Resistance**: Future-proof cryptography
 - **Private Messaging**: Zero-fee quantum messaging system
 - **Transaction Privacy**: Multiple privacy protection layers
-- **Wallet Security**: 16-word seed phrases, multiple security modes
+- **Wallet Security**: 16-word seed phrases, advanced security features
 - **Network Security**: Distributed node architecture
 
 ---
