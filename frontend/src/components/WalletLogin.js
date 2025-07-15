@@ -42,7 +42,7 @@ const WalletLogin = ({ onWalletLoaded }) => {
       // For demo purposes, accept any password
       sessionStorage.setItem('wepo_session_active', 'true');
       sessionStorage.setItem('wepo_current_wallet', walletData);
-      onLoginSuccess();
+      onWalletLoaded();
     } catch (error) {
       setError(error.message || 'Login failed');
     } finally {
