@@ -812,6 +812,36 @@ class WepoBlockchain:
         # - PoS/Masternodes: 48.3M WEPO (70% of supply)
         # - Post-PoW: Miners earn via 25% transaction fee redistribution
     
+    def calculate_pos_reward(self, height: int) -> int:
+        """Calculate PoS block reward based on height"""
+        if height < POS_ACTIVATION_HEIGHT:
+            return 0
+        
+        # PoS rewards are smaller than PoW since they occur more frequently
+        # PoS blocks every 3 minutes vs PoW every 9 minutes = 3x more frequent
+        # So PoS rewards should be ~1/3 of PoW rewards for same total distribution
+        
+        # PHASE 2A: Post-PoS Years 1-3 (Months 19-54)
+        if height <= PHASE_2A_END_HEIGHT:
+            # PoS gets 1/3 of PoW reward since 3x more frequent
+            return int(PHASE_2A_REWARD * 0.33)  # ~11 WEPO per PoS block
+        
+        # PHASE 2B: Post-PoS Years 4-9 (Months 55-126) - First Halving
+        elif height <= PHASE_2B_END_HEIGHT:
+            return int(PHASE_2B_REWARD * 0.33)  # ~5.5 WEPO per PoS block
+        
+        # PHASE 2C: Post-PoS Years 10-12 (Months 127-162) - Second Halving  
+        elif height <= PHASE_2C_END_HEIGHT:
+            return int(PHASE_2C_REWARD * 0.33)  # ~2.75 WEPO per PoS block
+        
+        # PHASE 2D: Post-PoS Years 13-15 (Months 163-198) - Final Halving
+        elif height <= PHASE_2D_END_HEIGHT:
+            return int(PHASE_2D_REWARD * 0.33)  # ~1.38 WEPO per PoS block
+        
+        else:
+            # After PoW ends, PoS continues with fee redistribution only
+            return 0
+    
     def create_coinbase_transaction(self, height: int, recipient_address: str, consensus_type: str = "pow") -> Transaction:
         """Create coinbase transaction for new block with 3-way fee redistribution"""
         # Get appropriate reward based on consensus type
