@@ -136,11 +136,11 @@ The WEPO wallet prioritizes simplicity without sacrificing functionality:
 ### **🔐 Security Experience**
 User-friendly security without complexity:
 
-#### **🎯 Progressive Security**
-- **Basic Mode**: Standard encryption for everyday use
-- **Quantum Mode**: Post-quantum protection for maximum security
-- **Vault Mode**: Private storage with zk-STARK protection
-- **Unified Mode**: Multi-currency management with optimal security
+#### **🛡️ Single Wallet Security**
+- **Quantum-Ready**: Built-in post-quantum cryptography for future-proof security
+- **Quantum Vault**: Private storage feature with zk-STARK mathematical privacy
+- **Multi-Asset Support**: WEPO, BTC, and RWA tokens in single secure interface
+- **Advanced Privacy**: Optional privacy features including Ghost Transfers
 
 #### **🛡️ User Protection**
 - **Seed Phrase Backup**: Guided 16-word recovery setup
