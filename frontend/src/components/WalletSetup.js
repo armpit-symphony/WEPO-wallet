@@ -136,10 +136,14 @@ const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
         balance: 0.0 // Real wallets start with zero balance
       };
       
-      // Store wallet data
+      // Store wallet data in localStorage
       localStorage.setItem('wepo_wallet', JSON.stringify(walletData));
       localStorage.setItem('wepo_wallet_exists', 'true');
       localStorage.setItem('wepo_wallet_username', formData.username);
+      
+      // Set session storage items (like WalletLogin does)
+      sessionStorage.setItem('wepo_session_active', 'true');
+      sessionStorage.setItem('wepo_current_wallet', JSON.stringify(walletData));
       
       // Set launch date for demo
       if (!localStorage.getItem('wepo_launch_date')) {
