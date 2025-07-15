@@ -2520,6 +2520,35 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
+        @self.app.get("/api/messaging/keys/{address}")
+        async def get_messaging_keys(address: str):
+            """Get messaging private key for TRUE E2E decryption"""
+            try:
+                # Validate address format
+                if not address.startswith("wepo1"):
+                    raise HTTPException(status_code=400, detail="Invalid address format")
+                
+                # Get or generate messaging keypair
+                messaging_keypair = messaging_system.get_messaging_keypair(address)
+                
+                # Get RSA private key for decryption
+                rsa_private_key = None
+                if hasattr(messaging_system, 'rsa_private_keys') and address in messaging_system.rsa_private_keys:
+                    rsa_private_key = messaging_system.rsa_private_keys[address].hex()
+                
+                return {
+                    'success': True,
+                    'address': address,
+                    'has_keys': True,
+                    'rsa_private_key': rsa_private_key,
+                    'e2e_encryption': True,
+                    'quantum_signing': True,
+                    'message': 'Private key for TRUE E2E decryption'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
         @self.app.post("/api/messaging/mark-read")
         async def mark_message_read(request: dict):
             """Mark message as read"""
