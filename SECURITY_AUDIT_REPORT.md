@@ -186,7 +186,50 @@ This comprehensive security audit identified **critical privacy and security iss
 
 ---
 
-### **6. ⚠️ ZK-STARK CLAIMS - CUSTOM IMPLEMENTATION**
+### **6. ❌ WALLET CREATION/LOGIN FLOW - AUTHENTICATION ISSUE**
+
+#### **Claims vs Reality:**
+- **Frontend Claims**: "Secure wallet creation and seamless login"
+- **Actual Implementation**: Authentication flow breaks after wallet creation
+
+#### **Critical Authentication Issues:**
+```javascript
+// File: /app/frontend/src/components/WalletSetup.js
+// Issue: After wallet creation, user cannot properly login to dashboard
+// Result: Users stuck in authentication loop
+```
+
+#### **Specific Problems:**
+1. **Broken Authentication Flow**: After creating wallet, login fails or redirects incorrectly
+2. **Session Management**: User session not properly established after wallet creation
+3. **Dashboard Access**: Cannot access main dashboard after successful wallet setup
+4. **Context Synchronization**: Wallet context not properly synchronized with authentication state
+5. **State Persistence**: User authentication state not properly persisted
+
+#### **What Actually Works:**
+- ✅ **Wallet Creation**: Users can create wallets with seed phrases
+- ✅ **Seed Phrase Generation**: BIP39 seed generation working correctly  
+- ✅ **Wallet Storage**: Wallet data properly stored in session/local storage
+- ✅ **Individual Components**: Dashboard and wallet components work when accessed directly
+
+#### **What's Broken:**
+- ❌ **Login Flow**: After wallet creation, login process fails
+- ❌ **Navigation**: Cannot navigate to dashboard after wallet setup
+- ❌ **Authentication State**: User authentication state not properly maintained
+- ❌ **Session Continuity**: No seamless transition from wallet creation to dashboard access
+
+#### **Evidence of Issue:**
+```javascript
+// File: /app/frontend/src/components/WalletLogin.js
+// Authentication may succeed but dashboard access fails
+// User stuck in login loop or incorrect redirects
+```
+
+#### **Impact**: **HIGH** - Users cannot access wallet after creation, blocking all functionality
+
+---
+
+### **7. ⚠️ ZK-STARK CLAIMS - CUSTOM IMPLEMENTATION**
 
 #### **Claims vs Reality:**
 - **README Claims**: "zk-STARK technology"
