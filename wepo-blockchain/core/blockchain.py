@@ -52,6 +52,10 @@ BLOCK_TIME_TARGET = BLOCK_TIME_INITIAL_18_MONTHS = 360  # 6 minutes per block (f
 BLOCK_TIME_YEAR1 = BLOCK_TIME_INITIAL_18_MONTHS  # For backward compatibility
 BLOCK_TIME_LONGTERM = 540           # 9 minutes per block (post-18 months)
 
+# HYBRID PoW/PoS BLOCK TIMING (after PoS activation)
+BLOCK_TIME_POS = 180               # 3 minutes per PoS block
+BLOCK_TIME_POW_HYBRID = 540        # 9 minutes per PoW block (in hybrid mode)
+
 # PHASE 1: Pre-PoS Mining (Months 1-18) - 10% of total supply
 PRE_POS_DURATION_BLOCKS = 131400    # 18 months in 6-minute blocks
 PRE_POS_REWARD = int(6900000 * COIN / PRE_POS_DURATION_BLOCKS)  # 52.51 WEPO per block
