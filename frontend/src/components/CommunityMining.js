@@ -19,7 +19,9 @@ import { useWallet } from '../contexts/WalletContext';
 
 const CommunityMining = ({ onBack, miningMode = 'genesis' }) => {
   const { wallet } = useWallet();
-  const { quantumWallet, isQuantumMode } = useQuantum();
+  // Simplified quantum mode state (disabled for now)
+  const quantumWallet = null;
+  const isQuantumMode = false;
   
   const [isConnected, setIsConnected] = useState(false);
   const [isMining, setIsMining] = useState(false);
