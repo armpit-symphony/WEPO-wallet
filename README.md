@@ -56,6 +56,28 @@ The WEPO wallet is a comprehensive financial management platform that consolidat
 - **RWA Trading**: Tokenized real-world assets exchange for WEPO
 - **Fair Pricing**: All rates determined by market forces, not hardcoded values
 
+### **🔒 Quantum Vault - Ultimate Privacy Feature**
+The Quantum Vault is an advanced privacy feature built into the WEPO wallet, providing mathematical privacy protection for your assets:
+
+#### **🛡️ Quantum Vault Capabilities**
+- **zk-STARK Privacy**: Mathematical proofs protect your balance and transactions
+- **Auto-Deposit**: Automatically routes incoming funds to private storage
+- **Ghost Transfers**: Completely untraceable vault-to-vault transfers
+- **Multi-Asset Support**: Store WEPO and RWA tokens privately
+- **On-Demand Access**: Available as a feature within your main wallet interface
+- **Zero Trust**: No third parties can access your private vault data
+
+#### **🔒 How It Works**
+1. **Access**: Click "Quantum Vault" button in your wallet dashboard
+2. **Deposit**: Transfer funds from your public balance to private storage
+3. **Transact**: Send private Ghost Transfers to other vault users
+4. **Withdraw**: Move funds back to public balance when needed
+5. **Privacy**: All vault operations use zk-STARK mathematical privacy proofs
+
+The Quantum Vault transforms your regular wallet into a "Be Your Own Bank" privacy fortress, without requiring separate wallets or complex mode switching.
+
+---
+
 ### **🏢 Real World Asset (RWA) Tokenization**
 Revolutionary system for digitizing physical assets on the blockchain:
 
