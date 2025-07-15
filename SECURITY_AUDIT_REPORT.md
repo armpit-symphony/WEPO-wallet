@@ -242,7 +242,7 @@ This comprehensive security audit identified **critical privacy and security iss
 
 ### **🔶 HIGH PRIORITY (Security Improvements)**
 
-#### **4. Implement Real Dilithium2**
+#### **6. Implement Real Dilithium2**
 - **Action**: Replace RSA backend with actual Dilithium implementation
 - **Options**:
   - Use NIST Dilithium reference implementation
