@@ -48,7 +48,7 @@ The WEPO wallet is a comprehensive financial management platform that consolidat
 - **WEPO Native**: Full blockchain functionality with quantum security
 - **Bitcoin Integration**: BTC receiving, sending, and holding capabilities  
 - **RWA Tokens**: Real World Asset token management and trading
-- **Unified Experience**: Single seed phrase controls all currencies
+- **Single Interface**: One wallet, one seed phrase, all currencies unified
 
 #### **⚡ Trading & Exchange**
 - **Community AMM**: Decentralized market-making with no admin control
