@@ -330,9 +330,14 @@ This comprehensive security audit identified **critical privacy and security iss
 # 5. Or reduce masternode fee allocation from 60% to match actual utility
 ```
 
----
-
-## ⚠️ **SECURITY WARNINGS**
+### **zk-STARK Integration**
+```python
+# Required changes in quantum_vault_system.py:
+# 1. Integrate StarkEx or Cairo libraries
+# 2. Replace custom proof generation with production libraries
+# 3. Add proper proof verification
+# 4. Maintain existing privacy features
+```
 
 ### **Current State:**
 - **Messaging**: NOT truly private - server can read all messages
