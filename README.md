@@ -224,7 +224,7 @@ True decentralization with no central authority:
 - ✅ **Fee Redistribution**: 60/25/15 split, zero burning
 
 #### **💼 Wallet & Interface**
-- ✅ **Unified Wallet**: Multi-currency (WEPO, BTC, RWA)
+- ✅ **Single Unified Wallet**: Multi-currency (WEPO, BTC, RWA) in one interface
 - ✅ **React Frontend**: Modern, responsive interface
 - ✅ **FastAPI Backend**: High-performance API layer
 - ✅ **Quantum Security**: Dilithium2 signature support
