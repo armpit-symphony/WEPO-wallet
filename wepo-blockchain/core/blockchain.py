@@ -909,7 +909,7 @@ class WepoBlockchain:
             rwa_system.add_transaction_fees_to_pool(total_transaction_fees, height)
         
         # Create coinbase transaction (will include redistributed fees)
-        coinbase_tx = self.create_coinbase_transaction(height, miner_address)
+        coinbase_tx = self.create_coinbase_transaction(height, miner_address, consensus_type="pow")
         
         # Add transactions from mempool (up to block size limit)
         transactions = [coinbase_tx]
