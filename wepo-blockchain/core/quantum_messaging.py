@@ -160,22 +160,50 @@ class UniversalQuantumMessaging:
             print(f"E2E Encryption failed: {e}")
             raise
     
-    def decrypt_message_content(self, encrypted_content: str, encrypted_key: bytes) -> str:
-        """Decrypt message content using hybrid decryption"""
+    def decrypt_message_content(self, encrypted_content: str, encrypted_key: bytes, recipient_private_key: bytes = None) -> str:
+        """Decrypt message content using TRUE end-to-end decryption"""
         try:
             from cryptography.fernet import Fernet
+            from cryptography.hazmat.primitives import serialization, hashes
+            from cryptography.hazmat.primitives.asymmetric import padding
             
-            # Decrypt the symmetric key (simplified for demo)
-            symmetric_key = encrypted_key
+            # **TRUE E2E DECRYPTION: Only recipient can decrypt**
+            if recipient_private_key is None:
+                # Try to get private key from fallback store (testing only)
+                if hasattr(self, 'recipient_private_keys') and encrypted_key in self.recipient_private_keys:
+                    private_key = self.recipient_private_keys[encrypted_key]
+                else:
+                    raise ValueError("Private key required for decryption - TRUE E2E encryption")
+            else:
+                # Load private key from bytes
+                private_key = serialization.load_pem_private_key(
+                    recipient_private_key,
+                    password=None
+                )
+            
+            # Decrypt the symmetric key using recipient's private key
+            try:
+                symmetric_key = private_key.decrypt(
+                    encrypted_key,
+                    padding.OAEP(
+                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        algorithm=hashes.SHA256(),
+                        label=None
+                    )
+                )
+            except Exception as decrypt_error:
+                raise ValueError(f"Failed to decrypt symmetric key - only recipient can decrypt: {decrypt_error}")
+            
+            # Decrypt message content with symmetric key
             fernet = Fernet(symmetric_key)
-            
-            # Decrypt the message content
             decrypted_content = fernet.decrypt(encrypted_content.encode())
+            
+            print(f"✓ TRUE E2E: Message decrypted with recipient's private key")
             
             return decrypted_content.decode()
             
         except Exception as e:
-            print(f"Decryption failed: {e}")
+            print(f"E2E Decryption failed: {e}")
             raise
     
     def send_message(self, from_address: str, to_address: str, content: str, 
