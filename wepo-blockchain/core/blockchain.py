@@ -956,6 +956,82 @@ class WepoBlockchain:
         
         return None
     
+    def create_pos_block(self, validator_address: str) -> Optional[Block]:
+        """Create a PoS block (no mining required)"""
+        if not self.is_valid_pos_validator(validator_address, len(self.chain)):
+            return None
+        
+        # Create block with PoS consensus
+        height = len(self.chain)
+        prev_hash = self.chain[-1].get_block_hash() if self.chain else "0" * 64
+        
+        # Create coinbase transaction for PoS rewards
+        coinbase_tx = self.create_coinbase_transaction(validator_address, height, consensus_type="pos")
+        transactions = [coinbase_tx]
+        
+        # Add transactions from mempool
+        for tx in list(self.mempool.values()):
+            if self.validate_transaction(tx):
+                transactions.append(tx)
+        
+        # Set appropriate block time for PoS
+        if height <= PRE_POS_DURATION_BLOCKS:
+            block_time = BLOCK_TIME_INITIAL_18_MONTHS  # 6 minutes per block for first 18 months
+        else:
+            block_time = BLOCK_TIME_POS  # 3 minutes per PoS block
+        
+        # Create PoS block header
+        header = BlockHeader(
+            version=1,
+            prev_hash=prev_hash,
+            merkle_root="",
+            timestamp=int(time.time()),
+            bits=0,  # No difficulty for PoS
+            nonce=0,  # No nonce for PoS
+            consensus_type="pos",
+            validator_address=validator_address
+        )
+        
+        # Create PoS block
+        pos_block = Block(
+            header=header,
+            transactions=transactions,
+            height=height
+        )
+        
+        # Calculate merkle root
+        pos_block.header.merkle_root = pos_block.calculate_merkle_root()
+        
+        # Sign the block with validator's key (simplified for now)
+        # In production, this would use the validator's private key
+        header.validator_signature = self.sign_pos_block(pos_block, validator_address)
+        
+        return pos_block
+    
+    def sign_pos_block(self, block: Block, validator_address: str) -> bytes:
+        """Sign PoS block with validator's key (simplified implementation)"""
+        # For now, create a simple signature based on block hash and validator
+        import hashlib
+        block_hash = block.get_block_hash()
+        signature_data = f"{block_hash}:{validator_address}".encode()
+        return hashlib.sha256(signature_data).digest()
+    
+    def validate_pos_block(self, block: Block) -> bool:
+        """Validate PoS block"""
+        if not block.header.is_pos_block():
+            return False
+        
+        # Check validator eligibility
+        if not self.is_valid_pos_validator(block.header.validator_address, block.height):
+            return False
+        
+        # Verify block signature (simplified)
+        expected_signature = self.sign_pos_block(block, block.header.validator_address)
+        if block.header.validator_signature != expected_signature:
+            return False
+        
+        return True
+    
     def add_block(self, block: Block, validate: bool = True) -> bool:
         """Add a block to the blockchain"""
         if validate and not self.validate_block(block):
