@@ -1599,6 +1599,47 @@ class WepoBlockchain:
         result = cursor.fetchone()
         return result[0] if result[0] else 0
     
+    def select_pos_validator(self, block_height: int) -> Optional[str]:
+        """Select PoS validator using stake-weighted random selection"""
+        if block_height < POS_ACTIVATION_HEIGHT:
+            return None
+            
+        # Get active stakes
+        active_stakes = self.get_active_stakes()
+        if not active_stakes:
+            return None
+            
+        # Calculate total stake
+        total_stake = sum(stake.amount for stake in active_stakes)
+        if total_stake == 0:
+            return None
+            
+        # Generate random point in stake range
+        import random
+        random.seed(block_height)  # Deterministic seed for consensus
+        random_point = random.randint(0, total_stake - 1)
+        
+        # Find validator at random point
+        cumulative_stake = 0
+        for stake in active_stakes:
+            cumulative_stake += stake.amount
+            if cumulative_stake > random_point:
+                return stake.staker_address
+                
+        # Fallback to first validator
+        return active_stakes[0].staker_address if active_stakes else None
+    
+    def is_valid_pos_validator(self, validator_address: str, block_height: int) -> bool:
+        """Check if address is a valid PoS validator"""
+        if block_height < POS_ACTIVATION_HEIGHT:
+            return False
+            
+        # Check if validator has active stake
+        active_stakes = self.get_active_stakes()
+        validator_stakes = [stake for stake in active_stakes if stake.staker_address == validator_address]
+        
+        return len(validator_stakes) > 0 and sum(stake.amount for stake in validator_stakes) >= MIN_STAKE_AMOUNT
+    
     def get_network_info(self) -> dict:
         """Get network information"""
         return {
