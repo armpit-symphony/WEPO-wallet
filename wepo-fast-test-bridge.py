@@ -2581,10 +2581,14 @@ class WepoFastTestBridge:
                 return {
                     'success': True,
                     'stats': stats,
-                    'quantum_encrypted': True,
+                    'e2e_encryption': True,  # TRUE end-to-end encryption
+                    'server_cannot_decrypt': True,  # Server cannot read messages
+                    'quantum_signing': True,  # Quantum-resistant signatures
                     'universal_compatibility': True,
-                    'feature': 'Universal Quantum Messaging',
-                    'description': 'Quantum-resistant messaging for all wallet types'
+                    'feature': 'TRUE E2E Quantum Messaging',
+                    'description': 'Quantum-resistant messaging with TRUE end-to-end encryption - server cannot decrypt messages',
+                    'privacy_level': 'maximum',
+                    'security_model': 'zero_trust'
                 }
                 
             except Exception as e:
