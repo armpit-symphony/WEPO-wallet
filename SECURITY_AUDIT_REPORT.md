@@ -225,7 +225,8 @@ This comprehensive security audit identified **critical privacy and security iss
 ### **Critical Fixes Required:**
 - [ ] **Messaging E2E Encryption**: Implement proper asymmetric key exchange
 - [ ] **Remove Server Message Access**: Eliminate server-side decryption
-- [ ] **Update README**: Remove false privacy claims
+- [ ] **Implement PoS Consensus**: Build actual hybrid PoW/PoS block production
+- [ ] **Update README**: Remove false privacy and consensus claims
 - [ ] **Add Privacy Warnings**: Inform users about current limitations
 
 ### **Security Improvements:**
