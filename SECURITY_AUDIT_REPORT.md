@@ -287,6 +287,7 @@ This comprehensive security audit identified **critical privacy and security iss
 ### **Security Improvements:**
 - [ ] **Real Dilithium2**: Replace RSA backend with actual post-quantum crypto
 - [ ] **Production zk-STARK**: Integrate StarkEx or Cairo libraries
+- [ ] **Masternode Economics**: Align rewards with actual services provided
 - [ ] **External Audit**: Professional security review
 - [ ] **Privacy Testing**: Comprehensive privacy assessment
 
