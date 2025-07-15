@@ -11,6 +11,8 @@
 ### **❌ CRITICAL SECURITY ISSUES**
 - **Messaging System**: Claims "end-to-end encryption" but server can decrypt all messages
 - **Dilithium2**: Claims "quantum-resistant" but uses RSA backend simulation
+- **PoS Consensus**: Claims "hybrid PoW/PoS" but only implements PoW consensus
+- **Masternode Services**: Claims "network infrastructure" but provides no actual services
 - **Privacy Claims**: Documentation overstates actual security implementation
 
 ### **📋 NEXT ENGINEER INSTRUCTIONS**
