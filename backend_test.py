@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-WEPO 20-Year Tokenomics Implementation Testing Suite
-Tests the new sustainable mining schedule and tokenomics system
+WEPO TRUE End-to-End Encryption Messaging System Testing Suite
+Tests the critical security fix that provides genuine privacy protection
 """
 import requests
 import json
@@ -28,9 +28,9 @@ if not BACKEND_URL:
     sys.exit(1)
 
 API_URL = f"{BACKEND_URL}/api"
-print(f"🎯 TESTING WEPO 20-YEAR TOKENOMICS IMPLEMENTATION")
+print(f"🔐 TESTING WEPO TRUE END-TO-END ENCRYPTION MESSAGING SYSTEM")
 print(f"Backend API URL: {API_URL}")
-print(f"Expected Total Supply: 69,000,003 WEPO")
+print(f"Critical Security Fix: Server can NO LONGER decrypt messages")
 print("=" * 80)
 
 # Test results tracking
