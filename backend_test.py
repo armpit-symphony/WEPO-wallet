@@ -28,9 +28,9 @@ if not BACKEND_URL:
     sys.exit(1)
 
 API_URL = f"{BACKEND_URL}/api"
-print(f"🔐 TESTING WEPO TRUE END-TO-END ENCRYPTION MESSAGING SYSTEM")
+print(f"🔗 TESTING WEPO HYBRID POW/POS CONSENSUS SYSTEM")
 print(f"Backend API URL: {API_URL}")
-print(f"Critical Security Fix: Server can NO LONGER decrypt messages")
+print(f"Critical Feature: Hybrid PoW/PoS consensus after 18 months (block 131,400)")
 print("=" * 80)
 
 # Test results tracking
