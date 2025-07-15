@@ -11,12 +11,18 @@ const MainApp = () => {
 
   useEffect(() => {
     // Check if user has existing wallet session
-    const currentUser = localStorage.getItem('wepo_current_user');
+    const sessionActive = sessionStorage.getItem('wepo_session_active');
     const sessionWallet = sessionStorage.getItem('wepo_current_wallet');
+    const walletExists = localStorage.getItem('wepo_wallet_exists');
     
-    if (currentUser || sessionWallet) {
+    if (sessionActive && sessionWallet) {
+      // User has active session - go directly to dashboard
+      setCurrentView('dashboard');
+    } else if (walletExists) {
+      // User has wallet but no active session - go to login
       setCurrentView('login');
     }
+    // Otherwise stay on setup
   }, []);
 
   const renderCurrentView = () => {
