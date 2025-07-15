@@ -48,7 +48,9 @@ def test_true_e2e_encryption():
             print(f"❌ SECURITY BREACH: Alice could decrypt Bob's message!")
             return False
         except Exception as e:
-            print(f"✓ Access control working: {str(e)}")
+            print(f"✅ Access control working: {str(e)}")
+            if "ACCESS DENIED" in str(e):
+                print(f"✅ TRUE E2E: Server correctly denied access to Alice")
         
         # Test that Bob CAN decrypt the message (is the recipient)
         print(f"\n4. Testing legitimate decryption...")
