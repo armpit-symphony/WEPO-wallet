@@ -9,7 +9,11 @@ import {
   Lock,
   Plus,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Zap,
+  CheckCircle,
+  User,
+  AlertCircle
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { validateWepoAddress } from '../utils/addressUtils';
