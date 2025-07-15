@@ -293,8 +293,10 @@ This comprehensive security audit identified **critical privacy and security iss
 
 ### **Documentation Updates:**
 - [ ] **Accurate Claims**: Align documentation with implementation
+- [ ] **Service Warnings**: Clear masternode service limitation disclosures
+- [ ] **Economic Transparency**: Explain fee distribution vs services provided
 - [ ] **Security Warnings**: Clear privacy limitation disclosures
-- [ ] **Upgrade Roadmap**: Clear path to production security
+- [ ] **Upgrade Roadmap**: Clear path to production security and services
 
 ---
 
