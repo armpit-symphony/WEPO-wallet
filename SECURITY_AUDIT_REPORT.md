@@ -280,8 +280,9 @@ This comprehensive security audit identified **critical privacy and security iss
 - [ ] **Messaging E2E Encryption**: Implement proper asymmetric key exchange
 - [ ] **Remove Server Message Access**: Eliminate server-side decryption
 - [ ] **Implement PoS Consensus**: Build actual hybrid PoW/PoS block production
-- [ ] **Update README**: Remove false privacy and consensus claims
-- [ ] **Add Privacy Warnings**: Inform users about current limitations
+- [ ] **Implement Masternode Services**: Build actual network infrastructure or reduce rewards
+- [ ] **Update README**: Remove false privacy, consensus, and service claims
+- [ ] **Add Service Warnings**: Inform users about current masternode limitations
 
 ### **Security Improvements:**
 - [ ] **Real Dilithium2**: Replace RSA backend with actual post-quantum crypto
