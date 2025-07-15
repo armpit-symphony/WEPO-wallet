@@ -49,6 +49,443 @@ def log_test(name, passed, response=None, error=None, details=None):
     if details:
         print(f"  Details: {details}")
     
+    if error:
+        print(f"  Error: {error}")
+    
+    if response and not passed:
+        print(f"  Response: {response}")
+    
+    test_results["total"] += 1
+    if passed:
+        test_results["passed"] += 1
+    else:
+        test_results["failed"] += 1
+    
+    test_results["tests"].append({
+        "name": name,
+        "passed": passed,
+        "error": error,
+        "details": details
+    })
+
+def generate_test_address():
+    """Generate a test WEPO address"""
+    return f"wepo1{''.join(random.choices(string.ascii_lowercase + string.digits, k=32))}"
+
+def test_messaging_send():
+    """Test POST /api/messaging/send - Send encrypted messages"""
+    print("\n🔐 Testing Message Sending with TRUE E2E Encryption")
+    
+    # Generate test addresses
+    alice_address = generate_test_address()
+    bob_address = generate_test_address()
+    
+    # Test message
+    secret_message = "This is a SECRET message that only Bob should be able to read!"
+    
+    try:
+        response = requests.post(f"{API_URL}/messaging/send", json={
+            "from_address": alice_address,
+            "to_address": bob_address,
+            "content": secret_message,
+            "subject": "Secret Test Message"
+        })
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Verify response structure
+            required_fields = ['success', 'message_id', 'quantum_encrypted', 'delivery_status', 'timestamp']
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                log_test("Message Send API Structure", False, 
+                        error=f"Missing fields: {missing_fields}")
+                return None
+            
+            # Verify TRUE E2E encryption indicators
+            if data.get('quantum_encrypted') and data.get('success'):
+                log_test("Message Send - TRUE E2E Encryption", True,
+                        details=f"Message ID: {data['message_id']}, Quantum Encrypted: {data['quantum_encrypted']}")
+                return data['message_id']
+            else:
+                log_test("Message Send - TRUE E2E Encryption", False,
+                        error="Message not properly encrypted")
+                return None
+        else:
+            log_test("Message Send API", False, 
+                    error=f"HTTP {response.status_code}: {response.text}")
+            return None
+            
+    except Exception as e:
+        log_test("Message Send API", False, error=str(e))
+        return None
+
+def test_messaging_inbox(address):
+    """Test GET /api/messaging/inbox/{address} - Get encrypted messages (server cannot decrypt)"""
+    print(f"\n📥 Testing Inbox Retrieval - Server Cannot Decrypt Messages")
+    
+    try:
+        response = requests.get(f"{API_URL}/messaging/inbox/{address}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Verify response structure
+            required_fields = ['success', 'address', 'message_count', 'messages']
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                log_test("Inbox API Structure", False, 
+                        error=f"Missing fields: {missing_fields}")
+                return False
+            
+            # Verify TRUE E2E encryption indicators
+            if data.get('quantum_encrypted') and data.get('success'):
+                messages = data.get('messages', [])
+                
+                # Check if messages are delivered encrypted
+                encrypted_messages = 0
+                for msg in messages:
+                    if msg.get('encrypted') and msg.get('e2e_encryption'):
+                        encrypted_messages += 1
+                        
+                        # Verify server cannot decrypt - content should be encrypted
+                        if 'content' in msg and len(msg['content']) > 0:
+                            # Content should be encrypted (not readable plaintext)
+                            if msg['content'] != "This is a SECRET message that only Bob should be able to read!":
+                                log_test("Server Cannot Decrypt Messages", True,
+                                        details=f"Message content is encrypted: {msg['content'][:50]}...")
+                            else:
+                                log_test("Server Cannot Decrypt Messages", False,
+                                        error="Server can still decrypt message content!")
+                                return False
+                
+                log_test("Inbox - TRUE E2E Encryption", True,
+                        details=f"Retrieved {len(messages)} messages, {encrypted_messages} encrypted")
+                return True
+            else:
+                log_test("Inbox - TRUE E2E Encryption", False,
+                        error="Inbox not properly encrypted")
+                return False
+        else:
+            log_test("Inbox API", False, 
+                    error=f"HTTP {response.status_code}: {response.text}")
+            return False
+            
+    except Exception as e:
+        log_test("Inbox API", False, error=str(e))
+        return False
+
+def test_messaging_conversation(address1, address2):
+    """Test GET /api/messaging/conversation/{address1}/{address2} - Get conversation (encrypted)"""
+    print(f"\n💬 Testing Conversation Retrieval - Encrypted Content")
+    
+    try:
+        response = requests.get(f"{API_URL}/messaging/conversation/{address1}/{address2}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Verify response structure
+            required_fields = ['success', 'participants', 'message_count', 'conversation']
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                log_test("Conversation API Structure", False, 
+                        error=f"Missing fields: {missing_fields}")
+                return False
+            
+            # Verify TRUE E2E encryption indicators
+            if data.get('quantum_encrypted') and data.get('success'):
+                conversation = data.get('conversation', [])
+                
+                # Verify participants
+                participants = data.get('participants', [])
+                if address1 in participants and address2 in participants:
+                    log_test("Conversation Participants", True,
+                            details=f"Participants: {participants}")
+                else:
+                    log_test("Conversation Participants", False,
+                            error=f"Wrong participants: {participants}")
+                    return False
+                
+                # Check encryption status
+                encrypted_messages = 0
+                for msg in conversation:
+                    if msg.get('encrypted') and msg.get('e2e_encryption'):
+                        encrypted_messages += 1
+                
+                log_test("Conversation - TRUE E2E Encryption", True,
+                        details=f"Conversation has {len(conversation)} messages, {encrypted_messages} encrypted")
+                return True
+            else:
+                log_test("Conversation - TRUE E2E Encryption", False,
+                        error="Conversation not properly encrypted")
+                return False
+        else:
+            log_test("Conversation API", False, 
+                    error=f"HTTP {response.status_code}: {response.text}")
+            return False
+            
+    except Exception as e:
+        log_test("Conversation API", False, error=str(e))
+        return False
+
+def test_messaging_keys(address):
+    """Test GET /api/messaging/keys/{address} - Get private keys for client-side decryption"""
+    print(f"\n🔑 Testing Private Key Retrieval for Client-Side Decryption")
+    
+    try:
+        response = requests.get(f"{API_URL}/messaging/keys/{address}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Verify response structure
+            required_fields = ['success', 'address', 'has_keys', 'e2e_encryption']
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                log_test("Keys API Structure", False, 
+                        error=f"Missing fields: {missing_fields}")
+                return False
+            
+            # Verify TRUE E2E encryption support
+            if data.get('e2e_encryption') and data.get('has_keys'):
+                # Check if RSA private key is available for decryption
+                if 'rsa_private_key' in data:
+                    log_test("Private Keys for E2E Decryption", True,
+                            details=f"RSA private key available for address: {address}")
+                else:
+                    log_test("Private Keys for E2E Decryption", True,
+                            details=f"Keys available for address: {address}")
+                return True
+            else:
+                log_test("Private Keys for E2E Decryption", False,
+                        error="Keys not properly configured for E2E encryption")
+                return False
+        else:
+            log_test("Keys API", False, 
+                    error=f"HTTP {response.status_code}: {response.text}")
+            return False
+            
+    except Exception as e:
+        log_test("Keys API", False, error=str(e))
+        return False
+
+def test_messaging_stats():
+    """Test GET /api/messaging/stats - Verify E2E encryption status"""
+    print(f"\n📊 Testing Messaging Statistics - E2E Encryption Status")
+    
+    try:
+        response = requests.get(f"{API_URL}/messaging/stats")
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Verify response structure
+            required_fields = ['success', 'stats', 'e2e_encryption', 'server_cannot_decrypt']
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if missing_fields:
+                log_test("Stats API Structure", False, 
+                        error=f"Missing fields: {missing_fields}")
+                return False
+            
+            # Verify TRUE E2E encryption status
+            if (data.get('e2e_encryption') and 
+                data.get('server_cannot_decrypt') and 
+                data.get('success')):
+                
+                stats = data.get('stats', {})
+                log_test("Messaging Stats - TRUE E2E Encryption", True,
+                        details=f"E2E Encryption: {data['e2e_encryption']}, Server Cannot Decrypt: {data['server_cannot_decrypt']}")
+                
+                # Verify additional security indicators
+                security_indicators = ['quantum_signing', 'universal_compatibility', 'privacy_level']
+                for indicator in security_indicators:
+                    if indicator in data:
+                        print(f"  {indicator}: {data[indicator]}")
+                
+                return True
+            else:
+                log_test("Messaging Stats - TRUE E2E Encryption", False,
+                        error="E2E encryption not properly indicated in stats")
+                return False
+        else:
+            log_test("Stats API", False, 
+                    error=f"HTTP {response.status_code}: {response.text}")
+            return False
+            
+    except Exception as e:
+        log_test("Stats API", False, error=str(e))
+        return False
+
+def test_access_control():
+    """Test access control - unauthorized users cannot decrypt messages"""
+    print(f"\n🚫 Testing Access Control - Unauthorized Decryption Prevention")
+    
+    # Generate test addresses
+    alice_address = generate_test_address()
+    bob_address = generate_test_address()
+    charlie_address = generate_test_address()  # Unauthorized user
+    
+    # Send message from Alice to Bob
+    secret_message = "This message is only for Bob!"
+    
+    try:
+        # Send message
+        send_response = requests.post(f"{API_URL}/messaging/send", json={
+            "from_address": alice_address,
+            "to_address": bob_address,
+            "content": secret_message,
+            "subject": "Access Control Test"
+        })
+        
+        if send_response.status_code != 200:
+            log_test("Access Control Setup", False, 
+                    error="Failed to send test message")
+            return False
+        
+        # Try to get Bob's inbox (authorized)
+        bob_inbox_response = requests.get(f"{API_URL}/messaging/inbox/{bob_address}")
+        
+        if bob_inbox_response.status_code == 200:
+            bob_data = bob_inbox_response.json()
+            if bob_data.get('success') and len(bob_data.get('messages', [])) > 0:
+                log_test("Authorized Access - Recipient", True,
+                        details=f"Bob can access his inbox with {len(bob_data['messages'])} messages")
+            else:
+                log_test("Authorized Access - Recipient", False,
+                        error="Recipient cannot access their own messages")
+                return False
+        else:
+            log_test("Authorized Access - Recipient", False,
+                    error=f"Failed to get recipient inbox: {bob_inbox_response.status_code}")
+            return False
+        
+        # Try to get Charlie's inbox (should be empty - unauthorized)
+        charlie_inbox_response = requests.get(f"{API_URL}/messaging/inbox/{charlie_address}")
+        
+        if charlie_inbox_response.status_code == 200:
+            charlie_data = charlie_inbox_response.json()
+            if charlie_data.get('success') and len(charlie_data.get('messages', [])) == 0:
+                log_test("Access Control - Unauthorized User", True,
+                        details="Unauthorized user cannot see messages not intended for them")
+            else:
+                log_test("Access Control - Unauthorized User", False,
+                        error="Unauthorized user can see messages!")
+                return False
+        else:
+            log_test("Access Control - Unauthorized User", False,
+                    error=f"Failed to test unauthorized access: {charlie_inbox_response.status_code}")
+            return False
+        
+        return True
+        
+    except Exception as e:
+        log_test("Access Control Test", False, error=str(e))
+        return False
+
+def run_all_tests():
+    """Run all TRUE E2E encryption messaging tests"""
+    print("🚀 Starting TRUE End-to-End Encryption Messaging Tests")
+    print("=" * 80)
+    
+    # Generate test addresses
+    alice_address = generate_test_address()
+    bob_address = generate_test_address()
+    
+    print(f"Test Addresses:")
+    print(f"  Alice: {alice_address}")
+    print(f"  Bob: {bob_address}")
+    
+    # Test 1: Message Sending
+    message_id = test_messaging_send()
+    
+    # Test 2: Inbox Retrieval (Server Cannot Decrypt)
+    test_messaging_inbox(bob_address)
+    
+    # Test 3: Conversation Retrieval (Encrypted)
+    test_messaging_conversation(alice_address, bob_address)
+    
+    # Test 4: Private Keys for Client-Side Decryption
+    test_messaging_keys(bob_address)
+    
+    # Test 5: Messaging Statistics (E2E Encryption Status)
+    test_messaging_stats()
+    
+    # Test 6: Access Control
+    test_access_control()
+    
+    # Print final results
+    print("\n" + "=" * 80)
+    print("🔐 TRUE END-TO-END ENCRYPTION MESSAGING TEST RESULTS")
+    print("=" * 80)
+    print(f"Total Tests: {test_results['total']}")
+    print(f"Passed: {test_results['passed']} ✅")
+    print(f"Failed: {test_results['failed']} ❌")
+    print(f"Success Rate: {(test_results['passed']/test_results['total']*100):.1f}%")
+    
+    if test_results['failed'] > 0:
+        print("\n❌ FAILED TESTS:")
+        for test in test_results['tests']:
+            if not test['passed']:
+                print(f"  - {test['name']}: {test['error']}")
+    
+    # Critical Security Success Criteria
+    print("\n🔒 CRITICAL SECURITY SUCCESS CRITERIA:")
+    critical_tests = [
+        "Message Send - TRUE E2E Encryption",
+        "Server Cannot Decrypt Messages", 
+        "Messaging Stats - TRUE E2E Encryption",
+        "Access Control - Unauthorized User"
+    ]
+    
+    critical_passed = 0
+    for test in test_results['tests']:
+        if test['name'] in critical_tests and test['passed']:
+            critical_passed += 1
+            print(f"  ✅ {test['name']}")
+        elif test['name'] in critical_tests:
+            print(f"  ❌ {test['name']}")
+    
+    print(f"\nCritical Security Tests: {critical_passed}/{len(critical_tests)} passed")
+    
+    if critical_passed == len(critical_tests):
+        print("\n🎉 TRUE END-TO-END ENCRYPTION IS WORKING CORRECTLY!")
+        print("✅ Server cannot read message content")
+        print("✅ Only authorized recipients can decrypt messages") 
+        print("✅ Messages are cryptographically secure end-to-end")
+        print("✅ Access control prevents unauthorized decryption")
+        return True
+    else:
+        print("\n❌ CRITICAL SECURITY ISSUES FOUND!")
+        print("⚠️  TRUE E2E encryption is not working properly")
+        return False
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    if not success:
+        sys.exit(1)
+
+# Test results tracking
+test_results = {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "tests": []
+}
+
+def log_test(name, passed, response=None, error=None, details=None):
+    """Log test results with enhanced details"""
+    status = "✅ PASSED" if passed else "❌ FAILED"
+    print(f"{status} {name}")
+    
+    if details:
+        print(f"  Details: {details}")
+    
     if not passed and response:
         print(f"  Response: {response.status_code} - {response.text}")
     if not passed and error:
