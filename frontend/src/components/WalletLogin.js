@@ -135,7 +135,7 @@ const WalletLogin = ({ onWalletLoaded, onCreateNew }) => {
               <p className="text-sm text-purple-300">
                 Don't have a wallet? 
                 <button 
-                  onClick={() => window.location.href = '/setup'}
+                  onClick={onCreateNew}
                   className="text-purple-400 hover:text-purple-300 ml-1 underline"
                 >
                   Create one here
