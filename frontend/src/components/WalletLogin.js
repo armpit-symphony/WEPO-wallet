@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, Eye, EyeOff, LogIn } from 'lucide-react';
 
-const WalletLogin = ({ onLoginSuccess }) => {
+const WalletLogin = ({ onWalletLoaded }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: ''
