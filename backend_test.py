@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-WEPO TRUE End-to-End Encryption Messaging System Testing Suite
-Tests the critical security fix that provides genuine privacy protection
+WEPO Hybrid PoW/PoS Consensus System Testing Suite
+Tests the critical hybrid consensus implementation for 18-month PoS activation
 """
 import requests
 import json
