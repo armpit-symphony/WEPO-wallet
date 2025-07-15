@@ -302,14 +302,16 @@ class Transaction:
 
 @dataclass
 class BlockHeader:
-    """WEPO Block Header"""
+    """WEPO Block Header with Hybrid PoW/PoS Support"""
     version: int
     prev_hash: str
     merkle_root: str
     timestamp: int
     bits: int
     nonce: int
-    consensus_type: str  # 'pow', 'pos', or 'masternode'
+    consensus_type: str  # 'pow', 'pos', or 'hybrid'
+    validator_address: Optional[str] = None  # For PoS blocks
+    validator_signature: Optional[bytes] = None  # For PoS blocks
     
     def calculate_hash(self) -> str:
         """Calculate block hash"""
@@ -321,6 +323,14 @@ class BlockHeader:
                                 self.bits,
                                 self.nonce)
         return hashlib.sha256(header_data).hexdigest()
+    
+    def is_pos_block(self) -> bool:
+        """Check if this is a PoS block"""
+        return self.consensus_type == 'pos'
+    
+    def is_pow_block(self) -> bool:
+        """Check if this is a PoW block"""
+        return self.consensus_type == 'pow'
 
 @dataclass
 class Block:
