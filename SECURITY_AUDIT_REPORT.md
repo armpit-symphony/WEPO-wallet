@@ -339,10 +339,15 @@ This comprehensive security audit identified **critical privacy and security iss
 # 4. Maintain existing privacy features
 ```
 
+---
+
+## ⚠️ **SECURITY WARNINGS**
+
 ### **Current State:**
 - **Messaging**: NOT truly private - server can read all messages
 - **Quantum Resistance**: Simulated only - uses classical cryptography
 - **PoS Consensus**: NOT implemented - still PoW-only despite claims
+- **Masternode Services**: NOT implemented - users pay 60% fees for no services
 - **Privacy**: Mixed - Quantum Vault provides real privacy, messaging does not
 
 ### **Production Readiness:**
