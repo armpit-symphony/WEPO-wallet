@@ -1068,13 +1068,24 @@ class WepoBlockchain:
         return True
     
     def validate_block(self, block: Block) -> bool:
-        """Validate a block"""
+        """Validate a block (supports both PoW and PoS)"""
         # Basic validation
         if not block.transactions:
             return False
         
         # Check coinbase transaction
         if not block.transactions[0].is_coinbase():
+            return False
+        
+        # Validate based on consensus type
+        if block.header.is_pos_block():
+            # PoS block validation
+            if not self.validate_pos_block(block):
+                return False
+        elif block.header.is_pow_block():
+            # PoW block validation (existing logic)
+            pass
+        else:
             return False
         
         # Validate all transactions
