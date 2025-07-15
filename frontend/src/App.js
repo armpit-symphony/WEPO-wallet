@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import WalletLogin from './components/WalletLogin';
 import WalletSetup from './components/WalletSetup';
-import SimpleDashboard from './components/SimpleDashboard';
+import Dashboard from './components/Dashboard';
 import { WalletProvider } from './contexts/WalletContext';
 import './App.css';
 
