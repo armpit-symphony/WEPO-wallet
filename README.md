@@ -358,10 +358,10 @@ True decentralization with no central authority:
 
 ## 🛡️ **SECURITY & TRUST**
 
-### **🔒 Security Measures**
-- **Quantum Resistance**: Future-proof cryptography
+### **🔒 Single Wallet Security**
+- **Quantum Resistance**: Future-proof cryptography built-in
 - **Multi-Signature**: Advanced transaction security
-- **Privacy Protection**: zk-STARK mathematical privacy
+- **Privacy Protection**: zk-STARK mathematical privacy via Quantum Vault
 - **Network Security**: Distributed consensus model
 - **Code Audits**: Regular security reviews
 
