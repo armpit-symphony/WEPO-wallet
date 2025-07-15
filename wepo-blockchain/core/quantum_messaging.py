@@ -77,7 +77,7 @@ class UniversalQuantumMessaging:
         """Generate quantum messaging keys AND RSA E2E encryption keys for any wallet address"""
         try:
             # Generate Dilithium keypair for signing
-            dilithium_keypair = generate_dilithium_keypair()
+            dilithium_private_key, dilithium_public_key = generate_dilithium_keypair()
             
             # Generate RSA keypair for TRUE E2E encryption
             from cryptography.hazmat.primitives.asymmetric import rsa
@@ -103,7 +103,7 @@ class UniversalQuantumMessaging:
             
             # Create extended keypair with both Dilithium and RSA keys
             extended_keypair = DilithiumKeyPair(
-                private_key=dilithium_keypair.private_key,
+                private_key=dilithium_private_key,
                 public_key=rsa_public_pem  # Use RSA public key for E2E encryption
             )
             
