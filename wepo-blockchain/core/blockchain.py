@@ -1097,6 +1097,57 @@ class WepoBlockchain:
         print(f"Block {block.height} added to chain: {block.get_block_hash()}")
         return True
     
+    def add_block_with_priority(self, new_block: Block) -> bool:
+        """Add block with timestamp-based priority (first valid block wins)"""
+        # Check if block at this height already exists
+        if new_block.height <= len(self.chain):
+            existing_block = self.chain[new_block.height - 1]
+            
+            # If new block has earlier timestamp, it wins
+            if new_block.header.timestamp < existing_block.header.timestamp:
+                print(f"Replacing block {new_block.height} - newer timestamp wins")
+                # Replace the block
+                self.chain[new_block.height - 1] = new_block
+                self.save_block(new_block)
+                return True
+            else:
+                print(f"Rejecting block {new_block.height} - later timestamp loses")
+                return False
+        else:
+            # No existing block, add normally
+            return self.add_block(new_block)
+    
+    def get_consensus_type(self, height: int) -> str:
+        """Get the consensus type for a given height"""
+        if height < POS_ACTIVATION_HEIGHT:
+            return "pow"
+        else:
+            return "hybrid"  # Both PoW and PoS active
+    
+    def process_hybrid_blocks(self, height: int):
+        """Process both PoW and PoS blocks for hybrid consensus"""
+        if height < POS_ACTIVATION_HEIGHT:
+            return
+        
+        # Time-based block production
+        current_time = int(time.time())
+        
+        # Check if it's time for a PoS block (every 3 minutes)
+        if current_time % BLOCK_TIME_POS == 0:
+            # Select validator for PoS block
+            validator = self.select_pos_validator(height)
+            if validator:
+                pos_block = self.create_pos_block(validator)
+                if pos_block and self.validate_block(pos_block):
+                    self.add_block_with_priority(pos_block)
+        
+        # Check if it's time for a PoW block (every 9 minutes)
+        if current_time % BLOCK_TIME_POW_HYBRID == 0:
+            # PoW mining continues in parallel
+            print(f"PoW mining opportunity at height {height}")
+            # This would trigger miners to start mining
+            pass
+    
     def validate_block(self, block: Block) -> bool:
         """Validate a block (supports both PoW and PoS)"""
         # Basic validation
