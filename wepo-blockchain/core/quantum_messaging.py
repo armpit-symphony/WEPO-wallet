@@ -343,31 +343,26 @@ class UniversalQuantumMessaging:
     
     def decrypt_message_for_user(self, message: QuantumMessage, user_address: str) -> str:
         """Decrypt message content for specific user using TRUE E2E decryption"""
-        try:
-            # Only recipient can decrypt - TRUE E2E SECURITY
-            if user_address != message.to_address:
-                raise ValueError("🚫 ACCESS DENIED: Only the recipient can decrypt this message")
-            
-            # Get user's RSA private key for decryption
-            if not hasattr(self, 'rsa_private_keys') or user_address not in self.rsa_private_keys:
-                raise ValueError("🚫 DECRYPTION FAILED: Private key not found - TRUE E2E encryption")
-            
-            recipient_private_key = self.rsa_private_keys[user_address]
-            
-            # Decrypt message content using TRUE E2E decryption
-            decrypted_content = self.decrypt_message_content(
-                message.content, 
-                message.encryption_key, 
-                recipient_private_key
-            )
-            
-            print(f"✓ TRUE E2E: Message decrypted by authorized recipient only")
-            
-            return decrypted_content
-            
-        except Exception as e:
-            print(f"🚫 E2E Decryption failed: {e}")
-            return f"[ENCRYPTED - Cannot decrypt: {str(e)}]"
+        # Only recipient can decrypt - TRUE E2E SECURITY
+        if user_address != message.to_address:
+            raise ValueError("🚫 ACCESS DENIED: Only the recipient can decrypt this message")
+        
+        # Get user's RSA private key for decryption
+        if not hasattr(self, 'rsa_private_keys') or user_address not in self.rsa_private_keys:
+            raise ValueError("🚫 DECRYPTION FAILED: Private key not found - TRUE E2E encryption")
+        
+        recipient_private_key = self.rsa_private_keys[user_address]
+        
+        # Decrypt message content using TRUE E2E decryption
+        decrypted_content = self.decrypt_message_content(
+            message.content, 
+            message.encryption_key, 
+            recipient_private_key
+        )
+        
+        print(f"✓ TRUE E2E: Message decrypted by authorized recipient only")
+        
+        return decrypted_content
     
     def verify_message_signature(self, message: QuantumMessage) -> bool:
         """Verify quantum signature of message"""
