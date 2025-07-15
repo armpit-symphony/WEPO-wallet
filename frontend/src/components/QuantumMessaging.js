@@ -33,7 +33,7 @@ const QuantumMessaging = ({ onBack }) => {
   const [messagingStats, setMessagingStats] = useState(null);
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-  const currentWallet = isQuantumMode ? quantumWallet : wallet;
+  const currentWallet = wallet;
   const currentAddress = currentWallet?.address;
 
   useEffect(() => {
