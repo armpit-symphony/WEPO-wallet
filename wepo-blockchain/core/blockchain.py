@@ -812,9 +812,17 @@ class WepoBlockchain:
         # - PoS/Masternodes: 48.3M WEPO (70% of supply)
         # - Post-PoW: Miners earn via 25% transaction fee redistribution
     
-    def create_coinbase_transaction(self, height: int, miner_address: str) -> Transaction:
+    def create_coinbase_transaction(self, height: int, recipient_address: str, consensus_type: str = "pow") -> Transaction:
         """Create coinbase transaction for new block with 3-way fee redistribution"""
-        base_reward = self.calculate_block_reward(height)
+        # Get appropriate reward based on consensus type
+        if consensus_type == "pow":
+            base_reward = self.calculate_block_reward(height)
+            print(f"PoW Block {height}: Base reward {base_reward / COIN:.8f} WEPO")
+        elif consensus_type == "pos":
+            base_reward = self.calculate_pos_reward(height)
+            print(f"PoS Block {height}: Base reward {base_reward / COIN:.8f} WEPO")
+        else:
+            base_reward = 0
         
         # Calculate total transaction fees from pending transactions
         total_transaction_fees = 0
@@ -849,31 +857,37 @@ class WepoBlockchain:
             print(f"Fee Distribution Summary:")
             print(f"  Total Fees: {total_transaction_fees / COIN:.8f} WEPO")
             print(f"  Masternodes (60%): {masternode_fees / COIN:.8f} WEPO")
-            print(f"  Miner (25%): {miner_fees / COIN:.8f} WEPO")
+            print(f"  Miner/Validator (25%): {miner_fees / COIN:.8f} WEPO")
             print(f"  Stakers (15%): {staker_fees / COIN:.8f} WEPO")
         else:
             miner_fees = 0
         
-        # Miner gets base reward + their share of fees
-        total_miner_reward = base_reward + miner_fees
+        # Recipient gets base reward + their share of fees
+        if consensus_type == "pow":
+            total_recipient_reward = base_reward + miner_fees
+        elif consensus_type == "pos":
+            # PoS validators get base reward + staker fees (since they are stakers)
+            total_recipient_reward = base_reward + staker_fees
+        else:
+            total_recipient_reward = base_reward
         
-        print(f"Coinbase for height {height}:")
+        print(f"Coinbase for {consensus_type.upper()} block {height}:")
         print(f"  Base reward: {base_reward / COIN:.8f} WEPO")
-        print(f"  Miner fee share: {miner_fees / COIN:.8f} WEPO")
-        print(f"  Total miner reward: {total_miner_reward / COIN:.8f} WEPO")
+        print(f"  Fee share: {(miner_fees if consensus_type == 'pow' else staker_fees) / COIN:.8f} WEPO")
+        print(f"  Total reward: {total_recipient_reward / COIN:.8f} WEPO")
         
         return Transaction(
             version=1,
             inputs=[TransactionInput(
                 prev_txid="0" * 64,
                 prev_vout=0xffffffff,
-                script_sig=f"Block {height} fees:{total_transaction_fees} 3-way-distribution".encode(),
+                script_sig=f"Block {height} {consensus_type.upper()} fees:{total_transaction_fees} 3-way-distribution".encode(),
                 sequence=0xffffffff
             )],
             outputs=[TransactionOutput(
-                value=total_miner_reward,
+                value=total_recipient_reward,
                 script_pubkey=b"coinbase_output",
-                address=miner_address
+                address=recipient_address
             )],
             lock_time=0
         )
