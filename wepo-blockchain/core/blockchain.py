@@ -1824,15 +1824,34 @@ class WepoBlockchain:
     
     def get_network_info(self) -> dict:
         """Get network information"""
-        return {
-            'height': self.get_block_height(),
+        current_height = self.get_block_height()
+        consensus_type = self.get_consensus_type(current_height)
+        
+        network_info = {
+            'height': current_height,
             'best_block_hash': self.get_latest_block().get_block_hash() if self.chain else None,
             'difficulty': self.current_difficulty,
             'mempool_size': len(self.mempool),
             'total_supply': sum(self.calculate_block_reward(i) for i in range(len(self.chain))),
             'network': 'mainnet',
-            'version': WEPO_VERSION
+            'version': WEPO_VERSION,
+            'consensus_type': consensus_type
         }
+        
+        # Add hybrid consensus info if active
+        if consensus_type == "hybrid":
+            network_info.update({
+                'hybrid_consensus': {
+                    'pow_block_time': f"{BLOCK_TIME_POW_HYBRID // 60} minutes",
+                    'pos_block_time': f"{BLOCK_TIME_POS // 60} minutes",
+                    'pos_activated': True,
+                    'pos_activation_height': POS_ACTIVATION_HEIGHT,
+                    'total_staked': self.get_total_staked(),
+                    'active_validators': len(self.get_active_stakes())
+                }
+            })
+        
+        return network_info
 
 def main():
     """Main function for testing"""
