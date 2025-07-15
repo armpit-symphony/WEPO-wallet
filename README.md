@@ -109,8 +109,8 @@ Fair, accessible mining system for network participation:
 
 ## 🎨 **USER EXPERIENCE & INTERFACE**
 
-### **📱 Intuitive Design**
-The WEPO wallet prioritizes simplicity without sacrificing functionality:
+### **📱 Intuitive Single Wallet Design**
+The WEPO wallet prioritizes simplicity and powerful functionality in one unified interface:
 
 #### **🎯 Single Dashboard**
 - **Balance Overview**: Multi-currency balances with privacy toggle
