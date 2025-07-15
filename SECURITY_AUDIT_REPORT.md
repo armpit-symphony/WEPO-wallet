@@ -387,7 +387,7 @@ This comprehensive security audit identified **critical privacy and security iss
 
 ---
 
-**⚠️ CRITICAL REMINDER**: The messaging system currently provides **false privacy** - users may believe their messages are private when they are not. This must be fixed before any production deployment.
+**⚠️ CRITICAL REMINDER**: The messaging system provides **false privacy**, PoS consensus is **not implemented** despite claims, and masternodes earn **60% of fees for no services**. These fundamental issues must be addressed before any production deployment.
 
 ---
 
