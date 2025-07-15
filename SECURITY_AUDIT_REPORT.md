@@ -375,7 +375,9 @@ This comprehensive security audit identified **critical privacy and security iss
 
 ### **Critical Security Files:**
 - `/app/wepo-blockchain/core/quantum_messaging.py` - **NEEDS COMPLETE OVERHAUL**
+- `/app/wepo-blockchain/core/blockchain.py` - **NEEDS PoS CONSENSUS & MASTERNODE SERVICES**
 - `/app/wepo-blockchain/core/dilithium.py` - **NEEDS REAL DILITHIUM**
+- `/app/wepo-blockchain/core/p2p_network.py` - **NEEDS MASTERNODE INTEGRATION**
 - `/app/quantum_vault_system.py` - **WELL IMPLEMENTED**
 - `/app/wepo-fast-test-bridge.py` - **MESSAGING ENDPOINTS INSECURE**
 
