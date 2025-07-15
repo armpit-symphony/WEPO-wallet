@@ -16,6 +16,7 @@ This comprehensive security audit identified **critical privacy and security iss
 - ❌ **Masternode Services**: Claims "network infrastructure" but provides no actual services
 - ✅ **Quantum Vault**: Well-implemented privacy features with genuine protections
 - ⚠️ **zk-STARK Claims**: Custom implementation, not using production zk-STARK libraries
+- ❌ **Wallet Creation/Login Flow**: Authentication issue after wallet creation prevents dashboard access
 
 ---
 
