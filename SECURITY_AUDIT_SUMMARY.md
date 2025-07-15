@@ -24,8 +24,9 @@
 
 ### **🚨 IMMEDIATE ACTIONS NEEDED**
 - Fix messaging system privacy (server currently reads all messages)
+- Implement actual PoS consensus or remove hybrid claims
+- Implement masternode services or reduce their 60% fee allocation
 - Update documentation to match actual implementation
 - Add security warnings about current limitations
-- Implement proper asymmetric key exchange for messaging
 
 The detailed security audit document provides technical implementation details and specific code references for all fixes needed.
