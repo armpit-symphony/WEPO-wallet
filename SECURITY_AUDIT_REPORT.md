@@ -278,6 +278,7 @@ This comprehensive security audit identified **critical privacy and security iss
 ### **Current State:**
 - **Messaging**: NOT truly private - server can read all messages
 - **Quantum Resistance**: Simulated only - uses classical cryptography
+- **PoS Consensus**: NOT implemented - still PoW-only despite claims
 - **Privacy**: Mixed - Quantum Vault provides real privacy, messaging does not
 
 ### **Production Readiness:**
