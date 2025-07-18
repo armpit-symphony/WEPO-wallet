@@ -34,9 +34,9 @@ if not BACKEND_URL:
     sys.exit(1)
 
 API_URL = f"{BACKEND_URL}/api"
-print(f"🏛️ TESTING WEPO MASTERNODE SERVICE SYSTEM")
+print(f"🔧 TESTING WEPO BACKEND SYSTEMS COMPREHENSIVE SUITE")
 print(f"Backend API URL: {API_URL}")
-print(f"Critical Feature: Masternodes now provide actual services to justify 60% fee allocation")
+print(f"Focus: Core Blockchain, Privacy, Masternode, Economic Systems & Integration Health")
 print("=" * 80)
 
 # Test results tracking
