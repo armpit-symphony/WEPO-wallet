@@ -755,20 +755,96 @@ class WepoFastTestBridge:
                 "test_mode": True
             }
         
-        @self.app.get("/api/network/status")
-        async def get_network_status():
-            return {
-                "block_height": len(self.blockchain.blocks) - 1,
-                "best_block_hash": self.blockchain.blocks[-1]["hash"],
-                "difficulty": 1,
-                "mempool_size": len(self.blockchain.mempool),
-                "total_supply": 69000003,
-                "network": "testnet",
-                "status": "ready",
-                "active_masternodes": 0,
-                "total_staked": 0,
-                "circulating_supply": len(self.blockchain.blocks) * 52.51  # Updated for new schedule
-            }
+        @self.app.get("/api/collateral/requirements")
+        async def get_collateral_requirements():
+            """Get current collateral requirements for masternodes and PoS staking"""
+            try:
+                current_height = len(self.blockchain.blocks) - 1
+                
+                # Get current masternode collateral using existing method
+                masternode_collateral = self.blockchain.get_dynamic_masternode_collateral(current_height)
+                
+                # PoS collateral (simplified - using minimum stake amount)
+                pos_collateral = self.blockchain.MIN_STAKE_AMOUNT / self.blockchain.COIN
+                pos_available = current_height >= self.blockchain.POS_ACTIVATION_HEIGHT
+                
+                collateral_info = {
+                    "current_height": current_height,
+                    "masternode_collateral": masternode_collateral,
+                    "pos_collateral": pos_collateral if pos_available else 0,
+                    "pos_available": pos_available,
+                    "minimum_floors": {
+                        "masternode": 500.0,  # Final minimum from existing schedule
+                        "pos": pos_collateral
+                    }
+                }
+                
+                return {
+                    "success": True,
+                    "data": collateral_info,
+                    "timestamp": int(time.time())
+                }
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": str(e),
+                    "timestamp": int(time.time())
+                }
+
+        @self.app.get("/api/collateral/schedule")
+        async def get_collateral_schedule():
+            """Get complete collateral adjustment schedule"""
+            try:
+                current_height = len(self.blockchain.blocks) - 1
+                
+                # Build schedule information using existing collateral schedule
+                schedule = []
+                
+                # Masternode schedule from existing method
+                collateral_schedule = {
+                    0: 10000.0,          # Genesis - Year 5: 10,000 WEPO
+                    262800: 5000.0,      # Year 5 (during halving): 5,000 WEPO
+                    525600: 1000.0,      # Year 10 (during halving): 1,000 WEPO
+                    1051200: 500.0,      # Year 20 (during halving): 500 WEPO
+                }
+                
+                for height in sorted(collateral_schedule.keys()):
+                    mn_collateral = collateral_schedule[height]
+                    pos_collateral = self.blockchain.MIN_STAKE_AMOUNT / self.blockchain.COIN if height >= self.blockchain.POS_ACTIVATION_HEIGHT else 0
+                    
+                    # Calculate block reward for this height
+                    block_reward = self.blockchain.calculate_block_reward(height) / self.blockchain.COIN
+                    
+                    schedule.append({
+                        "block_height": height,
+                        "masternode_collateral": mn_collateral,
+                        "pos_collateral": pos_collateral,
+                        "pos_available": height >= self.blockchain.POS_ACTIVATION_HEIGHT,
+                        "phase": f"Height {height}",
+                        "phase_description": f"Masternode collateral: {mn_collateral} WEPO",
+                        "pow_reward": block_reward,
+                        "is_current": current_height >= height,
+                        "is_next": height > current_height
+                    })
+                
+                return {
+                    "success": True,
+                    "data": {
+                        "current_height": current_height,
+                        "schedule": schedule,
+                        "minimum_floors": {
+                            "masternode": 500.0,
+                            "pos": self.blockchain.MIN_STAKE_AMOUNT / self.blockchain.COIN
+                        }
+                    },
+                    "timestamp": int(time.time())
+                }
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": str(e),
+                    "timestamp": int(time.time())
+                }
         
         @self.app.post("/api/wallet/create")
         async def create_wallet(request: dict):
