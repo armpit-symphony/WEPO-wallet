@@ -1,21 +1,116 @@
-import React, { useState } from 'react';
-import { Server, ArrowLeft, Shield, TrendingUp, AlertCircle, Clock, Globe } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Server, ArrowLeft, Shield, TrendingUp, AlertCircle, Clock, Globe, Smartphone, Monitor, Settings, Activity, Zap } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 
 const MasternodeInterface = ({ onClose }) => {
   const { balance, masternodesEnabled } = useWallet();
-  const [serverIP, setServerIP] = useState('');
-  const [serverPort, setServerPort] = useState('22567');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [masternodeActive, setMasternodeActive] = useState(false);
+  const [deviceType, setDeviceType] = useState('computer');
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [masternodeStats, setMasternodeStats] = useState({
+    uptime: 0,
+    dailyEarnings: 0,
+    servicesActive: 0,
+    lastReward: 0,
+    totalEarned: 0
+  });
 
-  // Mock masternode data
+  // Device detection
+  useEffect(() => {
+    const detectDevice = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isTablet = /iPad|Android/i.test(userAgent) && window.innerWidth > 768;
+      
+      if (isMobile && !isTablet) {
+        setDeviceType('mobile');
+      } else {
+        setDeviceType('computer');
+      }
+    };
+    
+    detectDevice();
+    window.addEventListener('resize', detectDevice);
+    return () => window.removeEventListener('resize', detectDevice);
+  }, []);
+
+  // Auto-select services based on device type
+  useEffect(() => {
+    if (deviceType === 'computer') {
+      // Auto-select 3 most suitable services for computers
+      setSelectedServices(['network_relay', 'mixing_service', 'dex_relay']);
+    } else {
+      // Auto-select 2 least resource-intensive services for mobile
+      setSelectedServices(['network_relay', 'governance']);
+    }
+  }, [deviceType]);
+
+  // Mock masternode data with new specifications
   const collateralRequired = 10000;
-  const masternodeAPR = 3; // 3% base APR
-  const mixingFeeAPR = 0.5; // Additional 0.5% from mixing fees
+  const deviceRequirements = {
+    computer: {
+      uptime: 9,
+      services: 3,
+      gracePeriod: 48,
+      maxEarnings: 4.2
+    },
+    mobile: {
+      uptime: 6,
+      services: 2,
+      gracePeriod: 24,
+      maxEarnings: 2.8
+    }
+  };
 
-  const handleSetupMasternode = async () => {
+  const availableServices = [
+    {
+      id: 'mixing_service',
+      name: 'Transaction Mixing',
+      icon: '🔀',
+      description: 'Anonymous transaction routing',
+      resourceUsage: 'Medium',
+      recommended: true
+    },
+    {
+      id: 'dex_relay',
+      name: 'DEX Relay',
+      icon: '🏪',
+      description: 'Facilitate P2P trades',
+      resourceUsage: 'High',
+      recommended: deviceType === 'computer'
+    },
+    {
+      id: 'network_relay',
+      name: 'Network Relay',
+      icon: '🌐',
+      description: 'Forward messages/transactions',
+      resourceUsage: 'Low',
+      recommended: true
+    },
+    {
+      id: 'governance',
+      name: 'Governance',
+      icon: '🗳️',
+      description: 'Vote on network proposals',
+      resourceUsage: 'Low',
+      recommended: true
+    },
+    {
+      id: 'vault_relay',
+      name: 'Vault Relay',
+      icon: '📡',
+      description: 'Route Quantum Vault transfers',
+      resourceUsage: 'Medium',
+      recommended: deviceType === 'computer'
+    }
+  ];
+
+  const currentReq = deviceRequirements[deviceType];
+
+  const handleLaunchMasternode = async () => {
     if (!masternodesEnabled) {
       setError('Masternodes are not yet enabled. Wait for 18 months after first PoW block.');
       return;
@@ -26,8 +121,66 @@ const MasternodeInterface = ({ onClose }) => {
       return;
     }
 
-    if (!serverIP) {
-      setError('Please enter your server IP address');
+    if (selectedServices.length < currentReq.services) {
+      setError(`Please select at least ${currentReq.services} services for ${deviceType} masternode.`);
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      // Simulate masternode launch process
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      setMasternodeActive(true);
+      setSuccess(`${deviceType === 'computer' ? 'Computer' : 'Mobile'} masternode launched successfully!`);
+      
+      // Start mock stats tracking
+      setMasternodeStats({
+        uptime: 0.5,
+        dailyEarnings: 0.2,
+        servicesActive: selectedServices.length,
+        lastReward: 0.1,
+        totalEarned: 0.2
+      });
+      
+    } catch (error) {
+      setError('Masternode launch failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStopMasternode = async () => {
+    setIsLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setMasternodeActive(false);
+      setSuccess('Masternode stopped successfully.');
+      setMasternodeStats({
+        uptime: 0,
+        dailyEarnings: 0,
+        servicesActive: 0,
+        lastReward: 0,
+        totalEarned: masternodeStats.totalEarned
+      });
+    } catch (error) {
+      setError('Failed to stop masternode.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleServiceToggle = (serviceId) => {
+    if (selectedServices.includes(serviceId)) {
+      if (selectedServices.length > currentReq.services) {
+        setSelectedServices(selectedServices.filter(id => id !== serviceId));
+      }
+    } else {
+      setSelectedServices([...selectedServices, serviceId]);
+    }
+  };
       return;
     }
 
