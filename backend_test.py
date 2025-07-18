@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-WEPO Hybrid PoW/PoS Consensus System Testing Suite
-Tests the critical hybrid consensus implementation for 18-month PoS activation
+WEPO Masternode Service System Testing Suite
+Tests the newly implemented WEPO Masternode Service System that addresses the security audit finding
+where masternodes were earning 60% of fees but providing zero services.
 """
 import requests
 import json
@@ -28,9 +29,9 @@ if not BACKEND_URL:
     sys.exit(1)
 
 API_URL = f"{BACKEND_URL}/api"
-print(f"🔗 TESTING WEPO HYBRID POW/POS CONSENSUS SYSTEM")
+print(f"🏛️ TESTING WEPO MASTERNODE SERVICE SYSTEM")
 print(f"Backend API URL: {API_URL}")
-print(f"Critical Feature: Hybrid PoW/PoS consensus after 18 months (block 131,400)")
+print(f"Critical Feature: Masternodes now provide actual services to justify 60% fee allocation")
 print("=" * 80)
 
 # Test results tracking
