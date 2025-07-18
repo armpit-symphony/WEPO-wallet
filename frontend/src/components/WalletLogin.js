@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Eye, EyeOff, LogIn } from 'lucide-react';
+import { useWallet } from '../contexts/WalletContext';
 
 const WalletLogin = ({ onWalletLoaded, onCreateNew }) => {
   const [formData, setFormData] = useState({
@@ -9,6 +10,7 @@ const WalletLogin = ({ onWalletLoaded, onCreateNew }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { setWallet } = useWallet();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -33,17 +35,30 @@ const WalletLogin = ({ onWalletLoaded, onCreateNew }) => {
         throw new Error('Invalid username');
       }
 
-      // Get wallet data (simplified for demo)
+      // Get wallet data
       const walletData = localStorage.getItem('wepo_wallet');
       if (!walletData) {
         throw new Error('Wallet not found');
       }
 
+      // Parse wallet data
+      const parsedWalletData = JSON.parse(walletData);
+      
       // For demo purposes, accept any password
+      // TODO: Implement proper password validation with encrypted mnemonic
+      
+      // Set session data
       sessionStorage.setItem('wepo_session_active', 'true');
       sessionStorage.setItem('wepo_current_wallet', walletData);
+      
+      // Update wallet context
+      setWallet(parsedWalletData);
+      
+      console.log('✅ Login successful for:', formData.username);
+      
       onWalletLoaded();
     } catch (error) {
+      console.error('Login error:', error);
       setError(error.message || 'Login failed');
     } finally {
       setIsLoading(false);
