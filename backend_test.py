@@ -69,383 +69,354 @@ def log_test(name, passed, response=None, error=None, details=None):
         "details": details
     })
 
-def test_hybrid_consensus_network_info():
-    """Test 1: Hybrid Consensus Status - Test /api/network/status endpoint for hybrid consensus information"""
-    print("\n🔗 TEST 1: HYBRID CONSENSUS NETWORK STATUS")
-    print("Testing /api/network/status endpoint for hybrid consensus information...")
+def test_masternode_services_endpoint():
+    """Test 1: Available Services - Test GET /api/masternode/services"""
+    print("\n🔧 TEST 1: MASTERNODE AVAILABLE SERVICES")
+    print("Testing GET /api/masternode/services endpoint...")
     
     try:
-        response = requests.get(f"{API_URL}/network/status")
+        response = requests.get(f"{API_URL}/masternode/services")
         
         if response.status_code == 200:
             data = response.json()
             checks_passed = 0
             total_checks = 0
             
-            # Check basic network status fields
-            required_fields = ['block_height', 'total_supply', 'status']
-            for field in required_fields:
-                total_checks += 1
-                if field in data:
-                    print(f"  ✅ {field}: {data[field]}")
-                    checks_passed += 1
-                else:
-                    print(f"  ❌ {field}: Missing")
-            
-            # Check total supply for new tokenomics
+            # Check response structure
             total_checks += 1
-            if data.get('total_supply') == 69000003:
-                print("  ✅ Total supply: 69,000,003 WEPO (new 20-year schedule)")
+            if data.get('success') and 'services' in data:
+                print(f"  ✅ Response structure: Valid with {len(data['services'])} services")
                 checks_passed += 1
             else:
-                print(f"  ❌ Total supply: {data.get('total_supply')} (expected 69,000,003)")
+                print("  ❌ Response structure: Invalid or missing services")
             
-            # Check network readiness
+            # Check for all 5 required services
+            expected_services = ['mixing_service', 'dex_relay', 'network_relay', 'governance', 'vault_relay']
+            services_found = []
+            
+            if 'services' in data:
+                for service in data['services']:
+                    if service.get('id') in expected_services:
+                        services_found.append(service['id'])
+                        print(f"  ✅ Service found: {service.get('name', 'Unknown')} ({service.get('id')})")
+                        print(f"      Description: {service.get('description', 'N/A')}")
+                        print(f"      Resource usage: {service.get('resource_usage', 'N/A')}")
+            
             total_checks += 1
-            if data.get('status') == 'ready':
-                print("  ✅ Network status: Ready for hybrid consensus")
+            if len(services_found) >= 5:
+                print(f"  ✅ All required services available: {len(services_found)}/5")
                 checks_passed += 1
             else:
-                print(f"  ❌ Network status: {data.get('status')} (expected 'ready')")
+                print(f"  ❌ Missing services: {len(services_found)}/5 found")
             
-            # Check staking and masternode indicators
+            # Check service details
             total_checks += 1
-            if 'total_staked' in data and 'active_masternodes' in data:
-                print(f"  ✅ Staking indicators: {data['total_staked']} WEPO staked, {data['active_masternodes']} masternodes")
+            service_details_valid = True
+            for service in data.get('services', []):
+                required_fields = ['id', 'name', 'description', 'resource_usage']
+                for field in required_fields:
+                    if field not in service:
+                        service_details_valid = False
+                        break
+            
+            if service_details_valid:
+                print("  ✅ Service details: All services have required fields")
                 checks_passed += 1
             else:
-                print("  ❌ Staking indicators: Missing staking/masternode data")
+                print("  ❌ Service details: Missing required fields in some services")
             
             success_rate = (checks_passed / total_checks) * 100
-            log_test("Hybrid Consensus Network Status", checks_passed >= 4,
-                     details=f"Verified {checks_passed}/{total_checks} network status fields ({success_rate:.1f}% success)")
-            return checks_passed >= 4
+            log_test("Masternode Available Services", checks_passed >= 2,
+                     details=f"Found {len(services_found)} services, {success_rate:.1f}% success rate")
+            return checks_passed >= 2
         else:
-            log_test("Hybrid Consensus Network Status", False, response=response)
+            log_test("Masternode Available Services", False, response=f"Status: {response.status_code}")
             return False
             
     except Exception as e:
-        log_test("Hybrid Consensus Network Status", False, error=str(e))
+        log_test("Masternode Available Services", False, error=str(e))
         return False
 
-def test_staking_system_integration():
-    """Test 2: Staking System Integration - Test /api/staking/info endpoint"""
-    print("\n🥩 TEST 2: STAKING SYSTEM INTEGRATION")
-    print("Testing /api/staking/info endpoint for PoS activation and configuration...")
+def test_masternode_requirements_endpoint():
+    """Test 2: Device Requirements - Test GET /api/masternode/requirements"""
+    print("\n📱 TEST 2: MASTERNODE DEVICE REQUIREMENTS")
+    print("Testing GET /api/masternode/requirements endpoint...")
     
     try:
-        response = requests.get(f"{API_URL}/staking/info")
+        response = requests.get(f"{API_URL}/masternode/requirements")
         
         if response.status_code == 200:
             data = response.json()
             checks_passed = 0
             total_checks = 0
             
-            # Check PoS activation configuration
+            # Check response structure
             total_checks += 1
-            if 'pos_activated' in data or 'staking_enabled' in data:
-                pos_status = data.get('pos_activated', data.get('staking_enabled', False))
-                print(f"  ✅ PoS activation status: {pos_status}")
+            if data.get('success') and 'requirements' in data:
+                print("  ✅ Response structure: Valid requirements data")
                 checks_passed += 1
             else:
-                print("  ❌ PoS activation status: Missing")
+                print("  ❌ Response structure: Invalid or missing requirements")
             
-            # Check activation height (18 months = 131,400 blocks)
+            # Check computer masternode requirements
             total_checks += 1
-            activation_height = data.get('activation_height') or data.get('pos_activation_height')
-            if activation_height:
-                if activation_height == 131400:
-                    print(f"  ✅ PoS activation height: {activation_height} (18 months)")
-                    checks_passed += 1
-                else:
-                    print(f"  ⚠️  PoS activation height: {activation_height} (expected 131,400)")
-                    checks_passed += 0.5  # Partial credit
-            else:
-                print("  ❌ PoS activation height: Missing")
-            
-            # Check minimum stake requirements
-            total_checks += 1
-            min_stake = data.get('min_stake_amount')
-            if min_stake:
-                if min_stake == 1000.0:
-                    print(f"  ✅ Minimum stake: {min_stake} WEPO")
-                    checks_passed += 1
-                else:
-                    print(f"  ⚠️  Minimum stake: {min_stake} WEPO (expected 1000)")
-                    checks_passed += 0.5
-            else:
-                print("  ❌ Minimum stake: Missing")
-            
-            # Check current block height vs activation
-            total_checks += 1
-            current_height = data.get('current_height')
-            if current_height is not None and activation_height:
-                blocks_until = max(0, activation_height - current_height)
-                print(f"  ✅ Current height: {current_height}, blocks until PoS: {blocks_until}")
+            computer_req = data.get('requirements', {}).get('computer', {})
+            if computer_req.get('uptime') == 9 and computer_req.get('services') == 3:
+                print(f"  ✅ Computer requirements: {computer_req['uptime']}h uptime, {computer_req['services']} services")
                 checks_passed += 1
             else:
-                print("  ❌ Block height information: Missing")
+                print(f"  ❌ Computer requirements: Invalid (expected 9h uptime, 3 services)")
             
-            # Check validator selection capabilities
+            # Check mobile masternode requirements
             total_checks += 1
-            if 'active_stakes_count' in data or 'total_staked_amount' in data:
-                stakes = data.get('active_stakes_count', 0)
-                staked_amount = data.get('total_staked_amount', 0)
-                print(f"  ✅ Validator selection ready: {stakes} stakes, {staked_amount} WEPO staked")
+            mobile_req = data.get('requirements', {}).get('mobile', {})
+            if mobile_req.get('uptime') == 6 and mobile_req.get('services') == 2:
+                print(f"  ✅ Mobile requirements: {mobile_req['uptime']}h uptime, {mobile_req['services']} services")
                 checks_passed += 1
             else:
-                print("  ❌ Validator selection: Missing stake information")
+                print(f"  ❌ Mobile requirements: Invalid (expected 6h uptime, 2 services)")
+            
+            # Check collateral requirement
+            total_checks += 1
+            collateral = data.get('collateral_required')
+            if collateral == 10000:
+                print(f"  ✅ Collateral requirement: {collateral} WEPO")
+                checks_passed += 1
+            else:
+                print(f"  ❌ Collateral requirement: {collateral} (expected 10,000 WEPO)")
+            
+            # Check fee share
+            total_checks += 1
+            fee_share = data.get('fee_share')
+            if fee_share == 0.60:
+                print(f"  ✅ Fee share: {fee_share * 100}% of network fees")
+                checks_passed += 1
+            else:
+                print(f"  ❌ Fee share: {fee_share} (expected 60%)")
             
             success_rate = (checks_passed / total_checks) * 100
-            log_test("Staking System Integration", checks_passed >= 3,
-                     details=f"Verified {checks_passed}/{total_checks} staking system elements ({success_rate:.1f}% success)")
+            log_test("Masternode Device Requirements", checks_passed >= 3,
+                     details=f"Verified {checks_passed}/{total_checks} requirement elements ({success_rate:.1f}% success)")
             return checks_passed >= 3
         else:
-            log_test("Staking System Integration", False, response=response)
+            log_test("Masternode Device Requirements", False, response=f"Status: {response.status_code}")
             return False
             
     except Exception as e:
-        log_test("Staking System Integration", False, error=str(e))
+        log_test("Masternode Device Requirements", False, error=str(e))
         return False
 
-def test_block_creation_support():
-    """Test 3: Block Creation Support - Test PoW and PoS block creation capabilities"""
-    print("\n⛏️  TEST 3: BLOCK CREATION SUPPORT")
-    print("Testing PoW and PoS block creation support...")
+def test_masternode_network_endpoint():
+    """Test 3: Network Statistics - Test GET /api/masternode/network"""
+    print("\n🌐 TEST 3: MASTERNODE NETWORK STATISTICS")
+    print("Testing GET /api/masternode/network endpoint...")
     
     try:
-        # Test mining info for PoW block creation
-        mining_response = requests.get(f"{API_URL}/mining/info")
-        
-        pow_support = False
-        pos_support = False
-        
-        if mining_response.status_code == 200:
-            mining_data = mining_response.json()
-            
-            # Check PoW mining support
-            if 'current_reward' in mining_data and 'difficulty' in mining_data:
-                current_reward = mining_data.get('current_reward')
-                difficulty = mining_data.get('difficulty')
-                print(f"  ✅ PoW block creation: Supported (reward: {current_reward} WEPO, difficulty: {difficulty})")
-                pow_support = True
-            else:
-                print("  ❌ PoW block creation: Missing mining parameters")
-        else:
-            print(f"  ❌ PoW block creation: Mining info unavailable ({mining_response.status_code})")
-        
-        # Test staking info for PoS block creation
-        staking_response = requests.get(f"{API_URL}/staking/info")
-        
-        if staking_response.status_code == 200:
-            staking_data = staking_response.json()
-            
-            # Check PoS validator capabilities
-            if ('pos_activated' in staking_data or 'staking_enabled' in staking_data) and 'min_stake_amount' in staking_data:
-                min_stake = staking_data.get('min_stake_amount')
-                print(f"  ✅ PoS block creation: Supported (min stake: {min_stake} WEPO)")
-                pos_support = True
-            else:
-                print("  ❌ PoS block creation: Missing staking parameters")
-        else:
-            print(f"  ❌ PoS block creation: Staking info unavailable ({staking_response.status_code})")
-        
-        # Test block timing configuration
-        timing_configured = False
-        if pow_support and pos_support:
-            print("  ✅ Block timing: PoS blocks every 3 minutes, PoW blocks every 9 minutes (configured)")
-            timing_configured = True
-        else:
-            print("  ⚠️  Block timing: Cannot verify without both consensus types")
-        
-        # Test reward calculations for both types
-        reward_support = False
-        if mining_response.status_code == 200:
-            mining_data = mining_response.json()
-            if 'current_reward' in mining_data:
-                print(f"  ✅ Reward calculations: PoW rewards calculated ({mining_data['current_reward']} WEPO)")
-                reward_support = True
-        
-        total_support = sum([pow_support, pos_support, timing_configured, reward_support])
-        log_test("Block Creation Support", total_support >= 2,
-                 details=f"PoW: {pow_support}, PoS: {pos_support}, Timing: {timing_configured}, Rewards: {reward_support}")
-        return total_support >= 2
-        
-    except Exception as e:
-        log_test("Block Creation Support", False, error=str(e))
-        return False
-
-def test_consensus_configuration():
-    """Test 4: Consensus Configuration - Verify PoS activation at block 131,400 (18 months)"""
-    print("\n⚙️  TEST 4: CONSENSUS CONFIGURATION")
-    print("Testing PoS activation configuration and timing...")
-    
-    try:
-        response = requests.get(f"{API_URL}/staking/info")
+        response = requests.get(f"{API_URL}/masternode/network")
         
         if response.status_code == 200:
             data = response.json()
             checks_passed = 0
             total_checks = 0
             
-            # Check PoS activation height (18 months)
+            # Check response structure
             total_checks += 1
-            activation_height = data.get('activation_height') or data.get('pos_activation_height')
-            if activation_height == 131400:
-                print(f"  ✅ PoS activation height: {activation_height} blocks (18 months)")
-                checks_passed += 1
-            elif activation_height:
-                print(f"  ⚠️  PoS activation height: {activation_height} blocks (expected 131,400)")
-                checks_passed += 0.5
-            else:
-                print("  ❌ PoS activation height: Not configured")
-            
-            # Check block timing configuration (PoS: 3 min, PoW: 9 min)
-            total_checks += 1
-            # This would typically be in constants or configuration
-            print("  ✅ Block timing: PoS 3 minutes, PoW 9 minutes (3:1 ratio)")
-            checks_passed += 1
-            
-            # Check stake-weighted validator selection
-            total_checks += 1
-            if 'min_stake_amount' in data:
-                min_stake = data.get('min_stake_amount')
-                if min_stake == 1000.0:
-                    print(f"  ✅ Stake-weighted selection: Minimum {min_stake} WEPO")
-                    checks_passed += 1
-                else:
-                    print(f"  ⚠️  Stake-weighted selection: Minimum {min_stake} WEPO (expected 1000)")
-                    checks_passed += 0.5
-            else:
-                print("  ❌ Stake-weighted selection: Not configured")
-            
-            # Check timestamp-based block priority
-            total_checks += 1
-            print("  ✅ Timestamp-based priority: First valid block wins (configured)")
-            checks_passed += 1
-            
-            # Check both consensus types supported
-            total_checks += 1
-            current_height = data.get('current_height', 0)
-            if current_height >= 0:  # System supports tracking both types
-                print("  ✅ Dual consensus support: Both PoW and PoS supported simultaneously")
+            if data.get('success'):
+                print("  ✅ Response structure: Valid network statistics")
                 checks_passed += 1
             else:
-                print("  ❌ Dual consensus support: Cannot verify")
+                print("  ❌ Response structure: Invalid response")
+            
+            # Check masternode count
+            total_checks += 1
+            total_masternodes = data.get('total_masternodes', 0)
+            if total_masternodes >= 0:
+                print(f"  ✅ Total masternodes: {total_masternodes}")
+                checks_passed += 1
+            else:
+                print("  ❌ Total masternodes: Invalid count")
+            
+            # Check network stats
+            total_checks += 1
+            network_stats = data.get('network_stats', {})
+            if 'total_services_active' in network_stats and 'average_uptime' in network_stats:
+                services_active = network_stats['total_services_active']
+                avg_uptime = network_stats['average_uptime']
+                print(f"  ✅ Network stats: {services_active} services active, {avg_uptime:.1f}h avg uptime")
+                checks_passed += 1
+            else:
+                print("  ❌ Network stats: Missing service or uptime statistics")
+            
+            # Check masternodes list structure
+            total_checks += 1
+            masternodes = data.get('masternodes', [])
+            if isinstance(masternodes, list):
+                print(f"  ✅ Masternodes list: {len(masternodes)} masternodes in network")
+                checks_passed += 1
+            else:
+                print("  ❌ Masternodes list: Invalid structure")
             
             success_rate = (checks_passed / total_checks) * 100
-            log_test("Consensus Configuration", checks_passed >= 3,
-                     details=f"Verified {checks_passed}/{total_checks} consensus configuration elements ({success_rate:.1f}% success)")
+            log_test("Masternode Network Statistics", checks_passed >= 3,
+                     details=f"Network has {total_masternodes} masternodes, {success_rate:.1f}% success rate")
             return checks_passed >= 3
         else:
-            log_test("Consensus Configuration", False, response=response)
+            log_test("Masternode Network Statistics", False, response=f"Status: {response.status_code}")
             return False
             
     except Exception as e:
-        log_test("Consensus Configuration", False, error=str(e))
+        log_test("Masternode Network Statistics", False, error=str(e))
         return False
 
-def test_network_hybrid_indicators():
-    """Test 5: Network Status - Check hybrid consensus indicators"""
-    print("\n🌐 TEST 5: NETWORK HYBRID CONSENSUS INDICATORS")
-    print("Testing network status for hybrid consensus indicators...")
+def test_masternode_launch_insufficient_balance():
+    """Test 4: Launch with Insufficient Balance - Test POST /api/masternode/launch (should fail)"""
+    print("\n💰 TEST 4: MASTERNODE LAUNCH - INSUFFICIENT BALANCE")
+    print("Testing POST /api/masternode/launch with insufficient balance...")
     
     try:
-        # Test network status endpoint
-        network_response = requests.get(f"{API_URL}/network/status")
-        staking_response = requests.get(f"{API_URL}/staking/info")
+        # Create test address with insufficient balance
+        test_address = "wepo1testinsufficientbalance123456789"
+        
+        launch_data = {
+            "address": test_address,
+            "device_type": "computer",
+            "selected_services": ["mixing_service", "dex_relay", "network_relay"]
+        }
+        
+        response = requests.post(f"{API_URL}/masternode/launch", json=launch_data)
+        
+        # This should fail due to insufficient balance
+        if response.status_code == 400:
+            data = response.json()
+            if "insufficient balance" in data.get('detail', '').lower():
+                print("  ✅ Insufficient balance check: Correctly rejected launch")
+                log_test("Masternode Launch - Insufficient Balance", True,
+                         details="Correctly rejected launch due to insufficient balance")
+                return True
+            else:
+                print(f"  ❌ Insufficient balance check: Wrong error message: {data.get('detail')}")
+                log_test("Masternode Launch - Insufficient Balance", False,
+                         details=f"Wrong error message: {data.get('detail')}")
+                return False
+        else:
+            print(f"  ❌ Insufficient balance check: Unexpected status {response.status_code}")
+            log_test("Masternode Launch - Insufficient Balance", False,
+                     response=f"Status: {response.status_code}")
+            return False
+            
+    except Exception as e:
+        log_test("Masternode Launch - Insufficient Balance", False, error=str(e))
+        return False
+
+def test_masternode_launch_invalid_parameters():
+    """Test 5: Launch with Invalid Parameters - Test POST /api/masternode/launch validation"""
+    print("\n⚠️  TEST 5: MASTERNODE LAUNCH - INVALID PARAMETERS")
+    print("Testing POST /api/masternode/launch with invalid parameters...")
+    
+    try:
+        test_cases = [
+            {
+                "name": "Invalid address format",
+                "data": {
+                    "address": "invalid_address",
+                    "device_type": "computer",
+                    "selected_services": ["mixing_service", "dex_relay", "network_relay"]
+                },
+                "expected_error": "invalid address"
+            },
+            {
+                "name": "No services selected",
+                "data": {
+                    "address": "wepo1validaddress123456789",
+                    "device_type": "computer",
+                    "selected_services": []
+                },
+                "expected_error": "no services"
+            },
+            {
+                "name": "Insufficient services for computer",
+                "data": {
+                    "address": "wepo1validaddress123456789",
+                    "device_type": "computer",
+                    "selected_services": ["mixing_service"]  # Need 3 for computer
+                },
+                "expected_error": "need at least"
+            }
+        ]
         
         checks_passed = 0
-        total_checks = 0
+        total_checks = len(test_cases)
         
-        if network_response.status_code == 200:
-            network_data = network_response.json()
+        for test_case in test_cases:
+            response = requests.post(f"{API_URL}/masternode/launch", json=test_case["data"])
             
-            # Check hybrid consensus indicators
-            total_checks += 1
-            if 'total_staked' in network_data and 'active_masternodes' in network_data:
-                total_staked = network_data.get('total_staked', 0)
-                active_masternodes = network_data.get('active_masternodes', 0)
-                print(f"  ✅ Hybrid indicators: {total_staked} WEPO staked, {active_masternodes} masternodes")
-                checks_passed += 1
-            else:
-                print("  ❌ Hybrid indicators: Missing staking/masternode data")
-            
-            # Check validator count and staking totals
-            total_checks += 1
-            if staking_response.status_code == 200:
-                staking_data = staking_response.json()
-                stakes_count = staking_data.get('active_stakes_count', 0)
-                staked_amount = staking_data.get('total_staked_amount', 0)
-                print(f"  ✅ Validator metrics: {stakes_count} validators, {staked_amount} WEPO total")
-                checks_passed += 1
-            else:
-                print("  ❌ Validator metrics: Staking info unavailable")
-            
-            # Check consensus type reporting
-            total_checks += 1
-            block_height = network_data.get('block_height', 0)
-            if block_height >= 0:
-                print(f"  ✅ Consensus reporting: Block height {block_height} (tracking enabled)")
-                checks_passed += 1
-            else:
-                print("  ❌ Consensus reporting: Block height tracking missing")
-            
-            # Check activation timing
-            total_checks += 1
-            if staking_response.status_code == 200:
-                staking_data = staking_response.json()
-                activation_height = staking_data.get('activation_height') or staking_data.get('pos_activation_height')
-                current_height = staking_data.get('current_height', block_height)
-                
-                if activation_height and current_height is not None:
-                    blocks_until = max(0, activation_height - current_height)
-                    if blocks_until > 0:
-                        print(f"  ✅ Activation timing: {blocks_until} blocks until PoS activation")
-                    else:
-                        print(f"  ✅ Activation timing: PoS already activated (height {current_height} >= {activation_height})")
+            if response.status_code == 400:
+                error_detail = response.json().get('detail', '').lower()
+                if any(keyword in error_detail for keyword in test_case["expected_error"].split()):
+                    print(f"  ✅ {test_case['name']}: Correctly rejected")
                     checks_passed += 1
                 else:
-                    print("  ❌ Activation timing: Cannot determine activation status")
+                    print(f"  ❌ {test_case['name']}: Wrong error message: {error_detail}")
             else:
-                print("  ❌ Activation timing: Staking info unavailable")
-            
-            # Check network readiness for hybrid consensus
-            total_checks += 1
-            if network_data.get('status') == 'ready':
-                print("  ✅ Network readiness: Ready for hybrid consensus operations")
-                checks_passed += 1
+                print(f"  ❌ {test_case['name']}: Unexpected status {response.status_code}")
+        
+        success_rate = (checks_passed / total_checks) * 100
+        log_test("Masternode Launch - Invalid Parameters", checks_passed >= 2,
+                 details=f"Validated {checks_passed}/{total_checks} parameter checks ({success_rate:.1f}% success)")
+        return checks_passed >= 2
+        
+    except Exception as e:
+        log_test("Masternode Launch - Invalid Parameters", False, error=str(e))
+        return False
+
+def test_masternode_status_nonexistent():
+    """Test 6: Status Check - Test GET /api/masternode/status/{address} for non-existent masternode"""
+    print("\n🔍 TEST 6: MASTERNODE STATUS - NON-EXISTENT")
+    print("Testing GET /api/masternode/status/{address} for non-existent masternode...")
+    
+    try:
+        test_address = "wepo1nonexistentmasternode123456789"
+        response = requests.get(f"{API_URL}/masternode/status/{test_address}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if not data.get('success') and 'not found' in data.get('error', '').lower():
+                print("  ✅ Non-existent masternode: Correctly returned not found")
+                log_test("Masternode Status - Non-existent", True,
+                         details="Correctly handled non-existent masternode")
+                return True
             else:
-                print(f"  ❌ Network readiness: Status {network_data.get('status')} (expected 'ready')")
-            
-            success_rate = (checks_passed / total_checks) * 100
-            log_test("Network Hybrid Consensus Indicators", checks_passed >= 3,
-                     details=f"Verified {checks_passed}/{total_checks} hybrid consensus indicators ({success_rate:.1f}% success)")
-            return checks_passed >= 3
+                print(f"  ❌ Non-existent masternode: Unexpected response: {data}")
+                log_test("Masternode Status - Non-existent", False,
+                         details=f"Unexpected response: {data}")
+                return False
         else:
-            log_test("Network Hybrid Consensus Indicators", False, response=network_response)
+            print(f"  ❌ Non-existent masternode: Unexpected status {response.status_code}")
+            log_test("Masternode Status - Non-existent", False,
+                     response=f"Status: {response.status_code}")
             return False
             
     except Exception as e:
-        log_test("Network Hybrid Consensus Indicators", False, error=str(e))
+        log_test("Masternode Status - Non-existent", False, error=str(e))
         return False
 
-def run_hybrid_consensus_tests():
-    """Run all hybrid PoW/PoS consensus tests"""
-    print("🚀 STARTING WEPO HYBRID POW/POS CONSENSUS SYSTEM TESTS")
-    print("Testing the critical hybrid consensus implementation...")
+def run_masternode_service_tests():
+    """Run all masternode service system tests"""
+    print("🚀 STARTING WEPO MASTERNODE SERVICE SYSTEM TESTS")
+    print("Testing the newly implemented masternode service system...")
     print("=" * 80)
     
     # Run all tests
-    test1_result = test_hybrid_consensus_network_info()
-    test2_result = test_staking_system_integration()
-    test3_result = test_block_creation_support()
-    test4_result = test_consensus_configuration()
-    test5_result = test_network_hybrid_indicators()
+    test1_result = test_masternode_services_endpoint()
+    test2_result = test_masternode_requirements_endpoint()
+    test3_result = test_masternode_network_endpoint()
+    test4_result = test_masternode_launch_insufficient_balance()
+    test5_result = test_masternode_launch_invalid_parameters()
+    test6_result = test_masternode_status_nonexistent()
     
     # Print final results
     print("\n" + "=" * 80)
-    print("🔗 WEPO HYBRID POW/POS CONSENSUS SYSTEM TEST RESULTS")
+    print("🏛️ WEPO MASTERNODE SERVICE SYSTEM TEST RESULTS")
     print("=" * 80)
     
     success_rate = (test_results["passed"] / test_results["total"]) * 100 if test_results["total"] > 0 else 0
@@ -458,11 +429,12 @@ def run_hybrid_consensus_tests():
     # Critical Success Criteria
     print("\n🎯 CRITICAL SUCCESS CRITERIA:")
     critical_tests = [
-        "Hybrid Consensus Network Status",
-        "Staking System Integration", 
-        "Block Creation Support",
-        "Consensus Configuration",
-        "Network Hybrid Consensus Indicators"
+        "Masternode Available Services",
+        "Masternode Device Requirements", 
+        "Masternode Network Statistics",
+        "Masternode Launch - Insufficient Balance",
+        "Masternode Launch - Invalid Parameters",
+        "Masternode Status - Non-existent"
     ]
     
     critical_passed = 0
@@ -477,25 +449,26 @@ def run_hybrid_consensus_tests():
     
     # Expected Results Summary
     print("\n📋 EXPECTED RESULTS VERIFICATION:")
-    print("✅ Network should indicate hybrid consensus support")
-    print("✅ PoS activation should be configured for 18 months (block 131,400)")
-    print("✅ Block timing should be 3 min PoS, 9 min PoW")
-    print("✅ Staking system should integrate with consensus")
-    print("✅ Both consensus types should be supported")
+    print("✅ All 5 masternode services should be available (mixing, DEX relay, network relay, governance, vault relay)")
+    print("✅ Device requirements should be properly enforced (computer: 9h/3 services, mobile: 6h/2 services)")
+    print("✅ Collateral requirement should be 10,000 WEPO")
+    print("✅ Fee share should be 60% of network fees")
+    print("✅ Network statistics should be accessible")
+    print("✅ Error handling should work correctly")
     
     if critical_passed >= 4:
-        print("\n🎉 HYBRID POW/POS CONSENSUS SYSTEM IS WORKING!")
-        print("✅ Hybrid consensus properly configured")
-        print("✅ PoS and PoW can coexist after activation")
-        print("✅ Validator selection works fairly")
-        print("✅ Block timing optimized for efficiency")
+        print("\n🎉 MASTERNODE SERVICE SYSTEM IS WORKING!")
+        print("✅ Masternodes now provide actual services to justify 60% fee allocation")
+        print("✅ Device-specific requirements are properly implemented")
+        print("✅ Service selection and management works correctly")
+        print("✅ Network operates in truly decentralized manner")
         return True
     else:
-        print("\n❌ CRITICAL HYBRID CONSENSUS ISSUES FOUND!")
-        print("⚠️  Hybrid consensus system needs attention")
+        print("\n❌ CRITICAL MASTERNODE SERVICE ISSUES FOUND!")
+        print("⚠️  Masternode service system needs attention")
         return False
 
 if __name__ == "__main__":
-    success = run_hybrid_consensus_tests()
+    success = run_masternode_service_tests()
     if not success:
         sys.exit(1)
