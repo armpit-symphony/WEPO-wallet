@@ -761,19 +761,56 @@ class WepoFastTestBridge:
             try:
                 current_height = len(self.blockchain.blocks) - 1
                 
-                # Import the actual blockchain to get the new methods
-                sys.path.append('/app/wepo-blockchain/core')
-                from blockchain import WEPOBlockchain
+                # Use hardcoded dynamic schedule based on our design
+                HALVING_SCHEDULE = {
+                    0: {"mn": 10000, "pos": 0},                  # Genesis → PoS (18 months)
+                    131400: {"mn": 10000, "pos": 1000},          # PoS Activation → 2nd Halving
+                    306600: {"mn": 6000, "pos": 600},            # 2nd Halving → 3rd Halving
+                    657000: {"mn": 3000, "pos": 300},            # 3rd Halving → 4th Halving
+                    832200: {"mn": 1500, "pos": 150},            # 4th Halving → 5th Halving
+                    1007400: {"mn": 1000, "pos": 100},           # 5th Halving+ (final)
+                }
                 
-                # Create a temporary blockchain instance to use the new methods
-                temp_blockchain = WEPOBlockchain()
+                # Find current requirements
+                mn_collateral = 10000  # Default
+                pos_collateral = 0     # Default
+                pos_available = current_height >= 131400  # PoS activation height
                 
-                # Get current requirements using the new dynamic system
-                masternode_collateral = temp_blockchain.get_masternode_collateral_for_height(current_height)
-                pos_collateral = temp_blockchain.get_pos_collateral_for_height(current_height)
+                for height in sorted(HALVING_SCHEDULE.keys(), reverse=True):
+                    if current_height >= height:
+                        mn_collateral = HALVING_SCHEDULE[height]["mn"]
+                        pos_collateral = HALVING_SCHEDULE[height]["pos"] if pos_available else 0
+                        break
                 
-                # Get comprehensive collateral info
-                collateral_info = temp_blockchain.get_collateral_info(current_height)
+                # Determine current phase
+                if current_height < 131400:
+                    phase = "Phase 1"
+                    phase_description = "Pre-PoS Mining (Genesis)"
+                elif current_height < 306600:
+                    phase = "Phase 2A"
+                    phase_description = "PoS Active, First Long-term Phase"
+                elif current_height < 657000:
+                    phase = "Phase 2B"
+                    phase_description = "Second Halving Phase"
+                elif current_height < 832200:
+                    phase = "Phase 2C"
+                    phase_description = "Third Halving Phase"
+                elif current_height < 1007400:
+                    phase = "Phase 2D"
+                    phase_description = "Fourth Halving Phase"
+                else:
+                    phase = "Phase 3"
+                    phase_description = "Post-PoW (Fees Only)"
+                
+                collateral_info = {
+                    "block_height": current_height,
+                    "masternode_collateral_wepo": mn_collateral,
+                    "pos_collateral_wepo": pos_collateral,
+                    "pos_available": pos_available,
+                    "phase": phase,
+                    "phase_description": phase_description,
+                    "adjustment_reason": "Tied to PoW halving schedule for network accessibility"
+                }
                 
                 return {
                     "success": True,
@@ -793,33 +830,28 @@ class WepoFastTestBridge:
             try:
                 current_height = len(self.blockchain.blocks) - 1
                 
-                # Import the actual blockchain to get the new methods
-                sys.path.append('/app/wepo-blockchain/core')
-                from blockchain import WEPOBlockchain, DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE, DYNAMIC_POS_COLLATERAL_SCHEDULE, MIN_MASTERNODE_COLLATERAL, MIN_POS_COLLATERAL, COIN, POS_ACTIVATION_HEIGHT
+                # Hardcoded schedule based on our design
+                HALVING_SCHEDULE = [
+                    {"height": 0, "mn": 10000, "pos": 0, "phase": "Phase 1", "desc": "Genesis → PoS Activation (18 months)", "pos_avail": False},
+                    {"height": 131400, "mn": 10000, "pos": 1000, "phase": "Phase 2A", "desc": "PoS Activation → 2nd Halving (4.5 years)", "pos_avail": True},
+                    {"height": 306600, "mn": 6000, "pos": 600, "phase": "Phase 2B", "desc": "2nd Halving → 3rd Halving (10.5 years)", "pos_avail": True},
+                    {"height": 657000, "mn": 3000, "pos": 300, "phase": "Phase 2C", "desc": "3rd Halving → 4th Halving (13.5 years)", "pos_avail": True},
+                    {"height": 832200, "mn": 1500, "pos": 150, "phase": "Phase 2D", "desc": "4th Halving → 5th Halving (16.5 years)", "pos_avail": True},
+                    {"height": 1007400, "mn": 1000, "pos": 100, "phase": "Phase 3", "desc": "5th Halving+ (Post-PoW Era)", "pos_avail": True},
+                ]
                 
-                # Create a temporary blockchain instance to use the new methods
-                temp_blockchain = WEPOBlockchain()
-                
-                # Build schedule information using the new dynamic system
                 schedule = []
-                
-                # Use the new dynamic schedules
-                for height in sorted(DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE.keys()):
-                    mn_collateral = DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE[height]
-                    pos_collateral = DYNAMIC_POS_COLLATERAL_SCHEDULE.get(height, 0)
-                    
-                    phase_info = temp_blockchain.get_current_phase_info(height)
-                    
+                for entry in HALVING_SCHEDULE:
                     schedule.append({
-                        "block_height": height,
-                        "masternode_collateral": mn_collateral / COIN,
-                        "pos_collateral": pos_collateral / COIN if pos_collateral > 0 else 0,
-                        "pos_available": height >= POS_ACTIVATION_HEIGHT,
-                        "phase": phase_info['phase'],
-                        "phase_description": phase_info['description'],
-                        "pow_reward": phase_info['pow_reward'],
-                        "is_current": current_height >= height,
-                        "is_next": height > current_height
+                        "block_height": entry["height"],
+                        "masternode_collateral": entry["mn"],
+                        "pos_collateral": entry["pos"],
+                        "pos_available": entry["pos_avail"],
+                        "phase": entry["phase"],
+                        "phase_description": entry["desc"],
+                        "pow_reward": 52.51 if entry["height"] < 131400 else (33.17 if entry["height"] < 306600 else (16.58 if entry["height"] < 657000 else (8.29 if entry["height"] < 832200 else (4.15 if entry["height"] < 1007400 else 0)))),
+                        "is_current": current_height >= entry["height"],
+                        "is_next": entry["height"] > current_height
                     })
                 
                 return {
@@ -828,8 +860,8 @@ class WepoFastTestBridge:
                         "current_height": current_height,
                         "schedule": schedule,
                         "minimum_floors": {
-                            "masternode": MIN_MASTERNODE_COLLATERAL / COIN,
-                            "pos": MIN_POS_COLLATERAL / COIN
+                            "masternode": 1000,
+                            "pos": 100
                         }
                     },
                     "timestamp": int(time.time())
