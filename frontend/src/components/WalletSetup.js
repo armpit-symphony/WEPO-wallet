@@ -120,20 +120,32 @@ const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
 
     setIsLoading(true);
     try {
-      // Generate WEPO address from mnemonic (simplified for demo)
-      const addressHash = Array.from(mnemonic).reduce((hash, char) => {
-        return hash + char.charCodeAt(0);
-      }, 0).toString(16).padStart(32, '0').substring(0, 32);
+      // Generate WEPO address from mnemonic using proper crypto
+      const crypto = window.crypto || window.msCrypto;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(mnemonic + formData.username);
       
-      const address = `wepo1${addressHash}`;
+      // Create cryptographic hash for address
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       
-      // Create wallet data
+      const address = `wepo1${hashHex.substring(0, 32)}`;
+      
+      // Create wallet data with proper structure
       const walletData = {
         username: formData.username,
         address: address,
-        encryptedMnemonic: mnemonic, // Simplified encryption for demo
+        mnemonic: mnemonic, // Store mnemonic for wallet context
+        encryptedMnemonic: mnemonic, // TODO: Implement proper encryption
         createdAt: new Date().toISOString(),
-        balance: 0.0 // Real wallets start with zero balance
+        balance: 0.0,
+        version: '2.0',
+        // Add WEPO-specific fields
+        wepo: {
+          address: address,
+          privateKey: hashHex.substring(0, 64) // Simplified for demo
+        }
       };
       
       // Store wallet data in localStorage
@@ -150,7 +162,18 @@ const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
         localStorage.setItem('wepo_launch_date', new Date().toISOString());
       }
       
-      onWalletCreated();
+      console.log('✅ Wallet created successfully:', {
+        address: address,
+        username: formData.username,
+        sessionActive: sessionStorage.getItem('wepo_session_active'),
+        walletStored: localStorage.getItem('wepo_wallet_exists')
+      });
+      
+      // Small delay to ensure storage is complete
+      setTimeout(() => {
+        onWalletCreated();
+      }, 100);
+      
     } catch (error) {
       console.error('Wallet finalization error:', error);
       setError('Failed to create wallet: ' + error.message);
