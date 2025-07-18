@@ -670,13 +670,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "WEPO 20-Year Tokenomics Implementation"
-  stuck_tasks:
-    - "WEPO 20-Year Tokenomics Implementation"
+    - "WEPO Dynamic Collateral System Implementation"
+  stuck_tasks: []
   test_all: false
   test_priority: "critical"
   backend_tested: true
-  frontend_tested: true
+  frontend_tested: false
 
 backend:
   - task: "WEPO New Tokenomics Implementation"
