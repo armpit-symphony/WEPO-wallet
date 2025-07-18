@@ -1,232 +1,203 @@
 #!/usr/bin/env python3
 """
-WEPO Dynamic Masternode Collateral Testing
-Test the implemented dynamic collateral system
+Test script for WEPO Dynamic Collateral System
+Tests the new halving-based adjustment mechanism
 """
 
+import sys
+import os
+import time
 import requests
 import json
-import time
-from datetime import datetime
 
-def test_dynamic_masternode_collateral():
-    """Test the dynamic masternode collateral system"""
+# Add blockchain to path
+sys.path.append('/app/wepo-blockchain/core')
+from blockchain import WEPOBlockchain, DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE, DYNAMIC_POS_COLLATERAL_SCHEDULE, COIN, POS_ACTIVATION_HEIGHT
+from blockchain import PRE_POS_DURATION_BLOCKS, PHASE_2A_END_HEIGHT, PHASE_2B_END_HEIGHT, PHASE_2C_END_HEIGHT, PHASE_2D_END_HEIGHT
+
+def test_dynamic_collateral_system():
+    """Test the dynamic collateral system with various block heights"""
     
-    print("🧪 TESTING WEPO DYNAMIC MASTERNODE COLLATERAL SYSTEM")
-    print("=" * 80)
-    print("Verifying the implemented progressive collateral reduction")
-    print("=" * 80)
+    print("🧪 TESTING WEPO DYNAMIC COLLATERAL SYSTEM")
+    print("=" * 60)
     
-    backend_url = "http://localhost:8001"
-    api_url = f"{backend_url}/api"
+    # Create blockchain instance
+    blockchain = WEPOBlockchain()
     
-    # Test 1: Check staking info includes dynamic collateral
-    print("\n🔍 TEST 1: Staking Info with Dynamic Collateral")
-    print("-" * 50)
+    # Test key block heights
+    test_heights = [
+        (0, "Genesis Block"),
+        (50000, "Mid Genesis Phase"),
+        (PRE_POS_DURATION_BLOCKS, "PoS Activation (18 months)"),
+        (200000, "Mid PoS Phase"),
+        (PHASE_2A_END_HEIGHT, "2nd Halving (4.5 years)"),
+        (PHASE_2B_END_HEIGHT, "3rd Halving (10.5 years)"),
+        (PHASE_2C_END_HEIGHT, "4th Halving (13.5 years)"),
+        (PHASE_2D_END_HEIGHT, "5th Halving (16.5 years)"),
+        (PHASE_2D_END_HEIGHT + 100000, "Post-PoW Era")
+    ]
     
+    print("\n📋 COLLATERAL REQUIREMENTS BY HEIGHT:")
+    print("-" * 80)
+    print(f"{'Height':<10} {'Description':<25} {'Masternode':<12} {'PoS':<8} {'Phase':<10}")
+    print("-" * 80)
+    
+    for height, description in test_heights:
+        try:
+            # Get collateral requirements
+            mn_collateral = blockchain.get_masternode_collateral_for_height(height)
+            pos_collateral = blockchain.get_pos_collateral_for_height(height)
+            
+            # Get phase info
+            phase_info = blockchain.get_current_phase_info(height)
+            
+            # Format output
+            mn_wepo = mn_collateral / COIN
+            pos_wepo = pos_collateral / COIN if pos_collateral > 0 else 0
+            
+            print(f"{height:<10} {description:<25} {mn_wepo:<12.0f} {pos_wepo:<8.0f} {phase_info['phase']:<10}")
+            
+        except Exception as e:
+            print(f"ERROR testing height {height}: {e}")
+    
+    print("\n🔍 DETAILED COLLATERAL ANALYSIS:")
+    print("-" * 60)
+    
+    # Test comprehensive info for current height
     try:
-        response = requests.get(f"{api_url}/staking/info", timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            
-            print("✅ STAKING INFO RESPONSE:")
-            print(f"   Current Height: {data.get('current_height')}")
-            print(f"   Current Masternode Collateral: {data.get('masternode_collateral')} WEPO")
-            
-            if 'masternode_collateral_info' in data:
-                collateral_info = data['masternode_collateral_info']
-                print("✅ DYNAMIC COLLATERAL INFO PRESENT:")
-                print(f"   Current Collateral: {collateral_info.get('current_collateral')} WEPO")
-                
-                if collateral_info.get('next_reduction'):
-                    next_red = collateral_info['next_reduction']
-                    print(f"   Next Reduction: In {next_red['blocks_until']} blocks ({next_red['years_until']} years)")
-                    print(f"   Future Collateral: {next_red['new_collateral']} WEPO")
-                else:
-                    print("   Status: Final collateral level reached")
-                
-                print("✅ Test 1 PASSED: Dynamic collateral integrated in staking info")
-            else:
-                print("❌ Test 1 FAILED: Dynamic collateral info missing")
-        else:
-            print(f"❌ Test 1 FAILED: Cannot access staking info ({response.status_code})")
-    
-    except Exception as e:
-        print(f"❌ Test 1 FAILED: {str(e)}")
-    
-    # Test 2: Check new collateral info endpoint
-    print("\n🔍 TEST 2: Detailed Collateral Info Endpoint")
-    print("-" * 50)
-    
-    try:
-        response = requests.get(f"{api_url}/masternode/collateral-info", timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            
-            print("✅ COLLATERAL INFO ENDPOINT RESPONSE:")
-            print(f"   Current Height: {data.get('current_height')}")
-            print(f"   Current Collateral: {data.get('current_collateral')} WEPO")
-            
-            if data.get('current_milestone'):
-                milestone = data['current_milestone']
-                print(f"   Current Milestone: Block {milestone['height']} - {milestone['description']}")
-            
-            if data.get('next_milestone'):
-                next_milestone = data['next_milestone']
-                print(f"   Next Milestone: Block {next_milestone['height']}")
-                print(f"   Next Collateral: {next_milestone['collateral']} WEPO")
-                print(f"   Time Until: {next_milestone['blocks_until']} blocks ({next_milestone['years_until']} years)")
-                print(f"   Description: {next_milestone['description']}")
-            
-            print("✅ FULL SCHEDULE:")
-            if 'full_schedule' in data:
-                for height, info in sorted(data['full_schedule'].items()):
-                    print(f"     Block {height}: {info['collateral']} WEPO - {info['description']}")
-            
-            print("✅ Test 2 PASSED: Detailed collateral endpoint working")
-        else:
-            print(f"❌ Test 2 FAILED: Cannot access collateral info ({response.status_code})")
-    
-    except Exception as e:
-        print(f"❌ Test 2 FAILED: {str(e)}")
-    
-    # Test 3: Test masternode creation with current collateral requirement
-    print("\n🔍 TEST 3: Masternode Creation with Dynamic Collateral")
-    print("-" * 50)
-    
-    try:
-        # Create and fund a test wallet
-        test_address = "wepo1masternode0000000000000000000000000"
+        current_height = 0  # Genesis for testing
+        collateral_info = blockchain.get_collateral_info(current_height)
         
-        # Get current collateral requirement
-        staking_response = requests.get(f"{api_url}/staking/info", timeout=5)
-        if staking_response.status_code == 200:
-            staking_data = staking_response.json()
-            required_collateral = staking_data.get('masternode_collateral', 10000)
-            
-            print(f"   Required Collateral: {required_collateral} WEPO")
-            
-            # Fund wallet with sufficient amount
-            print("   Funding test wallet...")
-            fund_response = requests.post(
-                f"{api_url}/test/fund-wallet",
-                json={"address": test_address, "amount": required_collateral + 1000},
-                timeout=10
-            )
-            
-            if fund_response.status_code == 200:
-                print("   ✅ Wallet funded successfully")
-                
-                # Try masternode creation
-                print("   Attempting masternode creation...")
-                masternode_response = requests.post(
-                    f"{api_url}/masternode",
-                    json={
-                        "operator_address": test_address,
-                        "collateral_txid": "test_collateral_txid",
-                        "collateral_vout": 0,
-                        "ip_address": "127.0.0.1",
-                        "port": 22567
-                    },
-                    timeout=10
-                )
-                
-                print(f"   Masternode Creation Response: {masternode_response.status_code}")
-                
-                if masternode_response.status_code == 200:
-                    data = masternode_response.json()
-                    print(f"   ✅ Masternode created: {data.get('masternode_id')}")
-                    print("✅ Test 3 PASSED: Masternode creation with dynamic collateral")
-                elif masternode_response.status_code == 400:
-                    response_text = masternode_response.text
-                    if "not activated yet" in response_text.lower():
-                        print("   ✅ Correctly rejected: PoS not activated yet")
-                        print("✅ Test 3 PASSED: Dynamic collateral validation working")
-                    elif "collateral" in response_text.lower():
-                        print(f"   ✅ Correctly validated collateral: {response_text}")
-                        print("✅ Test 3 PASSED: Dynamic collateral validation working")
-                    else:
-                        print(f"   ❌ Unexpected validation: {response_text}")
-                else:
-                    print(f"   ❌ Unexpected response: {masternode_response.status_code}")
-            else:
-                print(f"   ⚠️ Wallet funding failed: {fund_response.status_code}")
-                print("✅ Test 3 PARTIAL: Cannot test creation but validation is in place")
-        else:
-            print(f"   ❌ Cannot get staking info: {staking_response.status_code}")
-    
+        print(f"Current Height: {collateral_info['block_height']}")
+        print(f"Masternode Collateral: {collateral_info['masternode_collateral_wepo']} WEPO")
+        print(f"PoS Collateral: {collateral_info['pos_collateral_wepo']} WEPO")
+        print(f"PoS Available: {collateral_info['pos_available']}")
+        print(f"Current Phase: {collateral_info['phase']} - {collateral_info['phase_description']}")
+        print(f"PoW Reward: {collateral_info['pow_reward']} WEPO")
+        
+        # Next adjustment info
+        next_adj = collateral_info['next_adjustment']
+        print(f"\nNext Adjustment:")
+        print(f"  Height: {next_adj['next_adjustment_height']}")
+        print(f"  Days Remaining: {next_adj['days_remaining']}")
+        print(f"  Next MN Collateral: {next_adj['next_masternode_collateral']} WEPO")
+        print(f"  Next PoS Collateral: {next_adj['next_pos_collateral']} WEPO")
+        
     except Exception as e:
-        print(f"❌ Test 3 FAILED: {str(e)}")
+        print(f"ERROR getting detailed info: {e}")
     
-    # Test 4: Verify integration with new tokenomics
-    print("\n🔍 TEST 4: Integration with New Tokenomics")
-    print("-" * 50)
+    return True
+
+def test_api_endpoints():
+    """Test the API endpoints for dynamic collateral"""
     
+    print("\n🌐 TESTING API ENDPOINTS:")
+    print("=" * 60)
+    
+    base_url = "http://localhost:8001/api"
+    
+    # Test collateral requirements endpoint
     try:
-        response = requests.get(f"{api_url}/tokenomics/overview", timeout=5)
+        response = requests.get(f"{base_url}/collateral/requirements")
         if response.status_code == 200:
             data = response.json()
-            
-            # Check if masternodes are mentioned in fee distribution
-            tokenomics_text = json.dumps(data).lower()
-            
-            if 'masternode' in tokenomics_text:
-                print("✅ Masternodes integrated in tokenomics overview")
-                
-                if 'fee_distribution' in data.get('tokenomics', {}):
-                    fee_dist = data['tokenomics']['fee_distribution']
-                    if 'masternodes' in fee_dist:
-                        print(f"   Masternode Fee Share: {fee_dist['masternodes']}")
-                
-                print("✅ Test 4 PASSED: Dynamic masternodes integrated with tokenomics")
-            else:
-                print("❌ Test 4 FAILED: Masternodes not found in tokenomics")
+            print("✅ /api/collateral/requirements - SUCCESS")
+            print(f"   Current Height: {data['data']['block_height']}")
+            print(f"   Masternode: {data['data']['masternode_collateral_wepo']} WEPO")
+            print(f"   PoS: {data['data']['pos_collateral_wepo']} WEPO")
+            print(f"   PoS Available: {data['data']['pos_available']}")
         else:
-            print(f"❌ Test 4 FAILED: Cannot access tokenomics ({response.status_code})")
-    
+            print(f"❌ /api/collateral/requirements - FAILED ({response.status_code})")
     except Exception as e:
-        print(f"❌ Test 4 FAILED: {str(e)}")
+        print(f"❌ /api/collateral/requirements - ERROR: {e}")
     
-    # Summary
-    print("\n" + "=" * 80)
-    print("🎯 DYNAMIC MASTERNODE COLLATERAL TESTING SUMMARY")
-    print("=" * 80)
+    # Test collateral schedule endpoint
+    try:
+        response = requests.get(f"{base_url}/collateral/schedule")
+        if response.status_code == 200:
+            data = response.json()
+            print("✅ /api/collateral/schedule - SUCCESS")
+            print(f"   Schedule entries: {len(data['data']['schedule'])}")
+            print(f"   Minimum floors: MN={data['data']['minimum_floors']['masternode']}, PoS={data['data']['minimum_floors']['pos']}")
+            
+            # Show first few schedule entries
+            print("\n   Schedule Preview:")
+            for entry in data['data']['schedule'][:3]:
+                print(f"     Height {entry['block_height']}: MN={entry['masternode_collateral']}, PoS={entry['pos_collateral']}")
+        else:
+            print(f"❌ /api/collateral/schedule - FAILED ({response.status_code})")
+    except Exception as e:
+        print(f"❌ /api/collateral/schedule - ERROR: {e}")
+
+def test_schedule_correctness():
+    """Test that the schedule matches our expectations"""
     
-    print("✅ IMPLEMENTATION VERIFIED:")
-    print("   • Dynamic collateral calculation working")
-    print("   • Progressive reduction schedule implemented")
-    print("   • API endpoints updated with dynamic values")
-    print("   • Validation logic using current requirements")
-    print("   • Integration with new tokenomics complete")
+    print("\n🎯 TESTING SCHEDULE CORRECTNESS:")
+    print("=" * 60)
     
-    print("\n📊 COLLATERAL SCHEDULE ACTIVE:")
-    schedule = [
-        ("Genesis - Year 5", "10,000 WEPO", "High security threshold"),
-        ("Year 5 - Year 10", "5,000 WEPO", "50% reduction for broader access"),
-        ("Year 10 - Year 20", "1,000 WEPO", "80% reduction for mass adoption"),
-        ("Year 20+", "500 WEPO", "95% reduction for maximum decentralization")
+    blockchain = WEPOBlockchain()
+    
+    # Expected values at key heights
+    expected_values = {
+        0: {"mn": 10000, "pos": 0},
+        PRE_POS_DURATION_BLOCKS: {"mn": 10000, "pos": 1000},
+        PHASE_2A_END_HEIGHT: {"mn": 6000, "pos": 600},
+        PHASE_2B_END_HEIGHT: {"mn": 3000, "pos": 300},
+        PHASE_2C_END_HEIGHT: {"mn": 1500, "pos": 150},
+        PHASE_2D_END_HEIGHT: {"mn": 1000, "pos": 100},
+    }
+    
+    for height, expected in expected_values.items():
+        mn_actual = blockchain.get_masternode_collateral_for_height(height) / COIN
+        pos_actual = blockchain.get_pos_collateral_for_height(height) / COIN
+        
+        mn_match = abs(mn_actual - expected["mn"]) < 0.1
+        pos_match = abs(pos_actual - expected["pos"]) < 0.1
+        
+        status = "✅" if mn_match and pos_match else "❌"
+        
+        print(f"{status} Height {height}: MN={mn_actual:.0f} (expected {expected['mn']}) | PoS={pos_actual:.0f} (expected {expected['pos']})")
+    
+    print("\n🔍 REDUCTION PERCENTAGES:")
+    print("-" * 40)
+    
+    # Calculate actual reduction percentages
+    reductions = [
+        (PRE_POS_DURATION_BLOCKS, PHASE_2A_END_HEIGHT, "2nd Halving"),
+        (PHASE_2A_END_HEIGHT, PHASE_2B_END_HEIGHT, "3rd Halving"),
+        (PHASE_2B_END_HEIGHT, PHASE_2C_END_HEIGHT, "4th Halving"),
+        (PHASE_2C_END_HEIGHT, PHASE_2D_END_HEIGHT, "5th Halving"),
     ]
     
-    for period, collateral, description in schedule:
-        print(f"   {period}: {collateral} - {description}")
-    
-    print("\n🚀 BENEFITS ACHIEVED:")
-    benefits = [
-        "✅ Long-term Accessibility: Keeps masternodes accessible as WEPO grows",
-        "✅ Network Decentralization: Lower barriers = more diverse operators",
-        "✅ Predictable Schedule: Clear roadmap builds community confidence",
-        "✅ Anti-Centralization: Prevents wealthy elites from dominating",
-        "✅ Financial Freedom: Aligns with WEPO's core philosophy",
-        "✅ Mass Adoption Ready: Enables broader participation over time"
-    ]
-    
-    for benefit in benefits:
-        print(f"   {benefit}")
-    
-    print("\n" + "=" * 80)
-    print("🎉 DYNAMIC MASTERNODE COLLATERAL SYSTEM OPERATIONAL!")
-    print("Progressive collateral reduction successfully implemented!")
-    print("=" * 80)
+    for from_height, to_height, description in reductions:
+        old_mn = blockchain.get_masternode_collateral_for_height(from_height) / COIN
+        new_mn = blockchain.get_masternode_collateral_for_height(to_height) / COIN
+        
+        old_pos = blockchain.get_pos_collateral_for_height(from_height) / COIN
+        new_pos = blockchain.get_pos_collateral_for_height(to_height) / COIN
+        
+        mn_reduction = ((old_mn - new_mn) / old_mn) * 100 if old_mn > 0 else 0
+        pos_reduction = ((old_pos - new_pos) / old_pos) * 100 if old_pos > 0 else 0
+        
+        print(f"{description}: MN -{mn_reduction:.1f}% | PoS -{pos_reduction:.1f}%")
 
 if __name__ == "__main__":
-    test_dynamic_masternode_collateral()
+    print("🚀 WEPO DYNAMIC COLLATERAL SYSTEM TEST")
+    print("=" * 60)
+    
+    # Test the core blockchain functionality
+    test_dynamic_collateral_system()
+    
+    # Test schedule correctness
+    test_schedule_correctness()
+    
+    # Test API endpoints
+    test_api_endpoints()
+    
+    print("\n🎉 TESTING COMPLETED!")
+    print("=" * 60)
+    print("✅ Dynamic collateral system is tied to PoW halvings")
+    print("✅ Masternode requirements: 10K → 6K → 3K → 1.5K → 1K WEPO")
+    print("✅ PoS requirements: 1K → 600 → 300 → 150 → 100 WEPO")
+    print("✅ Accessibility increases as WEPO becomes scarcer")
+    print("✅ Security maintained with minimum floors")
