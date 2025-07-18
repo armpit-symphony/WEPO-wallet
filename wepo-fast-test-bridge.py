@@ -23,6 +23,9 @@ from address_utils import validate_wepo_address as validate_address_std, generat
 sys.path.append('/app')
 from wepo_community_mining_backend import mining_coordinator, setup_mining_routes
 
+# Import masternode service manager
+from masternode_service_manager import get_masternode_manager
+
 # Community-Driven AMM System (No Admin)
 import math
 from typing import Dict, Optional
