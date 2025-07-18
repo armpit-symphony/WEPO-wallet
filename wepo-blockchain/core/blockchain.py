@@ -118,13 +118,54 @@ else:
 
 MIN_STAKE_AMOUNT = 1000 * COIN  # 1,000 WEPO minimum stake - accessible to community
 
-# Dynamic Masternode Collateral System - Progressive reduction for accessibility
+# DYNAMIC COLLATERAL SYSTEM - TIED TO POW HALVINGS
+# Automatically adjusts masternode and PoS requirements at each halving event
+
+# Dynamic Masternode Collateral Schedule (tied to PoW halvings)
 DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE = {
-    0: 10000 * COIN,          # Genesis - Year 5: 10,000 WEPO (High security threshold)
-    262800: 5000 * COIN,      # Year 5 (during halving): 5,000 WEPO (50% reduction - broader access)
-    525600: 1000 * COIN,      # Year 10 (during halving): 1,000 WEPO (80% reduction - mass adoption)
-    1051200: 500 * COIN,      # Year 20 (during halving): 500 WEPO (95% reduction - maximum decentralization)
+    # Genesis → PoS Activation (0-18 months): 10,000 WEPO baseline
+    0: 10000 * COIN,
+    
+    # PoS Activation → 2nd Halving (18 months-4.5 years): Keep 10,000 WEPO
+    PRE_POS_DURATION_BLOCKS: 10000 * COIN,  # Block 131,400
+    
+    # 2nd Halving (4.5-10.5 years): Reduce to 6,000 WEPO (-40%)
+    PHASE_2A_END_HEIGHT: 6000 * COIN,  # Block 306,600
+    
+    # 3rd Halving (10.5-13.5 years): Reduce to 3,000 WEPO (-50%)
+    PHASE_2B_END_HEIGHT: 3000 * COIN,  # Block 657,000
+    
+    # 4th Halving (13.5-16.5 years): Reduce to 1,500 WEPO (-50%)
+    PHASE_2C_END_HEIGHT: 1500 * COIN,  # Block 832,200
+    
+    # 5th Halving (16.5+ years): Floor minimum 1,000 WEPO (-33%)
+    PHASE_2D_END_HEIGHT: 1000 * COIN,  # Block 1,007,400+
 }
+
+# Dynamic PoS Staking Collateral Schedule (tied to PoW halvings)
+DYNAMIC_POS_COLLATERAL_SCHEDULE = {
+    # Genesis → PoS Activation: PoS not available
+    0: 0,  # PoS not available
+    
+    # PoS Activation → 2nd Halving (18 months-4.5 years): 1,000 WEPO baseline
+    PRE_POS_DURATION_BLOCKS: 1000 * COIN,  # Block 131,400
+    
+    # 2nd Halving (4.5-10.5 years): Reduce to 600 WEPO (-40%)
+    PHASE_2A_END_HEIGHT: 600 * COIN,  # Block 306,600
+    
+    # 3rd Halving (10.5-13.5 years): Reduce to 300 WEPO (-50%)
+    PHASE_2B_END_HEIGHT: 300 * COIN,  # Block 657,000
+    
+    # 4th Halving (13.5-16.5 years): Reduce to 150 WEPO (-50%)
+    PHASE_2C_END_HEIGHT: 150 * COIN,  # Block 832,200
+    
+    # 5th Halving (16.5+ years): Floor minimum 100 WEPO (-33%)
+    PHASE_2D_END_HEIGHT: 100 * COIN,  # Block 1,007,400+
+}
+
+# Minimum collateral floors (never go below these values)
+MIN_MASTERNODE_COLLATERAL = 1000 * COIN  # Absolute minimum for masternodes
+MIN_POS_COLLATERAL = 100 * COIN          # Absolute minimum for PoS staking
 
 # Legacy constant for backward compatibility (now dynamic)
 MASTERNODE_COLLATERAL = 10000 * COIN
