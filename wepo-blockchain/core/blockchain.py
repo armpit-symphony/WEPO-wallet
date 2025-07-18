@@ -1545,11 +1545,134 @@ class WepoBlockchain:
         return masternode_id
     
     def get_masternode_collateral_for_height(self, height: int) -> int:
-        """Get required masternode collateral for a specific height"""
+        """Get required masternode collateral for a specific height (tied to PoW halvings)"""
+        # Find the appropriate collateral requirement for this height
         for trigger_height in sorted(DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE.keys(), reverse=True):
             if height >= trigger_height:
-                return DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE[trigger_height]
+                collateral = DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE[trigger_height]
+                # Apply minimum floor protection
+                return max(MIN_MASTERNODE_COLLATERAL, collateral)
+        
+        # Fallback to initial requirement
         return DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE[0]
+    
+    def get_pos_collateral_for_height(self, height: int) -> int:
+        """Get required PoS staking collateral for a specific height (tied to PoW halvings)"""
+        # PoS is not available before activation height
+        if height < POS_ACTIVATION_HEIGHT:
+            return 0
+            
+        # Find the appropriate collateral requirement for this height
+        for trigger_height in sorted(DYNAMIC_POS_COLLATERAL_SCHEDULE.keys(), reverse=True):
+            if height >= trigger_height:
+                collateral = DYNAMIC_POS_COLLATERAL_SCHEDULE[trigger_height]
+                # Apply minimum floor protection
+                return max(MIN_POS_COLLATERAL, collateral)
+        
+        # Fallback to initial PoS requirement
+        return DYNAMIC_POS_COLLATERAL_SCHEDULE[POS_ACTIVATION_HEIGHT]
+    
+    def get_collateral_info(self, height: int = None) -> dict:
+        """Get comprehensive collateral information for a specific height"""
+        if height is None:
+            height = self.get_block_height()
+        
+        masternode_collateral = self.get_masternode_collateral_for_height(height)
+        pos_collateral = self.get_pos_collateral_for_height(height)
+        
+        # Determine current phase
+        phase_info = self.get_current_phase_info(height)
+        
+        return {
+            'block_height': height,
+            'masternode_collateral': masternode_collateral,
+            'masternode_collateral_wepo': masternode_collateral / COIN,
+            'pos_collateral': pos_collateral,
+            'pos_collateral_wepo': pos_collateral / COIN,
+            'pos_available': height >= POS_ACTIVATION_HEIGHT,
+            'phase': phase_info['phase'],
+            'phase_description': phase_info['description'],
+            'pow_reward': phase_info['pow_reward'],
+            'next_adjustment': self.get_next_collateral_adjustment(height),
+            'adjustment_reason': 'Tied to PoW halving schedule for network accessibility'
+        }
+    
+    def get_current_phase_info(self, height: int) -> dict:
+        """Get current mining phase information"""
+        if height < PRE_POS_DURATION_BLOCKS:
+            return {
+                'phase': 'Phase 1',
+                'description': 'Pre-PoS Mining (Genesis)',
+                'pow_reward': PRE_POS_REWARD / COIN
+            }
+        elif height < PHASE_2A_END_HEIGHT:
+            return {
+                'phase': 'Phase 2A',
+                'description': 'PoS Active, First Long-term Phase',
+                'pow_reward': PHASE_2A_REWARD / COIN
+            }
+        elif height < PHASE_2B_END_HEIGHT:
+            return {
+                'phase': 'Phase 2B',
+                'description': 'Second Halving Phase',
+                'pow_reward': PHASE_2B_REWARD / COIN
+            }
+        elif height < PHASE_2C_END_HEIGHT:
+            return {
+                'phase': 'Phase 2C',
+                'description': 'Third Halving Phase',
+                'pow_reward': PHASE_2C_REWARD / COIN
+            }
+        elif height < PHASE_2D_END_HEIGHT:
+            return {
+                'phase': 'Phase 2D',
+                'description': 'Fourth Halving Phase',
+                'pow_reward': PHASE_2D_REWARD / COIN
+            }
+        else:
+            return {
+                'phase': 'Phase 3',
+                'description': 'Post-PoW (Fees Only)',
+                'pow_reward': 0
+            }
+    
+    def get_next_collateral_adjustment(self, height: int) -> dict:
+        """Get information about the next collateral adjustment"""
+        adjustment_heights = sorted(DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE.keys())
+        
+        for adj_height in adjustment_heights:
+            if height < adj_height:
+                blocks_remaining = adj_height - height
+                
+                # Calculate time remaining (approximate)
+                if adj_height <= PRE_POS_DURATION_BLOCKS:
+                    time_per_block = 6 * 60  # 6 minutes
+                else:
+                    time_per_block = 9 * 60  # 9 minutes
+                
+                days_remaining = (blocks_remaining * time_per_block) / (24 * 60 * 60)
+                
+                next_mn_collateral = DYNAMIC_MASTERNODE_COLLATERAL_SCHEDULE[adj_height]
+                next_pos_collateral = DYNAMIC_POS_COLLATERAL_SCHEDULE.get(adj_height, 0)
+                
+                return {
+                    'next_adjustment_height': adj_height,
+                    'blocks_remaining': blocks_remaining,
+                    'days_remaining': int(days_remaining),
+                    'next_masternode_collateral': next_mn_collateral / COIN,
+                    'next_pos_collateral': next_pos_collateral / COIN if next_pos_collateral > 0 else 0,
+                    'adjustment_type': 'PoW Halving Event'
+                }
+        
+        # No more adjustments
+        return {
+            'next_adjustment_height': None,
+            'blocks_remaining': 0,
+            'days_remaining': 0,
+            'next_masternode_collateral': MIN_MASTERNODE_COLLATERAL / COIN,
+            'next_pos_collateral': MIN_POS_COLLATERAL / COIN,
+            'adjustment_type': 'Final (Floor Minimum)'
+        }
     
     def get_active_stakes(self) -> List[StakeInfo]:
         """Get all active stakes"""
