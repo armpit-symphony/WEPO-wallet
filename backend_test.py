@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 """
-WEPO Backend Systems Comprehensive Testing Suite
-Tests all critical WEPO backend systems after wallet authentication fixes and ops-and-audit documentation updates.
+WEPO Dynamic Collateral System Testing Suite
+Tests the WEPO backend systems after implementing the dynamic collateral system tied to PoW halvings.
 Focus areas:
-1. Core Blockchain Systems - Verify blockchain, consensus, and tokenomics
-2. Privacy Systems - Test E2E messaging, quantum vault, and ghost transfers  
+1. New Dynamic Collateral System - Test /api/collateral/requirements and /api/collateral/schedule endpoints
+2. Core Blockchain Systems - Verify blockchain, consensus, and tokenomics are still working
 3. Masternode Services - Verify the 5 masternode services are operational
-4. Economic Systems - Test fee redistribution, staking, and dynamic collateral endpoints
-5. Integration Health - Ensure all APIs are responding correctly
+4. Integration Health - Ensure all APIs are responding correctly with the new dynamic system
+
+Key Points to Test:
+- Current collateral requirements at genesis (should be 10K MN, 0 PoS)
+- Complete schedule showing 6 phases with proper reductions
+- Reduction percentages: 40%, 50%, 50%, 33% as designed
+- PoS availability starting at block 131,400
+- Integration with existing systems
+
+Test Environment: Using http://localhost:8001 for the WepoFastTestBridge with dynamic collateral endpoints.
 """
 import requests
 import json
@@ -21,23 +29,13 @@ import random
 import string
 import base64
 
-# Get the backend URL from the frontend .env file
-def get_backend_url():
-    with open('/app/frontend/.env', 'r') as f:
-        for line in f:
-            if line.startswith('REACT_APP_BACKEND_URL='):
-                return line.strip().split('=')[1].strip('"\'')
-    return None
+# Use localhost:8001 for WepoFastTestBridge as specified in review request
+BRIDGE_URL = "http://localhost:8001"
+API_URL = f"{BRIDGE_URL}/api"
 
-BACKEND_URL = get_backend_url()
-if not BACKEND_URL:
-    print("Error: Could not find REACT_APP_BACKEND_URL in frontend/.env")
-    sys.exit(1)
-
-API_URL = f"{BACKEND_URL}/api"
-print(f"🔧 TESTING WEPO BACKEND SYSTEMS COMPREHENSIVE SUITE")
-print(f"Backend API URL: {API_URL}")
-print(f"Focus: Core Blockchain, Privacy, Masternode, Economic Systems & Integration Health")
+print(f"🔧 TESTING WEPO DYNAMIC COLLATERAL SYSTEM")
+print(f"WepoFastTestBridge API URL: {API_URL}")
+print(f"Focus: Dynamic Collateral System tied to PoW halvings")
 print("=" * 80)
 
 # Test results tracking
