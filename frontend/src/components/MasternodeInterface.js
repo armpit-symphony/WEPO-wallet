@@ -181,37 +181,6 @@ const MasternodeInterface = ({ onClose }) => {
       setSelectedServices([...selectedServices, serviceId]);
     }
   };
-      return;
-    }
-
-    if (!isValidIP(serverIP)) {
-      setError('Please enter a valid IP address');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Simulate masternode setup process
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      setSuccess(`Masternode successfully configured! IP: ${serverIP}:${serverPort}`);
-      setServerIP('');
-    } catch (error) {
-      setError('Masternode setup failed. Please check your server configuration.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const isValidIP = (ip) => {
-    const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    return ipRegex.test(ip);
-  };
-
-  const calculateMasternodeRewards = () => {
-    const totalAPR = masternodeAPR + mixingFeeAPR;
-    return (collateralRequired * totalAPR / 100);
-  };
 
   if (!masternodesEnabled) {
     return (
@@ -219,25 +188,62 @@ const MasternodeInterface = ({ onClose }) => {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="p-2 hover:bg-gray-700 rounded-full transition-colors"
           >
             <ArrowLeft size={24} />
           </button>
           <div className="flex items-center gap-2">
-            <Clock className="h-6 w-6 text-gray-500" />
-            <h2 className="text-xl font-semibold text-white">Masternodes</h2>
+            <Server className="h-6 w-6 text-purple-400" />
+            <h2 className="text-xl font-semibold text-white">Masternode Services</h2>
           </div>
         </div>
 
-        <div className="text-center py-12">
-          <Server className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">Masternodes Not Yet Available</h3>
-          <p className="text-gray-400 mb-4">
-            Masternode functionality will be unlocked 18 months after the first PoW block is mined.
+        <div className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-500/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="h-4 w-4 text-yellow-400" />
+            <span className="text-sm font-medium text-yellow-200">Service Activation Pending</span>
+          </div>
+          <p className="text-sm text-gray-300">
+            Masternode services will be activated 18 months after the first PoW block. 
+            This ensures network stability before enabling advanced features.
           </p>
-          <p className="text-sm text-purple-300">
-            This ensures the network has sufficient time to establish itself before deploying advanced infrastructure.
+        </div>
+
+        <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="h-4 w-4 text-purple-400" />
+            <span className="text-sm font-medium text-purple-200">Planned Services</span>
+          </div>
+          <p className="text-sm text-gray-300 mb-3">
+            When activated, masternodes will provide essential network services:
           </p>
+          <ul className="text-sm text-gray-300 space-y-1">
+            <li>• 🔀 Transaction mixing for enhanced privacy</li>
+            <li>• 🏪 DEX relay for decentralized trading</li>
+            <li>• 🌐 P2P network infrastructure</li>
+            <li>• 🗳️ Governance voting and execution</li>
+            <li>• 📡 Quantum Vault relay services</li>
+          </ul>
+        </div>
+
+        <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/30">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="h-4 w-4 text-green-400" />
+            <span className="text-sm font-medium text-green-200">Reward Structure</span>
+          </div>
+          <p className="text-sm text-gray-300 mb-2">
+            Masternodes earn 60% of all network transaction fees.
+          </p>
+          <div className="text-sm text-gray-300 space-y-1">
+            <div className="flex justify-between">
+              <span>Collateral Required:</span>
+              <span className="font-medium">10,000 WEPO</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Revenue Share:</span>
+              <span className="font-medium">60% of all fees</span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -248,26 +254,83 @@ const MasternodeInterface = ({ onClose }) => {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="p-2 hover:bg-gray-700 rounded-full transition-colors"
         >
           <ArrowLeft size={24} />
         </button>
         <div className="flex items-center gap-2">
           <Server className="h-6 w-6 text-purple-400" />
-          <h2 className="text-xl font-semibold text-white">Masternode Setup</h2>
+          <h2 className="text-xl font-semibold text-white">Decentralized Masternode</h2>
         </div>
       </div>
 
-      <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/30">
+      {/* Device Detection */}
+      <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30">
         <div className="flex items-center gap-2 mb-2">
-          <Shield className="h-4 w-4 text-purple-400" />
-          <span className="text-sm font-medium text-purple-200">Network Infrastructure</span>
+          {deviceType === 'computer' ? (
+            <Monitor className="h-4 w-4 text-blue-400" />
+          ) : (
+            <Smartphone className="h-4 w-4 text-blue-400" />
+          )}
+          <span className="text-sm font-medium text-blue-200">
+            Device: {deviceType === 'computer' ? 'Computer' : 'Mobile'}
+          </span>
         </div>
-        <p className="text-sm text-gray-300">
-          Masternodes provide privacy mixing, DEX relay services, and network stability. 
-          They require 10,000 WEPO collateral and a dedicated server.
-        </p>
+        <div className="text-sm text-gray-300 space-y-1">
+          <div className="flex justify-between">
+            <span>Minimum Uptime:</span>
+            <span className="font-medium">{currentReq.uptime} hours/day</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Services Required:</span>
+            <span className="font-medium">{currentReq.services} of 5</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Grace Period:</span>
+            <span className="font-medium">{currentReq.gracePeriod} hours</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Max Earnings:</span>
+            <span className="font-medium">{currentReq.maxEarnings} WEPO/day</span>
+          </div>
+        </div>
       </div>
+
+      {/* Masternode Status */}
+      {masternodeActive && (
+        <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/30">
+          <div className="flex items-center gap-2 mb-3">
+            <Activity className="h-4 w-4 text-green-400" />
+            <span className="text-sm font-medium text-green-200">
+              🟢 Masternode Status: ACTIVE
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-gray-400">Uptime Today:</span>
+              <div className="text-white font-medium">{masternodeStats.uptime.toFixed(1)} hours</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Daily Earnings:</span>
+              <div className="text-green-400 font-medium">{masternodeStats.dailyEarnings.toFixed(3)} WEPO</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Services Active:</span>
+              <div className="text-white font-medium">{masternodeStats.servicesActive}/5</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Last Reward:</span>
+              <div className="text-purple-400 font-medium">{masternodeStats.lastReward.toFixed(3)} WEPO</div>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-green-500/30">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Requirements:</span>
+              <span className="text-green-400 font-medium">✅ Met</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Requirements Check */}
       <div className="bg-gray-700/30 rounded-lg p-4">
@@ -284,117 +347,134 @@ const MasternodeInterface = ({ onClose }) => {
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-gray-400">Dedicated Server:</span>
-            <span className="text-yellow-400 font-medium">Required</span>
+            <span className="text-gray-400">Network Type:</span>
+            <span className="text-green-400 font-medium">Decentralized P2P</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-gray-400">Static IP Address:</span>
-            <span className="text-yellow-400 font-medium">Required</span>
+            <span className="text-gray-400">Server Required:</span>
+            <span className="text-green-400 font-medium">No - Local Only</span>
           </div>
         </div>
       </div>
 
-      {/* Server Configuration */}
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-purple-200 mb-2">
-            Server IP Address
-          </label>
-          <div className="relative">
-            <input
-              type="text"
-              value={serverIP}
-              onChange={(e) => setServerIP(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 pl-12"
-              placeholder="192.168.1.100"
-            />
-            <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-          </div>
-          <p className="text-xs text-gray-400 mt-1">
-            Enter the public IP address of your dedicated server
-          </p>
+      {/* Service Selection */}
+      <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/30">
+        <div className="flex items-center gap-2 mb-3">
+          <Settings className="h-4 w-4 text-purple-400" />
+          <span className="text-sm font-medium text-purple-200">
+            Service Selection ({selectedServices.length}/{currentReq.services} required)
+          </span>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-purple-200 mb-2">
-            Server Port
-          </label>
-          <input
-            type="number"
-            value={serverPort}
-            onChange={(e) => setServerPort(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="22567"
-            min="1"
-            max="65535"
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            Default WEPO masternode port is 22567
-          </p>
-        </div>
-      </div>
-
-      {/* Rewards Information */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
-        <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-purple-400" />
-          Masternode Rewards
-        </h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-gray-400">Base APR:</span>
-            <div className="text-purple-400 font-medium">{masternodeAPR}%</div>
-          </div>
-          <div>
-            <span className="text-gray-400">Mixing Fees APR:</span>
-            <div className="text-purple-400 font-medium">~{mixingFeeAPR}%</div>
-          </div>
-          <div>
-            <span className="text-gray-400">Total APR:</span>
-            <div className="text-green-400 font-medium">{masternodeAPR + mixingFeeAPR}%</div>
-          </div>
-          <div>
-            <span className="text-gray-400">Annual Rewards:</span>
-            <div className="text-green-400 font-medium">{calculateMasternodeRewards().toLocaleString()} WEPO</div>
-          </div>
+        <div className="space-y-3">
+          {availableServices.map((service) => (
+            <div
+              key={service.id}
+              className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                selectedServices.includes(service.id)
+                  ? 'bg-purple-800/50 border-purple-400'
+                  : 'bg-gray-700/30 border-gray-600 hover:border-purple-400'
+              }`}
+              onClick={() => handleServiceToggle(service.id)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">{service.icon}</span>
+                  <div>
+                    <div className="text-white font-medium text-sm">{service.name}</div>
+                    <div className="text-gray-400 text-xs">{service.description}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {service.recommended && (
+                    <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+                      Recommended
+                    </span>
+                  )}
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    service.resourceUsage === 'Low' ? 'bg-green-600' :
+                    service.resourceUsage === 'Medium' ? 'bg-yellow-600' : 'bg-red-600'
+                  } text-white`}>
+                    {service.resourceUsage}
+                  </span>
+                  <div className={`w-4 h-4 rounded border-2 ${
+                    selectedServices.includes(service.id)
+                      ? 'bg-purple-400 border-purple-400'
+                      : 'border-gray-400'
+                  }`}>
+                    {selectedServices.includes(service.id) && (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
+      {/* Error/Success Messages */}
       {error && (
-        <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 text-red-200 text-sm">
-          {error}
+        <div className="bg-red-900/30 rounded-lg p-4 border border-red-500/30">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-400" />
+            <span className="text-sm text-red-200">{error}</span>
+          </div>
         </div>
       )}
 
       {success && (
-        <div className="bg-green-900/50 border border-green-500 rounded-lg p-3 text-green-200 text-sm">
-          {success}
+        <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/30">
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-green-400" />
+            <span className="text-sm text-green-200">{success}</span>
+          </div>
         </div>
       )}
 
-      {/* Server Requirements */}
-      <div className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-500/30">
-        <div className="flex items-center gap-2 mb-2">
-          <AlertCircle className="h-4 w-4 text-yellow-400" />
-          <span className="text-sm font-medium text-yellow-200">Server Requirements</span>
-        </div>
-        <ul className="text-sm text-gray-300 space-y-1">
-          <li>• VPS with at least 2GB RAM and 40GB storage</li>
-          <li>• Ubuntu 20.04 or CentOS 8 recommended</li>
-          <li>• Static IP address with ports 22567 open</li>
-          <li>• 99.9% uptime to maximize rewards</li>
-          <li>• Regular security updates and monitoring</li>
-        </ul>
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        {!masternodeActive ? (
+          <button
+            onClick={handleLaunchMasternode}
+            disabled={isLoading || balance < collateralRequired}
+            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+              isLoading || balance < collateralRequired
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : 'bg-purple-600 hover:bg-purple-700 text-white'
+            }`}
+          >
+            {isLoading ? 'Launching...' : 'Launch Masternode'}
+          </button>
+        ) : (
+          <button
+            onClick={handleStopMasternode}
+            disabled={isLoading}
+            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+              isLoading
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : 'bg-red-600 hover:bg-red-700 text-white'
+            }`}
+          >
+            {isLoading ? 'Stopping...' : 'Stop Masternode'}
+          </button>
+        )}
       </div>
 
-      <button
-        onClick={handleSetupMasternode}
-        disabled={isLoading || balance < collateralRequired || !serverIP}
-        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-      >
-        <Server size={20} />
-        {isLoading ? 'Setting up Masternode...' : 'Setup Masternode'}
-      </button>
+      {/* Info Box */}
+      <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30">
+        <div className="flex items-center gap-2 mb-2">
+          <Globe className="h-4 w-4 text-blue-400" />
+          <span className="text-sm font-medium text-blue-200">Network Benefits</span>
+        </div>
+        <ul className="text-sm text-gray-300 space-y-1">
+          <li>• Earn 60% of all network transaction fees</li>
+          <li>• No dedicated server required - runs locally</li>
+          <li>• Automatic service management and monitoring</li>
+          <li>• Contribute to network decentralization and privacy</li>
+        </ul>
+      </div>
     </div>
   );
 };
