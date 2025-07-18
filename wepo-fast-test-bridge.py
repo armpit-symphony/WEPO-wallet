@@ -4165,6 +4165,204 @@ class WepoFastTestBridge:
                 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
+        
+        # =====================================================
+        # MASTERNODE SERVICE ENDPOINTS
+        # =====================================================
+        
+        @self.app.post("/api/masternode/launch")
+        async def launch_masternode(request: dict):
+            """Launch a decentralized masternode"""
+            try:
+                address = request.get('address')
+                device_type = request.get('device_type', 'computer')
+                selected_services = request.get('selected_services', [])
+                
+                if not address or not address.startswith("wepo1"):
+                    raise HTTPException(status_code=400, detail="Invalid address format")
+                
+                if not selected_services:
+                    raise HTTPException(status_code=400, detail="No services selected")
+                
+                # Check balance requirement
+                balance = self.blockchain.get_balance(address)
+                if balance < 1000000000000:  # 10,000 WEPO in satoshis
+                    raise HTTPException(status_code=400, detail="Insufficient balance for masternode collateral")
+                
+                # Get masternode manager
+                masternode_manager = get_masternode_manager()
+                
+                # Launch masternode
+                result = masternode_manager.launch_masternode(address, device_type, selected_services)
+                
+                if result['success']:
+                    return {
+                        'success': True,
+                        'message': f'{device_type.title()} masternode launched successfully',
+                        'masternode_id': result['masternode_id'],
+                        'device_type': device_type,
+                        'services_active': result['services_active'],
+                        'requirements': result['requirements']
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail=result['error'])
+                    
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/masternode/stop")
+        async def stop_masternode(request: dict):
+            """Stop a running masternode"""
+            try:
+                address = request.get('address')
+                
+                if not address or not address.startswith("wepo1"):
+                    raise HTTPException(status_code=400, detail="Invalid address format")
+                
+                # Get masternode manager
+                masternode_manager = get_masternode_manager()
+                
+                # Stop masternode
+                result = masternode_manager.stop_masternode(address)
+                
+                if result['success']:
+                    return {
+                        'success': True,
+                        'message': result['message'],
+                        'final_stats': result['final_stats']
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail=result['error'])
+                    
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/masternode/status/{address}")
+        async def get_masternode_status(address: str):
+            """Get masternode status and statistics"""
+            try:
+                if not address or not address.startswith("wepo1"):
+                    raise HTTPException(status_code=400, detail="Invalid address format")
+                
+                # Get masternode manager
+                masternode_manager = get_masternode_manager()
+                
+                # Get masternode stats
+                result = masternode_manager.get_masternode_stats(address)
+                
+                if result['success']:
+                    return {
+                        'success': True,
+                        'masternode': result['masternode']
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'error': result['error'],
+                        'message': 'Masternode not found or not active'
+                    }
+                    
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/masternode/network")
+        async def get_network_masternodes():
+            """Get all active masternodes in the network"""
+            try:
+                # Get masternode manager
+                masternode_manager = get_masternode_manager()
+                
+                # Get network masternodes
+                result = masternode_manager.get_network_masternodes()
+                
+                if result['success']:
+                    return {
+                        'success': True,
+                        'total_masternodes': result['total_masternodes'],
+                        'masternodes': result['masternodes'],
+                        'network_stats': result['network_stats']
+                    }
+                else:
+                    raise HTTPException(status_code=500, detail=result['error'])
+                    
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/masternode/service-activity")
+        async def report_service_activity(request: dict):
+            """Report service activity for a masternode"""
+            try:
+                address = request.get('address')
+                service_id = request.get('service_id')
+                activity_data = request.get('activity_data', {})
+                
+                if not address or not service_id:
+                    raise HTTPException(status_code=400, detail="Missing required parameters")
+                
+                # Get masternode manager
+                masternode_manager = get_masternode_manager()
+                
+                # Process service activity
+                success = masternode_manager.process_service_activity(address, service_id, activity_data)
+                
+                if success:
+                    return {
+                        'success': True,
+                        'message': 'Service activity recorded',
+                        'service_id': service_id,
+                        'timestamp': time.time()
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="Failed to record service activity")
+                    
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/masternode/services")
+        async def get_available_services():
+            """Get all available masternode services"""
+            try:
+                # Get masternode manager
+                masternode_manager = get_masternode_manager()
+                
+                services = []
+                for service_id, service in masternode_manager.services_registry.items():
+                    services.append({
+                        'id': service.id,
+                        'name': service.name,
+                        'icon': service.icon,
+                        'description': service.description,
+                        'resource_usage': service.resource_usage,
+                        'active': service.active,
+                        'activity_count': service.activity_count
+                    })
+                
+                return {
+                    'success': True,
+                    'services': services,
+                    'total_services': len(services)
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/masternode/requirements")
+        async def get_masternode_requirements():
+            """Get masternode requirements for different device types"""
+            try:
+                # Get masternode manager
+                masternode_manager = get_masternode_manager()
+                
+                return {
+                    'success': True,
+                    'requirements': masternode_manager.device_requirements,
+                    'collateral_required': 10000,  # 10,000 WEPO
+                    'fee_share': 0.60,  # 60% of network fees
+                    'network_type': 'decentralized_p2p'
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
 
 def main():
     print("=" * 60)
