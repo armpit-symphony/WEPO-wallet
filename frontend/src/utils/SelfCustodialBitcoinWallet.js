@@ -14,11 +14,9 @@ import * as bip39 from 'bip39';
 import BIP32Factory from 'bip32';
 import * as ecc from 'tiny-secp256k1';
 import CryptoJS from 'crypto-js';
-import { ECPairFactory } from 'ecpair';
 
-// Initialize BIP32 and ECPair with secp256k1 curve
+// Initialize BIP32 with secp256k1 curve
 const bip32 = BIP32Factory(ecc);
-const ECPair = ECPairFactory(ecc);
 
 // Bitcoin network parameters
 const NETWORKS = {
