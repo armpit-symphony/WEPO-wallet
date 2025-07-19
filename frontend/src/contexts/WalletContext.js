@@ -1,9 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-// Temporary isolation - disable crypto imports to test React loading
-// import * as bip39 from 'bip39';
-// import CryptoJS from 'crypto-js';
-// import { generateWepoAddress, generateBitcoinAddress, validateAddress } from '../utils/addressUtils';
-// import SelfCustodialBitcoinWallet from '../utils/SelfCustodialBitcoinWallet';
+import * as bip39 from 'bip39';
+import CryptoJS from 'crypto-js';
+import { generateWepoAddress, generateBitcoinAddress, validateAddress } from '../utils/addressUtils';
+import SelfCustodialBitcoinWallet from '../utils/SelfCustodialBitcoinWallet';
+
+// Ensure Buffer is available globally
+if (typeof window !== 'undefined' && !window.Buffer) {
+  const { Buffer } = require('buffer');
+  window.Buffer = Buffer;
+}
 
 const WalletContext = createContext();
 
