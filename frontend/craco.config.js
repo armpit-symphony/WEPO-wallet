@@ -17,7 +17,7 @@ module.exports = {
       // Add Node.js polyfills for browser compatibility
       webpackConfig.resolve.fallback = {
         ...webpackConfig.resolve.fallback,
-        "buffer": require.resolve("buffer"),
+        "buffer": require.resolve("buffer/"),
         "crypto": require.resolve("crypto-browserify"),
         "stream": require.resolve("stream-browserify"),
         "assert": require.resolve("assert"),
@@ -27,16 +27,18 @@ module.exports = {
         "url": require.resolve("url"),
         "zlib": require.resolve("browserify-zlib"),
         "path": require.resolve("path-browserify"),
+        "process": require.resolve("process/browser"),
         "fs": false,
         "net": false,
         "tls": false
       };
 
-      // Add buffer global for bitcoinjs-lib
+      // Add buffer and process globals for crypto libraries
       webpackConfig.plugins.push(
         new webpack.ProvidePlugin({
           Buffer: ['buffer', 'Buffer'],
           process: 'process/browser',
+          global: 'global/window',
         })
       );
       
