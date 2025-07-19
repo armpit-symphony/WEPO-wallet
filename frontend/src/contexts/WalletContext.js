@@ -117,6 +117,7 @@ export const WalletProvider = ({ children }) => {
       console.error('Secure mnemonic generation failed:', error);
       throw new Error('Failed to generate secure seed phrase. Please refresh and try again.');
     }
+    */
   };
 
   const createWallet = async (username, password, confirmPassword) => {
