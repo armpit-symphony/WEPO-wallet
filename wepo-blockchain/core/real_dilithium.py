@@ -45,7 +45,7 @@ class RealDilithiumSigner:
         
         # Set random seed for deterministic testing (optional)
         # In production, this would use secure random
-        seed = secrets.randbits(256).to_bytes(32, 'big')
+        seed = secrets.randbits(384).to_bytes(48, 'big')  # 48 bytes for AES256_CTR_DRBG
         self._dilithium.set_drbg_seed(seed)
         
     def generate_keypair(self) -> DilithiumKeyPair:
