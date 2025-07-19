@@ -17,7 +17,7 @@ module.exports = {
       // Add Node.js polyfills for browser compatibility
       webpackConfig.resolve.fallback = {
         ...webpackConfig.resolve.fallback,
-        "buffer": require.resolve("buffer/"),
+        "buffer": require.resolve("buffer"),
         "crypto": require.resolve("crypto-browserify"),
         "stream": require.resolve("stream-browserify"),
         "assert": require.resolve("assert"),
@@ -60,4 +60,3 @@ module.exports = {
     },
   },
 };
-  
