@@ -77,14 +77,6 @@ const Dashboard = ({ onLogout }) => {
     hash_function: 'SHAKE-256',
     security_level: 'Post-Quantum'
   };
-  
-  // Quantum status info
-  const quantumStatus = {
-    current_height: 12500,
-    quantum_ready: true,
-    last_update: Date.now()
-  };
-
   const handleModeToggle = () => {
     // For now, quantum mode switching is disabled since we removed quantum context
     console.log('Quantum mode toggle disabled in current version');
