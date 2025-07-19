@@ -16,8 +16,9 @@ from datetime import datetime, timedelta
 from dilithium import (
     generate_dilithium_keypair, sign_with_dilithium as sign_message, 
     verify_dilithium_signature as verify_signature,
-    DilithiumKeyPair, generate_wepo_address
+    DilithiumKeyPair
 )
+from address_utils import generate_wepo_address
 
 @dataclass
 class QuantumMessage:
