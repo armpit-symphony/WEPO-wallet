@@ -174,6 +174,123 @@ const UnifiedExchange = ({ onBack }) => {
     }
   };
 
+  // Privacy mixing functions
+  const fetchAvailableMixers = async () => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/masternode/get_available_mixers`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setAvailableMixers(data.mixers || []);
+      } else {
+        console.warn('No mixers available:', data.message);
+        setAvailableMixers([]);
+      }
+    } catch (err) {
+      console.error('Error fetching available mixers:', err);
+      setAvailableMixers([]);
+    }
+  };
+
+  const submitMixingRequest = async (amount, inputAddress, outputAddress) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/masternode/mix_btc`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_address: currentAddress,
+          input_address: inputAddress,
+          output_address: outputAddress,
+          amount: amount,
+          privacy_level: privacyLevel
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setCurrentMixingId(data.request_id);
+        setMixingStatus({
+          status: 'pending',
+          progress: 0,
+          estimated_time: data.estimated_time || 20
+        });
+        return data;
+      } else {
+        throw new Error(data.error || 'Failed to submit mixing request');
+      }
+    } catch (err) {
+      console.error('Error submitting mixing request:', err);
+      throw err;
+    }
+  };
+
+  const fetchMixingStatus = async (requestId) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/masternode/mixing_status/${requestId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setMixingStatus({
+          status: data.status,
+          progress: data.progress_percentage || 0,
+          estimated_completion: data.estimated_completion,
+          pool_info: data.pool_info
+        });
+
+        // If mixing is complete, proceed with swap
+        if (data.status === 'completed') {
+          setCurrentMixingId(null);
+          return true; // Indicates mixing completed
+        }
+      }
+      return false;
+    } catch (err) {
+      console.error('Error fetching mixing status:', err);
+      return false;
+    }
+  };
+
+  const performQuickMix = async (amount, fromAddress, toAddress) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/masternode/quick_mix_btc`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_address: currentAddress,
+          amount: amount,
+          from_address: fromAddress,
+          to_address: toAddress,
+          privacy_level: privacyLevel
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        return {
+          success: true,
+          mixed_amount: data.mixed_amount,
+          mixing_fee: data.mixing_fee,
+          transaction_id: data.transaction_id
+        };
+      } else {
+        throw new Error(data.error || 'Quick mix failed');
+      }
+    } catch (err) {
+      console.error('Error performing quick mix:', err);
+      throw err;
+    }
+  };
+
   const handleAddLiquidity = async () => {
     if (!liquidityBtcAmount || !liquidityWepoAmount) {
       setError('Please enter both BTC and WEPO amounts');
