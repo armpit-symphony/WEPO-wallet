@@ -53,7 +53,17 @@ const Dashboard = ({ onLogout }) => {
     setBalance,
     setTransactions,
     logout,
-    setWallet
+    setWallet,
+    
+    // Bitcoin wallet data
+    btcWallet,
+    btcAddresses,
+    btcUtxos,
+    isBtcLoading,
+    sendBitcoin,
+    getNewBitcoinAddress,
+    getBitcoinBalance,
+    exportBitcoinWalletInfo
   } = useWallet();
   
   // Simplified without quantum features for now
