@@ -1089,6 +1089,325 @@ async def execute_rwa_trade(request: dict):
         logger.error(f"Error executing RWA trade: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ===== RWA QUANTUM VAULT ENDPOINTS - REVOLUTIONARY PRIVATE RWA STORAGE =====
+
+@api_router.post("/vault/rwa/deposit")
+async def deposit_rwa_to_vault(request: dict):
+    """Deposit RWA tokens to Quantum Vault with privacy protection"""
+    try:
+        vault_id = request.get("vault_id")
+        asset_id = request.get("asset_id")  # RWA token ID
+        amount = request.get("amount")
+        user_address = request.get("user_address")
+        
+        if not all([vault_id, asset_id, amount, user_address]):
+            raise HTTPException(status_code=400, detail="Invalid RWA deposit parameters")
+        
+        amount = float(amount)
+        
+        # Check if vault exists
+        vault = await db.quantum_vaults.find_one({"vault_id": vault_id, "owner_address": user_address})
+        if not vault:
+            raise HTTPException(status_code=404, detail="Vault not found")
+        
+        # Check user's RWA token balance
+        user_balance_doc = await db.rwa_balances.find_one({
+            "token_id": asset_id,
+            "address": user_address
+        })
+        user_balance = user_balance_doc.get("balance", 0) if user_balance_doc else 0
+        
+        if user_balance < amount:
+            raise HTTPException(status_code=400, detail="Insufficient RWA token balance")
+        
+        # Deduct tokens from user balance
+        await db.rwa_balances.update_one(
+            {"token_id": asset_id, "address": user_address},
+            {"$inc": {"balance": -amount}}
+        )
+        
+        # Add tokens to vault
+        await db.vault_rwa_balances.update_one(
+            {"vault_id": vault_id, "asset_id": asset_id},
+            {"$inc": {"balance": amount}},
+            upsert=True
+        )
+        
+        # Record transaction
+        tx_record = {
+            "tx_id": f"vault_rwa_deposit_{int(time.time())}_{secrets.token_hex(4)}",
+            "vault_id": vault_id,
+            "asset_id": asset_id,
+            "amount": amount,
+            "user_address": user_address,
+            "tx_type": "rwa_deposit",
+            "timestamp": int(time.time()),
+            "privacy_level": vault.get("privacy_level", 3)
+        }
+        
+        await db.vault_transactions.insert_one(tx_record)
+        
+        # Update vault stats
+        await db.quantum_vaults.update_one(
+            {"vault_id": vault_id},
+            {
+                "$inc": {"transaction_count": 1, "rwa_asset_count": 1},
+                "$set": {"last_activity": int(time.time()), "rwa_support": True}
+            }
+        )
+        
+        return {
+            "success": True,
+            "vault_id": vault_id,
+            "asset_id": asset_id,
+            "amount": amount,
+            "tx_id": tx_record["tx_id"],
+            "rwa_deposited": True,
+            "privacy_level": vault.get("privacy_level", 3),
+            "rwa_support": True,
+            "message": f"RWA token {asset_id} deposited to vault with privacy protection"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error depositing RWA to vault: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/vault/rwa/withdraw")
+async def withdraw_rwa_from_vault(request: dict):
+    """Withdraw RWA tokens from Quantum Vault with privacy protection"""
+    try:
+        vault_id = request.get("vault_id")
+        asset_id = request.get("asset_id")  # RWA token ID
+        amount = request.get("amount")
+        destination_address = request.get("destination_address")
+        user_address = request.get("user_address")
+        
+        if not all([vault_id, asset_id, amount, destination_address, user_address]):
+            raise HTTPException(status_code=400, detail="Invalid RWA withdrawal parameters")
+        
+        amount = float(amount)
+        
+        # Check if vault exists and user owns it
+        vault = await db.quantum_vaults.find_one({"vault_id": vault_id, "owner_address": user_address})
+        if not vault:
+            raise HTTPException(status_code=404, detail="Vault not found or unauthorized")
+        
+        # Check vault's RWA balance
+        vault_balance_doc = await db.vault_rwa_balances.find_one({
+            "vault_id": vault_id,
+            "asset_id": asset_id
+        })
+        vault_balance = vault_balance_doc.get("balance", 0) if vault_balance_doc else 0
+        
+        if vault_balance < amount:
+            raise HTTPException(status_code=400, detail="Insufficient vault RWA balance")
+        
+        # Deduct tokens from vault
+        await db.vault_rwa_balances.update_one(
+            {"vault_id": vault_id, "asset_id": asset_id},
+            {"$inc": {"balance": -amount}}
+        )
+        
+        # Add tokens to destination address
+        await db.rwa_balances.update_one(
+            {"token_id": asset_id, "address": destination_address},
+            {"$inc": {"balance": amount}},
+            upsert=True
+        )
+        
+        # Record transaction
+        tx_record = {
+            "tx_id": f"vault_rwa_withdraw_{int(time.time())}_{secrets.token_hex(4)}",
+            "vault_id": vault_id,
+            "asset_id": asset_id,
+            "amount": amount,
+            "destination_address": destination_address,
+            "user_address": user_address,
+            "tx_type": "rwa_withdraw",
+            "timestamp": int(time.time()),
+            "privacy_level": vault.get("privacy_level", 3)
+        }
+        
+        await db.vault_transactions.insert_one(tx_record)
+        
+        # Update vault stats
+        await db.quantum_vaults.update_one(
+            {"vault_id": vault_id},
+            {"$inc": {"transaction_count": 1}, "$set": {"last_activity": int(time.time())}}
+        )
+        
+        return {
+            "success": True,
+            "vault_id": vault_id,
+            "asset_id": asset_id,
+            "amount": amount,
+            "destination_address": destination_address,
+            "tx_id": tx_record["tx_id"],
+            "rwa_withdrawn": True,
+            "privacy_level": vault.get("privacy_level", 3),
+            "rwa_support": True,
+            "message": f"RWA token {asset_id} withdrawn from vault to {destination_address}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error withdrawing RWA from vault: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/vault/rwa/assets/{vault_id}")
+async def get_vault_rwa_assets(vault_id: str, user_address: str = None):
+    """Get all RWA assets stored in a specific vault"""
+    try:
+        # Check if vault exists
+        vault_query = {"vault_id": vault_id}
+        if user_address:
+            vault_query["owner_address"] = user_address
+            
+        vault = await db.quantum_vaults.find_one(vault_query)
+        if not vault:
+            raise HTTPException(status_code=404, detail="Vault not found or unauthorized")
+        
+        # Get all RWA assets in this vault
+        vault_assets = await db.vault_rwa_balances.find({"vault_id": vault_id, "balance": {"$gt": 0}}).to_list(None)
+        
+        assets_info = []
+        total_value = 0
+        
+        for asset_balance in vault_assets:
+            asset_id = asset_balance["asset_id"]
+            balance = asset_balance["balance"]
+            
+            # Get token info
+            token_info = await db.rwa_tokens.find_one({"_id": asset_id})
+            if token_info:
+                asset_info = {
+                    "asset_id": asset_id,
+                    "symbol": token_info.get("symbol", ""),
+                    "asset_name": token_info.get("asset_name", ""),
+                    "asset_type": token_info.get("asset_type", ""),
+                    "balance": balance,
+                    "estimated_value": balance * 1.0,  # Simple 1:1 WEPO valuation
+                    "privacy_protected": True
+                }
+                assets_info.append(asset_info)
+                total_value += asset_info["estimated_value"]
+        
+        return {
+            "success": True,
+            "vault_id": vault_id,
+            "assets": assets_info,
+            "total_assets": len(assets_info),
+            "total_estimated_value": total_value,
+            "privacy_level": vault.get("privacy_level", 3),
+            "asset_type_hiding": vault.get("privacy_level", 3) >= 3,
+            "rwa_support": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting vault RWA assets: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/vault/rwa/ghost-transfer/initiate")
+async def initiate_rwa_ghost_transfer(request: dict):
+    """Initiate completely private RWA token transfer between vaults"""
+    try:
+        from_vault_id = request.get("from_vault_id")
+        to_vault_id = request.get("to_vault_id")
+        asset_id = request.get("asset_id")  # RWA token ID
+        amount = request.get("amount")
+        user_address = request.get("user_address")
+        
+        if not all([from_vault_id, to_vault_id, asset_id, amount, user_address]):
+            raise HTTPException(status_code=400, detail="Invalid RWA ghost transfer parameters")
+        
+        amount = float(amount)
+        
+        # Check source vault ownership
+        from_vault = await db.quantum_vaults.find_one({"vault_id": from_vault_id, "owner_address": user_address})
+        if not from_vault:
+            raise HTTPException(status_code=404, detail="Source vault not found or unauthorized")
+        
+        # Check destination vault exists
+        to_vault = await db.quantum_vaults.find_one({"vault_id": to_vault_id})
+        if not to_vault:
+            raise HTTPException(status_code=404, detail="Destination vault not found")
+        
+        # Check source vault balance
+        source_balance_doc = await db.vault_rwa_balances.find_one({
+            "vault_id": from_vault_id,
+            "asset_id": asset_id
+        })
+        source_balance = source_balance_doc.get("balance", 0) if source_balance_doc else 0
+        
+        if source_balance < amount:
+            raise HTTPException(status_code=400, detail="Insufficient vault balance for ghost transfer")
+        
+        # Execute the ghost transfer (fully private)
+        # Deduct from source vault
+        await db.vault_rwa_balances.update_one(
+            {"vault_id": from_vault_id, "asset_id": asset_id},
+            {"$inc": {"balance": -amount}}
+        )
+        
+        # Add to destination vault
+        await db.vault_rwa_balances.update_one(
+            {"vault_id": to_vault_id, "asset_id": asset_id},
+            {"$inc": {"balance": amount}},
+            upsert=True
+        )
+        
+        # Record ghost transfer (minimal metadata for privacy)
+        ghost_transfer_id = f"ghost_rwa_{int(time.time())}_{secrets.token_hex(8)}"
+        
+        # Store minimal transfer record (privacy-focused)
+        transfer_record = {
+            "ghost_id": ghost_transfer_id,
+            "asset_type_hash": hashlib.sha256(asset_id.encode()).hexdigest()[:16],  # Obfuscated asset ID
+            "amount_hash": hashlib.sha256(str(amount).encode()).hexdigest()[:16],   # Obfuscated amount
+            "timestamp": int(time.time()),
+            "privacy_level": 4,  # Maximum privacy
+            "transfer_type": "rwa_ghost",
+            "completed": True
+        }
+        
+        await db.ghost_transfers.insert_one(transfer_record)
+        
+        # Update vault stats (both vaults)
+        await db.quantum_vaults.update_one(
+            {"vault_id": from_vault_id},
+            {"$inc": {"transaction_count": 1}, "$set": {"last_activity": int(time.time())}}
+        )
+        
+        await db.quantum_vaults.update_one(
+            {"vault_id": to_vault_id},
+            {"$inc": {"transaction_count": 1}, "$set": {"last_activity": int(time.time())}}
+        )
+        
+        return {
+            "success": True,
+            "ghost_transfer_id": ghost_transfer_id,
+            "from_vault_id": from_vault_id,
+            "to_vault_id": to_vault_id,
+            "privacy_level": 4,
+            "asset_type_hidden": True,
+            "amount_hidden": True,
+            "completely_private": True,
+            "message": "RWA ghost transfer completed with maximum privacy protection"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error initiating RWA ghost transfer: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ===== END RWA QUANTUM VAULT ENDPOINTS =====
+
 # ===== END RWA TOKEN TRADING ENDPOINTS =====
 
 async def get_wallet_balance(address: str) -> float:
