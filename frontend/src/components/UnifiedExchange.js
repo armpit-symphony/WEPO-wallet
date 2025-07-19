@@ -14,7 +14,10 @@ import {
   Image,
   Home,
   Car,
-  Palette
+  Palette,
+  Shield,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 
