@@ -4929,6 +4929,204 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
+        # ===== BITCOIN PRIVACY MIXING SERVICE ENDPOINTS =====
+        
+        @self.app.post("/api/masternode/btc-mixing/register")
+        async def register_btc_mixer(request: dict):
+            """Register masternode as Bitcoin privacy mixer"""
+            try:
+                from btc_privacy_mixing_service import btc_mixing_service
+                
+                masternode_id = request.get("masternode_id")
+                address = request.get("address")
+                supported_amounts = request.get("supported_amounts", [0.001, 0.01, 0.1, 1.0])
+                
+                if not masternode_id or not address:
+                    raise HTTPException(status_code=400, detail="Missing masternode_id or address")
+                
+                success = btc_mixing_service.register_masternode_mixer(
+                    masternode_id=masternode_id,
+                    address=address,
+                    supported_amounts=supported_amounts
+                )
+                
+                if success:
+                    return {
+                        "success": True,
+                        "masternode_id": masternode_id,
+                        "status": "registered_as_btc_mixer",
+                        "supported_amounts": supported_amounts,
+                        "service_type": "Bitcoin Privacy Mixing",
+                        "message": "Masternode successfully registered as Bitcoin privacy mixer"
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": "Failed to register as BTC mixer"
+                    }
+                    
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/btc-mixing/submit")
+        async def submit_btc_mixing_request(request: dict):
+            """Submit Bitcoin mixing request for privacy enhancement"""
+            try:
+                from btc_privacy_mixing_service import btc_mixing_service
+                
+                user_address = request.get("user_address")
+                input_address = request.get("input_address")  # BTC address to mix from
+                output_address = request.get("output_address")  # BTC address to receive mixed coins
+                amount = request.get("amount")  # BTC amount
+                privacy_level = request.get("privacy_level", 3)  # 1-4 rounds
+                
+                if not all([user_address, input_address, output_address, amount]):
+                    raise HTTPException(status_code=400, detail="Missing required mixing parameters")
+                
+                try:
+                    amount = float(amount)
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid amount format")
+                
+                result = btc_mixing_service.submit_mixing_request(
+                    user_address=user_address,
+                    input_address=input_address,
+                    output_address=output_address,
+                    amount=amount,
+                    privacy_level=privacy_level
+                )
+                
+                if result['success']:
+                    return {
+                        "success": True,
+                        "mixing_request": result,
+                        "privacy_enhanced": True,
+                        "message": f"Bitcoin mixing request submitted with {privacy_level} rounds of privacy"
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail=result.get('error', 'Unknown error'))
+                    
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/btc-mixing/status/{request_id}")
+        async def get_btc_mixing_status(request_id: str):
+            """Get status of Bitcoin mixing request"""
+            try:
+                from btc_privacy_mixing_service import btc_mixing_service
+                
+                status = btc_mixing_service.get_mixing_status(request_id)
+                
+                if status['success']:
+                    return {
+                        "success": True,
+                        "mixing_status": status,
+                        "privacy_service": "Bitcoin Privacy Mixing",
+                        "message": "Mixing status retrieved successfully"
+                    }
+                else:
+                    raise HTTPException(status_code=404, detail=status.get('error', 'Mixing request not found'))
+                    
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/btc-mixing/mixers")
+        async def get_available_btc_mixers():
+            """Get list of available Bitcoin privacy mixers"""
+            try:
+                from btc_privacy_mixing_service import btc_mixing_service
+                
+                mixers = btc_mixing_service.get_available_mixers()
+                
+                return {
+                    "success": True,
+                    "available_mixers": len(mixers),
+                    "mixers": mixers,
+                    "service_info": {
+                        "mixing_tiers": [0.001, 0.01, 0.1, 1.0, 5.0, 10.0],
+                        "privacy_levels": {
+                            "1": "Standard (3 rounds)",
+                            "2": "Enhanced (3 rounds)", 
+                            "3": "High Privacy (4 rounds)",
+                            "4": "Enterprise (5 rounds)"
+                        },
+                        "fee_rates": {
+                            "standard": "0.5%",
+                            "high_privacy": "1.0%",
+                            "enterprise": "2.0%"
+                        }
+                    },
+                    "message": "Available Bitcoin privacy mixers retrieved"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/btc-mixing/statistics")
+        async def get_btc_mixing_statistics():
+            """Get comprehensive Bitcoin mixing service statistics"""
+            try:
+                from btc_privacy_mixing_service import btc_mixing_service
+                
+                stats = btc_mixing_service.get_mixing_statistics()
+                
+                return {
+                    "success": True,
+                    "mixing_statistics": stats,
+                    "service_status": "active",
+                    "privacy_enhancement": "Bitcoin transaction obfuscation through masternode mixing pools",
+                    "message": "Bitcoin mixing statistics retrieved successfully"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/btc-mixing/quick-mix")
+        async def quick_btc_mix(request: dict):
+            """Quick Bitcoin mixing for unified exchange onramp"""
+            try:
+                from btc_privacy_mixing_service import btc_mixing_service
+                
+                # This endpoint will be used by the unified exchange
+                # to automatically mix BTC before delivering to user's wallet
+                input_address = request.get("input_address")
+                output_address = request.get("output_address") 
+                amount = request.get("amount")
+                
+                if not all([input_address, output_address, amount]):
+                    raise HTTPException(status_code=400, detail="Missing required parameters")
+                
+                # Submit with standard privacy level for exchange integration
+                result = btc_mixing_service.submit_mixing_request(
+                    user_address="exchange_mixer",  # Special identifier for exchange mixing
+                    input_address=input_address,
+                    output_address=output_address,
+                    amount=float(amount),
+                    privacy_level=2  # Standard privacy level for exchange
+                )
+                
+                if result['success']:
+                    return {
+                        "success": True,
+                        "quick_mix_submitted": True,
+                        "request_id": result['request_id'],
+                        "estimated_time": result['estimated_time'],
+                        "mixing_fee": result['mixing_fee'],
+                        "privacy_level": "Exchange Standard",
+                        "message": "Bitcoin mixing initiated for exchange onramp"
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail=result.get('error', 'Quick mix failed'))
+                    
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         # ===== GOVERNANCE FRAMEWORK ENDPOINTS - COMMUNITY DEMOCRACY =====
         
         @self.app.post("/api/governance/proposals/create")
