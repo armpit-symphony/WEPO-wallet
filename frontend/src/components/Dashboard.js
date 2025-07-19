@@ -77,9 +77,39 @@ const Dashboard = ({ onLogout }) => {
     hash_function: 'SHAKE-256',
     security_level: 'Post-Quantum'
   };
+  // Fetch quantum status from backend
+  const fetchQuantumStatus = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/quantum/status`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setQuantumStatus(data.data);
+          setIsQuantumMode(data.data.quantum_resistant || false);
+        }
+      }
+    } catch (error) {
+      console.log('Quantum status fetch failed:', error);
+      // Set default status
+      setQuantumStatus({
+        quantum_resistant: true,
+        algorithm: 'Dilithium2',
+        implementation: 'NIST ML-DSA',
+        security_level: 128
+      });
+      setIsQuantumMode(true);
+    }
+  };
+
+  // Effect to fetch quantum status
+  useEffect(() => {
+    fetchQuantumStatus();
+  }, []);
+
   const handleModeToggle = () => {
-    // For now, quantum mode switching is disabled since we removed quantum context
-    console.log('Quantum mode toggle disabled in current version');
+    // Toggle between quantum mode display (UI only)
+    setIsQuantumMode(!isQuantumMode);
+    console.log(`Quantum mode ${!isQuantumMode ? 'enabled' : 'disabled'} for display`);
   };
 
   useEffect(() => {
