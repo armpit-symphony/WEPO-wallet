@@ -186,17 +186,24 @@ export const WalletProvider = ({ children }) => {
     }
 
     try {
-      const parsedWallet = JSON.parse(walletData);
+      const encryptedWallet = localStorage.getItem('wepo_wallet');
+      const decryptedWallet = CryptoJS.AES.decrypt(encryptedWallet, password).toString(CryptoJS.enc.Utf8);
+      const parsedWallet = JSON.parse(decryptedWallet);
+      
       setWallet(parsedWallet);
       sessionStorage.setItem('wepo_session_active', 'true');
-      sessionStorage.setItem('wepo_current_wallet', walletData);
+      sessionStorage.setItem('wepo_current_wallet', encryptedWallet);
       
-      // Load balance and transactions
+      // Load WEPO balance and transactions
       await loadWalletData(parsedWallet.address);
+      
+      // Load self-custodial Bitcoin wallet
+      await loadExistingBitcoinWallet(parsedWallet.seedPhrase);
       
       return parsedWallet;
     } catch (error) {
-      throw new Error('Invalid wallet data');
+      console.error('Login error:', error);
+      throw new Error('Invalid credentials or wallet data');
     }
   };
 
