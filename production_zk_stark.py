@@ -111,12 +111,37 @@ class ProductionZKStarkSystem:
     def __init__(self):
         self.field_prime = DEFAULT_PRIME
         self.cairo_available = CAIRO_AVAILABLE
+        self.enhanced_crypto_available = ENHANCED_CRYPTO_AVAILABLE
+        
+        # Initialize enhanced cryptographic systems if available
+        if self.enhanced_crypto_available:
+            self._init_enhanced_crypto()
         
         # Create temp directory for Cairo programs
         self.temp_dir = Path(tempfile.gettempdir()) / "wepo_cairo_programs"
         self.temp_dir.mkdir(exist_ok=True)
         
-        logger.info(f"Production zk-STARK System initialized (Cairo available: {self.cairo_available})")
+        logger.info(f"Production zk-STARK System initialized (Cairo: {self.cairo_available}, Enhanced: {self.enhanced_crypto_available})")
+    
+    def _init_enhanced_crypto(self):
+        """Initialize enhanced cryptographic systems"""
+        try:
+            # Initialize finite field for enhanced operations
+            self.galois_field = galois.GF(2**255 - 19)  # Ed25519 field
+            
+            # Enhanced generator points for commitments
+            self.bn128_g1 = G1
+            self.bn128_g2 = G2
+            
+            # Enhanced field elements
+            self.fq = FQ
+            self.fq2 = FQ2
+            
+            logger.info("Enhanced cryptographic systems initialized successfully")
+            
+        except Exception as e:
+            logger.warning(f"Enhanced cryptographic initialization failed: {e}")
+            self.enhanced_crypto_available = False
     
     def _create_cairo_program(self, program_name: str, secret_value: int, 
                             public_statement: str) -> str:
