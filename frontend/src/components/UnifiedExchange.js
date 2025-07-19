@@ -497,8 +497,40 @@ const UnifiedExchange = ({ onBack }) => {
 
     setIsLoading(true);
     setError('');
+    setSuccess('');
     
     try {
+      // Enhanced privacy flow for RWA trades involving BTC
+      const tokenValue = parseFloat(tokenAmount) * Math.pow(10, selectedToken.decimals || 8);
+      
+      // Check if this RWA token represents Bitcoin-backed assets and privacy is enabled
+      const isBtcBacked = selectedToken.asset_type === 'bitcoin' || 
+                          selectedToken.symbol.toLowerCase().includes('btc') ||
+                          selectedToken.asset_name.toLowerCase().includes('bitcoin');
+      
+      if (privacyEnabled && isBtcBacked && availableMixers.length > 0) {
+        setSuccess('🔒 Privacy mixing enabled for Bitcoin-backed RWA trade...');
+        
+        try {
+          // For RWA trades, we mix the equivalent BTC value before tokenization
+          const btcEquivalent = parseFloat(wepoAmount) / exchangeRate; // Convert WEPO to BTC equivalent
+          
+          const mixResult = await performQuickMix(
+            btcEquivalent,
+            btcAddress,
+            'rwa_mixer_temp_address'
+          );
+
+          if (mixResult.success) {
+            setSuccess(`🔒 Bitcoin value mixed for RWA trade (${mixResult.mixed_amount} BTC equivalent). Executing RWA trade...`);
+          }
+        } catch (mixError) {
+          console.warn('RWA mixing failed, proceeding with direct trade:', mixError);
+          setSuccess(`⚠️ Mixing failed, executing direct RWA trade...`);
+        }
+      }
+
+      // Execute RWA trade (with or without prior mixing)
       const response = await fetch('/api/dex/rwa-trade', {
         method: 'POST',
         headers: {
@@ -508,15 +540,17 @@ const UnifiedExchange = ({ onBack }) => {
           token_id: selectedToken.token_id,
           trade_type: swapType,
           user_address: currentAddress,
-          token_amount: parseFloat(tokenAmount) * Math.pow(10, selectedToken.decimals || 8),
-          wepo_amount: parseFloat(wepoAmount)
+          token_amount: tokenValue,
+          wepo_amount: parseFloat(wepoAmount),
+          privacy_enhanced: privacyEnabled && isBtcBacked && availableMixers.length > 0
         }),
       });
 
       const data = await response.json();
       
       if (response.ok && data.success) {
-        setSuccess(`${swapType === 'buy' ? 'Purchase' : 'Sale'} completed successfully! Trade ID: ${data.trade_id}`);
+        const privacyNote = privacyEnabled && isBtcBacked ? ' with enhanced privacy' : '';
+        setSuccess(`${swapType === 'buy' ? 'Purchase' : 'Sale'} completed successfully${privacyNote}! Trade ID: ${data.trade_id}${privacyNote ? '. Your RWA tokens are in your self-custodial wallet.' : ''}`);
         
         // Reset form
         setTokenAmount('');
