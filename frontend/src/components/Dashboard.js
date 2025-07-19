@@ -378,8 +378,8 @@ const Dashboard = ({ onLogout }) => {
         
         <div className="mt-4 p-3 bg-orange-900/30 rounded-lg">
           <p className="text-orange-200 text-sm">
-            💡 <strong>Get Ready for Launch:</strong> Use the Enhanced DEX to swap BTC for WEPO tokens. 
-            Your BTC is held securely in external wallets while you participate in atomic swaps.
+            🔐 <strong>Self-Custodial Bitcoin Wallet:</strong> Your Bitcoin private keys are generated from your WEPO seed phrase. 
+            You have complete control over your BTC while participating in the WEPO ecosystem.
           </p>
         </div>
       </div>
