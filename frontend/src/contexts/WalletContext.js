@@ -4,13 +4,6 @@ import CryptoJS from 'crypto-js';
 import { generateWepoAddress, generateBitcoinAddress, validateAddress } from '../utils/addressUtils';
 import SelfCustodialBitcoinWallet from '../utils/SelfCustodialBitcoinWallet';
 
-// Ensure Buffer is available globally
-if (typeof window !== 'undefined' && !window.Buffer) {
-  import('buffer').then(({ Buffer }) => {
-    window.Buffer = Buffer;
-  });
-}
-
 const WalletContext = createContext();
 
 export const useWallet = () => {
