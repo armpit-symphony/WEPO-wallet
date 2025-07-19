@@ -407,9 +407,9 @@ func main{{pedersen_ptr: HashBuiltin*, range_check_ptr, output_ptr: felt*}}() {{
     def _serialize_g1_point(self, point) -> bytes:
         """Serialize BN128 G1 point to bytes"""
         try:
-            normalized = normalize(point)
-            x_bytes = int(normalized[0]).to_bytes(32, 'big')
-            y_bytes = int(normalized[1]).to_bytes(32, 'big')
+            # Work directly with the point coordinates
+            x_bytes = int(point[0]).to_bytes(32, 'big')
+            y_bytes = int(point[1]).to_bytes(32, 'big')
             return x_bytes + y_bytes
         except:
             # Fallback serialization
