@@ -66,6 +66,7 @@ const UnifiedExchange = ({ onBack }) => {
     fetchStatistics();
     fetchTradeableTokens();
     fetchPoolStats();
+    fetchAvailableMixers();
   }, []);
 
   // Update amounts when exchange rate changes
@@ -82,6 +83,17 @@ const UnifiedExchange = ({ onBack }) => {
       setWepoAmount((parseFloat(tokenAmount) * rate).toFixed(8));
     }
   }, [selectedToken, tokenAmount, rwaRates, activeTab]);
+
+  // Poll mixing status if active
+  useEffect(() => {
+    if (currentMixingId) {
+      const pollInterval = setInterval(() => {
+        fetchMixingStatus(currentMixingId);
+      }, 10000); // Poll every 10 seconds
+      
+      return () => clearInterval(pollInterval);
+    }
+  }, [currentMixingId]);
 
   const fetchExchangeRate = async () => {
     try {
