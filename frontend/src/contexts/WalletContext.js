@@ -43,51 +43,8 @@ export const WalletProvider = ({ children }) => {
   }, []);
 
   const generateMnemonic = () => {
-    try {
-      // Use bip39 to generate proper 12-word mnemonic
-      const mnemonic = bip39.generateMnemonic(128); // 128 bits = 12 words
-      
-      // Validate the generated mnemonic
-      if (!bip39.validateMnemonic(mnemonic)) {
-        console.warn('Generated mnemonic failed validation, trying again');
-        return generateMnemonic(); // Recursive retry
-      }
-      
-      return mnemonic;
-      
-    } catch (error) {
-      console.error('bip39 mnemonic generation failed:', error);
-      
-      // Fallback to custom secure generation if bip39 fails
-      try {
-        const bip39Words = [
-          'abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse',
-          'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act',
-          'action', 'actor', 'actual', 'adapt', 'add', 'addict', 'address', 'adjust', 'admit', 'adult',
-          'advance', 'advice', 'aerobic', 'affair', 'afford', 'afraid', 'again', 'agent', 'agree', 'ahead'
-        ];
-        
-        // Use crypto.getRandomValues for secure randomness
-        const crypto = window.crypto || window.msCrypto;
-        if (!crypto || !crypto.getRandomValues) {
-          throw new Error('Cryptographically secure random number generation not available');
-        }
-        
-        const mnemonicWords = [];
-        for (let i = 0; i < 12; i++) {
-          const randomArray = new Uint32Array(1);
-          crypto.getRandomValues(randomArray);
-          const randomIndex = randomArray[0] % bip39Words.length;
-          mnemonicWords.push(bip39Words[randomIndex]);
-        }
-        
-        return mnemonicWords.join(' ');
-        
-      } catch (fallbackError) {
-        console.error('Fallback mnemonic generation failed:', fallbackError);
-        throw new Error('Failed to generate secure seed phrase. Please refresh and try again.');
-      }
-    }
+    // Temporarily disabled for isolation testing
+    return "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
   };
 
   const createWallet = async (username, password, confirmPassword) => {
