@@ -29,6 +29,20 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
+# Import production zk-STARK system
+try:
+    from production_zk_stark import (
+        production_zk_system,
+        create_production_stark_proof,
+        verify_production_stark_proof,
+        ProductionZKProof
+    )
+    PRODUCTION_ZK_AVAILABLE = True
+    logger.info("Production zk-STARK system loaded successfully")
+except ImportError as e:
+    PRODUCTION_ZK_AVAILABLE = False
+    logger.warning(f"Production zk-STARK system not available: {e}")
+
 @dataclass
 class VaultAsset:
     """Represents an asset in a vault (WEPO or RWA token)"""
