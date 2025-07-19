@@ -792,7 +792,7 @@ const UnifiedExchange = ({ onBack }) => {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-gray-400">Exchange Rate:</span>
-            <div className="text-white font-medium">1 BTC = {exchangeRate.toFixed(6)} WEPO</div>
+            <div className="text-white font-medium">1 BTC = {exchangeRate ? exchangeRate.toFixed(6) : 'N/A'} WEPO</div>
           </div>
           <div>
             <span className="text-gray-400">Fee Rate:</span>
