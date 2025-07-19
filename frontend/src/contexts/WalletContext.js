@@ -54,55 +54,29 @@ export const WalletProvider = ({ children }) => {
 
     try {
       const mnemonic = generateMnemonic();
-      const seed = bip39.mnemonicToSeedSync(mnemonic);
       
-      // Encrypt the mnemonic with the password
-      const encryptedMnemonic = CryptoJS.AES.encrypt(mnemonic, password).toString();
-      
-      // Create wallet object
-      // Generate WEPO address (regular type)
-      const wepoAddress = generateWepoAddress(seed, 'regular');
-      
-      // Generate Bitcoin address from same seed
-      const btcWallet = generateBitcoinAddress(seed, 'legacy');
-      
+      // Simplified wallet creation for isolation testing
       const walletData = {
         username,
-        seed: seed.toString('hex'),
         mnemonic,
-        
-        // WEPO wallet
         wepo: {
-          address: wepoAddress,
-          privateKey: CryptoJS.SHA256(seed.toString('hex')).toString()
+          address: "wepo1test123456789",
+          privateKey: "test_private_key"
         },
-        
-        // Bitcoin wallet (same seed)
         btc: {
-          address: btcWallet.address,
-          privateKey: btcWallet.privateKey,
-          publicKey: btcWallet.publicKey,
-          type: btcWallet.type
+          address: "1TestBitcoinAddress123",
+          privateKey: "test_btc_private_key",
+          publicKey: "test_btc_public_key",
+          type: "legacy"
         },
-        
         createdAt: new Date().toISOString(),
-        version: '2.0' // Unified wallet version
+        version: '2.0'
       };
 
-      // Store wallet data (encrypted)
-      const encryptedWallet = CryptoJS.AES.encrypt(JSON.stringify(walletData), password).toString();
-      localStorage.setItem('wepo_wallet', encryptedWallet);
+      // Store basic data
       localStorage.setItem('wepo_wallet_exists', 'true');
       localStorage.setItem('wepo_wallet_username', username);
       
-      // Initialize self-custodial Bitcoin wallet from same seed
-      await initializeBitcoinWallet(mnemonic);
-      
-      // Set launch date for demo purposes
-      if (!localStorage.getItem('wepo_launch_date')) {
-        localStorage.setItem('wepo_launch_date', new Date().toISOString());
-      }
-
       setWallet(walletData);
       return { mnemonic, address: walletData.wepo.address };
     } catch (error) {
