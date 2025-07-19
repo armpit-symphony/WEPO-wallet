@@ -40,8 +40,8 @@ const MasternodeInterface = ({ onClose }) => {
   // Auto-select services based on device type
   useEffect(() => {
     if (deviceType === 'computer') {
-      // Auto-select 3 most suitable services for computers
-      setSelectedServices(['network_relay', 'mixing_service', 'dex_relay']);
+      // Auto-select 4 most suitable services for computers including Bitcoin mixing
+      setSelectedServices(['network_relay', 'mixing_service', 'dex_relay', 'btc_mixing']);
     } else {
       // Auto-select 2 least resource-intensive services for mobile
       setSelectedServices(['network_relay', 'governance']);
