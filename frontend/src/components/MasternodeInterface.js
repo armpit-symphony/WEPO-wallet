@@ -105,6 +105,14 @@ const MasternodeInterface = ({ onClose }) => {
       description: 'Route Quantum Vault transfers',
       resourceUsage: 'Medium',
       recommended: deviceType === 'computer'
+    },
+    {
+      id: 'btc_mixing',
+      name: 'Bitcoin Privacy Mixing',
+      icon: '🔐',
+      description: 'Anonymize Bitcoin transactions through mixing pools',
+      resourceUsage: 'High',
+      recommended: deviceType === 'computer'
     }
   ];
 
