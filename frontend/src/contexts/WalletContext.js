@@ -6,8 +6,9 @@ import SelfCustodialBitcoinWallet from '../utils/SelfCustodialBitcoinWallet';
 
 // Ensure Buffer is available globally
 if (typeof window !== 'undefined' && !window.Buffer) {
-  const { Buffer } = require('buffer');
-  window.Buffer = Buffer;
+  import('buffer').then(({ Buffer }) => {
+    window.Buffer = Buffer;
+  });
 }
 
 const WalletContext = createContext();
