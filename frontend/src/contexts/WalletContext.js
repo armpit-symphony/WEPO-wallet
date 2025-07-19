@@ -581,6 +581,14 @@ export const WalletProvider = ({ children }) => {
     setWallet(null);
     setBalance(0);
     setTransactions([]);
+    
+    // Clear Bitcoin wallet data
+    setBtcWallet(null);
+    setBtcBalance(0);
+    setBtcTransactions([]);
+    setBtcAddresses([]);
+    setBtcUtxos([]);
+    
     sessionStorage.removeItem('wepo_session_active');
   };
 
