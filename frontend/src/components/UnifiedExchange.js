@@ -531,7 +531,8 @@ const UnifiedExchange = ({ onBack }) => {
       }
 
       // Execute RWA trade (with or without prior mixing)
-      const response = await fetch('/api/dex/rwa-trade', {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/dex/rwa-trade`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
