@@ -454,11 +454,11 @@ def test_backwards_compatibility():
             response = requests.get(f"{API_URL}/rwa/fee-info", timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                if 'fee_distribution' in data:
+                if data.get('success') and 'fee_info' in data:
                     print(f"  ✅ RWA fee info: Working with quantum backend")
                     checks_passed += 1
                 else:
-                    print(f"  ❌ RWA fee info: Missing fee distribution data")
+                    print(f"  ❌ RWA fee info: Missing fee info data")
             else:
                 print(f"  ❌ RWA fee info: Status {response.status_code}")
         except Exception as e:
@@ -470,8 +470,8 @@ def test_backwards_compatibility():
             response = requests.get(f"{API_URL}/masternode/services", timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                if isinstance(data, list) and len(data) > 0:
-                    print(f"  ✅ Masternode services: Working with quantum backend")
+                if data.get('success') and 'services' in data and len(data['services']) > 0:
+                    print(f"  ✅ Masternode services: Working with quantum backend ({len(data['services'])} services)")
                     checks_passed += 1
                 else:
                     print(f"  ❌ Masternode services: No services available")
