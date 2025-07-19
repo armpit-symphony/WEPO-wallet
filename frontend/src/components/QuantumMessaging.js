@@ -16,7 +16,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
-import { validateWepoAddress } from '../utils/addressUtils';
+// Temporarily commented out for Buffer isolation testing
+// import { validateWepoAddress } from '../utils/addressUtils';
 
 const QuantumMessaging = ({ onBack }) => {
   const { wallet } = useWallet();
