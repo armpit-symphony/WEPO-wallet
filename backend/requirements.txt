@@ -24,3 +24,7 @@ python-multipart>=0.0.9
 jq>=1.6.0
 typer>=0.9.0
 dilithium-py==1.1.0
+
+# Production zk-STARK libraries
+cairo-lang==0.13.1
+starknet-py==0.21.2
