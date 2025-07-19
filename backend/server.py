@@ -803,6 +803,28 @@ async def get_liquidity_stats():
         logger.error(f"Error getting liquidity stats: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ===== HELPER FUNCTIONS =====
+
+async def get_wallet_balance(address: str) -> float:
+    """Get wallet balance for an address"""
+    try:
+        wallet = await db.wallets.find_one({"address": address})
+        return wallet.get("balance", 0) if wallet else 0
+    except Exception:
+        return 0
+
+async def update_wallet_balance(address: str, amount_change: float):
+    """Update wallet balance by a specific amount (positive or negative)"""
+    try:
+        await db.wallets.update_one(
+            {"address": address},
+            {"$inc": {"balance": amount_change}},
+            upsert=True
+        )
+    except Exception as e:
+        logger.error(f"Error updating wallet balance: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update balance")
+
 # ===== RWA TOKEN TRADING ENDPOINTS =====
 
 @api_router.get("/rwa/tokens")
