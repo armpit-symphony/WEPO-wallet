@@ -418,12 +418,12 @@ func main{{pedersen_ptr: HashBuiltin*, range_check_ptr, output_ptr: felt*}}() {{
     def _serialize_g2_point(self, point) -> bytes:
         """Serialize BN128 G2 point to bytes"""
         try:
-            normalized = normalize(point)
+            # Work directly with the point coordinates
             # G2 points have FQ2 coordinates
-            x0_bytes = int(normalized[0].coeffs[0]).to_bytes(32, 'big')
-            x1_bytes = int(normalized[0].coeffs[1]).to_bytes(32, 'big')
-            y0_bytes = int(normalized[1].coeffs[0]).to_bytes(32, 'big')
-            y1_bytes = int(normalized[1].coeffs[1]).to_bytes(32, 'big')
+            x0_bytes = int(point[0].coeffs[0]).to_bytes(32, 'big')
+            x1_bytes = int(point[0].coeffs[1]).to_bytes(32, 'big')
+            y0_bytes = int(point[1].coeffs[0]).to_bytes(32, 'big')
+            y1_bytes = int(point[1].coeffs[1]).to_bytes(32, 'big')
             return x0_bytes + x1_bytes + y0_bytes + y1_bytes
         except:
             # Fallback serialization
