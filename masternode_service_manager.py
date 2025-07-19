@@ -100,6 +100,13 @@ class MasternodeServiceManager:
                 icon='📡',
                 description='Route Quantum Vault transfers',
                 resource_usage='Medium'
+            ),
+            MasternodeService(
+                id='btc_mixing',
+                name='Bitcoin Privacy Mixing',
+                icon='🔐',
+                description='Anonymize Bitcoin transactions through mixing pools',
+                resource_usage='High'
             )
         ]
         
