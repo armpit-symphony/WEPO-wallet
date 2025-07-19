@@ -24,13 +24,15 @@
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
         <script>
-            // Buffer polyfill for crypto libraries
+            // Global polyfills for crypto libraries
             if (typeof global === 'undefined') {
-                var global = globalThis;
+                var global = globalThis || window;
             }
-            if (typeof Buffer === 'undefined') {
-                window.Buffer = window.Buffer || {};
-            }
+            
+            // Initialize Buffer before any modules load
+            window.global = window.global || window;
+            window.Buffer = window.Buffer || require('buffer').Buffer;
+            window.process = window.process || require('process');
         </script>
         <!--
       This HTML file is a template.
