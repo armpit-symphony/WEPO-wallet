@@ -43,6 +43,9 @@ export const WalletProvider = ({ children }) => {
   }, []);
 
   const generateMnemonic = () => {
+    // Temporary - disabled for Buffer issue testing
+    return "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+    /*
     try {
       // Use proper BIP39 wordlist with cryptographically secure randomness
       const bip39Words = [
