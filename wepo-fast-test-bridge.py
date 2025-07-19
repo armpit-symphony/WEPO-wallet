@@ -4929,6 +4929,314 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
+        # ===== GOVERNANCE FRAMEWORK ENDPOINTS - COMMUNITY DEMOCRACY =====
+        
+        @self.app.post("/api/governance/proposals/create")
+        async def create_governance_proposal(request: dict):
+            """Create a new governance proposal for community voting"""
+            try:
+                proposer_address = request.get("proposer_address")
+                title = request.get("title")
+                description = request.get("description")
+                proposal_type = request.get("proposal_type", "network_parameter")
+                target_parameter = request.get("target_parameter")
+                proposed_value = request.get("proposed_value")
+                current_value = request.get("current_value")
+                
+                if not proposer_address or not title or not description:
+                    raise HTTPException(status_code=400, detail="Missing required proposal fields")
+                
+                # Convert string to enum
+                try:
+                    proposal_type_enum = ProposalType(proposal_type)
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid proposal type")
+                
+                # Create proposal
+                proposal_id = governance_system.create_proposal(
+                    proposer_address=proposer_address,
+                    title=title,
+                    description=description,
+                    proposal_type=proposal_type_enum,
+                    target_parameter=target_parameter,
+                    proposed_value=proposed_value,
+                    current_value=current_value
+                )
+                
+                return {
+                    "success": True,
+                    "proposal_created": True,
+                    "proposal_id": proposal_id,
+                    "title": title,
+                    "proposal_type": proposal_type,
+                    "proposer_address": proposer_address,
+                    "status": "draft",
+                    "message": "Governance proposal created successfully. Activate to begin voting period.",
+                    "next_steps": [
+                        "Review proposal details",
+                        "Activate proposal to begin voting",
+                        "Community members can vote during active period"
+                    ]
+                }
+                
+            except Exception as e:
+                if "not eligible" in str(e).lower():
+                    raise HTTPException(status_code=403, detail=str(e))
+                elif "insufficient" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/governance/proposals/{proposal_id}/activate")
+        async def activate_governance_proposal(proposal_id: str):
+            """Activate a governance proposal for community voting"""
+            try:
+                success = governance_system.activate_proposal(proposal_id)
+                
+                if success:
+                    proposal_details = governance_system.get_proposal_details(proposal_id)
+                    
+                    return {
+                        "success": True,
+                        "proposal_activated": True,
+                        "proposal_id": proposal_id,
+                        "status": "active",
+                        "voting_period_start": proposal_details["proposal"]["voting_start"],
+                        "voting_period_end": proposal_details["proposal"]["voting_end"],
+                        "time_remaining": proposal_details["time_remaining"],
+                        "requirements": proposal_details["requirements"],
+                        "message": "Proposal activated for community voting",
+                        "voting_info": {
+                            "minimum_participation": f"{proposal_details['requirements']['minimum_participation']*100:.1f}%",
+                            "approval_threshold": f"{proposal_details['requirements']['approval_threshold']*100:.1f}%",
+                            "voting_power": "Masternodes: 10x weight, Stakers: 1 vote per 1000 WEPO"
+                        }
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": "Failed to activate proposal"
+                    }
+                    
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                elif "not started" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/governance/proposals/{proposal_id}/vote")
+        async def cast_governance_vote(proposal_id: str, request: dict):
+            """Cast a vote on an active governance proposal"""
+            try:
+                voter_address = request.get("voter_address")
+                vote_choice = request.get("vote_choice")  # "yes", "no", or "abstain"
+                signature = request.get("signature", "quantum_signature_placeholder")
+                
+                if not voter_address or not vote_choice:
+                    raise HTTPException(status_code=400, detail="Missing required vote fields")
+                
+                # Convert string to enum
+                try:
+                    vote_choice_enum = VoteChoice(vote_choice.lower())
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid vote choice. Use 'yes', 'no', or 'abstain'")
+                
+                # Cast vote
+                vote_id = governance_system.cast_vote(
+                    proposal_id=proposal_id,
+                    voter_address=voter_address,
+                    vote_choice=vote_choice_enum,
+                    signature=signature
+                )
+                
+                # Get updated proposal details
+                proposal_details = governance_system.get_proposal_details(proposal_id)
+                current_results = proposal_details["current_results"]
+                
+                return {
+                    "success": True,
+                    "vote_cast": True,
+                    "vote_id": vote_id,
+                    "proposal_id": proposal_id,
+                    "voter_address": voter_address,
+                    "vote_choice": vote_choice,
+                    "voting_power": governance_system._calculate_voting_power(voter_address),
+                    "current_results": current_results,
+                    "requirements_status": proposal_details["meets_requirements"],
+                    "time_remaining": proposal_details["time_remaining"],
+                    "message": f"Vote '{vote_choice}' cast successfully on proposal {proposal_id}"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                elif "already voted" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                elif "not active" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                elif "no voting power" in str(e).lower():
+                    raise HTTPException(status_code=403, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/governance/proposals/{proposal_id}")
+        async def get_governance_proposal_details(proposal_id: str):
+            """Get detailed information about a governance proposal"""
+            try:
+                proposal_details = governance_system.get_proposal_details(proposal_id)
+                
+                return {
+                    "success": True,
+                    "proposal_details": proposal_details,
+                    "message": "Proposal details retrieved successfully"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/governance/proposals")
+        async def get_all_governance_proposals():
+            """Get all governance proposals with current status"""
+            try:
+                all_proposals = []
+                
+                for proposal_id in governance_system.proposals.keys():
+                    try:
+                        proposal_details = governance_system.get_proposal_details(proposal_id)
+                        all_proposals.append(proposal_details)
+                    except Exception as e:
+                        logger.error(f"Error getting proposal {proposal_id}: {e}")
+                
+                # Sort by creation date (newest first)
+                all_proposals.sort(key=lambda x: x["proposal"]["created_at"], reverse=True)
+                
+                return {
+                    "success": True,
+                    "total_proposals": len(all_proposals),
+                    "proposals": all_proposals,
+                    "message": "All governance proposals retrieved successfully"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/governance/proposals/active")
+        async def get_active_governance_proposals():
+            """Get all currently active governance proposals"""
+            try:
+                active_proposals = governance_system.get_active_proposals()
+                
+                return {
+                    "success": True,
+                    "active_proposals_count": len(active_proposals),
+                    "active_proposals": active_proposals,
+                    "message": f"Found {len(active_proposals)} active governance proposals"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/governance/proposals/{proposal_id}/finalize")
+        async def finalize_governance_proposal(proposal_id: str):
+            """Finalize a governance proposal after voting period ends"""
+            try:
+                finalization_result = governance_system.finalize_proposal(proposal_id)
+                
+                return {
+                    "success": True,
+                    "proposal_finalized": True,
+                    "finalization_result": finalization_result,
+                    "message": f"Proposal {proposal_id} finalized with status: {finalization_result['status']}"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                elif "still active" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/api/governance/proposals/{proposal_id}/execute")
+        async def execute_governance_proposal(proposal_id: str):
+            """Execute a passed governance proposal"""
+            try:
+                execution_result = governance_system.execute_proposal(proposal_id)
+                
+                return {
+                    "success": True,
+                    "proposal_executed": True,
+                    "execution_result": execution_result,
+                    "message": f"Proposal {proposal_id} executed successfully"
+                }
+                
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    raise HTTPException(status_code=404, detail=str(e))
+                elif "not passed" in str(e).lower():
+                    raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/governance/stats")
+        async def get_governance_system_stats():
+            """Get comprehensive governance system statistics"""
+            try:
+                governance_stats = governance_system.get_governance_stats()
+                
+                return {
+                    "success": True,
+                    "governance_statistics": governance_stats,
+                    "message": "Governance system statistics retrieved successfully"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/governance/voter/{address}")
+        async def get_voter_info(address: str):
+            """Get voting power and history for a specific address"""
+            try:
+                # Calculate current voting power
+                voting_power = governance_system._calculate_voting_power(address)
+                voter_type = governance_system._get_voter_type(address)
+                stake_amount = governance_system._get_stake_amount(address)
+                
+                # Get voting history
+                vote_history = []
+                for vote in governance_system.votes.values():
+                    if vote.voter_address == address:
+                        vote_history.append({
+                            "proposal_id": vote.proposal_id,
+                            "vote_choice": vote.vote_choice.value,
+                            "voting_power": vote.voting_power,
+                            "timestamp": vote.timestamp,
+                            "vote_id": vote.vote_id
+                        })
+                
+                # Sort by timestamp (newest first)
+                vote_history.sort(key=lambda x: x["timestamp"], reverse=True)
+                
+                return {
+                    "success": True,
+                    "voter_info": {
+                        "address": address,
+                        "voter_type": voter_type,
+                        "current_voting_power": voting_power,
+                        "stake_amount": stake_amount,
+                        "total_votes_cast": len(vote_history),
+                        "vote_history": vote_history[:10]  # Last 10 votes
+                    },
+                    "voting_power_calculation": {
+                        "masternode_multiplier": governance_system.MASTERNODE_VOTE_MULTIPLIER,
+                        "staker_vote_unit": f"1 vote per {governance_system.STAKER_VOTE_UNIT} WEPO",
+                        "explanation": "Masternodes get 10x voting power due to service provision and high collateral"
+                    },
+                    "message": "Voter information retrieved successfully"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
 def main():
     print("=" * 60)
     print("⚡ WEPO FAST TEST BLOCKCHAIN BRIDGE")
