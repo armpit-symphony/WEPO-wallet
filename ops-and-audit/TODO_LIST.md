@@ -12,31 +12,30 @@
 
 ### **🔥 SECURITY & CRYPTOGRAPHY**
 
-#### **1. Real Dilithium2 Implementation** 
-- **Status**: ⚠️ HIGH PRIORITY 
-- **Current**: Simulated with RSA backend (NOT quantum-resistant)
-- **Required**: True post-quantum cryptography using NIST Dilithium2
-- **Timeline**: 4-6 weeks post-genesis
-- **Difficulty**: 🔥 MOST DIFFICULT
-- **Dependencies**: None (can start immediately)
-- **Resources**: `/ops-and-audit/PRIVACY_ANALYSIS.md` contains implementation plan
-
-#### **2. Production zk-STARK Upgrade**
-- **Status**: ⚠️ HIGH PRIORITY
+#### **1. Production zk-STARK Upgrade** 
+- **Status**: 🔴 HIGH PRIORITY
 - **Current**: Custom implementation 
 - **Required**: Battle-tested libraries (StarkEx, Cairo, Polygon Zero)
 - **Timeline**: 2-3 weeks
 - **Difficulty**: 🔴 HIGH DIFFICULTY
 - **Dependencies**: None
-- **Impact**: Production-grade privacy proofs
+- **Impact**: Production-grade privacy proofs for Quantum Vault
 
-#### **3. Wallet Authentication Security Audit**
+#### **2. Wallet Authentication Security Audit**
 - **Status**: ⚠️ MEDIUM PRIORITY
 - **Issue**: Self-custodial wallet needs security review
 - **Required**: External security audit of wallet generation, storage, recovery
 - **Timeline**: 1-2 weeks
 - **Difficulty**: 🟡 MEDIUM DIFFICULTY
 - **Dependencies**: External auditor
+
+#### **3. Privacy Proof Generation Enhancement**
+- **Status**: 🟡 MEDIUM PRIORITY
+- **Current**: Basic zk-STARK implementation for Quantum Vault
+- **Required**: Optimized privacy proof generation for better performance
+- **Timeline**: 2-3 weeks
+- **Difficulty**: 🔴 HIGH DIFFICULTY
+- **Dependencies**: Production zk-STARK libraries
 
 ---
 
