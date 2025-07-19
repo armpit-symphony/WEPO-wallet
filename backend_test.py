@@ -29,7 +29,7 @@ import string
 import base64
 
 # Use production backend URL from frontend/.env
-BACKEND_URL = "https://2419e72d-a26d-426a-879a-54548b50aa13.preview.emergentagent.com"
+BACKEND_URL = "https://fc99a509-861d-4135-af8d-f75ec8f77e67.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔧 TESTING WEPO PRODUCTION ZK-STARK UPGRADE")
