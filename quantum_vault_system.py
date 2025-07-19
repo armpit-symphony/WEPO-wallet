@@ -1281,8 +1281,8 @@ class QuantumVaultSystem:
         with rigorous mathematical verification.
         """
         try:
-            # Check if this is a production proof
-            if hasattr(proof, 'production_proof') and PRODUCTION_ZK_AVAILABLE:
+            # Check if this is a production proof (verification_key starts with "production:")
+            if proof.verification_key.startswith("production:") and PRODUCTION_ZK_AVAILABLE:
                 return self._verify_production_proof(proof, expected_commitment)
             else:
                 return self._verify_enhanced_custom_proof(proof, expected_commitment)
