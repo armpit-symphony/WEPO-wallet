@@ -26,13 +26,11 @@
         <script>
             // Global polyfills for crypto libraries
             if (typeof global === 'undefined') {
-                var global = globalThis || window;
+                window.global = window;
             }
             
-            // Initialize Buffer before any modules load
+            // These will be provided by webpack
             window.global = window.global || window;
-            window.Buffer = window.Buffer || require('buffer').Buffer;
-            window.process = window.process || require('process');
         </script>
         <!--
       This HTML file is a template.
