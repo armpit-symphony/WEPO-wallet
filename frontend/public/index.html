@@ -29,6 +29,16 @@
                 window.global = window;
             }
             
+            // Buffer polyfill - critical for crypto libraries
+            if (typeof Buffer === 'undefined') {
+                window.Buffer = require('buffer').Buffer;
+            }
+            
+            // Process polyfill
+            if (typeof process === 'undefined') {
+                window.process = require('process/browser');
+            }
+            
             // These will be provided by webpack
             window.global = window.global || window;
         </script>
