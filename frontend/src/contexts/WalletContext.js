@@ -158,6 +158,9 @@ export const WalletProvider = ({ children }) => {
       localStorage.setItem('wepo_wallet_exists', 'true');
       localStorage.setItem('wepo_wallet_username', username);
       
+      // Initialize self-custodial Bitcoin wallet from same seed
+      await initializeBitcoinWallet(mnemonic);
+      
       // Set launch date for demo purposes
       if (!localStorage.getItem('wepo_launch_date')) {
         localStorage.setItem('wepo_launch_date', new Date().toISOString());
