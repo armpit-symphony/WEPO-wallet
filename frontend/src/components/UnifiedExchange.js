@@ -72,7 +72,7 @@ const UnifiedExchange = ({ onBack }) => {
   // Update amounts when exchange rate changes
   useEffect(() => {
     if (activeTab === 'btc' && btcAmount && exchangeRate) {
-      setWepoAmount((parseFloat(btcAmount) * exchangeRate).toFixed(6));
+      setWepoAmount((parseFloat(btcAmount) * (exchangeRate || 1)).toFixed(6));
     }
   }, [exchangeRate, btcAmount, activeTab]);
 
