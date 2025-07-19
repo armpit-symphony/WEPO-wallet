@@ -180,10 +180,10 @@ export const WalletProvider = ({ children }) => {
       sessionStorage.setItem('wepo_current_wallet', encryptedWallet);
       
       // Load WEPO balance and transactions
-      await loadWalletData(parsedWallet.address);
+      await loadWalletData(parsedWallet.wepo.address);
       
       // Load self-custodial Bitcoin wallet
-      await loadExistingBitcoinWallet(parsedWallet.seedPhrase);
+      await loadExistingBitcoinWallet(parsedWallet.mnemonic);
       
       return parsedWallet;
     } catch (error) {
