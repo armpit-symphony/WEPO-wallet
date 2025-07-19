@@ -14,7 +14,8 @@ from datetime import datetime, timedelta
 
 # Import our quantum cryptography
 from dilithium import (
-    generate_dilithium_keypair, sign_message, verify_signature,
+    generate_dilithium_keypair, sign_with_dilithium as sign_message, 
+    verify_dilithium_signature as verify_signature,
     DilithiumKeyPair, generate_wepo_address
 )
 
