@@ -27,7 +27,8 @@ import {
   ToggleLeft
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
-import { generateBitcoinAddress } from '../utils/addressUtils';
+// Temporarily commented out for Buffer isolation testing
+// import { generateBitcoinAddress } from '../utils/addressUtils';
 import SendWepo from './SendWepo';
 import ReceiveWepo from './ReceiveWepo';
 import QuantumVault from './QuantumVault';
