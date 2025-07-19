@@ -1098,6 +1098,328 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
+        @self.app.get("/api/staking/detailed-info")
+        async def get_detailed_staking_info():
+            """Get comprehensive staking system information with tokenomics details"""
+            try:
+                current_height = len(self.blockchain.blocks) - 1
+                total_staked = sum(stake.get("amount", 0) for stake in self.blockchain.stakes.values())
+                
+                # Dynamic collateral information from tokenomics
+                dynamic_collateral_schedule = {
+                    "phases": [
+                        {
+                            "phase": "Genesis → PoS",
+                            "timeline": "0-18 months",
+                            "pow_reward": 52.51,
+                            "pos_requirement": "Not Available",
+                            "pos_reward_share": "0%"
+                        },
+                        {
+                            "phase": "PoS Activation",
+                            "timeline": "18-54 months", 
+                            "pow_reward": 33.17,
+                            "pos_requirement": "1,000 WEPO",
+                            "pos_reward_share": "15%",
+                            "reduction": "Stable Period"
+                        },
+                        {
+                            "phase": "2nd Halving",
+                            "timeline": "4.5-10.5 years",
+                            "pow_reward": 16.58,
+                            "pos_requirement": "600 WEPO",
+                            "pos_reward_share": "15%",
+                            "reduction": "-40%"
+                        },
+                        {
+                            "phase": "3rd Halving", 
+                            "timeline": "10.5-13.5 years",
+                            "pow_reward": 8.29,
+                            "pos_requirement": "300 WEPO",
+                            "pos_reward_share": "15%",
+                            "reduction": "-50%"
+                        },
+                        {
+                            "phase": "4th Halving",
+                            "timeline": "13.5-16.5 years", 
+                            "pow_reward": 4.15,
+                            "pos_requirement": "150 WEPO",
+                            "pos_reward_share": "15%",
+                            "reduction": "-50%"
+                        },
+                        {
+                            "phase": "5th Halving",
+                            "timeline": "16.5+ years",
+                            "pow_reward": 0.0,
+                            "pos_requirement": "100 WEPO",
+                            "pos_reward_share": "15%", 
+                            "reduction": "-33%"
+                        }
+                    ],
+                    "accessibility_impact": {
+                        "initial_requirement": "1,000 WEPO",
+                        "final_requirement": "100 WEPO",
+                        "total_reduction": "90%",
+                        "purpose": "Prevents 'elite only' network as WEPO appreciates"
+                    }
+                }
+                
+                # Calculate current phase based on block height
+                current_phase = "Genesis → PoS" 
+                if current_height >= self.blockchain.POS_ACTIVATION_HEIGHT:
+                    current_phase = "PoS Activation"
+                
+                # Network economics breakdown
+                network_economics = {
+                    "total_supply": "69,000,003 WEPO",
+                    "fee_distribution": {
+                        "masternodes": {"percentage": 60, "reasoning": "Provide 5 genuine services"},
+                        "miners": {"percentage": 25, "reasoning": "Secure network through PoW"},
+                        "stakers": {"percentage": 15, "reasoning": "Participate in PoS consensus"}
+                    },
+                    "zero_burn_policy": {
+                        "description": "All fees redistribute to network participants",
+                        "benefit": "Creates sustainable economic incentives"
+                    }
+                }
+                
+                # Staking profitability analysis
+                profitability = {
+                    "estimated_apy_range": {
+                        "minimum": "3.0%",
+                        "maximum": "12.5%",
+                        "current": f"{self.blockchain.calculate_staking_apy():.1f}%"
+                    },
+                    "factors_affecting_apy": [
+                        "Total amount staked (higher stake = lower individual APY)",
+                        "Network transaction volume (more fees = higher rewards)",
+                        "Number of active stakers (more competition = lower individual rewards)",
+                        "Network usage and adoption (higher usage = more fees to distribute)"
+                    ],
+                    "reward_calculation": {
+                        "formula": "(15% of network fees) × (your_stake / total_staked)",
+                        "distribution_frequency": "Per block (approximately every 3-9 minutes)",
+                        "compound_effect": "Rewards auto-compound when restaked"
+                    }
+                }
+                
+                # Current network statistics
+                network_stats = {
+                    "current_height": current_height,
+                    "pos_activation_height": self.blockchain.POS_ACTIVATION_HEIGHT,
+                    "current_phase": current_phase,
+                    "staking_status": "Active" if current_height >= self.blockchain.POS_ACTIVATION_HEIGHT else "Pending",
+                    "total_staked": total_staked / self.blockchain.COIN,
+                    "total_stakers": len(set(stake.get("staker_address") for stake in self.blockchain.stakes.values())),
+                    "network_participation": {
+                        "staking_ratio": f"{(total_staked / (69000003 * self.blockchain.COIN)) * 100:.2f}%" if total_staked > 0 else "0%",
+                        "decentralization_health": "Excellent" if len(self.blockchain.stakes) > 10 else "Growing"
+                    }
+                }
+                
+                # Requirements and recommendations
+                requirements = {
+                    "minimum_stake": {
+                        "current": self.blockchain.MIN_STAKE_AMOUNT / self.blockchain.COIN,
+                        "currency": "WEPO",
+                        "reasoning": "Prevents spam while maintaining accessibility"
+                    },
+                    "hardware_requirements": {
+                        "cpu": "Minimal (any modern processor)",
+                        "ram": "512MB+ available",
+                        "storage": "50MB+ for blockchain data",
+                        "network": "Stable internet connection"
+                    },
+                    "recommended_practices": [
+                        "Start with minimum stake to test the system",
+                        "Monitor network participation for optimal timing",
+                        "Consider long-term staking for compound benefits",
+                        "Keep wallet secure and backed up",
+                        "Stay informed about network upgrades"
+                    ]
+                }
+                
+                return {
+                    "success": True,
+                    "timestamp": int(time.time()),
+                    "staking_system": {
+                        "overview": {
+                            "name": "WEPO Proof-of-Stake System",
+                            "type": "Hybrid PoW/PoS",
+                            "activation": "18 months post-genesis",
+                            "quantum_secure": True
+                        },
+                        "dynamic_collateral_schedule": dynamic_collateral_schedule,
+                        "network_economics": network_economics,
+                        "profitability_analysis": profitability,
+                        "current_network_stats": network_stats,
+                        "requirements_and_recommendations": requirements
+                    },
+                    "message": "Complete WEPO staking system information with tokenomics"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/staking/rewards/calculator")
+        async def staking_rewards_calculator(stake_amount: float = 1000.0):
+            """Calculate potential staking rewards for a given amount"""
+            try:
+                if stake_amount < (self.blockchain.MIN_STAKE_AMOUNT / self.blockchain.COIN):
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Minimum stake amount is {self.blockchain.MIN_STAKE_AMOUNT / self.blockchain.COIN} WEPO"
+                    )
+                
+                # Get current network state
+                total_staked = sum(stake.get("amount", 0) for stake in self.blockchain.stakes.values())
+                current_apy = self.blockchain.calculate_staking_apy()
+                
+                # Calculate potential rewards
+                stake_amount_satoshis = int(stake_amount * self.blockchain.COIN)
+                new_total_staked = total_staked + stake_amount_satoshis
+                
+                # Estimate future APY with this stake included
+                estimated_apy = max(3.0, current_apy * (total_staked / new_total_staked) if new_total_staked > 0 else 3.0)
+                
+                # Calculate different time period rewards
+                calculations = {
+                    "daily": {
+                        "reward": (stake_amount * estimated_apy / 100) / 365,
+                        "percentage": estimated_apy / 365
+                    },
+                    "weekly": {
+                        "reward": (stake_amount * estimated_apy / 100) / 52,
+                        "percentage": estimated_apy / 52
+                    },
+                    "monthly": {
+                        "reward": (stake_amount * estimated_apy / 100) / 12,
+                        "percentage": estimated_apy / 12
+                    },
+                    "yearly": {
+                        "reward": stake_amount * estimated_apy / 100,
+                        "percentage": estimated_apy
+                    }
+                }
+                
+                # Network impact analysis
+                network_impact = {
+                    "your_stake_percentage": (stake_amount_satoshis / new_total_staked) * 100 if new_total_staked > 0 else 100,
+                    "network_participation_change": {
+                        "before": total_staked / self.blockchain.COIN,
+                        "after": new_total_staked / self.blockchain.COIN,
+                        "increase": stake_amount
+                    },
+                    "decentralization_impact": "Positive" if stake_amount <= 10000 else "Monitor for concentration"
+                }
+                
+                return {
+                    "success": True,
+                    "calculation_params": {
+                        "stake_amount": stake_amount,
+                        "estimated_apy": f"{estimated_apy:.2f}%",
+                        "current_network_apy": f"{current_apy:.2f}%",
+                        "calculation_basis": "15% of network fees distributed proportionally"
+                    },
+                    "projected_rewards": calculations,
+                    "network_impact": network_impact,
+                    "important_notes": [
+                        "APY estimates based on current network conditions",
+                        "Actual rewards depend on network transaction volume",
+                        "More stakers = lower individual APY (but more network security)",
+                        "Rewards are distributed per block and compound automatically"
+                    ]
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.get("/api/staking/network-health")
+        async def get_staking_network_health():
+            """Get comprehensive network health metrics for staking"""
+            try:
+                current_height = len(self.blockchain.blocks) - 1
+                total_staked = sum(stake.get("amount", 0) for stake in self.blockchain.stakes.values())
+                total_supply = 69000003 * self.blockchain.COIN
+                
+                # Calculate network health metrics
+                staking_ratio = (total_staked / total_supply) * 100 if total_supply > 0 else 0
+                unique_stakers = len(set(stake.get("staker_address") for stake in self.blockchain.stakes.values()))
+                
+                # Determine health ratings
+                def get_health_rating(metric, thresholds):
+                    if metric >= thresholds["excellent"]:
+                        return "Excellent"
+                    elif metric >= thresholds["good"]:
+                        return "Good" 
+                    elif metric >= thresholds["fair"]:
+                        return "Fair"
+                    else:
+                        return "Needs Improvement"
+                
+                participation_health = get_health_rating(staking_ratio, {
+                    "excellent": 30, "good": 15, "fair": 5
+                })
+                
+                decentralization_health = get_health_rating(unique_stakers, {
+                    "excellent": 100, "good": 50, "fair": 10
+                })
+                
+                # Security analysis
+                security_metrics = {
+                    "staking_security_score": min(100, staking_ratio * 2 + unique_stakers * 0.5),
+                    "attack_cost": {
+                        "stake_required_for_33_percent": (total_staked * 0.33) / self.blockchain.COIN,
+                        "economic_security": "High" if total_staked > 1000000 * self.blockchain.COIN else "Growing"
+                    },
+                    "validator_distribution": {
+                        "total_validators": unique_stakers,
+                        "distribution_quality": decentralization_health
+                    }
+                }
+                
+                # Network growth trends (simulated based on current state)
+                growth_trends = {
+                    "staking_growth": {
+                        "current_staked": total_staked / self.blockchain.COIN,
+                        "participation_rate": f"{staking_ratio:.2f}%",
+                        "growth_trend": "Positive" if len(self.blockchain.stakes) > 0 else "Initial"
+                    },
+                    "network_effects": {
+                        "more_stakers_effect": "Increases security, decreases individual APY",
+                        "optimal_range": "20-40% of supply staked for best balance",
+                        "current_assessment": participation_health
+                    }
+                }
+                
+                return {
+                    "success": True,
+                    "network_health": {
+                        "overall_health": "Excellent" if participation_health == "Excellent" and decentralization_health == "Excellent" else "Good",
+                        "participation": {
+                            "staking_ratio": f"{staking_ratio:.2f}%",
+                            "health_rating": participation_health,
+                            "total_staked": total_staked / self.blockchain.COIN,
+                            "unique_stakers": unique_stakers
+                        },
+                        "decentralization": {
+                            "health_rating": decentralization_health,
+                            "validator_count": unique_stakers,
+                            "concentration_risk": "Low" if unique_stakers > 20 else "Monitor"
+                        },
+                        "security_metrics": security_metrics,
+                        "growth_trends": growth_trends
+                    },
+                    "recommendations": [
+                        "Encourage more diverse staker participation" if unique_stakers < 50 else "Maintain healthy validator diversity",
+                        "Monitor large stake concentrations" if any(stake.get("amount", 0) > total_staked * 0.1 for stake in self.blockchain.stakes.values()) else "Stake distribution looks healthy",
+                        "Continue promoting network security through staking participation"
+                    ]
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
         # Quantum Vault Endpoints - "Be Your Own Bank" Privacy Feature
         # Import quantum vault system
         sys.path.append('/app')
