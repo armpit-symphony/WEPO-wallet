@@ -531,7 +531,7 @@ export const WalletProvider = ({ children }) => {
         id: Date.now().toString(),
         type: 'send',
         amount: parseFloat(amount),
-        from: wallet.address,
+        from: wallet.wepo.address,
         to: toAddress,
         timestamp: new Date().toISOString(),
         status: 'pending'
