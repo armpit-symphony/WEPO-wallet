@@ -376,6 +376,7 @@ const UnifiedExchange = ({ onBack }) => {
 
     setIsLoading(true);
     setError('');
+    setSuccess('');
     
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -383,50 +384,103 @@ const UnifiedExchange = ({ onBack }) => {
       // Determine swap direction and currency
       const fromCurrency = swapType === 'buy' ? 'BTC' : 'WEPO';
       const inputAmount = swapType === 'buy' ? parseFloat(btcAmount) : parseFloat(wepoAmount);
-      
-      const response = await fetch(`${backendUrl}/api/swap/execute`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          wallet_address: currentAddress,
-          from_currency: fromCurrency,
-          input_amount: inputAmount
-        }),
-      });
 
-      const data = await response.json();
-      
-      if (response.ok && data.status === 'completed') {
-        setSuccess(`Swap completed! Exchanged ${data.input_amount} ${data.from_currency} for ${data.output_amount} ${data.to_currency}. Fee: ${data.fee_amount} ${data.from_currency}`);
+      // Enhanced privacy flow: Route through masternode mixer if enabled and available
+      if (privacyEnabled && fromCurrency === 'BTC' && availableMixers.length > 0) {
+        setSuccess('🔒 Privacy mixing enabled - routing through masternode mixer...');
         
-        // Update exchange rate with new market price
-        setExchangeRate(data.market_price);
-        
-        // Clear form
-        setBtcAmount('');
-        setWepoAmount('');
-        
-        // Refresh market data
-        fetchExchangeRate();
-        
-        // TODO: Refresh wallet balances
-        
-        // Reset form
-        setBtcAmount('');
-        setWepoAmount('');
-        setFeeInfo(null);
-        
-        // Refresh data
-        fetchStatistics();
+        try {
+          // Step 1: Use quick mix for seamless integration
+          const mixResult = await performQuickMix(
+            inputAmount,
+            btcAddress, // From user's BTC address
+            'mixing_temp_address' // Temporary mixer address
+          );
+
+          if (mixResult.success) {
+            setSuccess(`🔒 Bitcoin mixed successfully (${mixResult.mixed_amount} BTC). Proceeding with swap...`);
+            
+            // Step 2: Execute swap with mixed BTC
+            const response = await fetch(`${backendUrl}/api/swap/execute`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                wallet_address: currentAddress,
+                from_currency: fromCurrency,
+                input_amount: mixResult.mixed_amount, // Use mixed amount
+                privacy_enhanced: true,
+                mixing_transaction_id: mixResult.transaction_id
+              }),
+            });
+
+            const swapData = await response.json();
+            
+            if (response.ok && swapData.status === 'completed') {
+              setSuccess(`🔒 Privacy-enhanced swap completed! Mixed ${mixResult.mixed_amount} ${fromCurrency} → ${swapData.output_amount} ${swapData.to_currency}. Privacy mixing fee: ${mixResult.mixing_fee} BTC. Swap fee: ${swapData.fee_amount} ${fromCurrency}. Your funds are now in your self-custodial wallet with enhanced privacy!`);
+              
+              // Update exchange rate with new market price
+              setExchangeRate(swapData.market_price);
+            } else {
+              throw new Error(swapData.detail || 'Swap failed after mixing');
+            }
+          }
+        } catch (mixError) {
+          // Fallback to direct swap if mixing fails
+          console.warn('Mixing failed, falling back to direct swap:', mixError);
+          setError(`⚠️ Privacy mixing failed (${mixError.message}). Executing direct swap...`);
+          await executeDirectSwap(fromCurrency, inputAmount, backendUrl);
+        }
       } else {
-        setError(data.detail || 'Failed to initiate swap');
+        // Direct swap (no privacy mixing)
+        if (fromCurrency === 'BTC' && availableMixers.length === 0) {
+          setSuccess('ℹ️ No mixers available - executing direct swap...');
+        } else if (!privacyEnabled) {
+          setSuccess('ℹ️ Privacy mixing disabled - executing direct swap...');
+        }
+        
+        await executeDirectSwap(fromCurrency, inputAmount, backendUrl);
       }
+      
+      // Clear form and refresh data
+      setBtcAmount('');
+      setWepoAmount('');
+      setFeeInfo(null);
+      fetchExchangeRate();
+      fetchStatistics();
+      
     } catch (err) {
-      setError('Error initiating swap: ' + err.message);
+      setError('Error executing swap: ' + err.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Helper function for direct swaps (non-mixed)
+  const executeDirectSwap = async (fromCurrency, inputAmount, backendUrl) => {
+    const response = await fetch(`${backendUrl}/api/swap/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        wallet_address: currentAddress,
+        from_currency: fromCurrency,
+        input_amount: inputAmount,
+        privacy_enhanced: false
+      }),
+    });
+
+    const data = await response.json();
+    
+    if (response.ok && data.status === 'completed') {
+      setSuccess(`Direct swap completed! Exchanged ${data.input_amount} ${data.from_currency} for ${data.output_amount} ${data.to_currency}. Fee: ${data.fee_amount} ${data.from_currency}`);
+      
+      // Update exchange rate with new market price
+      setExchangeRate(data.market_price);
+    } else {
+      throw new Error(data.detail || 'Direct swap failed');
     }
   };
 
