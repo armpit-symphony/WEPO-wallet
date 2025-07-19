@@ -1089,6 +1089,112 @@ async def execute_rwa_trade(request: dict):
         logger.error(f"Error executing RWA trade: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ===== QUANTUM VAULT ENDPOINTS =====
+
+@api_router.post("/vault/create")
+async def create_quantum_vault(request: dict):
+    """Create a new Quantum Vault with multi-asset support"""
+    try:
+        user_address = request.get("user_address")
+        privacy_level = request.get("privacy_level", 3)
+        multi_asset_support = request.get("multi_asset_support", True)
+        
+        if not user_address:
+            raise HTTPException(status_code=400, detail="User address required")
+        
+        # Generate vault ID
+        vault_id = f"qv_{int(time.time())}_{secrets.token_hex(8)}"
+        
+        # Create vault record
+        vault_record = {
+            "vault_id": vault_id,
+            "owner_address": user_address,
+            "privacy_level": privacy_level,
+            "multi_asset_support": multi_asset_support,
+            "rwa_support": True,
+            "rwa_ghost_transfers": True,
+            "created_at": int(time.time()),
+            "last_activity": int(time.time()),
+            "transaction_count": 0,
+            "wepo_balance": 0,
+            "rwa_asset_count": 0,
+            "privacy_commitment": hashlib.sha256(f"{vault_id}{user_address}{int(time.time())}".encode()).hexdigest()
+        }
+        
+        await db.quantum_vaults.insert_one(vault_record)
+        
+        return {
+            "success": True,
+            "vault_id": vault_id,
+            "privacy_level": privacy_level,
+            "multi_asset_support": multi_asset_support,
+            "rwa_support": True,
+            "rwa_ghost_transfers": True,
+            "privacy_commitment": vault_record["privacy_commitment"],
+            "message": "Multi-asset Quantum Vault created with RWA support"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating quantum vault: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/vault/status/{vault_id}")
+async def get_vault_status(vault_id: str, user_address: str = None):
+    """Get comprehensive vault status including RWA assets"""
+    try:
+        # Build query
+        vault_query = {"vault_id": vault_id}
+        if user_address:
+            vault_query["owner_address"] = user_address
+            
+        vault = await db.quantum_vaults.find_one(vault_query)
+        if not vault:
+            raise HTTPException(status_code=404, detail="Vault not found or unauthorized")
+        
+        # Get RWA assets in vault
+        vault_rwa_assets = await db.vault_rwa_balances.find({"vault_id": vault_id, "balance": {"$gt": 0}}).to_list(None)
+        
+        # Calculate portfolio information
+        total_assets = len(vault_rwa_assets)
+        asset_types = list(set([asset.get("asset_type", "unknown") for asset in vault_rwa_assets]))
+        
+        # Get asset portfolio (privacy-protected based on privacy level)
+        assets_portfolio = []
+        if vault.get("privacy_level", 3) < 3:  # Lower privacy levels show some details
+            for asset in vault_rwa_assets:
+                asset_info = await db.rwa_tokens.find_one({"_id": asset["asset_id"]})
+                if asset_info:
+                    assets_portfolio.append({
+                        "asset_type": asset_info.get("asset_type", ""),
+                        "balance": asset["balance"],
+                        "symbol": asset_info.get("symbol", "")
+                    })
+        
+        return {
+            "success": True,
+            "vault_id": vault_id,
+            "owner_address": vault["owner_address"],
+            "privacy_level": vault["privacy_level"],
+            "multi_asset_support": vault.get("multi_asset_support", True),
+            "rwa_support": vault.get("rwa_support", True),
+            "rwa_ghost_transfers": vault.get("rwa_ghost_transfers", True),
+            "transaction_count": vault.get("transaction_count", 0),
+            "wepo_balance": vault.get("wepo_balance", 0),
+            "rwa_asset_count": vault.get("rwa_asset_count", 0),
+            "total_assets": total_assets,
+            "asset_types": asset_types if vault.get("privacy_level", 3) < 4 else [],  # Hide asset types at max privacy
+            "assets_portfolio": assets_portfolio,
+            "asset_type_hiding": vault.get("privacy_level", 3) >= 3,
+            "last_activity": vault.get("last_activity"),
+            "privacy_commitment": vault.get("privacy_commitment", "")
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting vault status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ===== RWA QUANTUM VAULT ENDPOINTS - REVOLUTIONARY PRIVATE RWA STORAGE =====
 
 @api_router.post("/vault/rwa/deposit")
