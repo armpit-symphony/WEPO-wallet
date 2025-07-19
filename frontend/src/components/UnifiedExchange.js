@@ -1039,19 +1039,19 @@ const UnifiedExchange = ({ onBack }) => {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-400">BTC Reserve:</span>
-              <div className="text-white font-medium">{poolStats.btc_reserve?.toFixed(6)} BTC</div>
+              <div className="text-white font-medium">{poolStats?.btc_reserve?.toFixed(6) || 'N/A'} BTC</div>
             </div>
             <div>
               <span className="text-gray-400">WEPO Reserve:</span>
-              <div className="text-white font-medium">{poolStats.wepo_reserve?.toFixed(2)} WEPO</div>
+              <div className="text-white font-medium">{poolStats?.wepo_reserve?.toFixed(2) || 'N/A'} WEPO</div>
             </div>
             <div>
               <span className="text-gray-400">Current Price:</span>
-              <div className="text-white font-medium">{poolStats.current_price?.toFixed(6)} WEPO/BTC</div>
+              <div className="text-white font-medium">{poolStats?.current_price?.toFixed(6) || 'N/A'} WEPO/BTC</div>
             </div>
             <div>
               <span className="text-gray-400">Total LPs:</span>
-              <div className="text-white font-medium">{poolStats.total_lp_count}</div>
+              <div className="text-white font-medium">{poolStats?.total_lp_count || 0}</div>
             </div>
           </div>
         </div>
