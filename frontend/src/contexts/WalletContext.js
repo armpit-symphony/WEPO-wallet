@@ -24,6 +24,12 @@ export const WalletProvider = ({ children }) => {
   const [posEnabled, setPosEnabled] = useState(false);
   const [masternodesEnabled, setMasternodesEnabled] = useState(false);
   const [showSeedPhrase, setShowSeedPhrase] = useState(false);
+  
+  // Self-custodial Bitcoin wallet state
+  const [btcWallet, setBtcWallet] = useState(null);
+  const [btcAddresses, setBtcAddresses] = useState([]);
+  const [btcUtxos, setBtcUtxos] = useState([]);
+  const [isBtcLoading, setIsBtcLoading] = useState(false);
 
   // Enable PoS after 18 months
   useEffect(() => {
