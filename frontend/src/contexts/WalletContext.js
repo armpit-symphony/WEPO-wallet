@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-// Temporarily isolate each crypto import to identify the problematic one
+// Temporarily comment out ALL crypto imports to isolate Buffer issue
 // import * as bip39 from 'bip39';
 // import CryptoJS from 'crypto-js';
 // import { generateWepoAddress, generateBitcoinAddress, validateAddress } from '../utils/addressUtils';
