@@ -736,6 +736,53 @@ const UnifiedExchange = ({ onBack }) => {
         </div>
       </div>
 
+      {/* Mixing Status Display */}
+      {mixingStatus && currentMixingId && (
+        <div className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30">
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="h-4 w-4 text-blue-400 animate-pulse" />
+            <span className="text-sm font-medium text-blue-200">Privacy Mixing in Progress</span>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-400">Status:</span>
+              <span className="text-xs font-medium text-blue-300 capitalize">
+                {mixingStatus.status}
+              </span>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-400">Progress:</span>
+                <span className="text-xs font-medium text-blue-300">
+                  {mixingStatus.progress}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${mixingStatus.progress}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            {mixingStatus.pool_info && (
+              <div className="text-xs text-gray-400">
+                Pool: {mixingStatus.pool_info.participants}/{mixingStatus.pool_info.min_participants} participants
+                {mixingStatus.pool_info.rounds_completed !== undefined && (
+                  <span> | Round {mixingStatus.pool_info.rounds_completed}/{mixingStatus.pool_info.total_rounds}</span>
+                )}
+              </div>
+            )}
+            
+            <p className="text-xs text-blue-200">
+              🔒 Your Bitcoin is being mixed through masternode privacy pools for enhanced anonymity
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Market Info */}
       <div className="bg-gray-700/30 rounded-lg p-4">
         <div className="flex items-center gap-2 mb-3">
