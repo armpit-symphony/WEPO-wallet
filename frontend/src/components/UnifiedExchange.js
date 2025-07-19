@@ -589,6 +589,59 @@ const UnifiedExchange = ({ onBack }) => {
         </p>
       </div>
 
+      {/* Privacy Controls */}
+      <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/30">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-purple-400" />
+            <span className="text-sm font-medium text-purple-200">Privacy Mixing</span>
+            <button
+              onClick={() => setPrivacyEnabled(!privacyEnabled)}
+              className={`p-1 rounded transition-colors ${privacyEnabled ? 'text-green-400' : 'text-gray-400'}`}
+              title={privacyEnabled ? 'Privacy enabled' : 'Privacy disabled'}
+            >
+              {privacyEnabled ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400">Mixers Available:</span>
+            <span className={`text-xs font-medium ${availableMixers.length > 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {availableMixers.length}
+            </span>
+          </div>
+        </div>
+        
+        {privacyEnabled ? (
+          <div className="space-y-2">
+            <p className="text-xs text-purple-200">
+              🔒 Enhanced privacy enabled - BTC swaps will be routed through masternode mixers before exchange
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Privacy Level:</span>
+              <select
+                value={privacyLevel}
+                onChange={(e) => setPrivacyLevel(parseInt(e.target.value))}
+                className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+              >
+                <option value={1}>Basic (1 round)</option>
+                <option value={2}>Standard (2 rounds)</option>
+                <option value={3}>High (3 rounds)</option>
+                <option value={4}>Maximum (4 rounds)</option>
+              </select>
+            </div>
+            {availableMixers.length === 0 && (
+              <div className="text-xs text-yellow-400">
+                ⚠️ No mixers available - will fallback to direct swap
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-400">
+            Privacy mixing disabled - direct swaps only
+          </p>
+        )}
+      </div>
+
       {/* Swap Type Toggle */}
       <div className="flex bg-gray-700 rounded-lg p-1">
         <button
