@@ -33,12 +33,19 @@ module.exports = {
         "tls": false
       };
 
-      // Add buffer and process globals for crypto libraries
-      webpackConfig.plugins.push(
+      // Add buffer and process globals for crypto libraries - CRITICAL
+      webpackConfig.plugins.unshift(
         new webpack.ProvidePlugin({
           Buffer: ['buffer', 'Buffer'],
           process: 'process/browser',
           global: 'global/window',
+        })
+      );
+      
+      // Ensure polyfills are loaded first
+      webpackConfig.plugins.unshift(
+        new webpack.DefinePlugin({
+          global: 'globalThis',
         })
       );
       
