@@ -44,6 +44,14 @@ const UnifiedExchange = ({ onBack }) => {
   const [statistics, setStatistics] = useState(null);
   const [priorityFee, setPriorityFee] = useState(false);
   const [swapHistory, setSwapHistory] = useState([]);
+  
+  // Privacy mixing state
+  const [privacyEnabled, setPrivacyEnabled] = useState(true);
+  const [availableMixers, setAvailableMixers] = useState([]);
+  const [privacyLevel, setPrivacyLevel] = useState(3);
+  const [mixingStatus, setMixingStatus] = useState(null);
+  const [currentMixingId, setCurrentMixingId] = useState(null);
+  
   // State for liquidity provision
   const [liquidityBtcAmount, setLiquidityBtcAmount] = useState('');
   const [liquidityWepoAmount, setLiquidityWepoAmount] = useState('');
