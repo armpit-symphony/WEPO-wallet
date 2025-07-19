@@ -152,7 +152,7 @@ export const WalletProvider = ({ children }) => {
       }
 
       setWallet(walletData);
-      return { mnemonic, address: walletData.address };
+      return { mnemonic, address: walletData.wepo.address };
     } catch (error) {
       console.error('Wallet creation error:', error);
       throw new Error('Failed to create wallet: ' + error.message);
