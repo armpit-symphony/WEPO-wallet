@@ -597,6 +597,12 @@ export const WalletProvider = ({ children }) => {
     showSeedPhrase,
     setShowSeedPhrase,
     
+    // Bitcoin wallet state
+    btcWallet,
+    btcAddresses,
+    btcUtxos,
+    isBtcLoading,
+    
     // Actions
     generateMnemonic,
     createWallet,
@@ -609,7 +615,15 @@ export const WalletProvider = ({ children }) => {
     setBalance,
     setTransactions,
     
-    // BTC-related (to be implemented)
+    // Bitcoin wallet actions
+    sendBitcoin,
+    getNewBitcoinAddress,
+    getBitcoinBalance,
+    exportBitcoinWalletInfo,
+    initializeBitcoinWallet,
+    loadExistingBitcoinWallet,
+    
+    // Legacy setters (keep for compatibility)
     setBtcBalance,
     setBtcTransactions
   };
