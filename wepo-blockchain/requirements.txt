@@ -8,6 +8,7 @@ pycryptodome==3.23.0
 
 # Quantum-resistant cryptography
 oqs==0.10.2
+dilithium-py==1.1.0
 
 # Bitcoin and atomic swap dependencies
 python-bitcoinlib==0.12.2
