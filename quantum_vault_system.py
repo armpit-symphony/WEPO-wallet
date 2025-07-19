@@ -1097,16 +1097,14 @@ class QuantumVaultSystem:
                 proof_type=f"vault_{operation}"
             )
             
-            # Convert to legacy ZKProof format for backward compatibility
+            # Convert to legacy ZKProof format for backward compatibility  
+            # Store production proof data in the verification_key field for compatibility
             legacy_proof = ZKProof(
                 proof_data=production_proof.proof_data.hex(),
                 public_inputs=production_proof.public_inputs,
-                verification_key=production_proof.verification_key.hex(),
+                verification_key=f"production:{production_proof.serialize().hex()}",
                 created_at=int(time.time())
             )
-            
-            # Store production proof reference for advanced verification
-            legacy_proof.production_proof = production_proof.serialize().hex()
             
             logger.info(f"Production zk-STARK proof generated for vault {operation}")
             return legacy_proof
