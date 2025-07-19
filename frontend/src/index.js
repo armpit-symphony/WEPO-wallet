@@ -1,13 +1,13 @@
-// Critical polyfills - must be imported FIRST before any crypto libraries
-import { Buffer } from 'buffer';
-import process from 'process';
+// Temporarily comment out polyfills to isolate Buffer issue
+// import { Buffer } from 'buffer';
+// import process from 'process';
 
 // Make polyfills available globally BEFORE any other imports
-if (typeof window !== 'undefined') {
-  window.Buffer = Buffer;
-  window.process = process;
-  window.global = window;
-}
+// if (typeof window !== 'undefined') {
+//   window.Buffer = Buffer;
+//   window.process = process;
+//   window.global = window;
+// }
 
 import React from "react";
 import ReactDOM from "react-dom/client";
