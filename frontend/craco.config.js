@@ -1,5 +1,10 @@
 const webpack = require('webpack');
 
+// Load configuration from environment or use defaults
+const config = {
+  disableHotReload: process.env.DISABLE_HOT_RELOAD === 'true',
+};
+
 module.exports = {
   webpack: {
     configure: (webpackConfig) => {
