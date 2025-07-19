@@ -1202,17 +1202,43 @@ const UnifiedExchange = ({ onBack }) => {
         </div>
       )}
 
-      {/* Warning */}
+      {/* Privacy & Security Notice */}
       <div className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-500/30">
         <div className="flex items-center gap-2 mb-2">
           <AlertTriangle className="h-4 w-4 text-yellow-400" />
-          <span className="text-sm font-medium text-yellow-200">Important Notice</span>
+          <span className="text-sm font-medium text-yellow-200">Privacy & Security Notice</span>
         </div>
-        <p className="text-sm text-gray-300">
-          {activeTab === 'btc' 
-            ? 'This is a trustless atomic swap. Make sure you have sufficient BTC in your external wallet.'
-            : 'RWA tokens represent real world assets. Verify asset details before trading.'}
-        </p>
+        <div className="space-y-2">
+          {activeTab === 'btc' ? (
+            <>
+              <p className="text-sm text-gray-300">
+                🔒 <strong>Privacy-Enhanced Trading:</strong> BTC swaps can be routed through masternode mixers for enhanced privacy
+              </p>
+              <p className="text-sm text-gray-300">
+                💰 <strong>Self-Custodial:</strong> Your funds go directly to your self-custodial wallet - no third party holds your assets
+              </p>
+              <p className="text-sm text-gray-300">
+                ⚡ <strong>Atomic Swaps:</strong> Trustless exchange ensures secure peer-to-peer trading
+              </p>
+            </>
+          ) : activeTab === 'rwa' ? (
+            <>
+              <p className="text-sm text-gray-300">
+                📄 <strong>RWA Verification:</strong> Each token represents verified real-world assets - review asset details before trading
+              </p>
+              <p className="text-sm text-gray-300">
+                🔒 <strong>Privacy for Bitcoin-backed Assets:</strong> Bitcoin-backed RWA trades support privacy mixing
+              </p>
+              <p className="text-sm text-gray-300">
+                💰 <strong>Self-Custodial Storage:</strong> All RWA tokens are stored in your self-custodial wallet
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-gray-300">
+              💧 <strong>Liquidity Provision:</strong> Earn fees from all trades by providing BTC-WEPO liquidity to the pool
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
