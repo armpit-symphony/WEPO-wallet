@@ -803,6 +803,21 @@ async def get_liquidity_stats():
         logger.error(f"Error getting liquidity stats: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+async def get_wallet_balance(address: str) -> float:
+    """Get wallet balance from database"""
+    wallet = await db.wallets.find_one({"address": address})
+    if not wallet:
+        return 0.0
+    return wallet.get("balance", 0.0)
+
+async def update_wallet_balance(address: str, amount_change: float):
+    """Update wallet balance by adding/subtracting amount"""
+    await db.wallets.update_one(
+        {"address": address},
+        {"$inc": {"balance": amount_change}},
+        upsert=True
+    )
+
 async def add_fee_to_redistribution_pool(fee_amount: float, fee_type: str):
     """Integrate swap fees with existing 3-way redistribution system"""
     try:
