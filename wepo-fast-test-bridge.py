@@ -824,6 +824,70 @@ class WepoFastTestBridge:
                     "timestamp": int(time.time())
                 }
 
+        @self.app.get("/api/quantum/status")
+        async def get_quantum_status():
+            """Get quantum resistance status and algorithm information"""
+            try:
+                # Import dilithium to check quantum resistance status
+                import sys
+                sys.path.append('/app/wepo-blockchain/core')
+                
+                try:
+                    from dilithium import DilithiumSigner
+                    
+                    # Create signer to get status
+                    signer = DilithiumSigner()
+                    algorithm_info = signer.get_algorithm_info()
+                    
+                    quantum_status = {
+                        "quantum_resistant": signer.is_quantum_resistant(),
+                        "algorithm": algorithm_info.get("algorithm", "Unknown"),
+                        "variant": algorithm_info.get("variant", "Unknown"),
+                        "implementation": algorithm_info.get("implementation", "Unknown"),
+                        "security_level": algorithm_info.get("security_level", 0),
+                        "nist_approved": algorithm_info.get("nist_approved", False),
+                        "post_quantum": algorithm_info.get("post_quantum", False),
+                        "key_sizes": {
+                            "public_key": algorithm_info.get("public_key_size", 0),
+                            "private_key": algorithm_info.get("private_key_size", 0),
+                            "signature": algorithm_info.get("signature_size", 0)
+                        },
+                        "current_height": len(self.blockchain.blocks) - 1,
+                        "last_update": int(time.time())
+                    }
+                    
+                    return {
+                        "success": True,
+                        "data": quantum_status,
+                        "timestamp": int(time.time())
+                    }
+                    
+                except Exception as e:
+                    # Fallback if dilithium import fails
+                    return {
+                        "success": True,
+                        "data": {
+                            "quantum_resistant": False,
+                            "algorithm": "RSA Simulation",
+                            "variant": "Fallback",
+                            "implementation": "Classical cryptography",
+                            "security_level": 0,
+                            "nist_approved": False,
+                            "post_quantum": False,
+                            "error": str(e),
+                            "current_height": len(self.blockchain.blocks) - 1,
+                            "last_update": int(time.time())
+                        },
+                        "timestamp": int(time.time())
+                    }
+                
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": str(e),
+                    "timestamp": int(time.time())
+                }
+
         @self.app.get("/api/collateral/schedule")
         async def get_collateral_schedule():
             """Get complete collateral adjustment schedule"""
