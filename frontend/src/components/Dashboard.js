@@ -198,9 +198,9 @@ const Dashboard = ({ onLogout }) => {
   const renderTabContent = () => {
     switch(activeTab) {
       case 'send':
-        return <SendWepo onBack={() => setActiveTab('dashboard')} />;
+        return <SendWepo onClose={() => setActiveTab('dashboard')} />;
       case 'receive':
-        return <ReceiveWepo onBack={() => setActiveTab('dashboard')} />;
+        return <ReceiveWepo onClose={() => setActiveTab('dashboard')} />;
       case 'btc-dex':
         return <UnifiedExchange onBack={() => setActiveTab('dashboard')} />;
       case 'staking':
@@ -208,7 +208,7 @@ const Dashboard = ({ onLogout }) => {
       case 'masternode':
         return <MasternodeInterface onBack={() => setActiveTab('dashboard')} />;
       case 'settings':
-        return <SettingsPanel onBack={() => setActiveTab('dashboard')} />;
+        return <SettingsPanel onClose={() => setActiveTab('dashboard')} />;
       case 'messaging':
         return <QuantumMessaging onBack={() => setActiveTab('dashboard')} />;
       case 'rwa':
