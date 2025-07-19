@@ -67,9 +67,8 @@ const Dashboard = ({ onLogout }) => {
   
   // Quantum Vault state
   const [showQuantumVault, setShowQuantumVault] = useState(false);
-  
-  // Simplified quantum mode state (disabled for now)
-  const isQuantumMode = false;
+  const [isQuantumMode, setIsQuantumMode] = useState(false);
+  const [quantumStatus, setQuantumStatus] = useState(null);
   
   // Dilithium info for quantum security display
   const dilithiumInfo = {
