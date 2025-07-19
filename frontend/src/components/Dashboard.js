@@ -342,19 +342,27 @@ const Dashboard = ({ onLogout }) => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div className="bg-black/30 rounded-lg p-3">
-            <div className="text-gray-400">BTC Address</div>
-            <div className="text-white font-mono text-xs">1A1zP1eP...DivfNa</div>
-            <div className="text-orange-400 text-xs mt-1">Use external wallet</div>
+            <div className="text-gray-400">BTC Balance</div>
+            <div className="text-orange-400 font-semibold">
+              {btcBalance.toFixed(8)} BTC
+            </div>
+            <div className="text-green-400 text-xs mt-1">
+              {btcAddresses.length > 0 ? '✅ Self-Custodial' : '⏳ Initializing...'}
+            </div>
           </div>
           <div className="bg-black/30 rounded-lg p-3">
-            <div className="text-gray-400">Exchange Rate</div>
-            <div className="text-white font-semibold">1 BTC ≈ 1.007 WEPO</div>
-            <div className="text-green-400 text-xs mt-1">Live atomic swaps</div>
+            <div className="text-gray-400">BTC Addresses</div>
+            <div className="text-white font-semibold">
+              {btcAddresses.filter(addr => addr.chain === 0).length} Receiving
+            </div>
+            <div className="text-orange-400 text-xs mt-1">
+              HD Wallet (BIP44)
+            </div>
           </div>
           <div className="bg-black/30 rounded-lg p-3">
-            <div className="text-gray-400">Status</div>
-            <div className="text-green-400 font-semibold">Trading Available</div>
-            <div className="text-gray-400 text-xs mt-1">Start accumulating now</div>
+            <div className="text-gray-400">Your Keys</div>
+            <div className="text-green-400 font-semibold">Your Control</div>
+            <div className="text-green-400 text-xs mt-1">True self-custody</div>
           </div>
         </div>
         
