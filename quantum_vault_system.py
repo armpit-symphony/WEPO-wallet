@@ -1298,10 +1298,12 @@ class QuantumVaultSystem:
         This provides rigorous mathematical verification with soundness guarantees.
         """
         try:
-            # Deserialize production proof
-            production_proof = ProductionZKProof.deserialize(
-                bytes.fromhex(proof.production_proof)
-            )
+            # Extract production proof from verification_key field
+            if proof.verification_key.startswith("production:"):
+                production_proof_hex = proof.verification_key[11:]  # Remove "production:" prefix
+                production_proof = ProductionZKProof.deserialize(
+                    bytes.fromhex(production_proof_hex)
+                )
             
             # Reconstruct public statement for verification
             # Extract operation and asset info from public inputs
