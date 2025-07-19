@@ -70,12 +70,21 @@ const Dashboard = ({ onLogout }) => {
   const [isQuantumMode, setIsQuantumMode] = useState(false);
   const [quantumStatus, setQuantumStatus] = useState(null);
   
-  // Dilithium info for quantum security display
-  const dilithiumInfo = {
-    algorithm: 'Dilithium2',
-    signature_size: 2420,
-    hash_function: 'SHAKE-256',
-    security_level: 'Post-Quantum'
+  // Dilithium info for quantum security display (dynamic from backend)
+  const dilithiumInfo = quantumStatus ? {
+    algorithm: quantumStatus.algorithm || 'Dilithium2',
+    variant: quantumStatus.variant || 'NIST ML-DSA',
+    implementation: quantumStatus.implementation || 'dilithium-py',
+    security_level: quantumStatus.security_level ? `${quantumStatus.security_level}-bit` : '128-bit',
+    quantum_resistant: quantumStatus.quantum_resistant || false,
+    nist_approved: quantumStatus.nist_approved || false
+  } : {
+    algorithm: 'Loading...',
+    variant: 'Loading...',
+    implementation: 'Loading...',
+    security_level: 'Loading...',
+    quantum_resistant: false,
+    nist_approved: false
   };
   // Fetch quantum status from backend
   const fetchQuantumStatus = async () => {
