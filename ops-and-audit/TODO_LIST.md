@@ -12,14 +12,14 @@
 
 ### **🔧 SYSTEM ENHANCEMENTS**
 
-#### **1. Enhanced Community DEX Features** 
-- **Status**: 🔴 HIGH PRIORITY  
-- **Purpose**: Improve community-driven price discovery and trading experience
-- **Required**: Advanced trading UI, liquidity mining, governance interface
-- **Timeline**: 2-3 weeks
-- **Difficulty**: 🟡 MEDIUM DIFFICULTY  
-- **Philosophy**: Community rules the price, not external oracles
-- **Benefits**: Better user experience, increased liquidity, fair price discovery
+#### **1. Complete Staking Info Endpoint** 
+- **Status**: 🟡 MEDIUM PRIORITY  
+- **Purpose**: Provide detailed PoS staking configuration and rewards info
+- **Required**: Missing staking statistics and configuration endpoints
+- **Timeline**: 1 week
+- **Difficulty**: 🟢 LOW DIFFICULTY  
+- **Dependencies**: Hybrid PoW/PoS system (✅ completed)
+- **Benefits**: Better staking UX, transparency, community engagement
 
 #### **2. Wallet Authentication Security Audit**
 - **Status**: ⚠️ MEDIUM PRIORITY
