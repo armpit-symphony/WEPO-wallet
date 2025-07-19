@@ -29,7 +29,25 @@ from dataclasses import dataclass
 from pathlib import Path
 import logging
 
-# Try to import cairo-lang for production zk-STARKs
+# Initialize logger first
+logger = logging.getLogger(__name__)
+
+# Try to import production-ready cryptographic libraries
+try:
+    # Enhanced elliptic curve cryptography
+    from py_ecc.bn128 import G1, G2, pairing, multiply, add, normalize
+    from py_ecc.fields import bn128_FQ as FQ, bn128_FQ2 as FQ2
+    
+    # Finite field arithmetic for enhanced zk-STARKs
+    import galois
+    
+    ENHANCED_CRYPTO_AVAILABLE = True
+    logger.info("Enhanced cryptographic libraries loaded successfully")
+except ImportError as e:
+    ENHANCED_CRYPTO_AVAILABLE = False
+    logger.info(f"Enhanced cryptographic libraries not available, using fallback: {e}")
+
+# Try to import cairo-lang for production zk-STARKs  
 try:
     # Cairo language support for production zk-STARKs
     from starkware.cairo.common.hash_state import compute_hash_on_elements
@@ -40,12 +58,12 @@ try:
     from starkware.cairo.lang.cairo_constants import DEFAULT_PRIME
     
     CAIRO_AVAILABLE = True
+    logger.info("Cairo zk-STARK system loaded successfully")
 except ImportError:
     # Fallback imports for systems without cairo-lang
     CAIRO_AVAILABLE = False
     DEFAULT_PRIME = 2**251 + 17 * 2**192 + 1  # Cairo's field prime
-
-logger = logging.getLogger(__name__)
+    logger.info("Cairo not available, using enhanced fallback implementation")
 
 @dataclass
 class ProductionZKProof:
