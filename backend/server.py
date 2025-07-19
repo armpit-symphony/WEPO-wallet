@@ -803,6 +803,272 @@ async def get_liquidity_stats():
         logger.error(f"Error getting liquidity stats: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ===== RWA TOKEN TRADING ENDPOINTS =====
+
+@api_router.get("/rwa/tokens")
+async def get_rwa_tokens():
+    """Get all tradeable RWA tokens"""
+    try:
+        # Query all RWA tokens from database
+        tokens = await db.rwa_tokens.find({"status": "active"}).to_list(None)
+        
+        # Format for trading interface
+        tradeable_tokens = []
+        for token in tokens:
+            tradeable_tokens.append({
+                "token_id": str(token.get("_id", "")),
+                "symbol": token.get("symbol", ""),
+                "asset_name": token.get("asset_name", ""),
+                "asset_type": token.get("asset_type", "property"),
+                "total_supply": token.get("total_supply", 1000),
+                "available_supply": token.get("available_supply", 1000),
+                "creator": token.get("creator", ""),
+                "created_date": token.get("created_date", ""),
+                "verified": token.get("verified", True),
+                "trading_enabled": token.get("trading_enabled", True),
+                "decimals": token.get("decimals", 8)
+            })
+        
+        return {
+            "success": True,
+            "tokens": tradeable_tokens,
+            "count": len(tradeable_tokens)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting RWA tokens: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/rwa/rates") 
+async def get_rwa_rates():
+    """Get RWA token exchange rates against WEPO"""
+    try:
+        # Get all active tokens
+        tokens = await db.rwa_tokens.find({"status": "active"}).to_list(None)
+        rates = {}
+        
+        # Calculate exchange rates for each token
+        for token in tokens:
+            token_id = str(token.get("_id", ""))
+            total_supply = token.get("total_supply", 1000)
+            
+            # Basic rate calculation (could be enhanced with market data)
+            base_rate = 1.0  # 1 token = 1 WEPO as base
+            
+            # Adjust rate based on scarcity
+            if total_supply < 100:
+                base_rate = 5.0  # Rare tokens worth more
+            elif total_supply < 500:
+                base_rate = 2.0  # Uncommon tokens
+            
+            # Add market variations (±20%)
+            import random
+            market_factor = random.uniform(0.8, 1.2)
+            final_rate = base_rate * market_factor
+            
+            rates[token_id] = {
+                "rate_wepo_per_token": round(final_rate, 6),
+                "rate_token_per_wepo": round(1.0 / final_rate, 6), 
+                "last_updated": int(time.time()),
+                "token_symbol": token.get("symbol", ""),
+                "token_name": token.get("asset_name", ""),
+                "24h_change": round(random.uniform(-0.1, 0.1), 4)  # Mock 24h change
+            }
+        
+        return {
+            "success": True,
+            "rates": rates,
+            "base_currency": "WEPO",
+            "last_updated": int(time.time())
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting RWA rates: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/rwa/transfer")
+async def transfer_rwa_tokens(request: dict):
+    """Transfer RWA tokens between addresses"""
+    try:
+        token_id = request.get('token_id')
+        from_address = request.get('from_address')
+        to_address = request.get('to_address') 
+        amount = request.get('amount')
+        
+        if not all([token_id, from_address, to_address, amount]):
+            raise HTTPException(status_code=400, detail="Missing required fields")
+        
+        amount = float(amount)
+        if amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be positive")
+        
+        # Get token info
+        token = await db.rwa_tokens.find_one({"_id": token_id})
+        if not token:
+            raise HTTPException(status_code=404, detail="Token not found")
+        
+        # Check sender balance
+        sender_balance_doc = await db.rwa_balances.find_one({
+            "token_id": token_id,
+            "address": from_address
+        })
+        
+        sender_balance = sender_balance_doc.get("balance", 0) if sender_balance_doc else 0
+        if sender_balance < amount:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+        
+        # Execute transfer
+        # Deduct from sender
+        await db.rwa_balances.update_one(
+            {"token_id": token_id, "address": from_address},
+            {"$inc": {"balance": -amount}},
+            upsert=True
+        )
+        
+        # Add to receiver  
+        await db.rwa_balances.update_one(
+            {"token_id": token_id, "address": to_address},
+            {"$inc": {"balance": amount}},
+            upsert=True
+        )
+        
+        # Record transaction
+        tx_record = {
+            "tx_id": f"rwa_tx_{int(time.time())}_{secrets.token_hex(4)}",
+            "token_id": token_id,
+            "from_address": from_address,
+            "to_address": to_address,
+            "amount": amount,
+            "token_symbol": token.get("symbol", ""),
+            "timestamp": int(time.time()),
+            "status": "confirmed",
+            "tx_type": "rwa_transfer"
+        }
+        
+        await db.rwa_transactions.insert_one(tx_record)
+        
+        return {
+            "success": True,
+            "tx_id": tx_record["tx_id"],
+            "token_id": token_id,
+            "from_address": from_address,
+            "to_address": to_address,
+            "amount": amount,
+            "token_symbol": token.get("symbol", ""),
+            "status": "confirmed",
+            "timestamp": tx_record["timestamp"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error transferring RWA tokens: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/dex/rwa-trade")
+async def execute_rwa_trade(request: dict):
+    """Execute RWA token trades through the unified exchange"""
+    try:
+        token_id = request.get('token_id')
+        trade_type = request.get('trade_type')  # 'buy' or 'sell'
+        user_address = request.get('user_address')
+        token_amount = request.get('token_amount') 
+        wepo_amount = request.get('wepo_amount')
+        privacy_enhanced = request.get('privacy_enhanced', False)
+        
+        if not all([token_id, trade_type, user_address, token_amount, wepo_amount]):
+            raise HTTPException(status_code=400, detail="Missing required fields")
+        
+        token_amount = float(token_amount)
+        wepo_amount = float(wepo_amount)
+        
+        # Get token info
+        token = await db.rwa_tokens.find_one({"_id": token_id})
+        if not token:
+            raise HTTPException(status_code=404, detail="RWA token not found")
+        
+        # Calculate trade fee (0.1% of WEPO amount)
+        trade_fee = wepo_amount * 0.001
+        
+        if trade_type == 'buy':
+            # User buying RWA tokens with WEPO
+            # Check user WEPO balance
+            user_balance = await get_wallet_balance(user_address)
+            if user_balance < (wepo_amount + trade_fee):
+                raise HTTPException(status_code=400, detail="Insufficient WEPO balance")
+            
+            # Deduct WEPO from user
+            await update_wallet_balance(user_address, -(wepo_amount + trade_fee))
+            
+            # Add RWA tokens to user
+            await db.rwa_balances.update_one(
+                {"token_id": token_id, "address": user_address},
+                {"$inc": {"balance": token_amount}},
+                upsert=True
+            )
+            
+        else:  # sell
+            # User selling RWA tokens for WEPO
+            # Check user token balance
+            user_token_balance_doc = await db.rwa_balances.find_one({
+                "token_id": token_id,
+                "address": user_address
+            })
+            user_token_balance = user_token_balance_doc.get("balance", 0) if user_token_balance_doc else 0
+            
+            if user_token_balance < token_amount:
+                raise HTTPException(status_code=400, detail="Insufficient token balance")
+            
+            # Deduct RWA tokens from user
+            await db.rwa_balances.update_one(
+                {"token_id": token_id, "address": user_address},
+                {"$inc": {"balance": -token_amount}}
+            )
+            
+            # Add WEPO to user (minus fee)
+            await update_wallet_balance(user_address, wepo_amount - trade_fee)
+        
+        # Add fee to redistribution pool
+        await add_fee_to_redistribution_pool(trade_fee, "rwa_trade")
+        
+        # Record trade
+        trade_record = {
+            "trade_id": f"rwa_trade_{int(time.time())}_{secrets.token_hex(4)}",
+            "token_id": token_id,
+            "token_symbol": token.get("symbol", ""),
+            "trade_type": trade_type,
+            "user_address": user_address,
+            "token_amount": token_amount,
+            "wepo_amount": wepo_amount,
+            "trade_fee": trade_fee,
+            "privacy_enhanced": privacy_enhanced,
+            "timestamp": int(time.time()),
+            "status": "completed"
+        }
+        
+        await db.rwa_trades.insert_one(trade_record)
+        
+        return {
+            "success": True,
+            "trade_id": trade_record["trade_id"],
+            "token_id": token_id,
+            "trade_type": trade_type,
+            "token_amount": token_amount,
+            "wepo_amount": wepo_amount,
+            "trade_fee": trade_fee,
+            "privacy_enhanced": privacy_enhanced,
+            "status": "completed",
+            "timestamp": trade_record["timestamp"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error executing RWA trade: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ===== END RWA TOKEN TRADING ENDPOINTS =====
+
 async def get_wallet_balance(address: str) -> float:
     """Get wallet balance from database"""
     wallet = await db.wallets.find_one({"address": address})
