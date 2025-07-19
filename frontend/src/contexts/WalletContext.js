@@ -267,6 +267,265 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
+  // ===== SELF-CUSTODIAL BITCOIN WALLET FUNCTIONS =====
+  
+  const initializeBitcoinWallet = async (seedPhrase) => {
+    try {
+      setIsBtcLoading(true);
+      
+      // Create new Bitcoin wallet instance
+      const newBtcWallet = new SelfCustodialBitcoinWallet();
+      
+      // Initialize from seed phrase
+      const initResult = await newBtcWallet.initializeFromSeed(seedPhrase);
+      
+      if (!initResult.success) {
+        throw new Error('Failed to initialize Bitcoin wallet');
+      }
+      
+      // Store Bitcoin wallet
+      setBtcWallet(newBtcWallet);
+      setBtcAddresses(newBtcWallet.addresses);
+      
+      // Store encrypted Bitcoin wallet data
+      const btcWalletData = newBtcWallet.exportWallet();
+      const encryptedBtcWallet = CryptoJS.AES.encrypt(
+        JSON.stringify(btcWalletData), 
+        seedPhrase.substring(0, 32) // Use part of seed as encryption key
+      ).toString();
+      localStorage.setItem('wepo_btc_wallet', encryptedBtcWallet);
+      
+      // Load Bitcoin balance and transactions
+      await loadBitcoinData(newBtcWallet);
+      
+      console.log('✅ Self-custodial Bitcoin wallet initialized:', {
+        masterFingerprint: initResult.masterFingerprint,
+        firstAddress: initResult.firstAddress,
+        addressCount: initResult.addressCount
+      });
+      
+      return initResult;
+      
+    } catch (error) {
+      console.error('Bitcoin wallet initialization error:', error);
+      throw error;
+    } finally {
+      setIsBtcLoading(false);
+    }
+  };
+
+  const loadExistingBitcoinWallet = async (seedPhrase) => {
+    try {
+      setIsBtcLoading(true);
+      
+      const encryptedBtcWallet = localStorage.getItem('wepo_btc_wallet');
+      if (!encryptedBtcWallet) {
+        // No existing Bitcoin wallet, initialize new one
+        return await initializeBitcoinWallet(seedPhrase);
+      }
+      
+      // Decrypt and load existing wallet
+      const decryptedBtcWallet = CryptoJS.AES.decrypt(
+        encryptedBtcWallet, 
+        seedPhrase.substring(0, 32)
+      ).toString(CryptoJS.enc.Utf8);
+      
+      const btcWalletData = JSON.parse(decryptedBtcWallet);
+      
+      // Recreate Bitcoin wallet
+      const newBtcWallet = new SelfCustodialBitcoinWallet();
+      await newBtcWallet.initializeFromSeed(seedPhrase);
+      newBtcWallet.importWalletData(btcWalletData);
+      
+      setBtcWallet(newBtcWallet);
+      setBtcAddresses(newBtcWallet.addresses);
+      
+      await loadBitcoinData(newBtcWallet);
+      
+      return { success: true, restored: true };
+      
+    } catch (error) {
+      console.error('Failed to load existing Bitcoin wallet:', error);
+      // Fall back to creating new wallet
+      return await initializeBitcoinWallet(seedPhrase);
+    } finally {
+      setIsBtcLoading(false);
+    }
+  };
+
+  const loadBitcoinData = async (btcWalletInstance) => {
+    try {
+      // In production, this would query blockchain APIs to get:
+      // - UTXO set for all wallet addresses
+      // - Transaction history
+      // - Current balance
+      
+      // For now, simulate some data
+      const balance = btcWalletInstance.getBalance();
+      setBtcBalance(balance.total / 100000000); // Convert satoshis to BTC
+      
+      // Simulate some test UTXOs and transactions for demo
+      const mockUtxos = [
+        {
+          txid: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+          vout: 0,
+          value: 50000000, // 0.5 BTC in satoshis
+          address: btcWalletInstance.addresses[0]?.address,
+          confirmations: 6
+        },
+        {
+          txid: 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+          vout: 1,
+          value: 25000000, // 0.25 BTC in satoshis
+          address: btcWalletInstance.addresses[1]?.address,
+          confirmations: 3
+        }
+      ];
+      
+      btcWalletInstance.utxos = mockUtxos;
+      setBtcUtxos(mockUtxos);
+      setBtcBalance(0.75); // 0.75 BTC total
+      
+      // Mock transaction history
+      const mockTransactions = [
+        {
+          txid: 'transaction1234567890abcdef1234567890abcdef1234567890abcdef',
+          type: 'receive',
+          amount: 0.5,
+          address: btcWalletInstance.addresses[0]?.address,
+          confirmations: 6,
+          timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+          status: 'confirmed'
+        },
+        {
+          txid: 'transaction_abcdef1234567890abcdef1234567890abcdef1234567890',
+          type: 'receive', 
+          amount: 0.25,
+          address: btcWalletInstance.addresses[1]?.address,
+          confirmations: 3,
+          timestamp: new Date(Date.now() - 43200000).toISOString(), // 12 hours ago
+          status: 'confirmed'
+        }
+      ];
+      
+      setBtcTransactions(mockTransactions);
+      
+    } catch (error) {
+      console.error('Failed to load Bitcoin data:', error);
+      setBtcBalance(0);
+      setBtcTransactions([]);
+      setBtcUtxos([]);
+    }
+  };
+
+  const sendBitcoin = async (toAddress, amount, password) => {
+    try {
+      setIsBtcLoading(true);
+      
+      if (!btcWallet) {
+        throw new Error('Bitcoin wallet not initialized');
+      }
+      
+      // Verify password by trying to decrypt main wallet
+      const encryptedWallet = localStorage.getItem('wepo_wallet');
+      const decryptedWallet = CryptoJS.AES.decrypt(encryptedWallet, password).toString(CryptoJS.enc.Utf8);
+      JSON.parse(decryptedWallet); // This will throw if password is wrong
+      
+      // Convert amount to satoshis
+      const amountSatoshis = Math.round(amount * 100000000);
+      
+      // Create transaction
+      const txResult = await btcWallet.createTransaction([
+        { address: toAddress, value: amountSatoshis }
+      ]);
+      
+      if (!txResult.success) {
+        throw new Error(txResult.error);
+      }
+      
+      // Sign transaction
+      const signResult = await btcWallet.signTransaction(txResult.transaction);
+      
+      if (!signResult.success) {
+        throw new Error(signResult.error);
+      }
+      
+      // In production, broadcast transaction to Bitcoin network
+      // For now, simulate successful send
+      const transaction = {
+        txid: 'simulated_' + Date.now().toString(),
+        type: 'send',
+        amount: amount,
+        to: toAddress,
+        from: btcWallet.addresses[0]?.address,
+        timestamp: new Date().toISOString(),
+        status: 'pending',
+        fee: txResult.fee / 100000000, // Convert to BTC
+        confirmations: 0
+      };
+      
+      // Add to transaction history
+      setBtcTransactions(prev => [transaction, ...prev]);
+      
+      // Update balance (subtract sent amount and fee)
+      setBtcBalance(prev => prev - amount - transaction.fee);
+      
+      // Simulate confirmation after 5 seconds
+      setTimeout(() => {
+        setBtcTransactions(prev =>
+          prev.map(tx =>
+            tx.txid === transaction.txid
+              ? { ...tx, status: 'confirmed', confirmations: 1 }
+              : tx
+          )
+        );
+      }, 5000);
+      
+      return {
+        success: true,
+        txid: transaction.txid,
+        fee: transaction.fee
+      };
+      
+    } catch (error) {
+      console.error('Bitcoin send error:', error);
+      throw error;
+    } finally {
+      setIsBtcLoading(false);
+    }
+  };
+
+  const getNewBitcoinAddress = () => {
+    if (!btcWallet) {
+      throw new Error('Bitcoin wallet not initialized');
+    }
+    
+    const newAddress = btcWallet.getNewReceiveAddress();
+    setBtcAddresses(btcWallet.addresses); // Update addresses array
+    return newAddress;
+  };
+
+  const getBitcoinBalance = () => {
+    if (!btcWallet) {
+      return { confirmed: 0, unconfirmed: 0, total: 0 };
+    }
+    
+    return btcWallet.getBalance();
+  };
+
+  const exportBitcoinWalletInfo = () => {
+    if (!btcWallet) {
+      throw new Error('Bitcoin wallet not initialized');
+    }
+    
+    return {
+      addresses: btcWallet.getReceivingAddresses(),
+      balance: btcWallet.getBalance(),
+      utxoCount: btcWallet.utxos.length,
+      transactionCount: btcWallet.transactions.length
+    };
+  };
+
   const sendWepo = async (toAddress, amount, password) => {
     setIsLoading(true);
     try {
