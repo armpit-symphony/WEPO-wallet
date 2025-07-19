@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import * as bip39 from 'bip39';
-import CryptoJS from 'crypto-js';
-import { generateWepoAddress, generateBitcoinAddress, validateAddress } from '../utils/addressUtils';
-import SelfCustodialBitcoinWallet from '../utils/SelfCustodialBitcoinWallet';
+// Temporary isolation - disable crypto imports to test React loading
+// import * as bip39 from 'bip39';
+// import CryptoJS from 'crypto-js';
+// import { generateWepoAddress, generateBitcoinAddress, validateAddress } from '../utils/addressUtils';
+// import SelfCustodialBitcoinWallet from '../utils/SelfCustodialBitcoinWallet';
 
 const WalletContext = createContext();
 
