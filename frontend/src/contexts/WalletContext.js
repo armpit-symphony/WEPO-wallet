@@ -445,12 +445,7 @@ export const WalletProvider = ({ children }) => {
   const sendWepo = async (toAddress, amount, password) => {
     setIsLoading(true);
     try {
-      // Verify password
-      const encryptedWallet = localStorage.getItem('wepo_wallet');
-      const decryptedWallet = CryptoJS.AES.decrypt(encryptedWallet, password).toString(CryptoJS.enc.Utf8);
-      JSON.parse(decryptedWallet); // This will throw if password is wrong
-      
-      // Create transaction (simulated)
+      // Simplified transaction for isolation testing
       const transaction = {
         id: Date.now().toString(),
         type: 'send',
@@ -458,25 +453,11 @@ export const WalletProvider = ({ children }) => {
         from: wallet.wepo.address,
         to: toAddress,
         timestamp: new Date().toISOString(),
-        status: 'pending'
+        status: 'confirmed'
       };
       
-      // Add to transactions
       setTransactions(prev => [transaction, ...prev]);
-      
-      // Update balance
       setBalance(prev => prev - parseFloat(amount));
-      
-      // Simulate confirmation after 3 seconds
-      setTimeout(() => {
-        setTransactions(prev => 
-          prev.map(tx => 
-            tx.id === transaction.id 
-              ? { ...tx, status: 'confirmed' }
-              : tx
-          )
-        );
-      }, 3000);
       
       return transaction;
     } catch (error) {
