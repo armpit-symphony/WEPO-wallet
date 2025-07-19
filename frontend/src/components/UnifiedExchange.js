@@ -803,6 +803,15 @@ const UnifiedExchange = ({ onBack }) => {
                   <div>
                     <div className="font-medium">{token.symbol}</div>
                     <div className="text-sm opacity-80">{token.asset_name}</div>
+                    {/* Privacy indicator for Bitcoin-backed assets */}
+                    {(token.asset_type === 'bitcoin' || 
+                      token.symbol.toLowerCase().includes('btc') ||
+                      token.asset_name.toLowerCase().includes('bitcoin')) && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Shield className="h-3 w-3 text-purple-400" />
+                        <span className="text-xs text-purple-300">Privacy mixing available</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
@@ -816,6 +825,63 @@ const UnifiedExchange = ({ onBack }) => {
           ))}
         </div>
       </div>
+
+      {/* Privacy Controls for Bitcoin-backed RWA tokens */}
+      {selectedToken && (selectedToken.asset_type === 'bitcoin' || 
+                         selectedToken.symbol.toLowerCase().includes('btc') ||
+                         selectedToken.asset_name.toLowerCase().includes('bitcoin')) && (
+        <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/30">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-purple-400" />
+              <span className="text-sm font-medium text-purple-200">RWA Privacy Mixing</span>
+              <button
+                onClick={() => setPrivacyEnabled(!privacyEnabled)}
+                className={`p-1 rounded transition-colors ${privacyEnabled ? 'text-green-400' : 'text-gray-400'}`}
+                title={privacyEnabled ? 'Privacy enabled' : 'Privacy disabled'}
+              >
+                {privacyEnabled ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Mixers Available:</span>
+              <span className={`text-xs font-medium ${availableMixers.length > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {availableMixers.length}
+              </span>
+            </div>
+          </div>
+          
+          {privacyEnabled ? (
+            <div className="space-y-2">
+              <p className="text-xs text-purple-200">
+                🔒 Enhanced privacy enabled for Bitcoin-backed RWA trade - equivalent BTC value will be mixed before tokenization
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">Privacy Level:</span>
+                <select
+                  value={privacyLevel}
+                  onChange={(e) => setPrivacyLevel(parseInt(e.target.value))}
+                  className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white"
+                >
+                  <option value={1}>Basic (1 round)</option>
+                  <option value={2}>Standard (2 rounds)</option>
+                  <option value={3}>High (3 rounds)</option>
+                  <option value={4}>Maximum (4 rounds)</option>
+                </select>
+              </div>
+              {availableMixers.length === 0 && (
+                <div className="text-xs text-yellow-400">
+                  ⚠️ No mixers available - will proceed with direct RWA trade
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400">
+              Privacy mixing disabled for this Bitcoin-backed RWA trade
+            </p>
+          )}
+        </div>
+      )}
 
       {selectedToken && (
         <>
