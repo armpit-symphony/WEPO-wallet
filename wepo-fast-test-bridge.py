@@ -9,9 +9,13 @@ import hashlib
 import json
 import sys
 import os
+import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+
+# Setup logger
+logger = logging.getLogger(__name__)
 
 # Add atomic swaps and RWA to the path
 sys.path.append('/app/wepo-blockchain/core')
