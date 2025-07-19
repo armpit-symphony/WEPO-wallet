@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 # Try to import production-ready cryptographic libraries
 try:
     # Enhanced elliptic curve cryptography
-    from py_ecc.bn128 import G1, G2, pairing, multiply, add, normalize
+    from py_ecc.bn128 import G1, G2, pairing, multiply, add
     from py_ecc.fields import bn128_FQ as FQ, bn128_FQ2 as FQ2
     
     # Finite field arithmetic for enhanced zk-STARKs
