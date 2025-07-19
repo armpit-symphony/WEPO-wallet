@@ -43,7 +43,7 @@ module.exports = {
       webpackConfig.plugins.push(
         new webpack.DefinePlugin({
           global: 'globalThis',
-          'process.env.NODE_DEBUG': JSON.stringify(process.env.NODE_DEBUG),
+          'process.env.NODE_DEBUG': JSON.stringify(process.env.NODE_DEBUG || ''),
         })
       );
       
