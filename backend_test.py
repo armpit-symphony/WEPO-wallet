@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-WEPO Production zk-STARK Upgrade Testing Suite
-Tests the WEPO backend systems after the PRODUCTION ZK-STARK UPGRADE to the Quantum Vault system.
+WEPO Comprehensive Wallet Functions Testing Suite
+Tests all WEPO wallet functionality in preview environment as requested in the review.
 
-Focus areas:
-1. Production zk-STARK Integration - Test the new zk-STARK upgrade status endpoint /api/vault/zk-stark/status
-2. Quantum Vault Enhanced Operations - Test vault creation, deposits, withdrawals with enhanced cryptographic operations
-3. Enhanced Verification System - Test multi-layer verification system with BN128 curves and galois field operations
-4. Backward Compatibility - Verify existing vault operations still work with the upgraded system
-5. System Performance - Verify enhanced cryptographic libraries (py_ecc, galois) are properly loaded and functioning
-6. API Integration - Test that all existing quantum vault endpoints work with the production upgrade
+Focus areas from review request:
+1. Wallet Creation & Authentication Testing - Test wallet creation endpoint with seed phrase generation
+2. Core Wallet Operations Testing - Test WEPO balance retrieval, transactions, address validation
+3. Bitcoin Wallet Integration Testing - Test self-custodial Bitcoin wallet functionality
+4. Privacy & Security Functions Testing - Test quantum messaging, privacy controls, encryption
+5. Advanced Wallet Features Testing - Test Quantum Vault, masternode, staking functionality
+6. API Endpoint Validation - Test all wallet-related API endpoints
+7. Preview Environment Specific Issues - Test crypto library compatibility, session management
+8. Integration Points Testing - Test wallet integration with exchange, privacy mixing, RWA trading
 
-This is a critical test to verify our production zk-STARK upgrade successfully replaced custom implementation 
-with battle-tested cryptography without breaking existing functionality.
+This comprehensive test suite addresses user concerns about wallet functionality in preview mode
+and validates all wallet-related features are working correctly.
 
-Test Environment: Using production backend URL for comprehensive testing.
+Test Environment: Using preview backend URL for comprehensive wallet testing.
 """
 import requests
 import json
