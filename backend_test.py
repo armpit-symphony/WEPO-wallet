@@ -936,6 +936,248 @@ def test_wallet_mining_system():
         log_test("Wallet Mining System", False, error=str(e))
         return False
 
+def test_rwa_quantum_vault_endpoints():
+    """Test 10: RWA QUANTUM VAULT ENDPOINTS TESTING"""
+    print("\n🏛️ TEST 10: RWA QUANTUM VAULT ENDPOINTS TESTING")
+    print("Testing newly implemented RWA Quantum Vault endpoints that were previously returning 404...")
+    
+    try:
+        checks_passed = 0
+        total_checks = 0
+        test_wallet_address = f"wepo1rwatest{secrets.token_hex(16)}"
+        created_vault_id = None
+        
+        # Test 1: RWA Vault Creation (/api/vault/rwa/create)
+        print("\n  🏗️ Testing RWA Vault Creation...")
+        total_checks += 1
+        
+        # Test different asset types
+        asset_types = ["real_estate", "commodities", "securities", "collectibles"]
+        successful_creations = 0
+        
+        for asset_type in asset_types:
+            vault_data = {
+                "wallet_address": test_wallet_address,
+                "asset_type": asset_type,
+                "privacy_level": "maximum"
+            }
+            
+            response = requests.post(f"{API_URL}/vault/rwa/create", json=vault_data)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and data.get('vault_id'):
+                    if not created_vault_id:  # Store first successful vault ID for later tests
+                        created_vault_id = data['vault_id']
+                    successful_creations += 1
+                    print(f"    ✅ {asset_type.title()} vault: Created {data['vault_id'][:12]}...")
+                else:
+                    print(f"    ❌ {asset_type.title()} vault: Invalid response structure")
+            else:
+                print(f"    ❌ {asset_type.title()} vault: HTTP {response.status_code}")
+        
+        if successful_creations >= 3:
+            print(f"  ✅ RWA Vault Creation: {successful_creations}/4 asset types working")
+            checks_passed += 1
+        else:
+            print(f"  ❌ RWA Vault Creation: Only {successful_creations}/4 asset types working")
+        
+        # Test 2: RWA Vault Status (/api/vault/rwa/status/{vault_id})
+        print("\n  📊 Testing RWA Vault Status...")
+        total_checks += 1
+        
+        if created_vault_id:
+            response = requests.get(f"{API_URL}/vault/rwa/status/{created_vault_id}")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and data.get('vault_found'):
+                    vault_data = data.get('vault_data', {})
+                    required_fields = ['vault_id', 'status', 'privacy_status', 'asset_holdings', 'security_features']
+                    fields_present = sum(1 for field in required_fields if field in vault_data)
+                    
+                    if fields_present >= 4:
+                        privacy_status = vault_data.get('privacy_status', {})
+                        security_features = vault_data.get('security_features', {})
+                        print(f"    ✅ Vault status: {fields_present}/5 fields present")
+                        print(f"    ✅ Privacy: {privacy_status.get('encryption_level', 'unknown')}")
+                        print(f"    ✅ Security: {len(security_features)} features enabled")
+                        checks_passed += 1
+                    else:
+                        print(f"    ❌ Vault status: Only {fields_present}/5 required fields present")
+                else:
+                    print(f"    ❌ Vault status: Invalid response structure")
+            else:
+                print(f"    ❌ Vault status: HTTP {response.status_code}")
+        else:
+            print(f"    ❌ Vault status: No vault ID available for testing")
+        
+        # Test 3: RWA Vault Transfer (/api/vault/rwa/transfer)
+        print("\n  🔄 Testing RWA Vault Transfer...")
+        total_checks += 1
+        
+        # Create second vault for transfer testing
+        second_vault_data = {
+            "wallet_address": f"wepo1rwatest2{secrets.token_hex(16)}",
+            "asset_type": "commodities",
+            "privacy_level": "maximum"
+        }
+        
+        second_vault_response = requests.post(f"{API_URL}/vault/rwa/create", json=second_vault_data)
+        second_vault_id = None
+        
+        if second_vault_response.status_code == 200:
+            second_vault_id = second_vault_response.json().get('vault_id')
+        
+        if created_vault_id and second_vault_id:
+            # Test different privacy modes
+            privacy_modes = ["ghost", "stealth", "public"]
+            successful_transfers = 0
+            
+            for privacy_mode in privacy_modes:
+                transfer_data = {
+                    "from_vault": created_vault_id,
+                    "to_vault": second_vault_id,
+                    "asset_id": f"test_asset_{secrets.token_hex(4)}",
+                    "amount": 1,
+                    "privacy_mode": privacy_mode
+                }
+                
+                response = requests.post(f"{API_URL}/vault/rwa/transfer", json=transfer_data)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('success') and data.get('transfer_id'):
+                        successful_transfers += 1
+                        print(f"    ✅ {privacy_mode.title()} transfer: ID {data['transfer_id'][:12]}...")
+                    else:
+                        print(f"    ❌ {privacy_mode.title()} transfer: Invalid response structure")
+                else:
+                    print(f"    ❌ {privacy_mode.title()} transfer: HTTP {response.status_code}")
+            
+            if successful_transfers >= 2:
+                print(f"  ✅ RWA Vault Transfer: {successful_transfers}/3 privacy modes working")
+                checks_passed += 1
+            else:
+                print(f"  ❌ RWA Vault Transfer: Only {successful_transfers}/3 privacy modes working")
+        else:
+            print(f"  ❌ RWA Vault Transfer: Cannot test - missing vault IDs")
+        
+        # Test 4: Integration with Existing RWA Endpoints
+        print("\n  🔗 Testing Integration with Existing RWA Endpoints...")
+        total_checks += 1
+        
+        integration_checks = 0
+        integration_total = 0
+        
+        # Test RWA tokens endpoint
+        integration_total += 1
+        response = requests.get(f"{API_URL}/rwa/tokens")
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success') and 'tokens' in data:
+                token_count = data.get('count', 0)
+                print(f"    ✅ RWA tokens: {token_count} tokens available")
+                integration_checks += 1
+            else:
+                print(f"    ❌ RWA tokens: Invalid response structure")
+        else:
+            print(f"    ❌ RWA tokens: HTTP {response.status_code}")
+        
+        # Test RWA rates endpoint
+        integration_total += 1
+        response = requests.get(f"{API_URL}/rwa/rates")
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success') and 'rates' in data:
+                rates_count = len(data.get('rates', {}))
+                print(f"    ✅ RWA rates: {rates_count} rate pairs available")
+                integration_checks += 1
+            else:
+                print(f"    ❌ RWA rates: Invalid response structure")
+        else:
+            print(f"    ❌ RWA rates: HTTP {response.status_code}")
+        
+        # Test RWA fee info endpoint
+        integration_total += 1
+        response = requests.get(f"{API_URL}/rwa/fee-info")
+        if response.status_code == 200:
+            data = response.json()
+            if 'fee_distribution' in data or 'trading_fee' in data:
+                print(f"    ✅ RWA fee info: Fee structure accessible")
+                integration_checks += 1
+            else:
+                print(f"    ❌ RWA fee info: Invalid response structure")
+        else:
+            print(f"    ❌ RWA fee info: HTTP {response.status_code}")
+        
+        if integration_checks >= 2:
+            print(f"  ✅ RWA Integration: {integration_checks}/{integration_total} endpoints working")
+            checks_passed += 1
+        else:
+            print(f"  ❌ RWA Integration: Only {integration_checks}/{integration_total} endpoints working")
+        
+        # Test 5: Privacy Features Validation
+        print("\n  🔐 Testing Privacy Features...")
+        total_checks += 1
+        
+        if created_vault_id:
+            response = requests.get(f"{API_URL}/vault/rwa/status/{created_vault_id}")
+            if response.status_code == 200:
+                data = response.json()
+                vault_data = data.get('vault_data', {})
+                privacy_status = vault_data.get('privacy_status', {})
+                
+                privacy_features = [
+                    privacy_status.get('quantum_encryption', False),
+                    privacy_status.get('zk_proofs', False),
+                    privacy_status.get('mixing_active', False),
+                    privacy_status.get('ghost_mode', False)
+                ]
+                
+                active_features = sum(1 for feature in privacy_features if feature)
+                if active_features >= 3:
+                    print(f"    ✅ Privacy features: {active_features}/4 features active")
+                    checks_passed += 1
+                else:
+                    print(f"    ❌ Privacy features: Only {active_features}/4 features active")
+            else:
+                print(f"    ❌ Privacy features: Cannot verify - vault status unavailable")
+        else:
+            print(f"    ❌ Privacy features: Cannot test - no vault available")
+        
+        # Test 6: Compliance and Security Features
+        print("\n  ⚖️ Testing Compliance and Security Features...")
+        total_checks += 1
+        
+        if created_vault_id:
+            response = requests.get(f"{API_URL}/vault/rwa/status/{created_vault_id}")
+            if response.status_code == 200:
+                data = response.json()
+                vault_data = data.get('vault_data', {})
+                compliance_status = vault_data.get('compliance_status', {})
+                security_features = vault_data.get('security_features', {})
+                
+                compliance_checks_count = sum(1 for key, value in compliance_status.items() if value)
+                security_checks_count = sum(1 for key, value in security_features.items() if value)
+                
+                if compliance_checks_count >= 2 and security_checks_count >= 2:
+                    print(f"    ✅ Compliance: {compliance_checks_count} checks passed")
+                    print(f"    ✅ Security: {security_checks_count} features enabled")
+                    checks_passed += 1
+                else:
+                    print(f"    ❌ Compliance/Security: Insufficient features enabled")
+            else:
+                print(f"    ❌ Compliance/Security: Cannot verify - vault status unavailable")
+        else:
+            print(f"    ❌ Compliance/Security: Cannot test - no vault available")
+        
+        success_rate = (checks_passed / total_checks) * 100
+        log_test("RWA Quantum Vault Endpoints", checks_passed >= 4,
+                 details=f"RWA Quantum Vault endpoints verified: {checks_passed}/{total_checks} endpoint groups working ({success_rate:.1f}% success)")
+        return checks_passed >= 4
+        
+    except Exception as e:
+        log_test("RWA Quantum Vault Endpoints", False, error=str(e))
+        return False
+
 def run_comprehensive_wallet_tests():
     """Run all comprehensive wallet function tests"""
     print("🚀 STARTING WEPO COMPREHENSIVE WALLET FUNCTIONS TESTING")
@@ -952,6 +1194,7 @@ def run_comprehensive_wallet_tests():
     test7_result = test_preview_environment_compatibility()
     test8_result = test_integration_points()
     test9_result = test_wallet_mining_system()
+    test10_result = test_rwa_quantum_vault_endpoints()
     
     # Print final results
     print("\n" + "=" * 80)
