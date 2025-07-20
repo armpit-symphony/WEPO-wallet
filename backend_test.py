@@ -1006,8 +1006,9 @@ def run_comprehensive_wallet_tests():
     print("✅ All wallet-related API endpoints should respond correctly")
     print("✅ Preview environment should have proper crypto library compatibility")
     print("✅ Integration with exchange, RWA trading, and privacy mixing should work")
+    print("✅ Wallet mining system should be fully operational with all endpoints")
     
-    if critical_passed >= 6:
+    if critical_passed >= 7:
         print("\n🎉 COMPREHENSIVE WALLET FUNCTIONALITY IS WORKING!")
         print("✅ Wallet creation and authentication are functional")
         print("✅ Core wallet operations are working correctly")
@@ -1017,6 +1018,7 @@ def run_comprehensive_wallet_tests():
         print("✅ API endpoints are responding properly")
         print("✅ Preview environment compatibility is confirmed")
         print("✅ Integration points are working correctly")
+        print("✅ Wallet mining system is fully operational")
         print("\n🔒 WALLET SECURITY & FUNCTIONALITY CONFIRMED:")
         print("• Wallet creation with proper encryption working")
         print("• Balance retrieval and transaction management functional")
@@ -1026,6 +1028,7 @@ def run_comprehensive_wallet_tests():
         print("• All critical API endpoints responding correctly")
         print("• Preview environment crypto libraries compatible")
         print("• Integration with exchange and RWA trading working")
+        print("• Wallet mining system with all endpoints operational")
         return True
     else:
         print("\n❌ CRITICAL WALLET FUNCTIONALITY ISSUES FOUND!")
