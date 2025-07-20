@@ -981,7 +981,8 @@ def run_comprehensive_wallet_tests():
         "Advanced Wallet Features",
         "API Endpoint Validation",
         "Preview Environment Compatibility",
-        "Integration Points"
+        "Integration Points",
+        "Wallet Mining System"
     ]
     
     critical_passed = 0
