@@ -803,6 +803,308 @@ async def get_liquidity_stats():
         logger.error(f"Error getting liquidity stats: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ===== WALLET MINING SYSTEM =====
+
+class WalletMiner:
+    """Browser-based wallet miner integrated with WEPO PoW network"""
+    def __init__(self):
+        self.connected_miners = {}  # address -> miner info
+        self.mining_stats = {
+            "connected_miners": 0,
+            "total_hashrate": 0.0,
+            "blocks_found": 0,
+            "network_difficulty": 1.0,
+            "mining_mode": "genesis"  # "genesis" or "pow"
+        }
+        self.genesis_launch_time = 1735153200  # Dec 25, 2025 8pm UTC (3pm EST)
+    
+    def is_genesis_active(self):
+        """Check if genesis mining is still active"""
+        current_time = time.time()
+        return current_time < self.genesis_launch_time or self.mining_stats["blocks_found"] == 0
+    
+    async def connect_miner(self, address: str, mining_mode: str = "genesis", wallet_type: str = "regular"):
+        """Connect a wallet miner to the network"""
+        if not address:
+            raise HTTPException(status_code=400, detail="Wallet address required")
+        
+        self.connected_miners[address] = {
+            "address": address,
+            "wallet_type": wallet_type,
+            "mining_mode": mining_mode,
+            "connected_time": time.time(),
+            "hashrate": 0.0,
+            "is_mining": False,
+            "last_activity": time.time(),
+            "cpu_usage": 25,  # Default 25%
+            "shares_submitted": 0,
+            "blocks_found": 0
+        }
+        
+        self.mining_stats["connected_miners"] = len(self.connected_miners)
+        
+        return {
+            "success": True,
+            "message": "Connected to WEPO mining network",
+            "miner_id": address[:10] + "..." + address[-6:],
+            "network_miners": self.mining_stats["connected_miners"],
+            "mining_mode": "🎄 Genesis Block Mining" if self.is_genesis_active() else "⚡ PoW Mining"
+        }
+    
+    async def start_mining(self, address: str):
+        """Start mining for a wallet miner"""
+        if address not in self.connected_miners:
+            await self.connect_miner(address)
+        
+        miner = self.connected_miners[address]
+        miner["is_mining"] = True
+        miner["last_activity"] = time.time()
+        
+        # Generate mining job (same format as external miners)
+        mining_job = await self.get_mining_work(address)
+        
+        return {
+            "success": True,
+            "message": "Mining started successfully",
+            "mining_job": mining_job,
+            "cpu_usage": miner["cpu_usage"],
+            "status": "🎄 Mining genesis block..." if self.is_genesis_active() else "⚡ Mining PoW blocks..."
+        }
+    
+    async def stop_mining(self, address: str):
+        """Stop mining for a wallet miner"""
+        if address in self.connected_miners:
+            miner = self.connected_miners[address]
+            miner["is_mining"] = False
+            miner["hashrate"] = 0.0
+            self.update_total_hashrate()
+        
+        return {
+            "success": True,
+            "message": "Mining stopped successfully"
+        }
+    
+    async def get_mining_work(self, address: str):
+        """Get mining work - same pathway as external miners"""
+        current_time = int(time.time())
+        height = await get_current_block_height()
+        
+        # Genesis block special case
+        if self.is_genesis_active():
+            return {
+                "job_id": f"genesis_{address[:8]}_{current_time}",
+                "block_type": "genesis",
+                "height": 0,
+                "prev_hash": "0" * 64,
+                "merkle_root": "genesis_merkle_root_" + "0" * 40,
+                "timestamp": current_time,
+                "bits": 0x1d00ffff,
+                "target_difficulty": 1.0,
+                "reward": 0,  # Genesis block has no reward
+                "algorithm": "argon2",
+                "message": "🎄 WEPO Genesis Block - December 25, 2025"
+            }
+        
+        # Regular PoW block
+        return {
+            "job_id": f"pow_{address[:8]}_{current_time}",
+            "block_type": "pow",
+            "height": height + 1,
+            "prev_hash": f"previous_block_hash_{height}",
+            "merkle_root": f"merkle_root_{current_time}",
+            "timestamp": current_time,
+            "bits": 0x1d00ffff,
+            "target_difficulty": self.mining_stats["network_difficulty"],
+            "reward": 121.6 if height <= 52560 else 12.4,
+            "algorithm": "argon2"
+        }
+    
+    async def submit_work(self, address: str, job_id: str, nonce: str, hash_result: str):
+        """Submit mining work - same pathway as external miners"""
+        if address not in self.connected_miners:
+            raise HTTPException(status_code=400, detail="Miner not connected")
+        
+        miner = self.connected_miners[address]
+        miner["shares_submitted"] += 1
+        miner["last_activity"] = time.time()
+        
+        # Check if valid solution (simplified for wallet mining)
+        # In production, this would validate against target difficulty
+        is_valid_block = hash_result.startswith("0000")  # Simplified validation
+        
+        if is_valid_block:
+            miner["blocks_found"] += 1
+            self.mining_stats["blocks_found"] += 1
+            
+            # If genesis block found, switch to PoW mode
+            if self.is_genesis_active() and job_id.startswith("genesis_"):
+                self.mining_stats["mining_mode"] = "pow"
+            
+            return {
+                "accepted": True,
+                "type": "block",
+                "height": 0 if job_id.startswith("genesis_") else await get_current_block_height() + 1,
+                "reward": 0 if job_id.startswith("genesis_") else 121.6,
+                "message": "🎄 Genesis block found!" if job_id.startswith("genesis_") else "Block found!"
+            }
+        
+        # Valid share but not a block
+        return {
+            "accepted": True,
+            "type": "share",
+            "message": "Share accepted"
+        }
+    
+    async def update_miner_hashrate(self, address: str, hashrate: float):
+        """Update individual miner hashrate"""
+        if address in self.connected_miners:
+            self.connected_miners[address]["hashrate"] = hashrate
+            self.connected_miners[address]["last_activity"] = time.time()
+            self.update_total_hashrate()
+    
+    def update_total_hashrate(self):
+        """Update total network hashrate"""
+        total = sum(miner["hashrate"] for miner in self.connected_miners.values() if miner["is_mining"])
+        self.mining_stats["total_hashrate"] = total
+    
+    def get_mining_stats(self):
+        """Get current mining statistics"""
+        active_miners = [m for m in self.connected_miners.values() if m["is_mining"]]
+        
+        return {
+            "connected_miners": len(self.connected_miners),
+            "active_miners": len(active_miners),
+            "total_hashrate": self.mining_stats["total_hashrate"],
+            "network_difficulty": self.mining_stats["network_difficulty"],
+            "blocks_found": self.mining_stats["blocks_found"],
+            "mining_mode": "genesis" if self.is_genesis_active() else "pow",
+            "genesis_launch_time": self.genesis_launch_time,
+            "time_to_launch": max(0, self.genesis_launch_time - time.time()) if self.is_genesis_active() else 0,
+            "mode_display": "🎄 Genesis Block Mining" if self.is_genesis_active() else "⚡ PoW Mining"
+        }
+    
+    def get_miner_stats(self, address: str):
+        """Get individual miner statistics"""
+        if address not in self.connected_miners:
+            return {"error": "Miner not found"}
+        
+        miner = self.connected_miners[address]
+        return {
+            "address": address[:10] + "..." + address[-6:],
+            "is_mining": miner["is_mining"],
+            "hashrate": miner["hashrate"],
+            "cpu_usage": miner.get("cpu_usage", 25),
+            "shares_submitted": miner["shares_submitted"],
+            "blocks_found": miner["blocks_found"],
+            "connected_time": miner["connected_time"],
+            "uptime": time.time() - miner["connected_time"],
+            "network_rank": self.get_miner_rank(address)
+        }
+    
+    def get_miner_rank(self, address: str):
+        """Get miner's rank by hashrate"""
+        if address not in self.connected_miners:
+            return 0
+        
+        miner_hashrate = self.connected_miners[address]["hashrate"]
+        miners_by_hashrate = sorted(
+            [m for m in self.connected_miners.values() if m["is_mining"]], 
+            key=lambda x: x["hashrate"], 
+            reverse=True
+        )
+        
+        for i, miner in enumerate(miners_by_hashrate):
+            if miner["address"] == address:
+                return i + 1
+        return len(miners_by_hashrate)
+
+# Global wallet mining instance
+wallet_mining = WalletMiner()
+
+# Wallet Mining API Endpoints
+@api_router.get("/mining/status")
+async def get_mining_status():
+    """Get current mining status"""
+    return wallet_mining.get_mining_stats()
+
+@api_router.post("/mining/connect")
+async def connect_miner(request: dict):
+    """Connect a wallet miner to the network"""
+    address = request.get("address")
+    mining_mode = request.get("mining_mode", "genesis") 
+    wallet_type = request.get("wallet_type", "regular")
+    
+    return await wallet_mining.connect_miner(address, mining_mode, wallet_type)
+
+@api_router.post("/mining/start")
+async def start_mining(request: dict):
+    """Start mining for a wallet miner"""
+    address = request.get("address")
+    if not address:
+        raise HTTPException(status_code=400, detail="Address required")
+    
+    return await wallet_mining.start_mining(address)
+
+@api_router.post("/mining/stop")
+async def stop_mining(request: dict):
+    """Stop mining for a wallet miner"""
+    address = request.get("address")
+    if not address:
+        raise HTTPException(status_code=400, detail="Address required")
+    
+    return await wallet_mining.stop_mining(address)
+
+@api_router.get("/mining/work/{address}")
+async def get_mining_work(address: str):
+    """Get mining work for wallet miner - same pathway as external miners"""
+    return await wallet_mining.get_mining_work(address)
+
+@api_router.post("/mining/submit")
+async def submit_mining_work(request: dict):
+    """Submit mining work - same pathway as external miners"""
+    address = request.get("address")
+    job_id = request.get("job_id")
+    nonce = request.get("nonce")
+    hash_result = request.get("hash")
+    
+    if not all([address, job_id, nonce, hash_result]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    return await wallet_mining.submit_work(address, job_id, nonce, hash_result)
+
+@api_router.post("/mining/hashrate")
+async def update_hashrate(request: dict):
+    """Update miner hashrate"""
+    address = request.get("address")
+    hashrate = request.get("hashrate", 0.0)
+    
+    if not address:
+        raise HTTPException(status_code=400, detail="Address required")
+    
+    await wallet_mining.update_miner_hashrate(address, hashrate)
+    return {"success": True}
+
+@api_router.get("/mining/stats/{address}")
+async def get_miner_stats(address: str):
+    """Get mining statistics for a specific miner"""
+    return wallet_mining.get_miner_stats(address)
+
+@api_router.get("/mining/leaderboard")
+async def get_mining_leaderboard():
+    """Get mining leaderboard - top miners by hashrate"""
+    miners = []
+    for address, miner in wallet_mining.connected_miners.items():
+        if miner["is_mining"]:
+            miners.append({
+                "address": address[:10] + "..." + address[-6:],
+                "hashrate": miner["hashrate"],
+                "wallet_type": miner["wallet_type"],
+                "blocks_found": miner["blocks_found"]
+            })
+    
+    miners.sort(key=lambda x: x["hashrate"], reverse=True)
+    return {"miners": miners[:20]}
+
 # ===== HELPER FUNCTIONS =====
 
 async def get_wallet_balance(address: str) -> float:
