@@ -2493,14 +2493,29 @@ class WepoFastTestBridge:
         @self.app.get("/api/dex/rate")
         async def get_exchange_rate():
             """Get current exchange rates"""
+            # Check if liquidity pool exists
+            if btc_wepo_pool.total_shares == 0:
+                # No market exists yet - first user can create market
+                return {
+                    'pool_exists': False,
+                    'message': 'No liquidity pool exists yet. First user can create the market and set initial price.',
+                    'btc_to_wepo': 0,
+                    'wepo_to_btc': 0,
+                    'rwa_tokens': {},
+                    'fee_percentage': 0.3,
+                    'can_bootstrap': True,
+                    'last_updated': time.strftime('%Y-%m-%d %H:%M:%S')
+                }
+            
+            # Market exists - get current rates from AMM
+            current_price = btc_wepo_pool.get_price()  # WEPO per BTC
+            
             # Get RWA tokens for trading
             rwa_tokens = rwa_system.get_tradeable_tokens()
-            
-            # Create rate info for each RWA token
             rwa_rates = {}
             for token in rwa_tokens:
-                # Use last price or default to 1 WEPO per 1000 tokens
-                rate = token.get('last_price', 1000000000)  # Default rate in satoshis per token
+                # Use last price or default to market-based rate
+                rate = token.get('last_price', current_price * 1000)  # RWA tokens priced relative to market
                 rwa_rates[token['token_id']] = {
                     'symbol': token['symbol'],
                     'name': token['name'],
@@ -2511,10 +2526,12 @@ class WepoFastTestBridge:
                 }
             
             return {
-                'btc_to_wepo': 1.0,
-                'wepo_to_btc': 1.0,
+                'pool_exists': True,
+                'btc_to_wepo': current_price,
+                'wepo_to_btc': 1.0 / current_price,
                 'rwa_tokens': rwa_rates,
-                'fee_percentage': 0.1,
+                'fee_percentage': 0.3,
+                'can_bootstrap': False,
                 'last_updated': time.strftime('%Y-%m-%d %H:%M:%S')
             }
         
