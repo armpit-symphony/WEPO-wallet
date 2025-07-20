@@ -54,9 +54,9 @@ import hashlib
 BACKEND_URL = "https://c20c25cb-96fe-4438-95b9-132ba06c9f15.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
-print(f"🔧 TESTING WEPO COMPREHENSIVE WALLET FUNCTIONS")
+print(f"🔧 TESTING WEPO RWA QUANTUM VAULT ENDPOINTS - PRIORITY 2 ISSUE RESOLUTION")
 print(f"Preview Backend API URL: {API_URL}")
-print(f"Focus: Comprehensive wallet functionality testing in preview environment")
+print(f"Focus: RWA Quantum Vault endpoints that were previously returning 404 Not Found")
 print("=" * 80)
 
 # Test results tracking
