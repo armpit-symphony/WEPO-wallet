@@ -26,7 +26,7 @@ import string
 import base64
 
 # Use production backend URL from frontend/.env
-BACKEND_URL = "https://fc99a509-861d-4135-af8d-f75ec8f77e67.preview.emergentagent.com"
+BACKEND_URL = "https://c20c25cb-96fe-4438-95b9-132ba06c9f15.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🏢 TESTING WEPO RWA TOKEN TRADING AND MASTERNODE INTEGRATION - FOCUSED")
