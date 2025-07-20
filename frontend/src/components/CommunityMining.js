@@ -514,6 +514,274 @@ const CommunityMining = ({ onBack, miningMode = 'genesis' }) => {
       </div>
     );
   };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Dashboard
+          </button>
+          <div className="flex items-center gap-2">
+            <Pickaxe className="w-6 h-6 text-yellow-400" />
+            <h1 className="text-2xl font-bold text-white">
+              {modeDisplay}
+            </h1>
+          </div>
+        </div>
+
+        {/* Genesis Countdown (only for genesis mode) */}
+        {currentMode === 'genesis' && renderCountdown()}
+
+        <div className="grid md:grid-cols-2 gap-6 mt-6">
+          {/* Mining Control Panel */}
+          <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Mining Control</h2>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="p-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Connection Status */}
+            <div className="flex items-center gap-3 mb-4 p-3 bg-gray-700/50 rounded-lg">
+              <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+              <span className="text-gray-300">
+                {isConnected ? 'Connected to network' : 'Not connected'}
+              </span>
+            </div>
+
+            {/* Mining Status */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Status:</span>
+                <span className={`font-medium ${isMining ? 'text-green-400' : 'text-gray-400'}`}>
+                  {isMining ? '⚡ Mining' : 'Stopped'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Your Hashrate:</span>
+                <span className="font-medium text-yellow-400">
+                  {formatHashrate(miningStats.hashRate)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">CPU Usage:</span>
+                <span className="font-medium text-blue-400">{cpuUsage}%</span>
+              </div>
+
+              {miningStats.networkRank > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">Network Rank:</span>
+                  <span className="font-medium text-purple-400">
+                    #{miningStats.networkRank}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* CPU Usage Settings */}
+            {showSettings && (
+              <div className="mt-4 p-4 bg-gray-700/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Cpu className="w-4 h-4 text-blue-400" />
+                  <span className="text-gray-300 font-medium">CPU Usage: {cpuUsage}%</span>
+                </div>
+                <div className="flex gap-2">
+                  {[25, 50, 75, 100].map(usage => (
+                    <button
+                      key={usage}
+                      onClick={() => updateCpuUsage(usage)}
+                      className={`px-3 py-1 rounded text-sm transition-colors ${
+                        cpuUsage === usage 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                      }`}
+                    >
+                      {usage}%
+                    </button>
+                  ))}
+                </div>
+                <div className="text-xs text-gray-400 mt-2">
+                  Lower CPU usage saves battery but reduces hashrate
+                </div>
+              </div>
+            )}
+
+            {/* Control Buttons */}
+            <div className="flex gap-3 mt-6">
+              {!isConnected ? (
+                <button
+                  onClick={connectToMining}
+                  disabled={!wallet?.address}
+                  className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                >
+                  <Globe className="w-5 h-5" />
+                  Connect to Network
+                </button>
+              ) : !isMining ? (
+                <button
+                  onClick={startMining}
+                  className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                >
+                  <Play className="w-5 h-5" />
+                  Start Mining
+                </button>
+              ) : (
+                <button
+                  onClick={stopMining}
+                  className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                >
+                  <Square className="w-5 h-5" />
+                  Stop Mining
+                </button>
+              )}
+            </div>
+
+            {!wallet?.address && (
+              <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600/30 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                  <span className="text-yellow-400 text-sm">
+                    Wallet not connected. Please create or login to your wallet first.
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Network Statistics */}
+          <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+            <div className="flex items-center gap-2 mb-4">
+              <Activity className="w-5 h-5 text-green-400" />
+              <h2 className="text-xl font-bold text-white">Network Statistics</h2>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Connected Miners:</span>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-blue-400" />
+                  <span className="font-medium text-blue-400">
+                    {miningStats.connectedMiners}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Active Miners:</span>
+                <span className="font-medium text-green-400">
+                  {miningStats.activeMiners}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Network Hashrate:</span>
+                <span className="font-medium text-yellow-400">
+                  {formatHashrate(miningStats.totalHashrate)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Blocks Found:</span>
+                <span className="font-medium text-purple-400">
+                  {miningStats.blocksFound}
+                </span>
+              </div>
+
+              {currentMode === 'pow' && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">Block Reward:</span>
+                  <span className="font-medium text-green-400">
+                    {miningStats.blockReward} WEPO
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Personal Mining Stats */}
+            <div className="mt-6 pt-4 border-t border-gray-600">
+              <h3 className="text-lg font-bold text-white mb-3">Your Stats</h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">Shares Submitted:</span>
+                  <span className="font-medium text-blue-400">
+                    {personalStats.sharesSubmitted}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">Blocks Found:</span>
+                  <span className="font-medium text-green-400">
+                    {personalStats.blocksFound}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">Mining Time:</span>
+                  <span className="font-medium text-yellow-400">
+                    {formatTime(personalStats.uptime)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mining Activity Log */}
+        <div className="mt-6 bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+          <div className="flex items-center gap-2 mb-4">
+            <CheckCircle className="w-5 h-5 text-green-400" />
+            <h2 className="text-xl font-bold text-white">Mining Activity</h2>
+          </div>
+
+          <div className="bg-black/30 rounded-lg p-4 max-h-64 overflow-y-auto">
+            {miningLogs.length === 0 ? (
+              <div className="text-center text-gray-400 py-4">
+                No mining activity yet. Connect to start mining.
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {miningLogs.map((log, index) => (
+                  <div key={index} className="text-sm text-gray-300 font-mono">
+                    {log}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Community Notice */}
+        <div className="mt-6 bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-xl p-6 border border-purple-600/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Award className="w-5 h-5 text-purple-400" />
+            <h3 className="text-lg font-bold text-white">We The People Network</h3>
+          </div>
+          <p className="text-gray-300 text-sm">
+            {currentMode === 'genesis' 
+              ? '🎄 Join the Christmas Day 2025 genesis mining event! Be part of history as we mine the very first WEPO block together as a community.'
+              : '⚡ Mining helps secure the WEPO network. Every hash counts in maintaining decentralization and financial freedom for all.'
+            }
+          </p>
+          <p className="text-gray-400 text-xs mt-2">
+            Mining from your wallet ensures network accessibility - no expensive equipment required!
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CommunityMining;
     const now = Date.now();
     const timeRemaining = LAUNCH_TIMESTAMP - now;
     
