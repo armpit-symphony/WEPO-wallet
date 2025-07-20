@@ -1107,6 +1107,12 @@ async def get_mining_leaderboard():
 
 # ===== HELPER FUNCTIONS =====
 
+async def get_current_block_height():
+    """Get current blockchain height"""
+    # In production, this would query the actual blockchain
+    # For now, return a simple counter
+    return 0
+
 async def get_wallet_balance(address: str) -> float:
     """Get wallet balance for an address"""
     try:
