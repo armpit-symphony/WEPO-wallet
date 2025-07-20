@@ -1027,32 +1027,46 @@ class WepoFastTestBridge:
         async def get_mining_info():
             height = len(self.blockchain.blocks) - 1
             
-            # Calculate current reward based on WEPO tokenomics
-            if height < 13140:  # Q1 (blocks 0-13139)
-                current_reward = 400.0
-                quarter_info = "Q1 (400 WEPO per block)"
-            elif height < 26280:  # Q2 (blocks 13140-26279)
-                current_reward = 200.0 
-                quarter_info = "Q2 (200 WEPO per block)"
-            elif height < 39420:  # Q3 (blocks 26280-39419)
-                current_reward = 100.0
-                quarter_info = "Q3 (100 WEPO per block)"
-            elif height < 52560:  # Q4 (blocks 39420-52559)
-                current_reward = 50.0
-                quarter_info = "Q4 (50 WEPO per block)"
-            else:  # Year 2+ 
-                current_reward = 12.4
-                quarter_info = "Year 2+ (12.4 WEPO per block)"
+            # Calculate current reward based on CORRECTED WEPO tokenomics (aligned with /api/tokenomics/overview)
+            # NEW TOKENOMICS: 69,000,003 WEPO total supply with proper mining schedule
+            if height < 131400:  # Phase 1: Pre-PoS Mining (18 months)
+                current_reward = 52.51
+                quarter_info = "Pre-PoS Mining (52.51 WEPO per block)"
+                phase_name = "Phase 1 - Pre-PoS Mining"
+            elif height < 288540:  # Phase 2a: Post-PoS Years 1-3
+                current_reward = 33.17
+                quarter_info = "Post-PoS Years 1-3 (33.17 WEPO per block)"
+                phase_name = "Phase 2a - Post-PoS Years 1-3"
+            elif height < 604140:  # Phase 2b: Post-PoS Years 4-9 
+                current_reward = 16.58
+                quarter_info = "Post-PoS Years 4-9 (16.58 WEPO per block)"
+                phase_name = "Phase 2b - Post-PoS Years 4-9"
+            elif height < 762300:  # Phase 2c: Post-PoS Years 10-12
+                current_reward = 8.29
+                quarter_info = "Post-PoS Years 10-12 (8.29 WEPO per block)"
+                phase_name = "Phase 2c - Post-PoS Years 10-12"
+            elif height < 920460:  # Phase 2d: Post-PoS Years 13-15
+                current_reward = 4.15
+                quarter_info = "Post-PoS Years 13-15 (4.15 WEPO per block)"
+                phase_name = "Phase 2d - Post-PoS Years 13-15"
+            else:  # Mining complete after 15 years
+                current_reward = 0.0
+                quarter_info = "Mining Complete (0 WEPO per block)"
+                phase_name = "Post-Mining Era"
             
             return {
                 "current_block_height": height,
                 "current_reward": current_reward,
                 "quarter_info": quarter_info,
+                "phase_name": phase_name,
                 "difficulty": 1,
-                "algorithm": "FastTest",
+                "algorithm": "Argon2 + SHA256 Dual-Layer",
                 "mining_enabled": True,
                 "mempool_size": len(self.blockchain.mempool),
-                "reward_schedule": "WEPO Tokenomics: Q1=400, Q2=200, Q3=100, Q4=50, Year2+=12.4 WEPO per block"
+                "reward_schedule": "CORRECTED WEPO Tokenomics: Phase1=52.51, Phase2a=33.17, Phase2b=16.58, Phase2c=8.29, Phase2d=4.15 WEPO per block",
+                "total_supply": "69,000,003 WEPO",
+                "mining_duration": "15 years (blocks 0-920,459)",
+                "pos_activation": "Block 131,400 (18 months)"
             }
         
         @self.app.post("/api/test/mine-block")
