@@ -1453,10 +1453,16 @@ class WepoFastTestBridge:
                     "success": True,
                     "vault_created": True,
                     "vault_id": result["vault_id"],
-                    "commitment": result["commitment"],
+                    "wallet_address": result["wallet_address"],
+                    "created_at": result["created_at"],
                     "privacy_enabled": result["privacy_enabled"],
                     "auto_deposit_available": result["auto_deposit_available"],
-                    "message": "Quantum Vault created - ultimate privacy enabled"
+                    "zk_stark_protection": result["zk_stark_protection"],
+                    "multi_asset_support": result["multi_asset_support"],
+                    "rwa_support": result["rwa_support"],
+                    "ghost_transfers": result["ghost_transfers"],
+                    "rwa_ghost_transfers": result["rwa_ghost_transfers"],
+                    "message": "Multi-asset Quantum Vault created - ultimate privacy enabled"
                 }
                 
             except Exception as e:
