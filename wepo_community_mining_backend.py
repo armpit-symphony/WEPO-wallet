@@ -41,7 +41,7 @@ class MiningStats:
     total_hash_rate: float = 0.0
     genesis_status: str = 'waiting'  # 'waiting', 'active', 'found'
     current_phase: str = 'Phase 1'
-    block_reward: float = 400.0
+    block_reward: float = 52.51  # CORRECTED: Aligned with new tokenomics (was 400.0)
     difficulty: str = '0x1d00ffff'
     blocks_mined: int = 0
 
