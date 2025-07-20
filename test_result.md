@@ -1178,7 +1178,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "WEPO RWA Token Trading Integration with Fixed Backend Endpoints"
+    - "WEPO Wallet Mining System Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "critical"
