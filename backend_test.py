@@ -1219,7 +1219,8 @@ def run_comprehensive_wallet_tests():
         "API Endpoint Validation",
         "Preview Environment Compatibility",
         "Integration Points",
-        "Wallet Mining System"
+        "Wallet Mining System",
+        "RWA Quantum Vault Endpoints"
     ]
     
     critical_passed = 0
@@ -1244,8 +1245,9 @@ def run_comprehensive_wallet_tests():
     print("✅ Preview environment should have proper crypto library compatibility")
     print("✅ Integration with exchange, RWA trading, and privacy mixing should work")
     print("✅ Wallet mining system should be fully operational with all endpoints")
+    print("✅ RWA Quantum Vault endpoints should return 200 status codes (not 404)")
     
-    if critical_passed >= 7:
+    if critical_passed >= 8:
         print("\n🎉 COMPREHENSIVE WALLET FUNCTIONALITY IS WORKING!")
         print("✅ Wallet creation and authentication are functional")
         print("✅ Core wallet operations are working correctly")
@@ -1256,6 +1258,7 @@ def run_comprehensive_wallet_tests():
         print("✅ Preview environment compatibility is confirmed")
         print("✅ Integration points are working correctly")
         print("✅ Wallet mining system is fully operational")
+        print("✅ RWA Quantum Vault endpoints are functional")
         print("\n🔒 WALLET SECURITY & FUNCTIONALITY CONFIRMED:")
         print("• Wallet creation with proper encryption working")
         print("• Balance retrieval and transaction management functional")
@@ -1266,6 +1269,7 @@ def run_comprehensive_wallet_tests():
         print("• Preview environment crypto libraries compatible")
         print("• Integration with exchange and RWA trading working")
         print("• Wallet mining system with all endpoints operational")
+        print("• RWA Quantum Vault endpoints returning 200 status codes")
         return True
     else:
         print("\n❌ CRITICAL WALLET FUNCTIONALITY ISSUES FOUND!")
