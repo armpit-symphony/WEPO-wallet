@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Pickaxe, 
   Users, 
@@ -13,49 +13,119 @@ import {
   Play,
   Square,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Settings,
+  Cpu,
+  Activity
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 
 const CommunityMining = ({ onBack, miningMode = 'genesis' }) => {
   const { wallet } = useWallet();
-  // Simplified quantum mode state (disabled for now)
-  const quantumWallet = null;
-  const isQuantumMode = false;
   
+  // Mining states
   const [isConnected, setIsConnected] = useState(false);
   const [isMining, setIsMining] = useState(false);
   const [miningStats, setMiningStats] = useState({
     hashRate: 0,
     difficulty: '0x1d00ffff',
     connectedMiners: 0,
+    activeMiners: 0,
     timeToLaunch: null,
-    blockReward: 400,
+    blockReward: 0,
     estimatedTime: null,
-    currentPhase: 'Phase 1'
+    currentPhase: 'Genesis Block',
+    totalHashrate: 0,
+    blocksFound: 0,
+    networkRank: 0
   });
   const [miningLogs, setMiningLogs] = useState([]);
-  const [genesisStatus, setGenesisStatus] = useState('waiting'); // waiting, active, found
-
+  const [cpuUsage, setCpuUsage] = useState(25);
+  const [personalStats, setPersonalStats] = useState({
+    sharesSubmitted: 0,
+    blocksFound: 0,
+    uptime: 0,
+    totalHashes: 0
+  });
+  const [showSettings, setShowSettings] = useState(false);
+  
+  // WebWorker refs
+  const miningWorker = useRef(null);
+  const statsInterval = useRef(null);
+  
+  // Dynamic mode detection
+  const [currentMode, setCurrentMode] = useState('genesis');
+  const [modeDisplay, setModeDisplay] = useState('🎄 Genesis Block Mining');
+  
   // Christmas Day 2025 3pm EST = 8pm UTC
   const LAUNCH_TIMESTAMP = new Date('2025-12-25T20:00:00Z').getTime();
 
-  const currentWallet = isQuantumMode ? quantumWallet : wallet;
-
   useEffect(() => {
-    // Load mining status and stats
+    // Initialize mining worker
+    initializeMiningWorker();
+    
+    // Load initial mining status
     loadMiningStatus();
     
     // Set up polling for real-time updates
     const interval = setInterval(() => {
       if (isConnected || isMining) {
         updateMiningStats();
+        updatePersonalStats();
       }
       updateCountdown();
-    }, 1000);
+    }, 2000); // Poll every 2 seconds
 
-    return () => clearInterval(interval);
-  }, [isConnected, isMining]);
+    return () => {
+      clearInterval(interval);
+      if (statsInterval.current) {
+        clearInterval(statsInterval.current);
+      }
+      if (miningWorker.current) {
+        miningWorker.current.terminate();
+      }
+    };
+  }, []);
+
+  const initializeMiningWorker = () => {
+    try {
+      miningWorker.current = new Worker('/mining-worker.js');
+      
+      miningWorker.current.onmessage = (e) => {
+        const { type, data } = e.data;
+        
+        switch (type) {
+          case 'WORKER_READY':
+            addMiningLog('⚙️ Mining engine initialized');
+            break;
+          case 'MINING_STARTED':
+            addMiningLog('🚀 Mining started successfully');
+            break;
+          case 'MINING_STOPPED':
+            addMiningLog(`⏹️ Mining stopped. Total hashes: ${data.totalHashes.toLocaleString()}`);
+            break;
+          case 'HASHRATE_UPDATE':
+            setMiningStats(prev => ({ ...prev, hashRate: data.hashrate }));
+            updateHashrateOnServer(data.hashrate);
+            break;
+          case 'SOLUTION_FOUND':
+            handleSolutionFound(data);
+            break;
+          case 'JOB_UPDATED':
+            addMiningLog(`📋 New mining job: ${data.jobId}`);
+            break;
+        }
+      };
+      
+      miningWorker.current.onerror = (error) => {
+        console.error('Mining worker error:', error);
+        addMiningLog(`❌ Mining worker error: ${error.message}`);
+      };
+    } catch (error) {
+      console.error('Failed to initialize mining worker:', error);
+      addMiningLog('❌ Failed to initialize mining engine');
+    }
+  };
 
   const loadMiningStatus = async () => {
     try {
@@ -64,32 +134,50 @@ const CommunityMining = ({ onBack, miningMode = 'genesis' }) => {
       
       if (response.ok) {
         const data = await response.json();
+        
+        // Update mode based on server response
+        setCurrentMode(data.mining_mode || 'genesis');
+        setModeDisplay(data.mode_display || '🎄 Genesis Block Mining');
+        
         setMiningStats(prev => ({
           ...prev,
           connectedMiners: data.connected_miners || 0,
-          difficulty: data.difficulty || '0x1d00ffff',
-          blockReward: data.block_reward || 400,
-          currentPhase: data.mining_phase || 'Phase 1'
+          activeMiners: data.active_miners || 0,
+          totalHashrate: data.total_hashrate || 0,
+          difficulty: data.network_difficulty || 1.0,
+          blocksFound: data.blocks_found || 0,
+          timeToLaunch: data.time_to_launch || null,
+          currentPhase: data.mode_display || 'Genesis Block'
         }));
-        setGenesisStatus(data.genesis_status || 'waiting');
       }
     } catch (error) {
       console.error('Failed to load mining status:', error);
+      addMiningLog('⚠️ Could not load network status');
     }
   };
 
   const updateMiningStats = async () => {
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-      const response = await fetch(`${backendUrl}/api/mining/stats/${currentWallet?.address}`);
+      const response = await fetch(`${backendUrl}/api/mining/status`);
       
       if (response.ok) {
         const data = await response.json();
+        
+        // Check if mode changed (genesis → pow)
+        if (data.mining_mode !== currentMode) {
+          setCurrentMode(data.mining_mode);
+          setModeDisplay(data.mode_display);
+          addMiningLog(`🔄 Mining mode changed to: ${data.mode_display}`);
+        }
+        
         setMiningStats(prev => ({
           ...prev,
-          hashRate: data.hash_rate || 0,
-          connectedMiners: data.connected_miners || 0,
-          estimatedTime: data.estimated_time || null
+          connectedMiners: data.connected_miners || prev.connectedMiners,
+          activeMiners: data.active_miners || prev.activeMiners,
+          totalHashrate: data.total_hashrate || prev.totalHashrate,
+          blocksFound: data.blocks_found || prev.blocksFound,
+          timeToLaunch: data.time_to_launch || null
         }));
       }
     } catch (error) {
@@ -97,7 +185,335 @@ const CommunityMining = ({ onBack, miningMode = 'genesis' }) => {
     }
   };
 
+  const updatePersonalStats = async () => {
+    if (!wallet?.address) return;
+    
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/mining/stats/${wallet.address}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (!data.error) {
+          setPersonalStats({
+            sharesSubmitted: data.shares_submitted || 0,
+            blocksFound: data.blocks_found || 0,
+            uptime: data.uptime || 0,
+            totalHashes: personalStats.totalHashes
+          });
+          setMiningStats(prev => ({
+            ...prev,
+            networkRank: data.network_rank || 0
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update personal stats:', error);
+    }
+  };
+
   const updateCountdown = () => {
+    const now = Date.now();
+    const timeRemaining = LAUNCH_TIMESTAMP - now;
+    
+    if (timeRemaining > 0 && currentMode === 'genesis') {
+      setMiningStats(prev => ({
+        ...prev,
+        timeToLaunch: timeRemaining
+      }));
+    }
+  };
+
+  const connectToMining = async () => {
+    if (!wallet?.address) {
+      addMiningLog('❌ Wallet not connected');
+      return;
+    }
+
+    try {
+      setIsConnected(true);
+      addMiningLog('🌐 Connecting to WEPO mining network...');
+      
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/mining/connect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: wallet.address,
+          mining_mode: currentMode,
+          wallet_type: 'regular'
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        addMiningLog('✅ Connected to mining network successfully!');
+        addMiningLog(`⛏️ Network miners: ${data.network_miners}`);
+        addMiningLog(`🎯 Mode: ${data.mining_mode}`);
+        
+        // Update stats immediately
+        updateMiningStats();
+      } else {
+        throw new Error('Failed to connect to mining network');
+      }
+    } catch (error) {
+      addMiningLog(`❌ Connection failed: ${error.message}`);
+      setIsConnected(false);
+    }
+  };
+
+  const startMining = async () => {
+    if (!isConnected) {
+      await connectToMining();
+    }
+
+    if (!wallet?.address) {
+      addMiningLog('❌ Wallet address required');
+      return;
+    }
+
+    try {
+      setIsMining(true);
+      addMiningLog('🚀 Starting mining operation...');
+      
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/mining/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: wallet.address
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        addMiningLog(`✅ ${data.message}`);
+        addMiningLog(`⚙️ CPU Usage: ${cpuUsage}%`);
+        addMiningLog(`🎯 ${data.status}`);
+        
+        // Start WebWorker mining
+        if (miningWorker.current && data.mining_job) {
+          miningWorker.current.postMessage({
+            type: 'START_MINING',
+            data: data.mining_job
+          });
+          
+          // Set CPU usage
+          miningWorker.current.postMessage({
+            type: 'SET_CPU_USAGE',
+            data: { cpuUsage: cpuUsage }
+          });
+        }
+        
+        // Start periodic job updates
+        statsInterval.current = setInterval(async () => {
+          if (isMining) {
+            await updateMiningJob();
+          }
+        }, 30000); // Update job every 30 seconds
+        
+      } else {
+        throw new Error('Failed to start mining');
+      }
+    } catch (error) {
+      addMiningLog(`❌ Mining start failed: ${error.message}`);
+      setIsMining(false);
+    }
+  };
+
+  const stopMining = async () => {
+    try {
+      setIsMining(false);
+      addMiningLog('⏹️ Stopping mining operation...');
+      
+      // Stop WebWorker
+      if (miningWorker.current) {
+        miningWorker.current.postMessage({ type: 'STOP_MINING' });
+      }
+      
+      // Stop job updates
+      if (statsInterval.current) {
+        clearInterval(statsInterval.current);
+        statsInterval.current = null;
+      }
+      
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      await fetch(`${backendUrl}/api/mining/stop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: wallet.address
+        })
+      });
+      
+      addMiningLog('✅ Mining stopped successfully');
+      setMiningStats(prev => ({ ...prev, hashRate: 0 }));
+    } catch (error) {
+      addMiningLog(`❌ Stop mining failed: ${error.message}`);
+    }
+  };
+
+  const updateMiningJob = async () => {
+    if (!wallet?.address) return;
+    
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/mining/work/${wallet.address}`);
+      
+      if (response.ok) {
+        const jobData = await response.json();
+        
+        // Send new job to WebWorker
+        if (miningWorker.current) {
+          miningWorker.current.postMessage({
+            type: 'UPDATE_JOB',
+            data: jobData
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update mining job:', error);
+    }
+  };
+
+  const handleSolutionFound = async (solutionData) => {
+    addMiningLog(`🎉 Solution found! Hash: ${solutionData.hash.substring(0, 16)}...`);
+    
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/mining/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: wallet.address,
+          job_id: solutionData.jobId,
+          nonce: solutionData.nonce,
+          hash: solutionData.hash
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        
+        if (result.accepted) {
+          if (result.type === 'block') {
+            addMiningLog(`🎉 BLOCK FOUND! ${result.message}`);
+            addMiningLog(`💰 Reward: ${result.reward} WEPO`);
+            
+            if (result.height === 0) {
+              // Genesis block found - mode will change
+              addMiningLog('🎄 GENESIS BLOCK MINED! Welcome to WEPO network!');
+            }
+          } else {
+            addMiningLog(`✅ Share accepted (${personalStats.sharesSubmitted + 1})`);
+          }
+          
+          // Update personal stats immediately
+          updatePersonalStats();
+        } else {
+          addMiningLog('❌ Solution rejected');
+        }
+      }
+    } catch (error) {
+      addMiningLog(`❌ Submit failed: ${error.message}`);
+    }
+  };
+
+  const updateHashrateOnServer = async (hashrate) => {
+    if (!wallet?.address) return;
+    
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      await fetch(`${backendUrl}/api/mining/hashrate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: wallet.address,
+          hashrate: hashrate
+        })
+      });
+    } catch (error) {
+      // Silently fail - not critical
+    }
+  };
+
+  const updateCpuUsage = (newUsage) => {
+    setCpuUsage(newUsage);
+    if (miningWorker.current) {
+      miningWorker.current.postMessage({
+        type: 'SET_CPU_USAGE',
+        data: { cpuUsage: newUsage }
+      });
+    }
+    addMiningLog(`⚙️ CPU usage updated to ${newUsage}%`);
+  };
+
+  const addMiningLog = (message) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = `[${timestamp}] ${message}`;
+    
+    setMiningLogs(prev => {
+      const newLogs = [logEntry, ...prev];
+      return newLogs.slice(0, 50); // Keep last 50 logs
+    });
+  };
+
+  const formatTime = (seconds) => {
+    if (!seconds) return 'N/A';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${hours}h ${minutes}m ${secs}s`;
+  };
+
+  const formatHashrate = (hashrate) => {
+    if (hashrate >= 1000000000) return `${(hashrate / 1000000000).toFixed(1)} GH/s`;
+    if (hashrate >= 1000000) return `${(hashrate / 1000000).toFixed(1)} MH/s`;
+    if (hashrate >= 1000) return `${(hashrate / 1000).toFixed(1)} KH/s`;
+    return `${hashrate.toFixed(0)} H/s`;
+  };
+
+  const renderCountdown = () => {
+    if (currentMode !== 'genesis' || !miningStats.timeToLaunch) return null;
+    
+    const days = Math.floor(miningStats.timeToLaunch / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((miningStats.timeToLaunch % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((miningStats.timeToLaunch % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((miningStats.timeToLaunch % (1000 * 60)) / 1000);
+    
+    return (
+      <div className="bg-gradient-to-r from-green-900/30 to-red-900/30 rounded-lg p-4 border border-green-600/30">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-green-400" />
+            <span className="text-green-400 font-medium">Christmas Genesis Launch</span>
+          </div>
+          <Timer className="w-5 h-5 text-red-400 animate-pulse" />
+        </div>
+        <div className="grid grid-cols-4 gap-2 text-center">
+          <div className="bg-black/30 rounded p-2">
+            <div className="text-2xl font-bold text-white">{days}</div>
+            <div className="text-xs text-gray-400">DAYS</div>
+          </div>
+          <div className="bg-black/30 rounded p-2">
+            <div className="text-2xl font-bold text-white">{hours}</div>
+            <div className="text-xs text-gray-400">HOURS</div>
+          </div>
+          <div className="bg-black/30 rounded p-2">
+            <div className="text-2xl font-bold text-white">{minutes}</div>
+            <div className="text-xs text-gray-400">MINS</div>
+          </div>
+          <div className="bg-black/30 rounded p-2">
+            <div className="text-2xl font-bold text-white">{seconds}</div>
+            <div className="text-xs text-gray-400">SECS</div>
+          </div>
+        </div>
+        <div className="text-center mt-2 text-sm text-yellow-400">
+          🎄 December 25, 2025 - 3:00 PM EST
+        </div>
+      </div>
+    );
+  };
     const now = Date.now();
     const timeRemaining = LAUNCH_TIMESTAMP - now;
     
