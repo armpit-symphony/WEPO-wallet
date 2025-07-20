@@ -752,6 +752,196 @@ def test_integration_points():
         log_test("Integration Points", False, error=str(e))
         return False
 
+def test_wallet_mining_system():
+    """Test 9: WALLET MINING SYSTEM TESTING"""
+    print("\n⛏️ TEST 9: WALLET MINING SYSTEM TESTING")
+    print("Testing newly implemented wallet mining system with all mining endpoints...")
+    
+    try:
+        checks_passed = 0
+        total_checks = 0
+        test_address = f"wepo1testwalletminer{secrets.token_hex(12)}"
+        
+        # Test 1: GET /api/mining/status - should return clean mining stats
+        total_checks += 1
+        response = requests.get(f"{API_URL}/mining/status")
+        if response.status_code == 200:
+            data = response.json()
+            required_fields = ['connected_miners', 'total_hashrate', 'mining_mode']
+            fields_present = sum(1 for field in required_fields if field in data)
+            if fields_present >= 2:
+                mining_mode = data.get('mining_mode', 'unknown')
+                connected_miners = data.get('connected_miners', 0)
+                print(f"  ✅ Mining status: {connected_miners} miners, mode: {mining_mode}")
+                checks_passed += 1
+            else:
+                print(f"  ❌ Mining status: Missing fields - only {fields_present}/{len(required_fields)} present")
+        else:
+            print(f"  ❌ Mining status: HTTP {response.status_code}")
+        
+        # Test 2: POST /api/mining/connect - connect a wallet miner
+        total_checks += 1
+        connect_data = {
+            "address": test_address,
+            "mining_mode": "genesis",
+            "wallet_type": "regular"
+        }
+        response = requests.post(f"{API_URL}/mining/connect", json=connect_data)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success') and data.get('message'):
+                network_miners = data.get('network_miners', 0)
+                print(f"  ✅ Connect miner: Successfully connected, network has {network_miners} miners")
+                checks_passed += 1
+            else:
+                print(f"  ❌ Connect miner: Invalid response structure")
+        else:
+            print(f"  ❌ Connect miner: HTTP {response.status_code}")
+        
+        # Test 3: POST /api/mining/start - start mining for a wallet
+        total_checks += 1
+        start_data = {"address": test_address}
+        response = requests.post(f"{API_URL}/mining/start", json=start_data)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success') and data.get('mining_job'):
+                mining_job = data['mining_job']
+                job_fields = ['job_id', 'block_type', 'height', 'target_difficulty']
+                job_fields_present = sum(1 for field in job_fields if field in mining_job)
+                if job_fields_present >= 3:
+                    print(f"  ✅ Start mining: Mining job generated with {job_fields_present}/{len(job_fields)} fields")
+                    checks_passed += 1
+                else:
+                    print(f"  ❌ Start mining: Incomplete mining job")
+            else:
+                print(f"  ❌ Start mining: Missing success or mining_job")
+        else:
+            print(f"  ❌ Start mining: HTTP {response.status_code}")
+        
+        # Test 4: GET /api/mining/work/{address} - get mining job
+        total_checks += 1
+        response = requests.get(f"{API_URL}/mining/work/{test_address}")
+        if response.status_code == 200:
+            data = response.json()
+            required_fields = ['job_id', 'block_type', 'height', 'algorithm']
+            fields_present = sum(1 for field in required_fields if field in data)
+            if fields_present >= 3:
+                block_type = data.get('block_type', 'unknown')
+                algorithm = data.get('algorithm', 'unknown')
+                print(f"  ✅ Get mining work: Job for {block_type} block using {algorithm}")
+                checks_passed += 1
+            else:
+                print(f"  ❌ Get mining work: Missing fields - only {fields_present}/{len(required_fields)} present")
+        else:
+            print(f"  ❌ Get mining work: HTTP {response.status_code}")
+        
+        # Test 5: POST /api/mining/submit - submit mining solution
+        total_checks += 1
+        submit_data = {
+            "address": test_address,
+            "job_id": f"test_job_{int(time.time())}",
+            "nonce": "12345678",
+            "hash": "0000abcd" + secrets.token_hex(28)  # Valid-looking hash
+        }
+        response = requests.post(f"{API_URL}/mining/submit", json=submit_data)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('accepted') is not None:
+                submission_type = data.get('type', 'unknown')
+                print(f"  ✅ Submit solution: Solution accepted as {submission_type}")
+                checks_passed += 1
+            else:
+                print(f"  ❌ Submit solution: Missing accepted field")
+        else:
+            print(f"  ❌ Submit solution: HTTP {response.status_code}")
+        
+        # Test 6: POST /api/mining/hashrate - update hashrate
+        total_checks += 1
+        hashrate_data = {
+            "address": test_address,
+            "hashrate": 1500.0  # 1.5 KH/s
+        }
+        response = requests.post(f"{API_URL}/mining/hashrate", json=hashrate_data)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success'):
+                print(f"  ✅ Update hashrate: Hashrate updated to 1.5 KH/s")
+                checks_passed += 1
+            else:
+                print(f"  ❌ Update hashrate: Success field missing or false")
+        else:
+            print(f"  ❌ Update hashrate: HTTP {response.status_code}")
+        
+        # Test 7: GET /api/mining/stats/{address} - get miner stats
+        total_checks += 1
+        response = requests.get(f"{API_URL}/mining/stats/{test_address}")
+        if response.status_code == 200:
+            data = response.json()
+            if 'address' in data or 'is_mining' in data:
+                is_mining = data.get('is_mining', False)
+                hashrate = data.get('hashrate', 0)
+                print(f"  ✅ Miner stats: Mining: {is_mining}, Hashrate: {hashrate}")
+                checks_passed += 1
+            else:
+                print(f"  ❌ Miner stats: Missing required fields")
+        else:
+            print(f"  ❌ Miner stats: HTTP {response.status_code}")
+        
+        # Test 8: GET /api/mining/leaderboard - get top miners
+        total_checks += 1
+        response = requests.get(f"{API_URL}/mining/leaderboard")
+        if response.status_code == 200:
+            data = response.json()
+            if 'miners' in data:
+                miners = data['miners']
+                if isinstance(miners, list):
+                    print(f"  ✅ Mining leaderboard: Retrieved {len(miners)} miners")
+                    checks_passed += 1
+                else:
+                    print(f"  ❌ Mining leaderboard: Invalid miners format")
+            else:
+                print(f"  ❌ Mining leaderboard: Missing miners field")
+        else:
+            print(f"  ❌ Mining leaderboard: HTTP {response.status_code}")
+        
+        # Test 9: Verify mining statistics show connected miners
+        total_checks += 1
+        response = requests.get(f"{API_URL}/mining/status")
+        if response.status_code == 200:
+            data = response.json()
+            connected_miners = data.get('connected_miners', 0)
+            if connected_miners > 0:
+                print(f"  ✅ Network stats: {connected_miners} connected miners tracked")
+                checks_passed += 1
+            else:
+                print(f"  ❌ Network stats: No connected miners tracked")
+        else:
+            print(f"  ❌ Network stats: HTTP {response.status_code}")
+        
+        # Test 10: Genesis vs PoW Mode behavior
+        total_checks += 1
+        response = requests.get(f"{API_URL}/mining/status")
+        if response.status_code == 200:
+            data = response.json()
+            mining_mode = data.get('mining_mode', 'unknown')
+            mode_display = data.get('mode_display', '')
+            if mining_mode in ['genesis', 'pow']:
+                print(f"  ✅ Mining mode: {mining_mode} mode active ({mode_display})")
+                checks_passed += 1
+            else:
+                print(f"  ❌ Mining mode: Invalid mode {mining_mode}")
+        else:
+            print(f"  ❌ Mining mode: HTTP {response.status_code}")
+        
+        success_rate = (checks_passed / total_checks) * 100
+        log_test("Wallet Mining System", checks_passed >= 8,
+                 details=f"Wallet mining system verified: {checks_passed}/{total_checks} endpoints working ({success_rate:.1f}% success)")
+        return checks_passed >= 8
+        
+    except Exception as e:
+        log_test("Wallet Mining System", False, error=str(e))
+        return False
+
 def run_comprehensive_wallet_tests():
     """Run all comprehensive wallet function tests"""
     print("🚀 STARTING WEPO COMPREHENSIVE WALLET FUNCTIONS TESTING")
@@ -767,6 +957,7 @@ def run_comprehensive_wallet_tests():
     test6_result = test_api_endpoint_validation()
     test7_result = test_preview_environment_compatibility()
     test8_result = test_integration_points()
+    test9_result = test_wallet_mining_system()
     
     # Print final results
     print("\n" + "=" * 80)
