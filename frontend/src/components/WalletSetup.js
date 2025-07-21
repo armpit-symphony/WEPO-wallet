@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Copy, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { generateMnemonic, validateMnemonic } from 'bip39';
 
 const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
   const [step, setStep] = useState(1);
