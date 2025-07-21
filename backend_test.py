@@ -54,9 +54,9 @@ import re
 BACKEND_URL = "https://6171a30c-6736-48d9-b5d5-8552a4691135.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
-print(f"🔐 TESTING WEPO BIP-39 CRYPTOGRAPHICALLY SECURE SEED PHRASE GENERATION SYSTEM")
+print(f"🔐 TESTING WEPO SECURITY ENHANCEMENTS VERIFICATION")
 print(f"Preview Backend API URL: {API_URL}")
-print(f"Focus: Critical security testing of BIP-39 implementation to ensure proper randomization")
+print(f"Focus: Critical security testing of newly implemented security enhancements")
 print("=" * 80)
 
 # Test results tracking
