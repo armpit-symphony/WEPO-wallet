@@ -549,6 +549,11 @@ async def send_transaction(request: Request, data: dict):
     client_id = SecurityManager.get_client_identifier(request)
     logger.info(f"Transaction attempt from {client_id}")
     
+    # Implement manual rate limiting (10/minute for transactions)
+    if SecurityManager.is_rate_limited(client_id, "transaction_send"):
+        logger.warning(f"Rate limit exceeded for transaction from {client_id}")
+        raise HTTPException(status_code=429, detail="Too many transaction attempts. Please try again later.")
+    
     try:
         # Input validation and sanitization
         from_address = SecurityManager.sanitize_input(data.get("from_address", ""))
