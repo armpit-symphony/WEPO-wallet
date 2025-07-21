@@ -154,7 +154,7 @@ export const WalletProvider = ({ children }) => {
       setWallet(walletData);
       setIsLoading(false);
       
-      console.log('✅ Secure BIP-39 wallet created successfully');
+      secureLog.info('Secure BIP-39 wallet created successfully');
       return { 
         mnemonic, 
         address: walletData.wepo.address,
@@ -164,7 +164,7 @@ export const WalletProvider = ({ children }) => {
       
     } catch (error) {
       setIsLoading(false);
-      console.error('❌ Wallet creation error:', error);
+      secureLog.error('Wallet creation error', error);
       throw new Error('Failed to create wallet: ' + error.message);
     }
   };
