@@ -25,16 +25,62 @@ from security_utils import SecurityManager, init_redis, security_middleware_hand
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Initialize security features
+init_redis()  # Initialize Redis for rate limiting (fallback to in-memory if Redis unavailable)
+
+# Create rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app
-app = FastAPI(title="WEPO Blockchain API", version="1.0.0")
+# Create the main app with enhanced security
+app = FastAPI(
+    title="WEPO Blockchain API", 
+    version="1.0.0",
+    docs_url=None,  # Disable docs in production for security
+    redoc_url=None  # Disable redoc in production for security
+)
+
+# Add rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Security middleware
+class SecurityMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Add security headers and processing
+        try:
+            response = await call_next(request)
+            
+            # Add security headers
+            security_headers = SecurityManager.get_security_headers()
+            for header, value in security_headers.items():
+                response.headers[header] = value
+            
+            return response
+        except Exception as e:
+            logging.error(f"Security middleware error: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+app.add_middleware(SecurityMiddleware)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Configure logging with enhanced security logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('/tmp/wepo_security.log')
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 # Security
 security = HTTPBasic()
