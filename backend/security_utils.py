@@ -169,6 +169,9 @@ class SecurityManager:
         current_time = time.time()
         key = f"rate_limit:{client_id}:{endpoint}"
         
+        # Get endpoint-specific rate limit
+        rate_limit = SecurityManager.RATE_LIMIT_CONFIG.get(endpoint, SecurityManager.RATE_LIMIT_CONFIG["default"])
+        
         try:
             if redis_client:
                 # Use Redis for distributed rate limiting
@@ -178,7 +181,7 @@ class SecurityManager:
                 results = pipe.execute()
                 
                 request_count = results[0]
-                return request_count > SecurityManager.RATE_LIMIT_REQUESTS
+                return request_count > rate_limit
             else:
                 # Fallback to in-memory storage
                 if key not in rate_limit_storage:
@@ -191,7 +194,7 @@ class SecurityManager:
                 ]
                 
                 # Check rate limit
-                if len(rate_limit_storage[key]) >= SecurityManager.RATE_LIMIT_REQUESTS:
+                if len(rate_limit_storage[key]) >= rate_limit:
                     return True
                 
                 # Add current request
