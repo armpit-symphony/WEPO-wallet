@@ -398,6 +398,11 @@ async def login_wallet(request: Request, data: dict):
     client_id = SecurityManager.get_client_identifier(request)
     logger.info(f"Login attempt from {client_id}")
     
+    # Implement manual rate limiting (5/minute for login)
+    if SecurityManager.is_rate_limited(client_id, "wallet_login"):
+        logger.warning(f"Rate limit exceeded for login from {client_id}")
+        raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
+    
     try:
         # Input validation and sanitization
         username = SecurityManager.sanitize_input(data.get("username", ""))
