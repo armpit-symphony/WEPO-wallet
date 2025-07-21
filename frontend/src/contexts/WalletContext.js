@@ -408,6 +408,10 @@ export const WalletProvider = ({ children }) => {
     setWallet,
     setBalance,
     setTransactions,
+    validateMnemonic,
+    recoverWallet,
+    deriveSeedFromMnemonic,
+    generateWalletFromSeed,
     
     // Bitcoin wallet actions
     sendBitcoin,
