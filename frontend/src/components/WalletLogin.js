@@ -90,18 +90,11 @@ const WalletLogin = ({ onWalletLoaded, onCreateNew }) => {
 
       setWallet(walletData);
       secureLog.info('Login successful');
+      
       onWalletLoaded(walletData);
-      sessionStorage.setItem('wepo_session_active', 'true');
-      sessionStorage.setItem('wepo_current_wallet', walletData);
       
-      // Update wallet context
-      setWallet(parsedWalletData);
-      
-      console.log('✅ Login successful for:', formData.username);
-      
-      onWalletLoaded();
     } catch (error) {
-      console.error('Login error:', error);
+      secureLog.error('Login error', error);
       setError(error.message || 'Login failed');
     } finally {
       setIsLoading(false);
