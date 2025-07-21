@@ -35,9 +35,6 @@ from security_utils import SecurityManager, init_redis
 # Initialize security features
 init_redis()  # Initialize Redis for rate limiting (fallback to in-memory if Redis unavailable)
 
-# Create rate limiter
-limiter = Limiter(key_func=get_remote_address)
-
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
