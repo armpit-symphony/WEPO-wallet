@@ -308,6 +308,11 @@ async def create_wallet(request: Request, data: dict):
     client_id = SecurityManager.get_client_identifier(request)
     logger.info(f"Wallet creation attempt from {client_id}")
     
+    # Implement manual rate limiting (3/minute for wallet creation)
+    if SecurityManager.is_rate_limited(client_id, "wallet_create"):
+        logger.warning(f"Rate limit exceeded for wallet creation from {client_id}")
+        raise HTTPException(status_code=429, detail="Too many wallet creation attempts. Please try again later.")
+    
     try:
         # Input validation and sanitization
         username = SecurityManager.sanitize_input(data.get("username", ""))
