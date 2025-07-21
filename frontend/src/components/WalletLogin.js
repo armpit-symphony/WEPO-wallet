@@ -173,6 +173,23 @@ const WalletLogin = ({ onWalletLoaded, onCreateNew }) => {
               </div>
             )}
 
+            {validationErrors.length > 0 && (
+              <div className="bg-red-900/50 border border-red-500 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-red-400" />
+                  <span className="text-sm font-medium text-red-200">Security Validation Errors:</span>
+                </div>
+                <ul className="text-sm text-red-200 space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-red-400 mt-0.5">•</span>
+                      <span>{error}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <button
               onClick={handleLogin}
               disabled={isLoading}
