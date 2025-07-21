@@ -44,7 +44,14 @@ class SecurityManager:
     MAX_LOGIN_ATTEMPTS = 5
     LOCKOUT_DURATION = 300  # 5 minutes in seconds
     RATE_LIMIT_WINDOW = 60  # 1 minute
-    RATE_LIMIT_REQUESTS = 10
+    
+    # Different rate limits for different endpoints
+    RATE_LIMIT_CONFIG = {
+        "wallet_create": 3,      # 3 per minute
+        "wallet_login": 5,       # 5 per minute  
+        "transaction_send": 10,  # 10 per minute
+        "default": 10           # Default rate limit
+    }
     
     @staticmethod
     def hash_password(password: str) -> str:
