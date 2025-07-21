@@ -952,13 +952,101 @@ class WepoFastTestBridge:
         
         @self.app.post("/api/wallet/create")
         async def create_wallet(request: dict):
-            address = request.get("address")
-            self.blockchain.wallets[address] = {
-                "username": request.get("username"),
-                "created_at": time.strftime('%Y-%m-%d %H:%M:%S')
-            }
-            print(f"⚡ Test wallet created: {address}")
-            return {"success": True, "address": address}
+            """Create a new WEPO wallet with proper authentication flow"""
+            try:
+                username = request.get("username")
+                password = request.get("password")
+                
+                if not username or not password:
+                    raise HTTPException(status_code=400, detail="Username and password required")
+                
+                if len(password) < 8:
+                    raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+                
+                # Check if username already exists
+                for addr, wallet_data in self.blockchain.wallets.items():
+                    if wallet_data.get("username") == username:
+                        raise HTTPException(status_code=400, detail="Username already exists")
+                
+                # Generate secure wallet address using proper randomization
+                import hashlib
+                import secrets
+                
+                wallet_seed = secrets.token_bytes(32)  # 256-bit entropy
+                address_hash = hashlib.sha256(wallet_seed + username.encode()).hexdigest()
+                wepo_address = f"wepo1{address_hash[:32]}"
+                
+                # Store wallet data
+                self.blockchain.wallets[wepo_address] = {
+                    "username": username,
+                    "created_at": time.strftime('%Y-%m-%d %H:%M:%S'),
+                    "balance": 0.0,
+                    "password_hash": hashlib.sha256(password.encode()).hexdigest(),
+                    "version": "3.0",
+                    "bip39": True
+                }
+                
+                print(f"✅ WEPO wallet created: {wepo_address} for user {username}")
+                
+                return {
+                    "success": True, 
+                    "address": wepo_address,
+                    "username": username,
+                    "message": "Wallet created successfully"
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                print(f"❌ Wallet creation error: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to create wallet: {str(e)}")
+
+        @self.app.post("/api/wallet/login")
+        async def login_wallet(request: dict):
+            """Login to existing WEPO wallet"""
+            try:
+                username = request.get("username")
+                password = request.get("password")
+                
+                if not username or not password:
+                    raise HTTPException(status_code=400, detail="Username and password required")
+                
+                # Find wallet by username
+                wallet_address = None
+                wallet_data = None
+                
+                for addr, data in self.blockchain.wallets.items():
+                    if data.get("username") == username:
+                        wallet_address = addr
+                        wallet_data = data
+                        break
+                
+                if not wallet_data:
+                    raise HTTPException(status_code=401, detail="Invalid username or password")
+                
+                # Verify password (simplified - in production use proper bcrypt)
+                password_hash = hashlib.sha256(password.encode()).hexdigest()
+                if wallet_data.get("password_hash") != password_hash:
+                    raise HTTPException(status_code=401, detail="Invalid username or password")
+                
+                print(f"✅ User {username} logged in successfully")
+                
+                return {
+                    "success": True,
+                    "address": wallet_address,
+                    "username": username,
+                    "balance": wallet_data.get("balance", 0.0),
+                    "created_at": wallet_data.get("created_at"),
+                    "version": wallet_data.get("version", "3.0"),
+                    "bip39": wallet_data.get("bip39", True),
+                    "message": "Login successful"
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                print(f"❌ Wallet login error: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
         
         @self.app.get("/api/wallet/{address}")
         async def get_wallet(address: str):
