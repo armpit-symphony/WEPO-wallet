@@ -118,35 +118,52 @@ export const WalletProvider = ({ children }) => {
       throw new Error('Passwords do not match');
     }
 
+    if (password.length < 8) {
+      throw new Error('Password must be at least 8 characters long');
+    }
+
     try {
+      setIsLoading(true);
+      
+      // Generate cryptographically secure BIP-39 mnemonic
       const mnemonic = generateMnemonic();
       
-      // Simplified wallet creation for isolation testing
+      // Derive seed from mnemonic
+      const seed = await deriveSeedFromMnemonic(mnemonic);
+      
+      // Generate wallet addresses and keys from seed
+      const walletKeys = await generateWalletFromSeed(seed);
+      
       const walletData = {
         username,
         mnemonic,
-        wepo: {
-          address: "wepo1test123456789",
-          privateKey: "test_private_key"
-        },
-        btc: {
-          address: "1TestBitcoinAddress123",
-          privateKey: "test_btc_private_key",
-          publicKey: "test_btc_public_key",
-          type: "legacy"
-        },
+        wepo: walletKeys.wepo,
+        btc: walletKeys.btc,
         createdAt: new Date().toISOString(),
-        version: '2.0'
+        version: '3.0', // Updated version for proper BIP-39 implementation
+        entropy: seed.toString('hex').substring(0, 32) + '...', // Store first part for verification (not the full seed!)
+        bip39: true // Flag to indicate proper BIP-39 implementation
       };
 
-      // Store basic data
+      // Store wallet existence and username (NOT the seed or private keys!)
       localStorage.setItem('wepo_wallet_exists', 'true');
       localStorage.setItem('wepo_wallet_username', username);
+      localStorage.setItem('wepo_wallet_version', '3.0');
       
       setWallet(walletData);
-      return { mnemonic, address: walletData.wepo.address };
+      setIsLoading(false);
+      
+      console.log('✅ Secure BIP-39 wallet created successfully');
+      return { 
+        mnemonic, 
+        address: walletData.wepo.address,
+        bip39: true,
+        security: 'cryptographically_secure' 
+      };
+      
     } catch (error) {
-      console.error('Wallet creation error:', error);
+      setIsLoading(false);
+      console.error('❌ Wallet creation error:', error);
       throw new Error('Failed to create wallet: ' + error.message);
     }
   };
