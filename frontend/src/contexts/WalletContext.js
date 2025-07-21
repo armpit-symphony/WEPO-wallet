@@ -365,6 +365,9 @@ export const WalletProvider = ({ children }) => {
   };
 
   const logout = () => {
+    secureLog.info('User logout initiated');
+    
+    // Clear all wallet data
     setWallet(null);
     setBalance(0);
     setTransactions([]);
@@ -376,7 +379,13 @@ export const WalletProvider = ({ children }) => {
     setBtcAddresses([]);
     setBtcUtxos([]);
     
-    sessionStorage.removeItem('wepo_session_active');
+    // Clear secure session data
+    sessionManager.clearSecureSession();
+    
+    // Clear any remaining localStorage items (except wallet existence flag)
+    // Keep 'wepo_wallet_exists' and 'wepo_wallet_username' for login page
+    
+    secureLog.info('User logout completed successfully');
   };
 
   const value = {
