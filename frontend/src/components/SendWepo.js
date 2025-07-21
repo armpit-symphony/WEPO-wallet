@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Send, ArrowLeft, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Send, ArrowLeft, AlertTriangle, Eye, EyeOff, Shield } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
+import { validateSendForm, secureLog } from '../utils/securityUtils';
 
 const SendWepo = ({ onClose }) => {
   const { sendWepo, balance } = useWallet();
@@ -13,6 +14,7 @@ const SendWepo = ({ onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [validationErrors, setValidationErrors] = useState([]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,42 +24,50 @@ const SendWepo = ({ onClose }) => {
     }));
     setError('');
     setSuccess('');
+    setValidationErrors([]);
   };
 
   const validateForm = () => {
-    if (!formData.toAddress || !formData.toAddress.startsWith('wepo1')) {
-      setError('Please enter a valid WEPO address (starts with wepo1)');
+    // Use comprehensive security validation
+    const validation = validateSendForm(formData, balance);
+    
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      setError('Please fix the validation errors below');
       return false;
     }
     
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      setError('Please enter a valid amount');
-      return false;
-    }
-    
-    if (parseFloat(formData.amount) > balance) {
-      setError('Insufficient balance');
-      return false;
-    }
-    
-    if (!formData.password) {
-      setError('Please enter your password to authorize the transaction');
-      return false;
-    }
-    
-    return true;
+    return validation.validatedData;
   };
 
   const handleSend = async () => {
-    if (!validateForm()) return;
+    const validatedData = validateForm();
+    if (!validatedData) return;
 
     setIsLoading(true);
     try {
-      const transaction = await sendWepo(formData.toAddress, formData.amount, formData.password);
-      setSuccess(`Transaction sent successfully! ID: ${transaction.id}`);
+      secureLog.info('Initiating secure transaction', {
+        toAddress: validatedData.toAddress,
+        amount: validatedData.amount,
+        fee: validatedData.fee,
+        total: validatedData.total
+      });
+      
+      const transaction = await sendWepo(
+        validatedData.toAddress, 
+        validatedData.amount, 
+        validatedData.password
+      );
+      
+      setSuccess(`✅ Transaction sent successfully! ID: ${transaction.id}`);
       setFormData({ toAddress: '', amount: '', password: '' });
+      setValidationErrors([]);
+      
+      secureLog.info('Transaction completed successfully');
+      
     } catch (error) {
-      setError(error.message);
+      secureLog.error('Transaction failed', error);
+      setError(`Transaction failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
