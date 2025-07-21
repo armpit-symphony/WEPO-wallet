@@ -988,55 +988,88 @@ class WepoFastTestBridge:
                 }
         
         @self.app.post("/api/wallet/create")
-        async def create_wallet(request: dict):
-            """Create a new WEPO wallet with proper authentication flow"""
+        async def create_wallet(request: Request):
+            """Create a new WEPO wallet with comprehensive security"""
+            client_id = SecurityManager.get_client_identifier(request)
+            logger.info(f"Wallet creation attempt from {client_id}")
+            
+            # Implement manual rate limiting (3/minute for wallet creation)
+            if SecurityManager.is_rate_limited(client_id, "wallet_create"):
+                logger.warning(f"Rate limit exceeded for wallet creation from {client_id}")
+                raise HTTPException(status_code=429, detail="Too many wallet creation attempts. Please try again later.")
+            
             try:
-                username = request.get("username")
-                password = request.get("password")
+                # Get request data
+                body = await request.body()
+                data = json.loads(body) if body else {}
+                
+                # Input validation and sanitization
+                username = SecurityManager.sanitize_input(data.get("username", ""))
+                password = data.get("password", "")
                 
                 if not username or not password:
                     raise HTTPException(status_code=400, detail="Username and password required")
                 
-                if len(password) < 8:
-                    raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+                # Enhanced password validation
+                password_validation = SecurityManager.validate_password_strength(password)
+                if not password_validation["is_valid"]:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail={
+                            "message": "Password does not meet security requirements",
+                            "issues": password_validation["issues"],
+                            "strength_score": password_validation["strength_score"]
+                        }
+                    )
+                
+                # Username validation
+                if len(username) < 3 or len(username) > 50:
+                    raise HTTPException(status_code=400, detail="Username must be 3-50 characters long")
+                
+                if not re.match(r'^[a-zA-Z0-9_]+$', username):
+                    raise HTTPException(status_code=400, detail="Username can only contain letters, numbers, and underscores")
                 
                 # Check if username already exists
                 for addr, wallet_data in self.blockchain.wallets.items():
                     if wallet_data.get("username") == username:
                         raise HTTPException(status_code=400, detail="Username already exists")
                 
-                # Generate secure wallet address using proper randomization
-                import hashlib
-                import secrets
+                # Generate secure WEPO address
+                wepo_address = SecurityManager.generate_wepo_address(username)
                 
-                wallet_seed = secrets.token_bytes(32)  # 256-bit entropy
-                address_hash = hashlib.sha256(wallet_seed + username.encode()).hexdigest()
-                wepo_address = f"wepo1{address_hash[:32]}"
+                # Hash password securely
+                password_hash = SecurityManager.hash_password(password)
                 
-                # Store wallet data
+                # Store wallet data with enhanced security
                 self.blockchain.wallets[wepo_address] = {
                     "username": username,
                     "created_at": time.strftime('%Y-%m-%d %H:%M:%S'),
                     "balance": 0.0,
-                    "password_hash": hashlib.sha256(password.encode()).hexdigest(),
-                    "version": "3.0",
-                    "bip39": True
+                    "password_hash": password_hash,  # Store bcrypt hash
+                    "version": "3.1",  # Updated for security enhancements
+                    "bip39": True,
+                    "security_level": "enhanced",
+                    "last_login": None,
+                    "failed_login_attempts": 0,
+                    "account_locked": False
                 }
                 
-                print(f"✅ WEPO wallet created: {wepo_address} for user {username}")
+                logger.info(f"Wallet created successfully for user {username} from {client_id}")
                 
                 return {
                     "success": True, 
                     "address": wepo_address,
                     "username": username,
-                    "message": "Wallet created successfully"
+                    "message": "Wallet created successfully with enhanced security",
+                    "bip39": True,
+                    "security_level": "enhanced"
                 }
                 
             except HTTPException:
                 raise
             except Exception as e:
-                print(f"❌ Wallet creation error: {str(e)}")
-                raise HTTPException(status_code=500, detail=f"Failed to create wallet: {str(e)}")
+                logger.error(f"Wallet creation error from {client_id}: {str(e)}")
+                raise HTTPException(status_code=500, detail="Failed to create wallet due to internal error")
 
         @self.app.post("/api/wallet/login")
         async def login_wallet(request: dict):
