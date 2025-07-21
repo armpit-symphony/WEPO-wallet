@@ -26,6 +26,13 @@ from security_utils import SecurityManager, init_redis, security_middleware_hand
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Add current directory to Python path for security_utils import
+import sys
+sys.path.append(str(ROOT_DIR))
+
+# Import security utilities
+from security_utils import SecurityManager, init_redis
+
 # Initialize security features
 init_redis()  # Initialize Redis for rate limiting (fallback to in-memory if Redis unavailable)
 
