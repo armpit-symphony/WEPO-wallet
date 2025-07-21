@@ -1027,32 +1027,43 @@ class WepoFastTestBridge:
         async def get_mining_info():
             height = len(self.blockchain.blocks) - 1
             
-            # Calculate current reward based on CORRECTED WEPO tokenomics (aligned with /api/tokenomics/overview)
-            # NEW TOKENOMICS: 69,000,003 WEPO total supply with proper mining schedule
-            if height < 131400:  # Phase 1: Pre-PoS Mining (18 months)
+            # SPECIAL CASE: Genesis Block (Block 0) gets commemorative 400 WEPO reward
+            if height == 0:
+                current_reward = 400.0
+                quarter_info = "Genesis Block - Christmas Day 2025 (400 WEPO commemorative)"
+                phase_name = "Genesis Block - Christmas Launch"
+                reward_schedule = "🎄 GENESIS BLOCK: 400 WEPO commemorative reward, then Phase1=52.51, Phase2a=33.17, Phase2b=16.58, Phase2c=8.29, Phase2d=4.15 WEPO per block"
+            # Regular mining schedule after Genesis (aligned with tokenomics)
+            elif height < 131400:  # Phase 1: Pre-PoS Mining (18 months)
                 current_reward = 52.51
                 quarter_info = "Pre-PoS Mining (52.51 WEPO per block)"
                 phase_name = "Phase 1 - Pre-PoS Mining"
+                reward_schedule = "CORRECTED WEPO Tokenomics: Phase1=52.51, Phase2a=33.17, Phase2b=16.58, Phase2c=8.29, Phase2d=4.15 WEPO per block"
             elif height < 288540:  # Phase 2a: Post-PoS Years 1-3
                 current_reward = 33.17
                 quarter_info = "Post-PoS Years 1-3 (33.17 WEPO per block)"
                 phase_name = "Phase 2a - Post-PoS Years 1-3"
+                reward_schedule = "CORRECTED WEPO Tokenomics: Phase1=52.51, Phase2a=33.17, Phase2b=16.58, Phase2c=8.29, Phase2d=4.15 WEPO per block"
             elif height < 604140:  # Phase 2b: Post-PoS Years 4-9 
                 current_reward = 16.58
                 quarter_info = "Post-PoS Years 4-9 (16.58 WEPO per block)"
                 phase_name = "Phase 2b - Post-PoS Years 4-9"
+                reward_schedule = "CORRECTED WEPO Tokenomics: Phase1=52.51, Phase2a=33.17, Phase2b=16.58, Phase2c=8.29, Phase2d=4.15 WEPO per block"
             elif height < 762300:  # Phase 2c: Post-PoS Years 10-12
                 current_reward = 8.29
                 quarter_info = "Post-PoS Years 10-12 (8.29 WEPO per block)"
                 phase_name = "Phase 2c - Post-PoS Years 10-12"
+                reward_schedule = "CORRECTED WEPO Tokenomics: Phase1=52.51, Phase2a=33.17, Phase2b=16.58, Phase2c=8.29, Phase2d=4.15 WEPO per block"
             elif height < 920460:  # Phase 2d: Post-PoS Years 13-15
                 current_reward = 4.15
                 quarter_info = "Post-PoS Years 13-15 (4.15 WEPO per block)"
                 phase_name = "Phase 2d - Post-PoS Years 13-15"
+                reward_schedule = "CORRECTED WEPO Tokenomics: Phase1=52.51, Phase2a=33.17, Phase2b=16.58, Phase2c=8.29, Phase2d=4.15 WEPO per block"
             else:  # Mining complete after 15 years
                 current_reward = 0.0
                 quarter_info = "Mining Complete (0 WEPO per block)"
                 phase_name = "Post-Mining Era"
+                reward_schedule = "Mining era completed - all rewards distributed"
             
             return {
                 "current_block_height": height,
@@ -1063,10 +1074,11 @@ class WepoFastTestBridge:
                 "algorithm": "Argon2 + SHA256 Dual-Layer",
                 "mining_enabled": True,
                 "mempool_size": len(self.blockchain.mempool),
-                "reward_schedule": "CORRECTED WEPO Tokenomics: Phase1=52.51, Phase2a=33.17, Phase2b=16.58, Phase2c=8.29, Phase2d=4.15 WEPO per block",
+                "reward_schedule": reward_schedule,
                 "total_supply": "69,000,003 WEPO",
                 "mining_duration": "15 years (blocks 0-920,459)",
-                "pos_activation": "Block 131,400 (18 months)"
+                "pos_activation": "Block 131,400 (18 months)",
+                "genesis_special": "Block 0 = 400 WEPO commemorative reward"
             }
         
         @self.app.post("/api/test/mine-block")
