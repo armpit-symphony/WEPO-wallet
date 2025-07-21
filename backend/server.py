@@ -402,7 +402,7 @@ async def create_wallet(request: Request, data: dict):
         logger.error(f"Wallet creation error from {client_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create wallet due to internal error")
 
-@api_router.post("/wallet/login")
+@app.post("/api/wallet/login")
 @limiter.limit("5/minute")  # Rate limit login attempts
 async def login_wallet(request: Request, data: dict):
     """Login to existing WEPO wallet with comprehensive security"""
