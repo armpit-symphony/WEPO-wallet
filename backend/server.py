@@ -48,17 +48,6 @@ app = FastAPI(
     redoc_url=None  # Disable redoc in production for security
 )
 
-# Create rate limiter with proper key function
-def get_client_id(request: Request):
-    """Get client identifier for rate limiting"""
-    return SecurityManager.get_client_identifier(request)
-
-limiter = Limiter(key_func=get_client_id)
-
-# Add rate limiting to app
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
 # Security middleware
 class SecurityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
