@@ -196,6 +196,53 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
+  const validateMnemonic = (mnemonic) => {
+    try {
+      return bip39.validateMnemonic(mnemonic.trim());
+    } catch (error) {
+      console.error('❌ Mnemonic validation error:', error);
+      return false;
+    }
+  };
+
+  const recoverWallet = async (mnemonic, password) => {
+    try {
+      setIsLoading(true);
+      
+      // Validate the provided mnemonic
+      if (!validateMnemonic(mnemonic)) {
+        throw new Error('Invalid seed phrase. Please check your words and try again.');
+      }
+      
+      // Derive seed from mnemonic
+      const seed = await deriveSeedFromMnemonic(mnemonic.trim());
+      
+      // Generate wallet from seed
+      const walletKeys = await generateWalletFromSeed(seed);
+      
+      const recoveredWallet = {
+        mnemonic: mnemonic.trim(),
+        wepo: walletKeys.wepo,
+        btc: walletKeys.btc,
+        recoveredAt: new Date().toISOString(),
+        version: '3.0',
+        bip39: true,
+        recovered: true
+      };
+      
+      setWallet(recoveredWallet);
+      setIsLoading(false);
+      
+      console.log('✅ Wallet recovered successfully from BIP-39 seed phrase');
+      return { success: true, address: recoveredWallet.wepo.address };
+      
+    } catch (error) {
+      setIsLoading(false);
+      console.error('❌ Wallet recovery error:', error);
+      throw error;
+    }
+  };
+
   const changePassword = async (currentPassword, newPassword, confirmNewPassword) => {
     if (newPassword !== confirmNewPassword) {
       throw new Error('New passwords do not match');
