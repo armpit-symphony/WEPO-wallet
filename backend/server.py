@@ -540,39 +540,109 @@ async def get_wallet_transactions(address: str, limit: int = 50):
     return transactions
 
 @api_router.post("/transaction/send")
-async def send_transaction(request: SendTransactionRequest):
-    """Send WEPO transaction"""
-    # Verify wallet exists and has sufficient balance
-    wallet = await db.wallets.find_one({"address": request.from_address})
-    if not wallet:
-        raise HTTPException(status_code=404, detail="Wallet not found")
+@limiter.limit("10/minute")  # Rate limit transaction attempts
+async def send_transaction(request: Request, data: dict):
+    """Send WEPO transaction with comprehensive security validation"""
+    client_id = SecurityManager.get_client_identifier(request)
+    logger.info(f"Transaction attempt from {client_id}")
     
-    if wallet["balance"] < request.amount + 0.0001:  # Include fee
-        raise HTTPException(status_code=400, detail="Insufficient balance")
-    
-    # Create transaction with privacy features
-    transaction = WepoTransaction(
-        from_address=request.from_address,
-        to_address=request.to_address,
-        amount=request.amount,
-        transaction_type=TransactionType.SEND,
-        privacy_proof=generate_zk_proof(),
-        ring_signature=generate_ring_signature()
-    )
-    
-    transaction.tx_hash = calculate_transaction_hash(transaction)
-    
-    await db.transactions.insert_one(transaction.dict())
-    
-    # Simulate transaction confirmation after delay
-    # In real implementation, this would be handled by miners/validators
-    
-    return {
-        "transaction_id": transaction.id,
-        "tx_hash": transaction.tx_hash,
-        "status": transaction.status,
-        "privacy_protected": True
-    }
+    try:
+        # Input validation and sanitization
+        from_address = SecurityManager.sanitize_input(data.get("from_address", ""))
+        to_address = SecurityManager.sanitize_input(data.get("to_address", ""))
+        amount = data.get("amount", 0)
+        
+        # Comprehensive input validation
+        if not from_address or not to_address:
+            raise HTTPException(status_code=400, detail="From and to addresses are required")
+        
+        # Validate addresses
+        if not SecurityManager.validate_wepo_address(from_address):
+            raise HTTPException(status_code=400, detail="Invalid from_address format")
+        
+        if not SecurityManager.validate_wepo_address(to_address):
+            raise HTTPException(status_code=400, detail="Invalid to_address format")
+        
+        # Prevent self-transactions
+        if from_address == to_address:
+            raise HTTPException(status_code=400, detail="Cannot send to the same address")
+        
+        # Validate transaction amount
+        amount_validation = SecurityManager.validate_transaction_amount(amount)
+        if not amount_validation["is_valid"]:
+            raise HTTPException(
+                status_code=400, 
+                detail={
+                    "message": "Invalid transaction amount",
+                    "issues": amount_validation["issues"]
+                }
+            )
+        
+        validated_amount = amount_validation["sanitized_amount"]
+        
+        # Verify wallet exists and has sufficient balance
+        wallet = await db.wallets.find_one({"address": from_address})
+        if not wallet:
+            logger.warning(f"Transaction attempt from non-existent wallet {from_address} by {client_id}")
+            raise HTTPException(status_code=404, detail="Wallet not found")
+        
+        # Transaction fee calculation
+        transaction_fee = 0.0001  # Standard WEPO fee
+        total_required = validated_amount + transaction_fee
+        
+        if wallet.get("balance", 0) < total_required:
+            logger.warning(f"Insufficient balance transaction attempt from {from_address} by {client_id}")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Insufficient balance. Required: {total_required} WEPO, Available: {wallet.get('balance', 0)} WEPO"
+            )
+        
+        # Create secure transaction with enhanced validation
+        transaction_data = {
+            "id": str(uuid.uuid4()),
+            "tx_hash": secrets.token_hex(32),
+            "from_address": from_address,
+            "to_address": to_address,
+            "amount": validated_amount,
+            "fee": transaction_fee,
+            "transaction_type": "send",
+            "status": "pending",
+            "timestamp": datetime.utcnow().isoformat(),
+            "privacy_proof": generate_zk_proof(),
+            "ring_signature": generate_ring_signature(),
+            "client_id": client_id,
+            "security_validated": True
+        }
+        
+        # Insert transaction with proper error handling
+        result = await db.transactions.insert_one(transaction_data)
+        if not result.inserted_id:
+            raise HTTPException(status_code=500, detail="Failed to create transaction")
+        
+        # Update wallet balance (in real implementation, this would be handled by consensus)
+        await db.wallets.update_one(
+            {"address": from_address},
+            {"$inc": {"balance": -total_required}}
+        )
+        
+        logger.info(f"Transaction created: {transaction_data['tx_hash']} from {from_address} to {to_address} amount {validated_amount} by {client_id}")
+        
+        return {
+            "success": True,
+            "transaction_id": transaction_data["id"],
+            "tx_hash": transaction_data["tx_hash"],
+            "status": transaction_data["status"],
+            "amount": validated_amount,
+            "fee": transaction_fee,
+            "privacy_protected": True,
+            "message": "Transaction created successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Transaction error from {client_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Transaction failed due to internal error")
 
 @api_router.post("/stake")
 async def create_stake(request: StakeRequest):
