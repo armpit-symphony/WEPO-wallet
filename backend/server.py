@@ -51,7 +51,14 @@ app = FastAPI(
     redoc_url=None  # Disable redoc in production for security
 )
 
-# Add rate limiting
+# Create rate limiter with proper key function
+def get_client_id(request: Request):
+    """Get client identifier for rate limiting"""
+    return SecurityManager.get_client_identifier(request)
+
+limiter = Limiter(key_func=get_client_id)
+
+# Add rate limiting to app
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
