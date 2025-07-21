@@ -1,48 +1,58 @@
 #!/usr/bin/env python3
 """
-WEPO Mining Reward Information Alignment Testing Suite - Priority 3 Issue Resolution
-Tests mining reward information consistency across all endpoints to verify Priority 3 issue is resolved.
+WEPO BIP-39 CRYPTOGRAPHICALLY SECURE SEED PHRASE GENERATION SYSTEM TESTING SUITE
 
-PRIORITY 3 ISSUE RESOLUTION: MINING REWARD CONSISTENCY TESTING
-Testing all endpoints that show mining reward information to ensure they're aligned with the correct tokenomics:
+**CRITICAL SEED PHRASE SECURITY TESTING**
 
-**1. Mining Info API (`/api/mining/info`)**
-- Should show 52.51 WEPO per block (NOT 400 WEPO)
-- Should show "Pre-PoS Mining" phase
-- Should align with new tokenomics schedule
-- Verify reward schedule shows correct phases
+The user identified a **critical security vulnerability** where seed phrases were not properly randomized. 
+We've now implemented proper BIP-39 standards. Test the following:
 
-**2. Tokenomics Overview API (`/api/tokenomics/overview`)**
-- Should show 52.51 WEPO current block reward
-- Should show Pre-PoS Mining phase
-- Should show 69,000,003 total supply
-- This is the reference/correct API
+**1. BIP-39 Library Integration**
+- Verify bip39 library is properly imported and functional
+- Test that generateMnemonic() produces different results each call
+- Test that validateMnemonic() properly validates generated phrases
+- Ensure no hardcoded "abandon abandon abandon..." test phrases
 
-**3. Network Status API (`/api/network/status`)**
-- Should show consistent block rewards if present
-- Should align with mining info
+**2. Cryptographic Security Validation**
+- Test entropy generation (should be 128-bit minimum for 12 words)
+- Verify each generated seed phrase is unique and random
+- Test that generated phrases follow BIP-39 standard format
+- Ensure proper word list usage (2048 official BIP-39 words)
 
-**4. Mining Status API (`/api/mining/status`)**
-- Should show consistent reward information
-- Should not contradict other APIs
+**3. Seed Derivation Testing**
+- Test mnemonicToSeed() conversion works properly
+- Verify seed-to-wallet-key derivation functions
+- Test that same mnemonic always generates same wallet addresses
+- Verify different mnemonics generate different addresses
 
-**5. Wallet Mining System**
-- Should show consistent rewards in mining interface
-- Should not display misleading reward information
+**4. Wallet Creation Security**
+- Test that createWallet() uses secure mnemonic generation
+- Verify no test/hardcoded values in production
+- Test mnemonic validation during wallet recovery
+- Ensure proper error handling for invalid phrases
+
+**5. Backend Integration**
+- Test wallet creation endpoints use secure generation
+- Verify backend wallet storage doesn't expose seed phrases
+- Test that wallet retrieval doesn't return sensitive data
+- Ensure proper cryptographic address generation
 
 **Expected Results:**
-- ALL APIs show 52.51 WEPO (not 400 WEPO) for Phase 1
-- Consistent phase naming: "Pre-PoS Mining"
-- Consistent total supply: 69,000,003 WEPO
-- No contradictory reward information anywhere
+- All seed phrases are cryptographically secure and unique
+- No hardcoded test values like "abandon abandon abandon..."
+- Proper BIP-39 validation and checksum verification
+- Secure wallet address derivation from seed phrases
+- Full integration with backend wallet creation flow
 
-**Success Criteria:**
-- 100% consistency across all reward-displaying endpoints
-- No user confusion from mixed reward information
-- Mining info aligned with tokenomics overview
-- Ready for Christmas Day 2025 launch with consistent messaging
+**Critical Security Requirements:**
+- Each generated seed phrase must be different
+- Must use full 2048-word BIP-39 wordlist
+- Must have proper entropy (128+ bits)
+- Must follow BIP-39 checksum validation
+- Must be production-ready for Christmas Day 2025 launch
 
-This resolves the critical inconsistency where mining API showed 400 WEPO while tokenomics correctly showed 52.51 WEPO.
+This addresses the critical vulnerability where "seed phrases are not randomized" and ensures 
+WEPO wallet security meets cryptocurrency industry standards.
 
 Test Environment: Using preview backend URL for comprehensive backend testing.
 """
