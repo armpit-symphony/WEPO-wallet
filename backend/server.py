@@ -316,7 +316,7 @@ async def get_network_status():
 
 # ===== WALLET AUTHENTICATION ENDPOINTS =====
 
-@api_router.post("/wallet/create")
+@app.post("/api/wallet/create")
 @limiter.limit("3/minute")  # Rate limit wallet creation
 async def create_wallet(request: Request, data: dict):
     """Create a new WEPO wallet with comprehensive security"""
