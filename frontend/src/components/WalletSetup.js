@@ -66,8 +66,8 @@ const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
       console.log(`📊 Entropy: ${secureMnemonic.split(' ').length} words (${secureMnemonic.split(' ').length * 11} bits)`);
       setStep(2);
     } catch (error) {
-      console.error('Wallet generation error:', error);
-      setError('Failed to generate secure wallet: ' + error.message);
+      console.error('❌ Seed phrase generation failed:', error);
+      setError('Failed to generate secure seed phrase: ' + error.message);
     } finally {
       setIsLoading(false);
     }
