@@ -738,7 +738,13 @@ class WepoFastTestBridge:
     
     def __init__(self):
         self.blockchain = FastTestBlockchain()
-        self.app = FastAPI(title="WEPO Fast Test Bridge", version="1.0.0")
+        self.app = FastAPI(
+            title="WEPO Fast Test Bridge", 
+            version="1.0.0",
+            docs_url=None,  # Disable docs in production
+            redoc_url=None  # Disable redoc in production
+        )
+        self.setup_security_middleware()
         self.setup_cors()
         self.setup_routes()
         
@@ -747,6 +753,25 @@ class WepoFastTestBridge:
         
         # Setup mining routes
         setup_mining_routes(self.app)
+    
+    def setup_security_middleware(self):
+        """Add comprehensive security middleware"""
+        class SecurityMiddleware(BaseHTTPMiddleware):
+            async def dispatch(self, request: Request, call_next):
+                try:
+                    response = await call_next(request)
+                    
+                    # Add security headers
+                    security_headers = SecurityManager.get_security_headers()
+                    for header, value in security_headers.items():
+                        response.headers[header] = value
+                    
+                    return response
+                except Exception as e:
+                    logger.error(f"Security middleware error: {e}")
+                    raise HTTPException(status_code=500, detail="Internal server error")
+        
+        self.app.add_middleware(SecurityMiddleware)
     
     def setup_cors(self):
         self.app.add_middleware(
