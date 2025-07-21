@@ -354,26 +354,6 @@ async def login_wallet(request: dict):
         logger.error(f"Wallet login error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
-@api_router.post("/wallet/create")
-async def create_wallet_old(request: CreateWalletRequest):
-    """Create a new WEPO wallet"""
-    existing = await db.wallets.find_one({"username": request.username})
-    if existing:
-        raise HTTPException(status_code=400, detail="Username already exists")
-    
-    existing_address = await db.wallets.find_one({"address": request.address})
-    if existing_address:
-        raise HTTPException(status_code=400, detail="Address already exists")
-    
-    wallet = WepoWallet(
-        username=request.username,
-        address=request.address,
-        encrypted_private_key=request.encrypted_private_key
-    )
-    
-    await db.wallets.insert_one(wallet.dict())
-    return {"success": True, "address": wallet.address}
-
 @api_router.get("/wallet/{address}")
 async def get_wallet(address: str):
     """Get wallet information"""
