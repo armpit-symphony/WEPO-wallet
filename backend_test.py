@@ -68,14 +68,15 @@ import random
 import string
 import base64
 import hashlib
+import re
 
 # Use preview backend URL from frontend/.env
 BACKEND_URL = "https://c20c25cb-96fe-4438-95b9-132ba06c9f15.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
-print(f"🔧 TESTING WEPO RWA QUANTUM VAULT ENDPOINTS - PRIORITY 2 ISSUE RESOLUTION")
+print(f"🔐 TESTING WEPO BIP-39 CRYPTOGRAPHICALLY SECURE SEED PHRASE GENERATION SYSTEM")
 print(f"Preview Backend API URL: {API_URL}")
-print(f"Focus: RWA Quantum Vault endpoints that were previously returning 404 Not Found")
+print(f"Focus: Critical security testing of BIP-39 implementation to ensure proper randomization")
 print("=" * 80)
 
 # Test results tracking
