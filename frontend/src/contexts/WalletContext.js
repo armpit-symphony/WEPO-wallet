@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
+import { sessionManager, secureLog } from '../utils/securityUtils';
 // import { generateWepoAddress, generateBitcoinAddress, validateAddress } from '../utils/addressUtils';
 // import SelfCustodialBitcoinWallet from '../utils/SelfCustodialBitcoinWallet';
 
