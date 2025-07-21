@@ -549,7 +549,7 @@ async def get_wallet_transactions(address: str, limit: int = 50):
     
     return transactions
 
-@api_router.post("/transaction/send")
+@app.post("/api/transaction/send")
 @limiter.limit("10/minute")  # Rate limit transaction attempts
 async def send_transaction(request: Request, data: dict):
     """Send WEPO transaction with comprehensive security validation"""
