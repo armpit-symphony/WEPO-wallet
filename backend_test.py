@@ -71,7 +71,7 @@ import hashlib
 import re
 
 # Use preview backend URL from frontend/.env
-BACKEND_URL = "https://c20c25cb-96fe-4438-95b9-132ba06c9f15.preview.emergentagent.com"
+BACKEND_URL = "https://6171a30c-6736-48d9-b5d5-8552a4691135.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔐 TESTING WEPO BIP-39 CRYPTOGRAPHICALLY SECURE SEED PHRASE GENERATION SYSTEM")
