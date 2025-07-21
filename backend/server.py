@@ -393,26 +393,84 @@ async def create_wallet(request: Request, data: dict):
         raise HTTPException(status_code=500, detail="Failed to create wallet due to internal error")
 
 @api_router.post("/wallet/login")
-async def login_wallet(request: dict):
-    """Login to existing WEPO wallet"""
+@limiter.limit("5/minute")  # Rate limit login attempts
+async def login_wallet(request: Request, data: dict):
+    """Login to existing WEPO wallet with comprehensive security"""
+    client_id = SecurityManager.get_client_identifier(request)
+    logger.info(f"Login attempt from {client_id}")
+    
     try:
-        username = request.get("username")
-        password = request.get("password")
+        # Input validation and sanitization
+        username = SecurityManager.sanitize_input(data.get("username", ""))
+        password = data.get("password", "")
         
         if not username or not password:
             raise HTTPException(status_code=400, detail="Username and password required")
         
+        # Check for rate limiting specific to this endpoint
+        if SecurityManager.is_rate_limited(client_id, "login"):
+            raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
+        
         # Find wallet by username
         wallet = await db.wallets.find_one({"username": username})
         if not wallet:
+            # Record failed login attempt
+            SecurityManager.record_failed_login(username)
+            logger.warning(f"Login attempt for non-existent user {username} from {client_id}")
             raise HTTPException(status_code=401, detail="Invalid username or password")
         
-        # Verify password (simplified - in production use proper password verification)
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        # Check if account is locked
+        if wallet.get("account_locked", False):
+            logger.warning(f"Login attempt for locked account {username} from {client_id}")
+            raise HTTPException(status_code=423, detail="Account is locked due to too many failed attempts")
         
-        # In production, you would decrypt the private key with the password
-        # and verify it matches. For now, we'll simulate successful login
-        # since we don't store the actual password hash
+        # Verify password using proper verification
+        password_hash = wallet.get("password_hash")
+        if not password_hash:
+            # Handle legacy accounts that might not have proper password hash
+            logger.error(f"Legacy account detected for {username} - security upgrade required")
+            raise HTTPException(status_code=500, detail="Account requires security upgrade")
+        
+        if not SecurityManager.verify_password(password, password_hash):
+            # Record failed login attempt
+            failed_info = SecurityManager.record_failed_login(username)
+            
+            # Lock account if too many failed attempts
+            if failed_info["is_locked"]:
+                await db.wallets.update_one(
+                    {"username": username},
+                    {
+                        "$set": {
+                            "account_locked": True,
+                            "failed_login_attempts": failed_info["attempts"],
+                            "lockout_until": time.time() + SecurityManager.LOCKOUT_DURATION
+                        }
+                    }
+                )
+                logger.warning(f"Account {username} locked after {failed_info['attempts']} failed attempts from {client_id}")
+                raise HTTPException(
+                    status_code=423, 
+                    detail=f"Account locked due to {failed_info['attempts']} failed login attempts. Try again in {failed_info['time_remaining']} seconds."
+                )
+            
+            logger.warning(f"Failed login for {username} from {client_id} - {failed_info['attempts']}/{failed_info['max_attempts']} attempts")
+            raise HTTPException(status_code=401, detail="Invalid username or password")
+        
+        # Successful login - clear failed attempts and unlock account
+        SecurityManager.clear_failed_login(username)
+        await db.wallets.update_one(
+            {"username": username},
+            {
+                "$set": {
+                    "last_login": int(time.time()),
+                    "failed_login_attempts": 0,
+                    "account_locked": False
+                },
+                "$unset": {"lockout_until": ""}
+            }
+        )
+        
+        logger.info(f"Successful login for {username} from {client_id}")
         
         return {
             "success": True,
@@ -420,16 +478,17 @@ async def login_wallet(request: dict):
             "username": wallet["username"],
             "balance": wallet.get("balance", 0.0),
             "created_at": wallet.get("created_at"),
-            "version": wallet.get("version", "3.0"),
+            "version": wallet.get("version", "3.1"),
             "bip39": wallet.get("bip39", True),
+            "security_level": wallet.get("security_level", "enhanced"),
             "message": "Login successful"
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Wallet login error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
+        logger.error(f"Login error for user {username} from {client_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Login failed due to internal error")
 
 @api_router.get("/wallet/{address}")
 async def get_wallet(address: str):
