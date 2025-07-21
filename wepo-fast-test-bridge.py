@@ -11,9 +11,16 @@ import sys
 import os
 import logging
 import secrets
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
+
+# Import security utilities
+from security_utils import SecurityManager, init_redis
+
+# Initialize security features
+init_redis()
 
 # Setup logger
 logger = logging.getLogger(__name__)
