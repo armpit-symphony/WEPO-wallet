@@ -175,27 +175,24 @@ export const WalletProvider = ({ children }) => {
     }
 
     try {
-      // Simplified login for isolation testing
-      const testWallet = {
-        username,
-        mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-        wepo: {
-          address: "wepo1test123456789",
-          privateKey: "test_private_key"
-        },
-        btc: {
-          address: "1TestBitcoinAddress123",
-          privateKey: "test_btc_private_key",
-          publicKey: "test_btc_public_key",
-          type: "legacy"
-        }
-      };
+      setIsLoading(true);
       
-      setWallet(testWallet);
-      return testWallet;
+      // In a real implementation, you would:
+      // 1. Load encrypted wallet data from secure storage
+      // 2. Decrypt using the password
+      // 3. Validate the mnemonic and restore wallet
+      
+      // For now, simulating successful login
+      // Note: In production, never store the actual seed phrase
+      console.log('🔐 Wallet login attempted - in production this would decrypt stored wallet data');
+      
+      setIsLoading(false);
+      throw new Error('Login functionality requires encrypted wallet storage implementation');
+      
     } catch (error) {
-      console.error('Login error:', error);
-      throw new Error('Invalid credentials or wallet data');
+      setIsLoading(false);
+      console.error('❌ Login error:', error);
+      throw error;
     }
   };
 
