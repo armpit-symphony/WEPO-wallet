@@ -1159,23 +1159,13 @@ class WepoFastTestBridge:
                 
                 # Check for scientific notation in raw body before JSON parsing
                 body_str = body.decode('utf-8')
-                # Enhanced scientific notation detection with multiple patterns
-                scientific_patterns = [
-                    r'(\d+\.?\d*[eE][+-]?\d+)',  # Standard scientific notation
-                    r'(\d+[eE][+-]?\d+)',        # Integer with exponent
-                    r'(\d*\.\d+[eE][+-]?\d+)',   # Decimal with exponent
-                    r'(\d+\.[eE][+-]?\d+)',      # Number with decimal point and exponent
-                    r'(\d+\.?\d*[Ee]\d+)',       # Without explicit + sign
-                ]
+                # More precise scientific notation detection - only match within JSON values
+                # Pattern matches scientific notation in JSON context: "amount": 1e5 or "amount":1.5E-3
+                scientific_pattern = r'["\s:,]\s*(\d+\.?\d*[eE][+-]?\d+)\s*[,}\s"]'
                 
-                found_scientific = None
-                for pattern in scientific_patterns:
-                    match = re.search(pattern, body_str)
-                    if match:
-                        found_scientific = match.group(1)
-                        break
-                
-                if found_scientific:
+                match = re.search(scientific_pattern, body_str)
+                if match:
+                    found_scientific = match.group(1)
                     raise HTTPException(
                         status_code=400, 
                         detail={
