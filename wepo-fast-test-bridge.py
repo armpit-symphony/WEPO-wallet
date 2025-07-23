@@ -1144,40 +1144,152 @@ class WepoFastTestBridge:
             return self.blockchain.get_transactions(address)
         
         @self.app.post("/api/transaction/send")
-        async def send_transaction(request: dict):
+        async def send_transaction(request: Request):
+            """Send WEPO transaction with comprehensive security validation"""
             try:
-                from_address = request.get('from_address')
-                to_address = request.get('to_address')
-                amount = request.get('amount')
+                # Get client information for security logging
+                client_ip = request.client.host if request.client else "unknown"
                 
-                # Validation: Check if from_address has sufficient balance
+                # Parse request body
+                body = await request.body()
+                if not body:
+                    raise HTTPException(status_code=400, detail="Request body is required")
+                
+                try:
+                    data = json.loads(body)
+                except json.JSONDecodeError:
+                    raise HTTPException(status_code=400, detail="Invalid JSON format")
+                
+                from_address = data.get('from_address')
+                to_address = data.get('to_address')
+                amount = data.get('amount')
+                
+                # Comprehensive Input Validation
+                validation_errors = []
+                
+                # Validate from_address
+                if not from_address:
+                    validation_errors.append("from_address is required")
+                elif not isinstance(from_address, str):
+                    validation_errors.append("from_address must be a string")
+                elif not from_address.startswith("wepo1"):
+                    validation_errors.append("from_address must start with 'wepo1'")
+                elif len(from_address) != 37:
+                    validation_errors.append("from_address must be exactly 37 characters")
+                elif not re.match(r'^wepo1[a-f0-9]{32}$', from_address.lower()):
+                    validation_errors.append("from_address contains invalid characters")
+                
+                # Validate to_address
+                if not to_address:
+                    validation_errors.append("to_address is required")
+                elif not isinstance(to_address, str):
+                    validation_errors.append("to_address must be a string")
+                elif not to_address.startswith("wepo1"):
+                    validation_errors.append("to_address must start with 'wepo1'")
+                elif len(to_address) != 37:
+                    validation_errors.append("to_address must be exactly 37 characters")
+                elif not re.match(r'^wepo1[a-f0-9]{32}$', to_address.lower()):
+                    validation_errors.append("to_address contains invalid characters")
+                elif from_address == to_address:
+                    validation_errors.append("Cannot send to the same address")
+                
+                # Validate amount
+                if amount is None:
+                    validation_errors.append("amount is required")
+                elif not isinstance(amount, (int, float)):
+                    validation_errors.append("amount must be a number")
+                elif amount <= 0:
+                    validation_errors.append("amount must be greater than 0")
+                elif amount > 69000003:  # WEPO total supply
+                    validation_errors.append("amount exceeds maximum possible value")
+                elif isinstance(amount, float):
+                    # Check for excessive decimal places
+                    decimal_str = str(amount)
+                    if '.' in decimal_str:
+                        decimal_places = len(decimal_str.split('.')[1])
+                        if decimal_places > 8:
+                            validation_errors.append("amount cannot have more than 8 decimal places")
+                    # Check for scientific notation
+                    if 'e' in decimal_str.lower():
+                        validation_errors.append("scientific notation not allowed in amount")
+                elif amount < 0.00000001:  # Minimum amount (1 satoshi equivalent)
+                    validation_errors.append("amount is below minimum transaction value (0.00000001 WEPO)")
+                
+                # Check for XSS/injection attempts in inputs
+                dangerous_patterns = [
+                    r'<script.*?>.*?</script>',
+                    r'javascript:',
+                    r'on\w+\s*=',
+                    r'eval\(',
+                    r'document\.',
+                    r'window\.',
+                    r'[\'";]'
+                ]
+                
+                for field_name, field_value in [('from_address', from_address), ('to_address', to_address)]:
+                    if field_value:
+                        for pattern in dangerous_patterns:
+                            if re.search(pattern, str(field_value), re.IGNORECASE):
+                                validation_errors.append(f"{field_name} contains potentially malicious content")
+                                break
+                
+                # Return validation errors if any
+                if validation_errors:
+                    logger.warning(f"Transaction validation failed from {client_ip}: {validation_errors}")
+                    raise HTTPException(
+                        status_code=400, 
+                        detail={
+                            "error": "Transaction validation failed",
+                            "validation_errors": validation_errors,
+                            "security_check": "failed"
+                        }
+                    )
+                
+                # Balance validation
                 current_balance = self.blockchain.get_balance(from_address)
-                if current_balance < amount:
-                    raise HTTPException(status_code=400, detail=f"Insufficient balance. Available: {current_balance} WEPO, Required: {amount} WEPO")
+                transaction_fee = 0.0001  # Standard WEPO transaction fee
+                total_required = amount + transaction_fee
                 
-                # Validation: Check for valid amount
-                if amount <= 0:
-                    raise HTTPException(status_code=400, detail="Transaction amount must be greater than 0")
+                if current_balance < total_required:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail={
+                            "error": "Insufficient balance",
+                            "available": current_balance,
+                            "required": total_required,
+                            "amount": amount,
+                            "fee": transaction_fee
+                        }
+                    )
                 
-                # Validation: Check if to_address is valid (basic check)
-                if not to_address or not to_address.startswith("wepo1") or len(to_address) != 37:
-                    raise HTTPException(status_code=400, detail="Invalid recipient address format")
+                # Security logging
+                logger.info(f"Valid transaction request from {client_ip}: {from_address} -> {to_address}, amount: {amount}")
                 
-                # Validation: Check if from_address is valid
-                if not from_address or not from_address.startswith("wepo1") or len(from_address) != 37:
-                    raise HTTPException(status_code=400, detail="Invalid sender address format")
-                
+                # Create transaction
                 txid = self.blockchain.create_transaction(from_address, to_address, amount)
+                
                 return {
+                    "success": True,
                     "transaction_id": txid,
                     "tx_hash": txid,
                     "status": "pending",
-                    "message": "Transaction added to mempool"
+                    "amount": amount,
+                    "fee": transaction_fee,
+                    "total": total_required,
+                    "message": "Transaction created successfully",
+                    "security_validation": "passed"
                 }
+                
+            except HTTPException:
+                raise
             except ValueError as e:
                 # Handle blockchain validation errors
-                raise HTTPException(status_code=400, detail=str(e))
+                logger.error(f"Blockchain validation error: {str(e)}")
+                raise HTTPException(status_code=400, detail=f"Blockchain validation failed: {str(e)}")
             except Exception as e:
+                # Log unexpected errors
+                logger.error(f"Unexpected transaction error: {str(e)}")
+                raise HTTPException(status_code=500, detail="Transaction processing failed")
                 # Handle unexpected errors
                 raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
         
