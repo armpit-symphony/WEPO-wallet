@@ -1159,13 +1159,29 @@ class WepoFastTestBridge:
                 
                 # Check for scientific notation in raw body before JSON parsing
                 body_str = body.decode('utf-8')
-                if re.search(r'["\s:](\d+\.?\d*[eE][+-]?\d+)["\s,}]', body_str):
+                # Enhanced scientific notation detection with multiple patterns
+                scientific_patterns = [
+                    r'(\d+\.?\d*[eE][+-]?\d+)',  # Standard scientific notation
+                    r'(\d+[eE][+-]?\d+)',        # Integer with exponent
+                    r'(\d*\.\d+[eE][+-]?\d+)',   # Decimal with exponent
+                    r'(\d+\.[eE][+-]?\d+)',      # Number with decimal point and exponent
+                    r'(\d+\.?\d*[Ee]\d+)',       # Without explicit + sign
+                ]
+                
+                found_scientific = None
+                for pattern in scientific_patterns:
+                    match = re.search(pattern, body_str)
+                    if match:
+                        found_scientific = match.group(1)
+                        break
+                
+                if found_scientific:
                     raise HTTPException(
                         status_code=400, 
                         detail={
                             "error": "Transaction validation failed",
                             "validation_errors": [
-                                "scientific notation (e.g., 1e10, 5E-3) is not allowed in transaction amounts. Please use standard decimal format (e.g., 10000000000, 0.005)"
+                                f"Scientific notation (found: {found_scientific}) is not allowed in transaction amounts. Please use standard decimal format. Examples: instead of 1e10 use 10000000000, instead of 5E-3 use 0.005, instead of 1.5e10 use 15000000000"
                             ],
                             "security_check": "failed"
                         }
