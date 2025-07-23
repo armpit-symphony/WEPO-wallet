@@ -1235,22 +1235,26 @@ class WepoFastTestBridge:
                         if decimal_places > 8:
                             validation_errors.append(f"amount has {decimal_places} decimal places, maximum allowed is 8. Maximum precision: 0.00000001 WEPO (provided: {amount})")
                 
-                # Check for XSS/injection attempts in inputs
-                dangerous_patterns = [
-                    (r'<script.*?>.*?</script>', 'script tags'),
-                    (r'javascript:', 'javascript URLs'),
-                    (r'on\w+\s*=', 'HTML event handlers'),
-                    (r'eval\(', 'eval() function calls'),
-                    (r'document\.', 'document object access'),
-                    (r'window\.', 'window object access'),
-                    (r'[\'";]', 'potential injection characters')
+                # Check for XSS/injection attempts in inputs with enhanced threat detection
+                xss_patterns = [
+                    (r'<script\b[^>]*>(.*?)</script>', 'embedded JavaScript code'),
+                    (r'javascript\s*:', 'JavaScript URL protocol'),
+                    (r'on\w+\s*=\s*["\']', 'HTML event handler attributes'),
+                    (r'eval\s*\(', 'code execution via eval()'),
+                    (r'<iframe\b[^>]*>', 'iframe embedding attempt'),
+                    (r'<img\b[^>]*onerror\s*=', 'image error event exploitation'),
+                    (r'document\s*\.\s*cookie', 'cookie theft attempt'),
+                    (r'window\s*\.\s*location', 'page redirection attempt'),
+                    (r'alert\s*\(', 'JavaScript alert dialog'),
+                    (r'confirm\s*\(', 'JavaScript confirm dialog'),
+                    (r'prompt\s*\(', 'JavaScript prompt dialog')
                 ]
                 
                 for field_name, field_value in [('from_address', from_address), ('to_address', to_address)]:
                     if field_value:
-                        for pattern, description in dangerous_patterns:
+                        for pattern, threat_description in xss_patterns:
                             if re.search(pattern, str(field_value), re.IGNORECASE):
-                                validation_errors.append(f"{field_name} contains potentially malicious content ({description}). Please use only valid WEPO address format")
+                                validation_errors.append(f"{field_name} contains potentially malicious content: {threat_description}. Please use only valid WEPO address format (wepo1 + 32 hex characters)")
                                 break
                 
                 # Return validation errors if any
