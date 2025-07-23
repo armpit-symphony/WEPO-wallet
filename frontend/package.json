@@ -38,7 +38,8 @@
     "util": "^0.12.5"
   },
   "scripts": {
-    "start": "craco start",
+    "start": "node secure-server.js",
+    "dev": "craco start",
     "build": "craco build",
     "test": "craco test",
     "eject": "react-scripts eject"
