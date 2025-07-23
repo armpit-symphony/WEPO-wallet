@@ -1222,15 +1222,15 @@ class WepoFastTestBridge:
                     validation_errors.append("amount must be greater than 0")
                 elif amount > 69000003:  # WEPO total supply
                     validation_errors.append(f"amount exceeds maximum possible value. Maximum: 69,000,003 WEPO (total supply), provided: {amount:,.0f}")
+                elif amount < 0.00000001:  # Minimum amount (1 satoshi equivalent)
+                    validation_errors.append(f"amount is below minimum transaction value. Minimum: 0.00000001 WEPO, provided: {amount:.10f}")
                 elif isinstance(amount, float):
                     # Check for excessive decimal places
                     decimal_str = str(amount)
-                    if '.' in decimal_str:
+                    if '.' in decimal_str and 'e' not in decimal_str.lower():  # Avoid scientific notation strings
                         decimal_places = len(decimal_str.split('.')[1])
                         if decimal_places > 8:
-                            validation_errors.append(f"amount cannot have more than 8 decimal places (found {decimal_places}). Maximum precision: 0.00000001 WEPO")
-                elif amount < 0.00000001:  # Minimum amount (1 satoshi equivalent)
-                    validation_errors.append(f"amount is below minimum transaction value. Minimum: 0.00000001 WEPO, provided: {amount}")
+                            validation_errors.append(f"amount has {decimal_places} decimal places, maximum allowed is 8. Maximum precision: 0.00000001 WEPO (provided: {amount})")
                 
                 # Check for XSS/injection attempts in inputs
                 dangerous_patterns = [
