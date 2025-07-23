@@ -2393,7 +2393,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=[
-        "https://6171a30c-6736-48d9-b5d5-8552a4691135.preview.emergentagent.com",  # Production frontend
+        "https://22190ec7-9156-431f-9bec-2599fe9f7d3d.preview.emergentagent.com",  # Production frontend
         "http://localhost:3000",  # Development frontend
         "http://127.0.0.1:3000",  # Alternative localhost
     ],

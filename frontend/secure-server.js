@@ -32,7 +32,7 @@ app.use(helmet({
         "'self'", 
         "https:",
         "wss:",
-        "https://6171a30c-6736-48d9-b5d5-8552a4691135.preview.emergentagent.com"
+        "https://22190ec7-9156-431f-9bec-2599fe9f7d3d.preview.emergentagent.com"
       ],
       fontSrc: ["'self'", "https:"],
       objectSrc: ["'none'"],

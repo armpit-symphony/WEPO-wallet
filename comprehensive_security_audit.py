@@ -55,7 +55,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 
 # Use preview backend URL from frontend/.env
-BACKEND_URL = "https://6171a30c-6736-48d9-b5d5-8552a4691135.preview.emergentagent.com"
+BACKEND_URL = "https://22190ec7-9156-431f-9bec-2599fe9f7d3d.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔐 WEPO COMPREHENSIVE SECURITY AUDIT AND PENETRATION TESTING")
