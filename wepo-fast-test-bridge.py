@@ -1203,7 +1203,7 @@ class WepoFastTestBridge:
                 elif amount <= 0:
                     validation_errors.append("amount must be greater than 0")
                 elif amount > 69000003:  # WEPO total supply
-                    validation_errors.append("amount exceeds maximum possible value")
+                    validation_errors.append(f"amount exceeds maximum possible value. Maximum: 69,000,003 WEPO (total supply), provided: {amount:,.0f}")
                 elif isinstance(amount, float):
                     # Check for excessive decimal places
                     decimal_str = str(amount)
