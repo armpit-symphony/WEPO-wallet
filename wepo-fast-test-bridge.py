@@ -1210,7 +1210,7 @@ class WepoFastTestBridge:
                     if '.' in decimal_str:
                         decimal_places = len(decimal_str.split('.')[1])
                         if decimal_places > 8:
-                            validation_errors.append("amount cannot have more than 8 decimal places")
+                            validation_errors.append(f"amount cannot have more than 8 decimal places (found {decimal_places}). Maximum precision: 0.00000001 WEPO")
                     # Check for scientific notation
                     if 'e' in decimal_str.lower():
                         validation_errors.append("scientific notation (e.g., 1e10, 5E-3) is not allowed in transaction amounts. Please use standard decimal format (e.g., 10000000000, 0.005)")
