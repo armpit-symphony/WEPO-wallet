@@ -1231,9 +1231,9 @@ class WepoFastTestBridge:
                 
                 # Validate amount
                 if amount is None:
-                    validation_errors.append("amount is required")
+                    validation_errors.append("Amount is required")
                 elif not isinstance(amount, (int, float)):
-                    validation_errors.append("amount must be a number")
+                    validation_errors.append("Amount must be a number")
                 elif amount <= 0:
                     if amount == 0:
                         validation_errors.append("Amount cannot be zero. Minimum transaction amount: 0.00000001 WEPO")
