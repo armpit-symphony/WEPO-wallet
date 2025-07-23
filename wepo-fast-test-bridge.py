@@ -1213,7 +1213,7 @@ class WepoFastTestBridge:
                             validation_errors.append("amount cannot have more than 8 decimal places")
                     # Check for scientific notation
                     if 'e' in decimal_str.lower():
-                        validation_errors.append("scientific notation not allowed in amount")
+                        validation_errors.append("scientific notation (e.g., 1e10, 5E-3) is not allowed in transaction amounts. Please use standard decimal format (e.g., 10000000000, 0.005)")
                 elif amount < 0.00000001:  # Minimum amount (1 satoshi equivalent)
                     validation_errors.append("amount is below minimum transaction value (0.00000001 WEPO)")
                 
