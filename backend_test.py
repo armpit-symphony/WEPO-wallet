@@ -44,7 +44,7 @@ API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔐 FINAL 100% SECURITY VERIFICATION - ENHANCED ERROR MESSAGES TESTING")
 print(f"Preview Backend API URL: {API_URL}")
-print(f"Focus: Comprehensive security validation to achieve 100% security score")
+print(f"Focus: Final security verification testing for 100% security score achievement")
 print("=" * 80)
 
 # Test results tracking
