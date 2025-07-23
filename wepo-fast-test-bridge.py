@@ -1234,20 +1234,20 @@ class WepoFastTestBridge:
                 
                 # Check for XSS/injection attempts in inputs
                 dangerous_patterns = [
-                    r'<script.*?>.*?</script>',
-                    r'javascript:',
-                    r'on\w+\s*=',
-                    r'eval\(',
-                    r'document\.',
-                    r'window\.',
-                    r'[\'";]'
+                    (r'<script.*?>.*?</script>', 'script tags'),
+                    (r'javascript:', 'javascript URLs'),
+                    (r'on\w+\s*=', 'HTML event handlers'),
+                    (r'eval\(', 'eval() function calls'),
+                    (r'document\.', 'document object access'),
+                    (r'window\.', 'window object access'),
+                    (r'[\'";]', 'potential injection characters')
                 ]
                 
                 for field_name, field_value in [('from_address', from_address), ('to_address', to_address)]:
                     if field_value:
-                        for pattern in dangerous_patterns:
+                        for pattern, description in dangerous_patterns:
                             if re.search(pattern, str(field_value), re.IGNORECASE):
-                                validation_errors.append(f"{field_name} contains potentially malicious content")
+                                validation_errors.append(f"{field_name} contains potentially malicious content ({description}). Please use only valid WEPO address format")
                                 break
                 
                 # Return validation errors if any
