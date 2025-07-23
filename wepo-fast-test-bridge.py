@@ -1159,8 +1159,12 @@ class WepoFastTestBridge:
                 
                 try:
                     data = json.loads(body)
-                except json.JSONDecodeError:
-                    raise HTTPException(status_code=400, detail="Invalid JSON format")
+                    if not isinstance(data, dict):
+                        raise HTTPException(status_code=400, detail="Request body must be a JSON object")
+                except json.JSONDecodeError as e:
+                    raise HTTPException(status_code=400, detail=f"Invalid JSON format: {str(e)}")
+                except Exception as e:
+                    raise HTTPException(status_code=400, detail=f"Request parsing error: {str(e)}")
                 
                 from_address = data.get('from_address')
                 to_address = data.get('to_address')
