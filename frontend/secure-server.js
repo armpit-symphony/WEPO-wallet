@@ -187,6 +187,11 @@ app.get('/security-test', (req, res) => {
 
 // Catch all handler: send back React's index.html file for SPA routing
 app.get('*', (req, res) => {
+  // Avoid issues with path-to-regexp by being more specific
+  if (req.path.startsWith('/static/') || req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  
   res.sendFile(path.join(__dirname, 'build', 'index.html'), {
     headers: {
       'X-Content-Type-Options': 'nosniff',
