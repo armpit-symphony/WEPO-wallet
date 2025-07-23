@@ -1219,7 +1219,10 @@ class WepoFastTestBridge:
                 elif not isinstance(amount, (int, float)):
                     validation_errors.append("amount must be a number")
                 elif amount <= 0:
-                    validation_errors.append("amount must be greater than 0")
+                    if amount == 0:
+                        validation_errors.append("amount cannot be zero. Minimum transaction amount: 0.00000001 WEPO")
+                    else:
+                        validation_errors.append("amount cannot be negative. Please enter a positive value")
                 elif amount > 69000003:  # WEPO total supply
                     validation_errors.append(f"amount exceeds maximum possible value. Maximum: 69,000,003 WEPO (total supply), provided: {amount:,.0f}")
                 elif amount < 0.00000001:  # Minimum amount (1 satoshi equivalent)
