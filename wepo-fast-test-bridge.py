@@ -1074,11 +1074,23 @@ class WepoFastTestBridge:
                 raise HTTPException(status_code=500, detail="Failed to create wallet due to internal error")
 
         @self.app.post("/api/wallet/login")
-        async def login_wallet(request: dict):
-            """Login to existing WEPO wallet"""
+        async def login_wallet(request: Request):
+            """Login to existing WEPO wallet with enhanced security"""
+            client_id = SecurityManager.get_client_identifier(request)
+            logger.info(f"Wallet login attempt from {client_id}")
+            
+            # Implement rate limiting for login attempts
+            if SecurityManager.is_rate_limited(client_id, "wallet_login"):
+                logger.warning(f"Rate limit exceeded for login from {client_id}")
+                raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
+            
             try:
-                username = request.get("username")
-                password = request.get("password")
+                # Get request data
+                body = await request.body()
+                data = json.loads(body) if body else {}
+                
+                username = data.get("username")
+                password = data.get("password")
                 
                 if not username or not password:
                     raise HTTPException(status_code=400, detail="Username and password required")
@@ -1087,21 +1099,35 @@ class WepoFastTestBridge:
                 wallet_address = None
                 wallet_data = None
                 
-                for addr, data in self.blockchain.wallets.items():
-                    if data.get("username") == username:
+                for addr, wallet_info in self.blockchain.wallets.items():
+                    if wallet_info.get("username") == username:
                         wallet_address = addr
-                        wallet_data = data
+                        wallet_data = wallet_info
                         break
                 
                 if not wallet_data:
+                    # Record failed login attempt
+                    failed_info = SecurityManager.record_failed_login(username)
+                    logger.warning(f"Login failed for unknown user {username} from {client_id}")
                     raise HTTPException(status_code=401, detail="Invalid username or password")
                 
-                # Verify password (simplified - in production use proper bcrypt)
-                password_hash = hashlib.sha256(password.encode()).hexdigest()
-                if wallet_data.get("password_hash") != password_hash:
+                # Verify password using bcrypt
+                stored_password_hash = wallet_data.get("password_hash")
+                if not stored_password_hash:
+                    logger.error(f"No password hash found for user {username}")
                     raise HTTPException(status_code=401, detail="Invalid username or password")
                 
-                print(f"✅ User {username} logged in successfully")
+                # Use SecurityManager for proper bcrypt verification
+                if not SecurityManager.verify_password(password, stored_password_hash):
+                    # Record failed login attempt
+                    failed_info = SecurityManager.record_failed_login(username)
+                    logger.warning(f"Login failed for user {username} from {client_id} - incorrect password")
+                    raise HTTPException(status_code=401, detail="Invalid username or password")
+                
+                # Clear any failed login attempts on successful login
+                SecurityManager.clear_failed_login(username)
+                
+                logger.info(f"User {username} logged in successfully from {client_id}")
                 
                 return {
                     "success": True,
@@ -1109,16 +1135,17 @@ class WepoFastTestBridge:
                     "username": username,
                     "balance": wallet_data.get("balance", 0.0),
                     "created_at": wallet_data.get("created_at"),
-                    "version": wallet_data.get("version", "3.0"),
+                    "version": wallet_data.get("version", "3.1"),
                     "bip39": wallet_data.get("bip39", True),
+                    "security_level": wallet_data.get("security_level", "enhanced"),
                     "message": "Login successful"
                 }
                 
             except HTTPException:
                 raise
             except Exception as e:
-                print(f"❌ Wallet login error: {str(e)}")
-                raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
+                logger.error(f"Wallet login error from {client_id}: {str(e)}")
+                raise HTTPException(status_code=500, detail="Login failed due to internal error")
         
         @self.app.get("/api/wallet/{address}")
         async def get_wallet(address: str):
