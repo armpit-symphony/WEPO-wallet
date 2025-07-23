@@ -1193,11 +1193,11 @@ class WepoFastTestBridge:
                 elif not isinstance(from_address, str):
                     validation_errors.append("from_address must be a string")
                 elif not from_address.startswith("wepo1"):
-                    validation_errors.append("from_address must start with 'wepo1'")
+                    validation_errors.append("from_address must start with 'wepo1' (WEPO address format)")
                 elif len(from_address) != 37:
-                    validation_errors.append("from_address must be exactly 37 characters")
+                    validation_errors.append(f"from_address must be exactly 37 characters (wepo1 + 32 hex chars), found {len(from_address)} characters")
                 elif not re.match(r'^wepo1[a-f0-9]{32}$', from_address.lower()):
-                    validation_errors.append("from_address contains invalid characters")
+                    validation_errors.append("from_address contains invalid characters. Must be: wepo1 + 32 hexadecimal characters (0-9, a-f)")
                 
                 # Validate to_address
                 if not to_address:
@@ -1205,13 +1205,13 @@ class WepoFastTestBridge:
                 elif not isinstance(to_address, str):
                     validation_errors.append("to_address must be a string")
                 elif not to_address.startswith("wepo1"):
-                    validation_errors.append("to_address must start with 'wepo1'")
+                    validation_errors.append("to_address must start with 'wepo1' (WEPO address format)")
                 elif len(to_address) != 37:
-                    validation_errors.append("to_address must be exactly 37 characters")
+                    validation_errors.append(f"to_address must be exactly 37 characters (wepo1 + 32 hex chars), found {len(to_address)} characters")
                 elif not re.match(r'^wepo1[a-f0-9]{32}$', to_address.lower()):
-                    validation_errors.append("to_address contains invalid characters")
+                    validation_errors.append("to_address contains invalid characters. Must be: wepo1 + 32 hexadecimal characters (0-9, a-f)")
                 elif from_address == to_address:
-                    validation_errors.append("Cannot send to the same address")
+                    validation_errors.append("cannot send to the same address (from_address and to_address are identical)")
                 
                 # Validate amount
                 if amount is None:
