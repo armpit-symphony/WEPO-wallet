@@ -367,7 +367,7 @@ def test_mining_system_functionality():
         else:
             print(f"  ❌ Mining Status: HTTP {response.status_code} - {response.text}")
         
-        # Test 3.3: Network Status
+        # Test 3.3: Network Status (Fixed endpoint)
         response = requests.get(f"{API_URL}/network/status")
         
         if response.status_code == 200:
@@ -384,11 +384,12 @@ def test_mining_system_functionality():
         else:
             print(f"  ❌ Network Status: HTTP {response.status_code} - {response.text}")
         
-        # Test 3.4: Mining Connection Test
+        # Test 3.4: Mining Connection Test (Fixed with wallet_type parameter)
         test_address = generate_valid_wepo_address()
         connect_data = {
             "address": test_address,
-            "mining_mode": "genesis"
+            "mining_mode": "genesis",
+            "wallet_type": "regular"  # Added required parameter
         }
         
         response = requests.post(f"{API_URL}/mining/connect", json=connect_data)
