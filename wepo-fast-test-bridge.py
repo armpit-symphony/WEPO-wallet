@@ -1215,7 +1215,7 @@ class WepoFastTestBridge:
                     if 'e' in decimal_str.lower():
                         validation_errors.append("scientific notation (e.g., 1e10, 5E-3) is not allowed in transaction amounts. Please use standard decimal format (e.g., 10000000000, 0.005)")
                 elif amount < 0.00000001:  # Minimum amount (1 satoshi equivalent)
-                    validation_errors.append("amount is below minimum transaction value (0.00000001 WEPO)")
+                    validation_errors.append(f"amount is below minimum transaction value. Minimum: 0.00000001 WEPO, provided: {amount}")
                 
                 # Check for XSS/injection attempts in inputs
                 dangerous_patterns = [
