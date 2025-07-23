@@ -1227,7 +1227,7 @@ class WepoFastTestBridge:
                 elif not re.match(r'^wepo1[a-f0-9]{32}$', to_address.lower()):
                     validation_errors.append("to_address contains invalid characters. Must be: wepo1 + 32 hexadecimal characters (0-9, a-f)")
                 elif from_address == to_address:
-                    validation_errors.append("cannot send to the same address (from_address and to_address are identical)")
+                    validation_errors.append("Cannot send to the same address (from_address and to_address are identical)")
                 
                 # Validate amount
                 if amount is None:
