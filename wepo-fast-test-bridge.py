@@ -1157,6 +1157,20 @@ class WepoFastTestBridge:
                 if not body:
                     raise HTTPException(status_code=400, detail="Request body is required")
                 
+                # Check for scientific notation in raw body before JSON parsing
+                body_str = body.decode('utf-8')
+                if re.search(r'["\s:](\d+\.?\d*[eE][+-]?\d+)["\s,}]', body_str):
+                    raise HTTPException(
+                        status_code=400, 
+                        detail={
+                            "error": "Transaction validation failed",
+                            "validation_errors": [
+                                "scientific notation (e.g., 1e10, 5E-3) is not allowed in transaction amounts. Please use standard decimal format (e.g., 10000000000, 0.005)"
+                            ],
+                            "security_check": "failed"
+                        }
+                    )
+                
                 try:
                     data = json.loads(body)
                     if not isinstance(data, dict):
