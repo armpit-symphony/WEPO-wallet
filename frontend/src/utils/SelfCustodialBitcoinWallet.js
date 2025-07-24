@@ -44,8 +44,8 @@ const NETWORKS = {
   }
 };
 
-// Use testnet for development, mainnet for production
-const NETWORK = NETWORKS.testnet; // Change to NETWORKS.bitcoin for mainnet
+// Use mainnet for production Bitcoin functionality
+const NETWORK = NETWORKS.bitcoin; // Switched to mainnet for real BTC functionality
 
 // BIP44 derivation paths
 const BTC_DERIVATION_PATH = "m/44'/0'/0'"; // Bitcoin mainnet
