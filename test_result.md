@@ -1520,8 +1520,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "BIP-39 Cryptographically Secure Seed Phrase Generation System - COMPLETED"
-  stuck_tasks: []
+    - "Bitcoin Integration Endpoints - Balance, Network Status, Address Generation"
+    - "Bitcoin Privacy Mixing Service Endpoints"
+    - "Self-Custodial Bitcoin Wallet Functions"
+    - "End-to-End Bitcoin Integration Flow"
+  stuck_tasks:
+    - "Bitcoin Privacy Mixing Service Endpoints"
+    - "Self-Custodial Bitcoin Wallet Functions"
   test_all: false
   test_priority: "critical"
 
