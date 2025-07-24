@@ -159,17 +159,27 @@ export const WalletProvider = ({ children }) => {
       
       setWallet(walletData);
       
-      // Initialize Bitcoin wallet with the same seed (temporarily disabled)
-      console.log('🔐 Bitcoin wallet initialization temporarily disabled to prevent crashes...');
+      // Initialize Bitcoin wallet with the same seed (now enabled with real backend)
+      console.log('🔐 Initializing Bitcoin wallet with real backend integration...');
       try {
-        // Placeholder for Bitcoin wallet until we fix the runtime issues
+        const btcResult = await loadBitcoinWallet(mnemonic, password);
+        if (btcResult.success) {
+          console.log('✅ Bitcoin wallet initialized successfully');
+        } else {
+          console.warn('⚠️  Bitcoin wallet initialization failed, using placeholder:', btcResult.error);
+          // Fallback to placeholder
+          setBtcBalance(0.0);
+          setBtcAddresses([]);
+          setBtcTransactions([]);
+          setBtcUtxos([]);
+        }
+      } catch (btcError) {
+        console.warn('⚠️  Bitcoin wallet initialization error:', btcError.message);
+        // Fallback to placeholder
         setBtcBalance(0.0);
         setBtcAddresses([]);
         setBtcTransactions([]);
         setBtcUtxos([]);
-        console.log('✅ Bitcoin wallet placeholder initialized');
-      } catch (btcError) {
-        console.warn('⚠️  Bitcoin wallet initialization error:', btcError.message);
       }
       
       setIsLoading(false);
