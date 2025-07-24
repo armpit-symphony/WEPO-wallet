@@ -632,6 +632,8 @@ export const WalletProvider = ({ children }) => {
     exportBitcoinWalletInfo,
     initializeBitcoinWallet,
     loadExistingBitcoinWallet,
+    loadBitcoinWallet,
+    syncBitcoinWallet,
     
     // Legacy setters (keep for compatibility)
     setBtcBalance,
