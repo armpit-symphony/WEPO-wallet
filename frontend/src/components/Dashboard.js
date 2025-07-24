@@ -139,9 +139,9 @@ const Dashboard = ({ onLogout }) => {
   }, []);
 
   const handleModeToggle = () => {
-    // Toggle between quantum mode display (UI only)
+    // Toggle between private mode display (UI only)
     setIsQuantumMode(!isQuantumMode);
-    console.log(`Quantum mode ${!isQuantumMode ? 'enabled' : 'disabled'} for display`);
+    console.log(`Private mode ${!isQuantumMode ? 'enabled' : 'disabled'} for display`);
   };
 
   useEffect(() => {
