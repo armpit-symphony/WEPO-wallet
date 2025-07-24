@@ -158,18 +158,17 @@ export const WalletProvider = ({ children }) => {
       
       setWallet(walletData);
       
-      // Initialize Bitcoin wallet with the same seed (non-blocking)
-      console.log('🔐 Initializing Bitcoin mainnet wallet...');
+      // Initialize Bitcoin wallet with the same seed (temporarily disabled)
+      console.log('🔐 Bitcoin wallet initialization temporarily disabled to prevent crashes...');
       try {
-        const btcResult = await initializeBitcoinWallet(mnemonic);
-        if (btcResult.success) {
-          console.log('✅ Bitcoin wallet initialized successfully');
-        } else {
-          console.warn('⚠️  Bitcoin wallet initialization failed:', btcResult.error);
-        }
+        // Placeholder for Bitcoin wallet until we fix the runtime issues
+        setBtcBalance(0.0);
+        setBtcAddresses([]);
+        setBtcTransactions([]);
+        setBtcUtxos([]);
+        console.log('✅ Bitcoin wallet placeholder initialized');
       } catch (btcError) {
         console.warn('⚠️  Bitcoin wallet initialization error:', btcError.message);
-        // Don't fail the entire wallet creation if Bitcoin fails
       }
       
       setIsLoading(false);
