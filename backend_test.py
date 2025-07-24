@@ -204,7 +204,9 @@ def test_bitcoin_privacy_mixing_service():
         mix_request = {
             "btc_amount": 0.001,
             "privacy_level": 2,
-            "user_address": generate_valid_wepo_address()
+            "user_address": generate_valid_wepo_address(),
+            "input_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+            "output_address": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"
         }
         
         response = requests.post(f"{API_URL}/btc-mixing/quick-mix", json=mix_request)
@@ -219,6 +221,8 @@ def test_bitcoin_privacy_mixing_service():
                 mix_id = data.get('mix_id')
             else:
                 print(f"  ❌ Quick Mix BTC: Invalid response structure")
+        elif response.status_code == 400:
+            print(f"  ❌ Quick Mix BTC: Parameter validation error - {response.text}")
         elif response.status_code == 404:
             print(f"  ❌ Quick Mix BTC: Endpoint not found - /api/btc-mixing/quick-mix not implemented")
         else:
@@ -229,7 +233,10 @@ def test_bitcoin_privacy_mixing_service():
             "btc_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
             "amount": 0.001,
             "privacy_rounds": 3,
-            "mixer_fee": 0.0001
+            "mixer_fee": 0.0001,
+            "input_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+            "output_address": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+            "user_address": generate_valid_wepo_address()
         }
         
         response = requests.post(f"{API_URL}/btc-mixing/submit", json=submit_request)
@@ -243,6 +250,8 @@ def test_bitcoin_privacy_mixing_service():
                 request_id = data.get('request_id')
             else:
                 print(f"  ❌ BTC Mixing Submit: Missing request_id in response")
+        elif response.status_code == 400:
+            print(f"  ❌ BTC Mixing Submit: Parameter validation error - {response.text}")
         elif response.status_code == 404:
             print(f"  ❌ BTC Mixing Submit: Endpoint not found - /api/btc-mixing/submit not implemented")
         else:
@@ -289,7 +298,9 @@ def test_bitcoin_privacy_mixing_service():
         register_request = {
             "masternode_address": generate_valid_wepo_address(),
             "btc_capacity": 1.0,
-            "mixing_fee": 0.001
+            "mixing_fee": 0.001,
+            "masternode_id": f"mn_{secrets.token_hex(8)}",
+            "address": generate_valid_wepo_address()
         }
         
         response = requests.post(f"{API_URL}/masternode/btc-mixing/register", json=register_request)
@@ -301,6 +312,8 @@ def test_bitcoin_privacy_mixing_service():
                 checks_passed += 1
             else:
                 print(f"  ❌ Masternode Registration: Invalid response structure")
+        elif response.status_code == 400:
+            print(f"  ❌ Masternode Registration: Parameter validation error - {response.text}")
         elif response.status_code == 404:
             print(f"  ❌ Masternode Registration: Endpoint not found - /api/masternode/btc-mixing/register not implemented")
         else:
