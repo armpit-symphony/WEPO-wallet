@@ -54,7 +54,10 @@ const MainApp = () => {
   return (
     <div className="App">
       {currentView === 'setup' && (
-        <WalletSetup onComplete={() => handleViewChange('dashboard')} />
+        <WalletSetup 
+          onWalletCreated={() => handleViewChange('dashboard')} 
+          onLoginRedirect={() => handleViewChange('login')} 
+        />
       )}
       {currentView === 'login' && (
         <WalletLogin 
