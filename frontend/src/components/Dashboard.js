@@ -78,7 +78,7 @@ const Dashboard = ({ onLogout }) => {
   
   // Quantum Vault state
   const [showQuantumVault, setShowQuantumVault] = useState(false);
-  const [isQuantumMode, setIsQuantumMode] = useState(false);
+  const [isQuantumMode, setIsQuantumMode] = useState(true); // Default to Private mode for privacy project
   const [quantumStatus, setQuantumStatus] = useState(null);
   
   // Dilithium info for quantum security display (dynamic from backend)
