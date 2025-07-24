@@ -1465,6 +1465,171 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
+        # ===== BITCOIN INTEGRATION ENDPOINTS =====
+        
+        @self.app.get("/api/bitcoin/balance/{address}")
+        async def get_bitcoin_balance(address: str):
+            """Get Bitcoin balance for a given address using BlockCypher API"""
+            try:
+                import requests
+                import time
+                
+                # Basic Bitcoin address validation
+                if not (address.startswith('1') or address.startswith('3') or address.startswith('bc1')):
+                    raise HTTPException(status_code=400, detail="Invalid Bitcoin address format")
+                
+                # BlockCypher API call with rate limiting
+                api_url = f"https://api.blockcypher.com/v1/btc/main/addrs/{address}/balance"
+                
+                try:
+                    # Rate limiting for free tier (3 requests/sec)
+                    time.sleep(0.35)  # 350ms delay to stay under 3/sec limit
+                    
+                    response = requests.get(api_url, timeout=10)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        return {
+                            "success": True,
+                            "address": address,
+                            "balance": data.get("balance", 0),  # in satoshis
+                            "unconfirmed_balance": data.get("unconfirmed_balance", 0),
+                            "final_balance": data.get("final_balance", 0),
+                            "n_tx": data.get("n_tx", 0),
+                            "balance_btc": data.get("balance", 0) / 100000000,  # Convert to BTC
+                            "network": "mainnet",
+                            "source": "blockcypher"
+                        }
+                    elif response.status_code == 429:
+                        raise HTTPException(status_code=429, detail="Rate limit exceeded. BlockCypher free tier: 3 requests/sec")
+                    elif response.status_code == 404:
+                        # New address with no transactions
+                        return {
+                            "success": True,
+                            "address": address,
+                            "balance": 0,
+                            "unconfirmed_balance": 0,
+                            "final_balance": 0,
+                            "n_tx": 0,
+                            "balance_btc": 0.0,
+                            "network": "mainnet",
+                            "source": "blockcypher",
+                            "message": "New address with no transaction history"
+                        }
+                    else:
+                        raise HTTPException(status_code=response.status_code, detail=f"BlockCypher API error: {response.text}")
+                        
+                except requests.RequestException as e:
+                    # Fallback to zero balance if API is unavailable
+                    return {
+                        "success": False,
+                        "address": address,
+                        "balance": 0,
+                        "balance_btc": 0.0,
+                        "network": "mainnet",
+                        "error": f"Unable to connect to Bitcoin network: {str(e)}",
+                        "message": "Bitcoin network temporarily unavailable"
+                    }
+                    
+            except Exception as e:
+                logger.error(f"Bitcoin balance check error: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to check Bitcoin balance: {str(e)}")
+
+        @self.app.get("/api/bitcoin/network/status")
+        async def get_bitcoin_network_status():
+            """Get Bitcoin network status information"""
+            try:
+                import requests
+                import time
+                
+                # Rate limiting for BlockCypher API
+                time.sleep(0.35)  # 350ms delay
+                
+                try:
+                    # Get Bitcoin network info from BlockCypher
+                    api_url = "https://api.blockcypher.com/v1/btc/main"
+                    response = requests.get(api_url, timeout=10)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        return {
+                            "success": True,
+                            "network": "mainnet",
+                            "name": data.get("name", "Bitcoin"),
+                            "block_height": data.get("height", 0),
+                            "latest_block": data.get("hash", ""),
+                            "peer_count": data.get("peer_count", 0),
+                            "unconfirmed_count": data.get("unconfirmed_count", 0),
+                            "api_status": "connected",
+                            "source": "blockcypher",
+                            "timestamp": int(time.time()),
+                            "rate_limit": {
+                                "requests_per_second": 3,
+                                "requests_per_hour": 200,
+                                "tier": "free"
+                            }
+                        }
+                    else:
+                        raise Exception(f"API responded with status {response.status_code}")
+                        
+                except requests.RequestException as e:
+                    # Return offline status if API unavailable
+                    return {
+                        "success": False,
+                        "network": "mainnet",
+                        "name": "Bitcoin",
+                        "block_height": 0,
+                        "api_status": "offline",
+                        "error": str(e),
+                        "message": "Bitcoin network API temporarily unavailable",
+                        "timestamp": int(time.time())
+                    }
+                    
+            except Exception as e:
+                logger.error(f"Bitcoin network status error: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to get Bitcoin network status: {str(e)}")
+
+        @self.app.post("/api/bitcoin/address/generate")
+        async def generate_bitcoin_address(request: dict):
+            """Generate a new Bitcoin address (for demo purposes)"""
+            try:
+                wallet_id = request.get("wallet_id", "default")
+                
+                # For production, this would use proper HD wallet derivation
+                # For now, generate a mock Bitcoin address for testing
+                import hashlib
+                import secrets
+                
+                # Generate random data for address
+                random_data = secrets.token_bytes(20)  # 20 bytes for P2PKH
+                
+                # Create mock Bitcoin address (Legacy P2PKH format)
+                # Real implementation would use proper Bitcoin cryptography
+                address_hash = hashlib.sha256(random_data).hexdigest()[:34]
+                bitcoin_address = f"1{address_hash}"
+                
+                # Generate corresponding private key (mock)
+                private_key = secrets.token_hex(32)
+                
+                return {
+                    "success": True,
+                    "address": bitcoin_address,
+                    "address_type": "P2PKH",
+                    "network": "mainnet",
+                    "wallet_id": wallet_id,
+                    "derivation_path": "m/44'/0'/0'/0/0",
+                    "private_key": private_key,  # In production, never return this!
+                    "public_key": hashlib.sha256(private_key.encode()).hexdigest(),
+                    "message": "Bitcoin address generated successfully",
+                    "warning": "This is a demo implementation. Use proper HD wallet derivation in production."
+                }
+                
+            except Exception as e:
+                logger.error(f"Bitcoin address generation error: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to generate Bitcoin address: {str(e)}")
+
         @self.app.get("/api/staking/detailed-info")
         async def get_detailed_staking_info():
             """Get comprehensive staking system information with tokenomics details"""
