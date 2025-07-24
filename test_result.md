@@ -58,17 +58,17 @@
 ##
 ## agent_communication:
 ##     -agent: "main"
-##     -message: "User requested comprehensive frontend testing (Option A) after successfully resolving the 'onWalletCreated is not a function' error. Need to test the complete UI flow including: 1) Wallet creation flow and seed phrase display, 2) Dashboard access and functionality, 3) Bitcoin wallet integration in the UI, 4) Self-custodial Bitcoin features, 5) End-to-end user experience verification. The backend Bitcoin integration has been verified at 100% success rate, frontend fixes have been applied, and wallet creation is now working properly."
+##     -message: "User requested thorough audit and testing of all BTC functions and flow integration within WEPO network. CRITICAL: Just implemented BIP44 standard derivation paths to ensure true self-custodial Bitcoin compatibility. Need comprehensive testing of: 1) New BIP44 Bitcoin wallet initialization with proper derivation paths (m/44'/0'/0'/0/x), 2) Bitcoin recovery information and portability verification, 3) All Bitcoin backend endpoints functionality, 4) Bitcoin integration within WEPO ecosystem flows, 5) End-to-end Bitcoin transaction capabilities, 6) Bitcoin privacy mixing integration, 7) Self-custodial Bitcoin wallet sync and balance checking, 8) Bitcoin mainnet connectivity and BlockCypher API integration. GOAL: Ensure complete Bitcoin integration works seamlessly within WEPO network and maintains true self-custodial principles with standard wallet compatibility."
 
 ## test_plan:
 ##   current_focus:
-##     - "Complete Frontend UI Flow Testing"
-##     - "Bitcoin Wallet UI Integration"  
-##     - "Self-Custodial Wallet User Experience"
-##     - "End-to-End Frontend Functionality"
+##     - "Comprehensive BTC Functions Audit"
+##     - "BIP44 Standard Derivation Verification"  
+##     - "Bitcoin Self-Custodial Flow Testing"
+##     - "End-to-End Bitcoin Integration in WEPO Network"
 ##   stuck_tasks: []
-##   test_all: false
-##   test_priority: "high_first"
+##   test_all: true
+##   test_priority: "critical_first"
 
 # Protocol Guidelines for Main agent
 #
