@@ -364,6 +364,48 @@ const Dashboard = ({ onLogout }) => {
                 💡 <strong>Run a Masternode:</strong> Earn mixing fees by providing privacy services. Requires 10,000 WEPO collateral.
               </p>
             </div>
+            
+            {/* Bitcoin Recovery Information */}
+            <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+              <h4 className="text-blue-200 font-semibold mb-2 flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Bitcoin Recovery Information
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-blue-300 font-medium">Standard:</div>
+                    <div className="text-blue-100">BIP44 HD Wallet</div>
+                  </div>
+                  <div>
+                    <div className="text-blue-300 font-medium">Derivation Path:</div>
+                    <div className="text-blue-100 font-mono">m/44'/0'/0'/0/x</div>
+                  </div>
+                  <div>
+                    <div className="text-blue-300 font-medium">Address Type:</div>
+                    <div className="text-blue-100">P2PKH (Legacy)</div>
+                  </div>
+                  <div>
+                    <div className="text-blue-300 font-medium">Network:</div>
+                    <div className="text-blue-100">Bitcoin Mainnet</div>
+                  </div>
+                </div>
+                
+                <div className="mt-3 pt-3 border-t border-blue-500/20">
+                  <div className="text-blue-300 font-medium mb-2">Emergency Recovery Steps:</div>
+                  <ol className="text-blue-100 space-y-1 text-xs">
+                    <li>1. Use your WEPO 12-word seed phrase in any Bitcoin wallet</li>
+                    <li>2. Select Bitcoin (BTC) and Legacy (P2PKH) addresses</li>
+                    <li>3. Use derivation path: <code className="bg-blue-900/40 px-1 rounded">m/44'/0'/0'/0/x</code></li>
+                    <li>4. Compatible with: Electrum, Bitcoin Core, Exodus, Trust Wallet, Ledger, Trezor</li>
+                  </ol>
+                </div>
+                
+                <div className="mt-2 p-2 bg-green-900/30 rounded text-green-200 text-xs">
+                  ✅ <strong>True Self-Custody:</strong> Your Bitcoin is fully portable and recoverable in any standard Bitcoin wallet using just your WEPO seed phrase.
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
