@@ -200,6 +200,9 @@ class SelfCustodialBitcoinWallet {
     this.nextReceiveIndex = 0;
     this.nextChangeIndex = 0;
     this.gapLimit = 20; // BIP44 gap limit
+    this.networkService = new BitcoinNetworkService();
+    this.balance = 0; // Total balance in BTC
+    this.isInitialized = false;
   }
 
   /**
