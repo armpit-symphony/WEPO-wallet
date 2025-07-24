@@ -366,6 +366,9 @@ export const WalletProvider = ({ children }) => {
     try {
       console.log('🔄 Loading Bitcoin wallet with real backend integration...');
 
+      // Check if we have a real backend connection
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+
       // Initialize Bitcoin wallet with backend
       const response = await fetch(`${backendUrl}/api/bitcoin/wallet/init`, {
         method: 'POST',
@@ -429,6 +432,8 @@ export const WalletProvider = ({ children }) => {
   const syncBitcoinWallet = async (walletFingerprint, addresses) => {
     try {
       console.log('🔄 Syncing Bitcoin wallet with blockchain...');
+
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
       const response = await fetch(`${backendUrl}/api/bitcoin/wallet/sync`, {
         method: 'POST',
