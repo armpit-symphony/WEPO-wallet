@@ -366,14 +366,30 @@ export const WalletProvider = ({ children }) => {
       const addresses = btcWalletInstance.addresses || [];
       setBtcAddresses(addresses);
       
-      // For now, set balance to 0 until we implement blockchain API integration
-      // In production, this would query blockchain APIs like BlockCypher or Electrum
-      setBtcBalance(0.0);
-      setBtcTransactions([]);
-      setBtcUtxos([]);
+      // Get current balance (will be 0 initially, updated in background)
+      const balanceInfo = btcWalletInstance.getBalance();
+      setBtcBalance(balanceInfo.total);
       
       console.log(`📍 Generated ${addresses.length} Bitcoin addresses`);
-      console.log('⚠️  Note: Connect to blockchain API for real balance updates');
+      console.log(`💰 Initial balance: ${balanceInfo.total} BTC (will update in background)`);
+      
+      // Simulate some basic transaction history for now
+      setBtcTransactions([]);
+      setBtcUtxos(btcWalletInstance.utxos || []);
+      
+      // Set up periodic balance updates
+      const balanceUpdateInterval = setInterval(async () => {
+        try {
+          const updatedBalance = btcWalletInstance.getBalance();
+          setBtcBalance(updatedBalance.total);
+          setBtcUtxos(btcWalletInstance.utxos || []);
+        } catch (error) {
+          console.warn('⚠️ Failed to update balance in context:', error);
+        }
+      }, 30000); // Update every 30 seconds
+      
+      // Store interval ID for cleanup
+      btcWalletInstance.balanceUpdateInterval = balanceUpdateInterval;
       
     } catch (error) {
       console.error('❌ Failed to load Bitcoin data:', error);
