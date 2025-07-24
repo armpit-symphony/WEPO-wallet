@@ -246,7 +246,7 @@ const Dashboard = ({ onLogout }) => {
               {isQuantumMode && (
                 <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full">
                   <Zap className="h-3 w-3 text-yellow-300" />
-                  <span className="text-xs text-yellow-300">Quantum</span>
+                  <span className="text-xs text-yellow-300">Private</span>
                 </div>
               )}
             </div>
