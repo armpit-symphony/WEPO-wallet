@@ -24,7 +24,8 @@ import {
   LogOut,
   Server,
   ToggleRight,
-  ToggleLeft
+  ToggleLeft,
+  ChevronDown
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 // Temporarily commented out for Buffer isolation testing
