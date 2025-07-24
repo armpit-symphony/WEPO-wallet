@@ -606,6 +606,7 @@ export const WalletProvider = ({ children }) => {
     btcWallet,
     btcAddresses,
     btcUtxos,
+    btcWalletFingerprint,
     isBtcLoading,
     
     // Actions
