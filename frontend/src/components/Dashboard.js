@@ -298,23 +298,32 @@ const Dashboard = ({ onLogout }) => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
           <div className="bg-black/30 rounded-lg p-3">
             <div className="text-gray-400">BTC Balance</div>
             <div className="text-orange-400 font-semibold">
               {btcBalance.toFixed(8)} BTC
             </div>
             <div className="text-green-400 text-xs mt-1">
-              {btcAddresses.length > 0 ? '✅ Self-Custodial' : '⏳ Initializing...'}
+              {btcAddresses.length > 0 ? '✅ Mainnet Active' : '⏳ Initializing...'}
             </div>
           </div>
           <div className="bg-black/30 rounded-lg p-3">
-            <div className="text-gray-400">BTC Addresses</div>
+            <div className="text-gray-400">Mode</div>
             <div className="text-white font-semibold">
-              {btcAddresses.filter(addr => addr.chain === 0).length} Receiving
+              Public Mode
             </div>
-            <div className="text-orange-400 text-xs mt-1">
-              HD Wallet (BIP44)
+            <div className="text-blue-400 text-xs mt-1">
+              Direct Bitcoin
+            </div>
+          </div>
+          <div className="bg-black/30 rounded-lg p-3">
+            <div className="text-gray-400">Private Mode</div>
+            <div className="text-white font-semibold">
+              {balance >= 10000 && masternodesEnabled ? 'Available' : 'Locked'}
+            </div>
+            <div className={`text-xs mt-1 ${balance >= 10000 && masternodesEnabled ? 'text-green-400' : 'text-gray-500'}`}>
+              {balance >= 10000 && masternodesEnabled ? 'Via Masternodes' : 'Need 10,000 WEPO'}
             </div>
           </div>
           <div className="bg-black/30 rounded-lg p-3">
