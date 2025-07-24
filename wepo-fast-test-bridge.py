@@ -1630,6 +1630,361 @@ class WepoFastTestBridge:
                 logger.error(f"Bitcoin address generation error: {str(e)}")
                 raise HTTPException(status_code=500, detail=f"Failed to generate Bitcoin address: {str(e)}")
 
+        @self.app.post("/api/bitcoin/wallet/init")
+        async def initialize_bitcoin_wallet(request: dict):
+            """Initialize self-custodial Bitcoin wallet from seed phrase"""
+            try:
+                seed_phrase = request.get("seed_phrase")
+                passphrase = request.get("passphrase", "")
+                
+                if not seed_phrase:
+                    raise HTTPException(status_code=400, detail="seed_phrase is required")
+                
+                # Validate seed phrase (basic check)
+                words = seed_phrase.strip().split()
+                if len(words) not in [12, 15, 18, 21, 24]:
+                    raise HTTPException(status_code=400, detail="Invalid seed phrase length. Must be 12, 15, 18, 21, or 24 words")
+                
+                # For production, this would use proper BIP39 validation and HD wallet derivation
+                # For now, simulate wallet initialization
+                import hashlib
+                import secrets
+                
+                # Generate wallet fingerprint from seed
+                seed_hash = hashlib.sha256(seed_phrase.encode()).hexdigest()
+                wallet_fingerprint = seed_hash[:8]
+                
+                # Generate HD wallet master data (simplified)
+                master_seed = hashlib.pbkdf2_hmac('sha256', seed_phrase.encode(), b'bitcoin_seed', 2048)
+                master_fingerprint = hashlib.sha256(master_seed).hexdigest()[:8]
+                
+                # Generate initial Bitcoin addresses (BIP44: m/44'/0'/0'/0/0)
+                addresses = []
+                for i in range(5):  # Generate first 5 receiving addresses
+                    addr_seed = hashlib.sha256(f"{seed_phrase}_btc_0_0_{i}".encode()).hexdigest()
+                    # Create mock Bitcoin address (Legacy P2PKH format)
+                    address = f"1{addr_seed[:33]}"
+                    addresses.append({
+                        "address": address,
+                        "derivation_path": f"m/44'/0'/0'/0/{i}",
+                        "index": i,
+                        "balance": 0,
+                        "used": False
+                    })
+                
+                wallet_data = {
+                    "success": True,
+                    "wallet_initialized": True,
+                    "master_fingerprint": master_fingerprint,
+                    "wallet_fingerprint": wallet_fingerprint,
+                    "network": "mainnet",
+                    "addresses": addresses,
+                    "address_count": len(addresses),
+                    "derivation_path": "m/44'/0'/0'",
+                    "next_receive_index": 0,
+                    "next_change_index": 0,
+                    "balance": {
+                        "confirmed": 0,
+                        "unconfirmed": 0,
+                        "total": 0
+                    },
+                    "message": "Bitcoin wallet initialized successfully from seed phrase"
+                }
+                
+                # Store wallet data in memory for this session (in production, use secure storage)
+                # You would encrypt this data before storing
+                self.bitcoin_wallets = getattr(self, 'bitcoin_wallets', {})
+                self.bitcoin_wallets[wallet_fingerprint] = {
+                    "seed_phrase": seed_phrase,  # In production, store encrypted!
+                    "addresses": addresses,
+                    "balance": 0,
+                    "utxos": [],
+                    "transactions": [],
+                    "initialized_at": time.time()
+                }
+                
+                return wallet_data
+                
+            except Exception as e:
+                logger.error(f"Bitcoin wallet initialization error: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to initialize Bitcoin wallet: {str(e)}")
+
+        @self.app.post("/api/bitcoin/wallet/sync")
+        async def sync_bitcoin_wallet(request: dict):
+            """Sync Bitcoin wallet with blockchain - update balances and transactions"""
+            try:
+                wallet_fingerprint = request.get("wallet_fingerprint")
+                addresses = request.get("addresses", [])
+                
+                if not wallet_fingerprint and not addresses:
+                    raise HTTPException(status_code=400, detail="wallet_fingerprint or addresses required")
+                
+                # Get wallet data
+                bitcoin_wallets = getattr(self, 'bitcoin_wallets', {})
+                wallet_data = bitcoin_wallets.get(wallet_fingerprint) if wallet_fingerprint else None
+                
+                # Use provided addresses or wallet addresses
+                if wallet_data:
+                    sync_addresses = [addr["address"] for addr in wallet_data["addresses"]]
+                else:
+                    sync_addresses = addresses
+                
+                if not sync_addresses:
+                    raise HTTPException(status_code=400, detail="No addresses to sync")
+                
+                import requests
+                import time
+                
+                total_balance = 0
+                total_unconfirmed = 0
+                updated_addresses = []
+                all_transactions = []
+                
+                # Sync each address with rate limiting
+                for address in sync_addresses[:10]:  # Limit to 10 addresses to avoid rate limits
+                    try:
+                        # Rate limiting for BlockCypher API
+                        time.sleep(0.4)  # 400ms delay for safety
+                        
+                        # Get address info from BlockCypher
+                        api_url = f"https://api.blockcypher.com/v1/btc/main/addrs/{address}"
+                        response = requests.get(api_url, timeout=10)
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            
+                            address_balance = data.get("balance", 0)
+                            address_unconfirmed = data.get("unconfirmed_balance", 0)
+                            
+                            total_balance += address_balance
+                            total_unconfirmed += address_unconfirmed
+                            
+                            updated_addresses.append({
+                                "address": address,
+                                "balance": address_balance,
+                                "unconfirmed_balance": address_unconfirmed,
+                                "final_balance": data.get("final_balance", 0),
+                                "n_tx": data.get("n_tx", 0),
+                                "last_sync": int(time.time())
+                            })
+                            
+                            # Get recent transactions for this address (simplified)
+                            if data.get("txrefs"):
+                                for tx in data.get("txrefs", [])[:5]:  # Last 5 transactions
+                                    all_transactions.append({
+                                        "txid": tx.get("tx_hash"),
+                                        "address": address,
+                                        "value": tx.get("value", 0),
+                                        "confirmations": tx.get("confirmations", 0),
+                                        "block_height": tx.get("block_height", 0),
+                                        "tx_input_n": tx.get("tx_input_n", -1),
+                                        "tx_output_n": tx.get("tx_output_n", -1)
+                                    })
+                        elif response.status_code == 404:
+                            # New address with no transactions
+                            updated_addresses.append({
+                                "address": address,
+                                "balance": 0,
+                                "unconfirmed_balance": 0,
+                                "final_balance": 0,
+                                "n_tx": 0,
+                                "last_sync": int(time.time())
+                            })
+                        
+                    except requests.RequestException as e:
+                        logger.warning(f"Failed to sync address {address}: {str(e)}")
+                        updated_addresses.append({
+                            "address": address,
+                            "balance": 0,
+                            "unconfirmed_balance": 0,
+                            "error": str(e),
+                            "last_sync": int(time.time())
+                        })
+                
+                # Update wallet data if we have it
+                if wallet_data:
+                    wallet_data["balance"] = total_balance / 100000000  # Convert to BTC
+                    wallet_data["transactions"] = all_transactions
+                    wallet_data["last_sync"] = int(time.time())
+                
+                sync_result = {
+                    "success": True,
+                    "wallet_synced": True,
+                    "addresses_synced": len(updated_addresses),
+                    "total_balance": total_balance,  # in satoshis
+                    "total_balance_btc": total_balance / 100000000,  # in BTC
+                    "unconfirmed_balance": total_unconfirmed,
+                    "addresses": updated_addresses,
+                    "transactions": all_transactions,
+                    "sync_timestamp": int(time.time()),
+                    "message": f"Successfully synced {len(updated_addresses)} addresses"
+                }
+                
+                return sync_result
+                
+            except Exception as e:
+                logger.error(f"Bitcoin wallet sync error: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to sync Bitcoin wallet: {str(e)}")
+
+        @self.app.get("/api/bitcoin/utxos/{address}")
+        async def get_bitcoin_utxos(address: str):
+            """Get UTXOs (Unspent Transaction Outputs) for a Bitcoin address"""
+            try:
+                # Basic Bitcoin address validation
+                if not (address.startswith('1') or address.startswith('3') or address.startswith('bc1')):
+                    raise HTTPException(status_code=400, detail="Invalid Bitcoin address format")
+                
+                import requests
+                import time
+                
+                # Rate limiting for BlockCypher API
+                time.sleep(0.35)  # 350ms delay
+                
+                try:
+                    # Get UTXOs from BlockCypher API
+                    api_url = f"https://api.blockcypher.com/v1/btc/main/addrs/{address}?unspentOnly=true"
+                    response = requests.get(api_url, timeout=10)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        utxos = []
+                        
+                        # Process UTXOs
+                        for utxo in data.get("txrefs", []):
+                            utxos.append({
+                                "txid": utxo.get("tx_hash"),
+                                "vout": utxo.get("tx_output_n"),
+                                "value": utxo.get("value", 0),  # in satoshis
+                                "value_btc": utxo.get("value", 0) / 100000000,  # in BTC
+                                "confirmations": utxo.get("confirmations", 0),
+                                "block_height": utxo.get("block_height", 0),
+                                "script": utxo.get("script", ""),
+                                "address": address,
+                                "spendable": utxo.get("confirmations", 0) >= 1  # Require 1 confirmation
+                            })
+                        
+                        # Calculate total UTXO value
+                        total_value = sum(utxo["value"] for utxo in utxos)
+                        spendable_value = sum(utxo["value"] for utxo in utxos if utxo["spendable"])
+                        
+                        return {
+                            "success": True,
+                            "address": address,
+                            "utxo_count": len(utxos),
+                            "total_value": total_value,  # in satoshis
+                            "total_value_btc": total_value / 100000000,  # in BTC
+                            "spendable_value": spendable_value,  # in satoshis
+                            "spendable_value_btc": spendable_value / 100000000,  # in BTC
+                            "utxos": utxos,
+                            "network": "mainnet",
+                            "source": "blockcypher"
+                        }
+                    elif response.status_code == 404:
+                        # Address not found or no UTXOs
+                        return {
+                            "success": True,
+                            "address": address,
+                            "utxo_count": 0,
+                            "total_value": 0,
+                            "total_value_btc": 0.0,
+                            "spendable_value": 0,
+                            "spendable_value_btc": 0.0,
+                            "utxos": [],
+                            "network": "mainnet",
+                            "message": "No UTXOs found for this address"
+                        }
+                    else:
+                        raise HTTPException(status_code=response.status_code, detail=f"BlockCypher API error: {response.text}")
+                        
+                except requests.RequestException as e:
+                    # Fallback when API is unavailable
+                    return {
+                        "success": False,
+                        "address": address,
+                        "utxo_count": 0,
+                        "total_value": 0,
+                        "total_value_btc": 0.0,
+                        "utxos": [],
+                        "error": f"Unable to fetch UTXOs: {str(e)}",
+                        "message": "Bitcoin network temporarily unavailable"
+                    }
+                    
+            except Exception as e:
+                logger.error(f"Bitcoin UTXO fetch error: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to fetch Bitcoin UTXOs: {str(e)}")
+
+        @self.app.post("/api/bitcoin/broadcast")
+        async def broadcast_bitcoin_transaction(request: dict):
+            """Broadcast a signed Bitcoin transaction to the network"""
+            try:
+                tx_hex = request.get("tx_hex")
+                tx_data = request.get("tx_data")  # Optional transaction metadata
+                
+                if not tx_hex:
+                    raise HTTPException(status_code=400, detail="tx_hex is required")
+                
+                # Basic hex validation
+                try:
+                    bytes.fromhex(tx_hex)
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid transaction hex format")
+                
+                import requests
+                import time
+                
+                # Rate limiting for BlockCypher API
+                time.sleep(0.35)  # 350ms delay
+                
+                try:
+                    # Broadcast transaction using BlockCypher API
+                    api_url = "https://api.blockcypher.com/v1/btc/main/txs/push"
+                    payload = {"tx": tx_hex}
+                    
+                    response = requests.post(api_url, json=payload, timeout=15)
+                    
+                    if response.status_code == 201:
+                        data = response.json()
+                        
+                        return {
+                            "success": True,
+                            "transaction_broadcasted": True,
+                            "txid": data.get("tx", {}).get("hash"),
+                            "block_height": data.get("tx", {}).get("block_height", -1),
+                            "received": data.get("tx", {}).get("received"),
+                            "total": data.get("tx", {}).get("total", 0),
+                            "fees": data.get("tx", {}).get("fees", 0),
+                            "size": data.get("tx", {}).get("size", 0),
+                            "network": "mainnet",
+                            "confirmations": 0,
+                            "message": "Transaction successfully broadcast to Bitcoin network"
+                        }
+                    elif response.status_code == 400:
+                        error_data = response.json()
+                        error_msg = error_data.get("error", "Invalid transaction")
+                        
+                        return {
+                            "success": False,
+                            "transaction_broadcasted": False,
+                            "error": error_msg,
+                            "error_code": "INVALID_TRANSACTION",
+                            "message": f"Transaction rejected by network: {error_msg}"
+                        }
+                    else:
+                        raise HTTPException(status_code=response.status_code, detail=f"BlockCypher API error: {response.text}")
+                        
+                except requests.RequestException as e:
+                    return {
+                        "success": False,
+                        "transaction_broadcasted": False,
+                        "error": f"Network error: {str(e)}",
+                        "error_code": "NETWORK_ERROR",
+                        "message": "Unable to connect to Bitcoin network for broadcasting"
+                    }
+                    
+            except Exception as e:
+                logger.error(f"Bitcoin transaction broadcast error: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to broadcast Bitcoin transaction: {str(e)}")
+
         @self.app.get("/api/staking/detailed-info")
         async def get_detailed_staking_info():
             """Get comprehensive staking system information with tokenomics details"""
