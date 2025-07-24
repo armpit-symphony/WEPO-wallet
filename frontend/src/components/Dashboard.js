@@ -280,7 +280,7 @@ const Dashboard = ({ onLogout }) => {
         </div>
       </div>
 
-      {/* Quantum Status Card (only show in quantum mode) */}
+      {/* Privacy Status Card (only show in private mode) */}
       {isQuantumMode && (
         <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
