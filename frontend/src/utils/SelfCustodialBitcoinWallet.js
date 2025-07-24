@@ -213,6 +213,8 @@ class SelfCustodialBitcoinWallet {
    */
   async initializeFromSeed(seedPhrase, passphrase = '') {
     try {
+      console.log('🔐 Initializing Bitcoin wallet from seed...');
+      
       // Validate seed phrase
       if (!bip39.validateMnemonic(seedPhrase)) {
         throw new Error('Invalid seed phrase');
@@ -231,8 +233,14 @@ class SelfCustodialBitcoinWallet {
       
       this.accountNode = this.masterNode.derivePath(derivationPath);
       
-      // Generate initial addresses
+      // Generate initial addresses (don't sync with network yet)
       await this.generateInitialAddresses();
+      
+      this.isInitialized = true;
+      console.log('✅ Bitcoin wallet initialized successfully');
+      
+      // Start background balance sync (non-blocking)
+      this.syncBalancesInBackground();
       
       return {
         success: true,
@@ -243,6 +251,7 @@ class SelfCustodialBitcoinWallet {
       };
       
     } catch (error) {
+      console.error('❌ Bitcoin wallet initialization failed:', error);
       throw new Error(`Failed to initialize Bitcoin wallet: ${error.message}`);
     }
   }
