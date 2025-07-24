@@ -32,11 +32,15 @@ export const WalletProvider = ({ children }) => {
   const [btcUtxos, setBtcUtxos] = useState([]);
   const [isBtcLoading, setIsBtcLoading] = useState(false);
 
+  // Enable masternodes immediately (require 10,000 WEPO collateral)
   // Enable PoS after 18 months
   useEffect(() => {
+    // Masternodes enabled now with 10,000 WEPO requirement
+    setMasternodesEnabled(true);
+    
+    // PoS still requires 18-month timeline
     const timer = setTimeout(() => {
       setPosEnabled(true);
-      setMasternodesEnabled(true);
     }, 100000); // For demo - in production this would be actual 18 months
 
     return () => clearTimeout(timer);
