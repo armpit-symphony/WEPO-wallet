@@ -320,10 +320,10 @@ const Dashboard = ({ onLogout }) => {
           <div className="bg-black/30 rounded-lg p-3">
             <div className="text-gray-400">Private Mode</div>
             <div className="text-white font-semibold">
-              {balance >= 10000 && masternodesEnabled ? 'Available' : 'Locked'}
+              {masternodesEnabled ? 'Available' : 'Coming Soon'}
             </div>
-            <div className={`text-xs mt-1 ${balance >= 10000 && masternodesEnabled ? 'text-green-400' : 'text-gray-500'}`}>
-              {balance >= 10000 && masternodesEnabled ? 'Via Masternodes' : 'Need 10,000 WEPO'}
+            <div className={`text-xs mt-1 ${masternodesEnabled ? 'text-green-400' : 'text-gray-500'}`}>
+              {masternodesEnabled ? 'Via Masternodes' : 'Need Active Masternodes'}
             </div>
           </div>
           <div className="bg-black/30 rounded-lg p-3">
