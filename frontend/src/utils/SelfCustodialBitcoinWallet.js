@@ -47,6 +47,143 @@ const NETWORKS = {
 // Use mainnet for production Bitcoin functionality
 const NETWORK = NETWORKS.bitcoin; // Switched to mainnet for real BTC functionality
 
+// Bitcoin blockchain API configuration
+const BLOCKCYPHER_API = {
+  BASE_URL: 'https://api.blockcypher.com/v1/btc/main',
+  // Free tier: 3 requests/sec, 200 requests/hour
+  // For production, add API token: ?token=YOUR_TOKEN
+  ENDPOINTS: {
+    ADDRESS_INFO: (address) => `${BLOCKCYPHER_API.BASE_URL}/addrs/${address}`,
+    ADDRESS_BALANCE: (address) => `${BLOCKCYPHER_API.BASE_URL}/addrs/${address}/balance`,
+    UNSPENT_OUTPUTS: (address) => `${BLOCKCYPHER_API.BASE_URL}/addrs/${address}?unspentOnly=true`,
+    BROADCAST_TX: `${BLOCKCYPHER_API.BASE_URL}/txs/push`,
+    TX_INFO: (txid) => `${BLOCKCYPHER_API.BASE_URL}/txs/${txid}`
+  }
+};
+
+// Bitcoin network service class
+class BitcoinNetworkService {
+  constructor() {
+    this.rateLimitDelay = 350; // 350ms between requests to stay under 3/sec limit
+    this.lastRequestTime = 0;
+  }
+
+  async rateLimitedRequest(url, options = {}) {
+    // Rate limiting for free BlockCypher API
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    if (timeSinceLastRequest < this.rateLimitDelay) {
+      await new Promise(resolve => setTimeout(resolve, this.rateLimitDelay - timeSinceLastRequest));
+    }
+    
+    this.lastRequestTime = Date.now();
+    
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Bitcoin API error: ${response.status} ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Bitcoin network request failed:', error);
+      throw error;
+    }
+  }
+
+  async getAddressInfo(address) {
+    try {
+      const data = await this.rateLimitedRequest(BLOCKCYPHER_API.ENDPOINTS.ADDRESS_INFO(address));
+      return {
+        address: data.address,
+        balance: data.balance || 0, // in satoshis
+        unconfirmed_balance: data.unconfirmed_balance || 0,
+        final_balance: data.final_balance || 0,
+        n_tx: data.n_tx || 0,
+        unconfirmed_n_tx: data.unconfirmed_n_tx || 0,
+        final_n_tx: data.final_n_tx || 0
+      };
+    } catch (error) {
+      console.warn(`Failed to get address info for ${address}:`, error);
+      return {
+        address,
+        balance: 0,
+        unconfirmed_balance: 0,
+        final_balance: 0,
+        n_tx: 0,
+        unconfirmed_n_tx: 0,
+        final_n_tx: 0
+      };
+    }
+  }
+
+  async getAddressBalance(address) {
+    try {
+      const data = await this.rateLimitedRequest(BLOCKCYPHER_API.ENDPOINTS.ADDRESS_BALANCE(address));
+      return {
+        balance: data.balance || 0, // confirmed balance in satoshis
+        unconfirmed_balance: data.unconfirmed_balance || 0,
+        final_balance: data.final_balance || 0 // confirmed + unconfirmed
+      };
+    } catch (error) {
+      console.warn(`Failed to get balance for ${address}:`, error);
+      return { balance: 0, unconfirmed_balance: 0, final_balance: 0 };
+    }
+  }
+
+  async getUnspentOutputs(address) {
+    try {
+      const data = await this.rateLimitedRequest(BLOCKCYPHER_API.ENDPOINTS.UNSPENT_OUTPUTS(address));
+      return (data.txrefs || []).map(utxo => ({
+        txid: utxo.tx_hash,
+        vout: utxo.tx_output_n,
+        value: utxo.value, // in satoshis
+        confirmations: utxo.confirmations || 0,
+        script: utxo.script || ''
+      }));
+    } catch (error) {
+      console.warn(`Failed to get UTXOs for ${address}:`, error);
+      return [];
+    }
+  }
+
+  async broadcastTransaction(hexTx) {
+    try {
+      const data = await this.rateLimitedRequest(BLOCKCYPHER_API.ENDPOINTS.BROADCAST_TX, {
+        method: 'POST',
+        body: JSON.stringify({ tx: hexTx })
+      });
+      return {
+        success: true,
+        txid: data.tx.hash,
+        message: 'Transaction broadcast successfully'
+      };
+    } catch (error) {
+      console.error('Failed to broadcast transaction:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to broadcast transaction'
+      };
+    }
+  }
+
+  satoshisToBTC(satoshis) {
+    return satoshis / 100000000;
+  }
+
+  BTCToSatoshis(btc) {
+    return Math.round(btc * 100000000);
+  }
+}
+
 // BIP44 derivation paths
 const BTC_DERIVATION_PATH = "m/44'/0'/0'"; // Bitcoin mainnet
 const BTC_TESTNET_DERIVATION_PATH = "m/44'/1'/0'"; // Bitcoin testnet
