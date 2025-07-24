@@ -100,8 +100,20 @@ const QuantumVault = ({ onClose }) => {
   const loadWalletVaults = async () => {
     try {
       setLoading(true);
+      setError('');
+      
+      console.log('Loading wallet vaults...');
+      console.log('Current address:', currentAddress);
+      
+      if (!currentAddress) {
+        throw new Error('Wallet address not available');
+      }
+      
       const response = await fetch(`${backendUrl}/api/vault/wallet/${currentAddress}`);
+      console.log('Load vaults response status:', response.status);
+      
       const data = await response.json();
+      console.log('Load vaults response data:', data);
       
       if (data.success) {
         setVaults(data.vaults || []);
@@ -110,11 +122,11 @@ const QuantumVault = ({ onClose }) => {
           setAutoDepositEnabled(data.vaults[0].auto_deposit_enabled);
         }
       } else {
-        setError('Failed to load vaults');
+        setError(data.message || 'Failed to load vaults');
       }
     } catch (err) {
       console.error('Error loading vaults:', err);
-      setError('Failed to connect to vault system');
+      setError(`Failed to connect to vault system: ${err.message}`);
     } finally {
       setLoading(false);
     }
