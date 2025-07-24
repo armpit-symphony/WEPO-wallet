@@ -81,6 +81,9 @@ const Dashboard = ({ onLogout }) => {
   const [isQuantumMode, setIsQuantumMode] = useState(true); // Default to Private mode for privacy project
   const [quantumStatus, setQuantumStatus] = useState(null);
   
+  // Bitcoin section state
+  const [showBitcoinDetails, setShowBitcoinDetails] = useState(false);
+  
   // Dilithium info for quantum security display (dynamic from backend)
   const dilithiumInfo = quantumStatus ? {
     algorithm: quantumStatus.algorithm || 'Dilithium2',
