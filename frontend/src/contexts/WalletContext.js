@@ -362,38 +362,17 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
-  const loadBitcoinData = async (btcWalletInstance) => {
+  const loadBitcoinData = async (placeholder) => {
     try {
-      console.log('📊 Loading Bitcoin wallet data...');
+      console.log('📊 Loading Bitcoin data (placeholder)...');
       
-      // Get addresses from wallet
-      const addresses = btcWalletInstance.addresses || [];
-      setBtcAddresses(addresses);
-      
-      // Get current balance (will be 0 initially, updated in background)
-      const balanceInfo = btcWalletInstance.getBalance();
-      setBtcBalance(balanceInfo.total);
-      
-      console.log(`📍 Generated ${addresses.length} Bitcoin addresses`);
-      console.log(`💰 Initial balance: ${balanceInfo.total} BTC (will update in background)`);
-      
-      // Simulate some basic transaction history for now
+      // Set placeholder data to prevent crashes
+      setBtcAddresses([]);
+      setBtcBalance(0.0);
       setBtcTransactions([]);
-      setBtcUtxos(btcWalletInstance.utxos || []);
+      setBtcUtxos([]);
       
-      // Set up periodic balance updates
-      const balanceUpdateInterval = setInterval(async () => {
-        try {
-          const updatedBalance = btcWalletInstance.getBalance();
-          setBtcBalance(updatedBalance.total);
-          setBtcUtxos(btcWalletInstance.utxos || []);
-        } catch (error) {
-          console.warn('⚠️ Failed to update balance in context:', error);
-        }
-      }, 30000); // Update every 30 seconds
-      
-      // Store interval ID for cleanup
-      btcWalletInstance.balanceUpdateInterval = balanceUpdateInterval;
+      console.log('✅ Bitcoin placeholder data loaded');
       
     } catch (error) {
       console.error('❌ Failed to load Bitcoin data:', error);
