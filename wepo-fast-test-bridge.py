@@ -4171,6 +4171,51 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
+        @self.app.get("/api/wallet/bitcoin-privacy-status")
+        async def get_bitcoin_privacy_status(wallet_address: str = None):
+            """Check if Bitcoin privacy mixing is available for this wallet"""
+            try:
+                if not wallet_address:
+                    raise HTTPException(status_code=400, detail="wallet_address parameter required")
+                
+                # Get wallet balance
+                wallet_balance = self.blockchain.get_balance(wallet_address)
+                required_collateral = self.blockchain.get_dynamic_masternode_collateral(len(self.blockchain.blocks) - 1)
+                
+                # Check if user has enough WEPO for masternode operations
+                has_masternode_collateral = wallet_balance >= required_collateral
+                
+                # Check if there are active masternodes available for mixing
+                active_masternodes = len([mn for mn in self.blockchain.masternodes if mn.get("active", False)])
+                
+                return {
+                    "public_mode": {
+                        "available": True,
+                        "description": "Direct Bitcoin transactions",
+                        "status": "active"
+                    },
+                    "private_mode": {
+                        "available": has_masternode_collateral and active_masternodes > 0,
+                        "description": "Bitcoin mixing via masternodes",
+                        "status": "available" if has_masternode_collateral and active_masternodes > 0 else "locked",
+                        "requirements": {
+                            "wepo_balance": wallet_balance,
+                            "required_collateral": required_collateral,
+                            "has_sufficient_wepo": has_masternode_collateral,
+                            "active_masternodes": active_masternodes,
+                            "needs_masternodes": active_masternodes == 0
+                        }
+                    },
+                    "masternode_eligibility": {
+                        "can_run_masternode": has_masternode_collateral,
+                        "collateral_needed": max(0, required_collateral - wallet_balance) if not has_masternode_collateral else 0
+                    }
+                }
+                
+            except Exception as e:
+                logger.error(f"Error checking Bitcoin privacy status: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to check privacy status: {str(e)}")
+
         @self.app.get("/api/masternode/collateral-info")
         async def get_masternode_collateral_info():
             """Get detailed masternode collateral information"""
