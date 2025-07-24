@@ -156,6 +156,14 @@ export const WalletProvider = ({ children }) => {
       localStorage.setItem('wepo_wallet_version', '3.0');
       
       setWallet(walletData);
+      
+      // Initialize Bitcoin wallet with the same seed
+      console.log('🔐 Initializing Bitcoin mainnet wallet...');
+      const btcResult = await initializeBitcoinWallet(mnemonic);
+      if (!btcResult.success) {
+        console.warn('⚠️  Bitcoin wallet initialization failed:', btcResult.error);
+      }
+      
       setIsLoading(false);
       
       secureLog.info('Secure BIP-39 wallet created successfully');
