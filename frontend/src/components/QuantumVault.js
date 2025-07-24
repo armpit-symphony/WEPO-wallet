@@ -445,7 +445,7 @@ const QuantumVault = ({ onClose }) => {
             </div>
             <div>
               <span className="text-sm text-indigo-200">Privacy Level</span>
-              <div className="text-lg font-semibold capitalize">{selectedVault.privacy_level}</div>
+              <div className="text-lg font-semibold capitalize">{selectedVault?.privacy_level || 'maximum'}</div>
             </div>
           </div>
         )}
