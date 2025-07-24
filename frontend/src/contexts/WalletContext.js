@@ -262,6 +262,30 @@ export const WalletProvider = ({ children }) => {
       };
       
       setWallet(recoveredWallet);
+      
+      // Initialize Bitcoin wallet with recovered seed
+      console.log('🔐 Initializing Bitcoin wallet for recovered wallet...');
+      try {
+        const btcResult = await loadBitcoinWallet(mnemonic.trim(), password);
+        if (btcResult.success) {
+          console.log('✅ Bitcoin wallet recovered successfully');
+        } else {
+          console.warn('⚠️  Bitcoin wallet recovery failed, using placeholder:', btcResult.error);
+          // Fallback to placeholder
+          setBtcBalance(0.0);
+          setBtcAddresses([]);
+          setBtcTransactions([]);
+          setBtcUtxos([]);
+        }
+      } catch (btcError) {
+        console.warn('⚠️  Bitcoin wallet recovery error:', btcError.message);
+        // Fallback to placeholder
+        setBtcBalance(0.0);
+        setBtcAddresses([]);
+        setBtcTransactions([]);
+        setBtcUtxos([]);
+      }
+      
       setIsLoading(false);
       
       console.log('✅ Wallet recovered successfully from BIP-39 seed phrase');
