@@ -489,7 +489,7 @@ const QuantumVault = ({ onClose }) => {
               <span className="text-sm text-gray-400">Transactions</span>
             </div>
             <div className="text-lg font-semibold text-white">
-              {selectedVault.transaction_count}
+              {selectedVault?.transaction_count || 0}
             </div>
           </div>
 
