@@ -335,8 +335,9 @@ const Dashboard = ({ onLogout }) => {
         
         <div className="mt-4 p-3 bg-orange-900/30 rounded-lg">
           <p className="text-orange-200 text-sm">
-            🔐 <strong>Self-Custodial Bitcoin Wallet:</strong> Your Bitcoin private keys are generated from your WEPO seed phrase. 
-            You have complete control over your BTC while participating in the WEPO ecosystem.
+            🔐 <strong>Self-Custodial Bitcoin Wallet (MAINNET):</strong> Your Bitcoin private keys are generated from your WEPO seed phrase. 
+            <strong className="text-green-300"> Public Mode: </strong> Direct Bitcoin transactions available now.
+            <strong className="text-purple-300"> Private Mode: </strong> Routes through masternodes when you have 10,000+ WEPO.
           </p>
         </div>
       </div>
