@@ -280,60 +280,7 @@ const Dashboard = ({ onLogout }) => {
         </div>
       </div>
 
-      {/* Privacy Status Card (only show in private mode) */}
-      {isQuantumMode && (
-        <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Zap className="h-8 w-8 text-yellow-400" />
-              <div>
-                <h3 className="text-white font-semibold">Privacy Security Status</h3>
-                <p className="text-sm text-gray-300">Post-quantum cryptography active</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-green-400 font-semibold">ACTIVE</div>
-              <div className="text-xs text-gray-400">128-bit quantum level</div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <div className="text-gray-400">Algorithm</div>
-              <div className="text-white font-medium">
-                {dilithiumInfo?.algorithm || 'Dilithium2'}
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-400">Hash Function</div>
-              <div className="text-white font-medium">BLAKE2b</div>
-            </div>
-            <div>
-              <div className="text-gray-400">Signature Size</div>
-              <div className="text-white font-medium">
-                {dilithiumInfo?.signature_size || 2420} bytes
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-400">Quantum Ready</div>
-              <div className="text-green-400 font-medium">✓ Yes</div>
-            </div>
-          </div>
-          
-          {quantumStatus && (
-            <div className="mt-4 pt-4 border-t border-purple-500/30">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Blockchain Height:</span>
-                <span className="text-white">{quantumStatus.current_height}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Mempool Size:</span>
-                <span className="text-white">{quantumStatus.mempool_size}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+
 
       {/* BTC Wallet Integration */}
       <div className="bg-gradient-to-r from-orange-900/30 to-yellow-900/30 border border-orange-500/30 rounded-xl p-6 mb-6">
