@@ -337,7 +337,10 @@ const Dashboard = ({ onLogout }) => {
           <p className="text-orange-200 text-sm">
             🔐 <strong>Self-Custodial Bitcoin Wallet (MAINNET):</strong> Your Bitcoin private keys are generated from your WEPO seed phrase. 
             <strong className="text-green-300"> Public Mode: </strong> Direct Bitcoin transactions available now.
-            <strong className="text-purple-300"> Private Mode: </strong> Routes through masternodes when you have 10,000+ WEPO.
+            <strong className="text-purple-300"> Private Mode: </strong> Enhanced privacy via masternode mixing - available to everyone (small mixing fees apply).
+          </p>
+          <p className="text-yellow-200 text-xs mt-2">
+            💡 <strong>Run a Masternode:</strong> Earn mixing fees by providing privacy services to the network. Requires 10,000 WEPO collateral.
           </p>
         </div>
       </div>
