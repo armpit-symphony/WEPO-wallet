@@ -465,12 +465,38 @@ const Dashboard = ({ onLogout }) => {
           </div>
           
           {masternodesEnabled ? (
-            <button
-              onClick={() => setActiveTab('masternodes')}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-            >
-              Setup Masternode
-            </button>
+            <div>
+              <div className="mb-3 p-3 bg-purple-900/30 rounded-lg">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-300">Collateral Required:</span>
+                  <span className="text-purple-400 font-semibold">10,000 WEPO</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-1">
+                  <span className="text-gray-300">Your Balance:</span>
+                  <span className={`font-semibold ${balance >= 10000 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatBalance(balance)} WEPO
+                  </span>
+                </div>
+              </div>
+              
+              {balance >= 10000 ? (
+                <button
+                  onClick={() => setActiveTab('masternodes')}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                >
+                  Setup Masternode
+                </button>
+              ) : (
+                <div className="text-center">
+                  <div className="text-orange-400 text-sm mb-2">
+                    Insufficient WEPO for masternode
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Need {(10000 - balance).toLocaleString()} more WEPO
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 text-gray-400 mb-2">
