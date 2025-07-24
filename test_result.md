@@ -58,13 +58,14 @@
 ##
 ## agent_communication:
 ##     -agent: "main"
-##     -message: "User requested verification of the 10% gap in Bitcoin integration. Previous testing showed 90% success rate for Bitcoin Privacy Mixing Service Integration. Need to identify and verify what's causing the remaining 10% gap to achieve 100% functionality."
+##     -message: "User requested comprehensive frontend testing (Option A) after successfully resolving the 'onWalletCreated is not a function' error. Need to test the complete UI flow including: 1) Wallet creation flow and seed phrase display, 2) Dashboard access and functionality, 3) Bitcoin wallet integration in the UI, 4) Self-custodial Bitcoin features, 5) End-to-end user experience verification. The backend Bitcoin integration has been verified at 100% success rate, frontend fixes have been applied, and wallet creation is now working properly."
 
 ## test_plan:
 ##   current_focus:
-##     - "Bitcoin Integration 10% Gap Verification" 
-##     - "Bitcoin Privacy Mixing Service Endpoints"
-##     - "Self-Custodial Bitcoin Wallet Functionality"
+##     - "Complete Frontend UI Flow Testing"
+##     - "Bitcoin Wallet UI Integration"  
+##     - "Self-Custodial Wallet User Experience"
+##     - "End-to-End Frontend Functionality"
 ##   stuck_tasks: []
 ##   test_all: false
 ##   test_priority: "high_first"
