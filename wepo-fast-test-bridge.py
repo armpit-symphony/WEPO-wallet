@@ -1736,7 +1736,28 @@ class WepoFastTestBridge:
                         "unconfirmed": 0,
                         "total": 0
                     },
-                    "message": "Bitcoin wallet initialized successfully from seed phrase"
+                    "recovery_info": {
+                        "standard": "BIP44",
+                        "derivation_path": "m/44'/0'/0'/0/x",
+                        "address_type": "P2PKH (Legacy)",
+                        "network": "Bitcoin Mainnet",
+                        "compatible_wallets": [
+                            "Electrum",
+                            "Bitcoin Core", 
+                            "Exodus",
+                            "Trust Wallet",
+                            "Ledger Live",
+                            "Trezor Suite"
+                        ],
+                        "recovery_instructions": [
+                            "1. Use your WEPO 12-word seed phrase",
+                            "2. Select Bitcoin (BTC) wallet type",
+                            "3. Choose Legacy (P2PKH) addresses", 
+                            "4. Use derivation path: m/44'/0'/0'/0/x",
+                            "5. Your Bitcoin will appear automatically"
+                        ]
+                    },
+                    "message": "Bitcoin wallet initialized with BIP44 standard - fully portable to other Bitcoin wallets"
                 }
                 
                 # Store wallet data in memory for this session (in production, use secure storage)
