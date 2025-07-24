@@ -285,67 +285,86 @@ const Dashboard = ({ onLogout }) => {
 
 
 
-      {/* BTC Wallet Integration */}
-      <div className="bg-gradient-to-r from-orange-900/30 to-yellow-900/30 border border-orange-500/30 rounded-xl p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Bitcoin className="h-8 w-8 text-orange-400" />
-            <div>
-              <h3 className="text-white font-semibold">Bitcoin Integration</h3>
-              <p className="text-sm text-gray-300">Hold BTC while waiting for genesis launch</p>
+      {/* BTC Wallet Integration - Compact Button */}
+      <div className="mb-6">
+        <button
+          onClick={() => setShowBitcoinDetails(!showBitcoinDetails)}
+          className="w-full bg-gradient-to-r from-orange-900/30 to-yellow-900/30 border border-orange-500/30 rounded-xl p-4 hover:from-orange-900/40 hover:to-yellow-900/40 transition-all duration-200"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Bitcoin className="h-6 w-6 text-orange-400" />
+              <div className="text-left">
+                <h3 className="text-white font-semibold">BTC</h3>
+                <div className="text-sm text-gray-300">
+                  {btcBalance.toFixed(8)} BTC
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-green-400 text-sm">
+                  {btcAddresses.length > 0 ? '✅ Active' : '⏳ Loading'}
+                </div>
+                <div className="text-xs text-gray-400">Self-Custodial</div>
+              </div>
+              <div className={`transform transition-transform duration-200 ${showBitcoinDetails ? 'rotate-180' : ''}`}>
+                <RefreshCw className="h-4 w-4 text-gray-400" />
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-orange-400 font-semibold">Ready for Christmas</div>
-            <div className="text-xs text-gray-400">Dec 25, 2025 Launch</div>
-          </div>
-        </div>
+        </button>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-          <div className="bg-black/30 rounded-lg p-3">
-            <div className="text-gray-400">BTC Balance</div>
-            <div className="text-orange-400 font-semibold">
-              {btcBalance.toFixed(8)} BTC
+        {/* Expanded Bitcoin Details */}
+        {showBitcoinDetails && (
+          <div className="mt-3 bg-gradient-to-r from-orange-900/20 to-yellow-900/20 border border-orange-500/20 rounded-xl p-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm mb-4">
+              <div className="bg-black/30 rounded-lg p-3">
+                <div className="text-gray-400">BTC Balance</div>
+                <div className="text-orange-400 font-semibold">
+                  {btcBalance.toFixed(8)} BTC
+                </div>
+                <div className="text-green-400 text-xs mt-1">
+                  {btcAddresses.length > 0 ? '✅ Mainnet Active' : '⏳ Initializing...'}
+                </div>
+              </div>
+              <div className="bg-black/30 rounded-lg p-3">
+                <div className="text-gray-400">Mode</div>
+                <div className="text-white font-semibold">
+                  Public Mode
+                </div>
+                <div className="text-blue-400 text-xs mt-1">
+                  Direct Bitcoin
+                </div>
+              </div>
+              <div className="bg-black/30 rounded-lg p-3">
+                <div className="text-gray-400">Private Mode</div>
+                <div className="text-white font-semibold">
+                  {masternodesEnabled ? 'Available' : 'Coming Soon'}
+                </div>
+                <div className={`text-xs mt-1 ${masternodesEnabled ? 'text-green-400' : 'text-gray-500'}`}>
+                  {masternodesEnabled ? 'Via Masternodes' : 'Need Active Masternodes'}
+                </div>
+              </div>
+              <div className="bg-black/30 rounded-lg p-3">
+                <div className="text-gray-400">Your Keys</div>
+                <div className="text-green-400 font-semibold">Your Control</div>
+                <div className="text-green-400 text-xs mt-1">True self-custody</div>
+              </div>
             </div>
-            <div className="text-green-400 text-xs mt-1">
-              {btcAddresses.length > 0 ? '✅ Mainnet Active' : '⏳ Initializing...'}
+            
+            <div className="p-3 bg-orange-900/30 rounded-lg">
+              <p className="text-orange-200 text-sm">
+                🔐 <strong>Self-Custodial Bitcoin Wallet (MAINNET):</strong> Your Bitcoin private keys are generated from your WEPO seed phrase. 
+                <strong className="text-green-300"> Public Mode: </strong> Direct Bitcoin transactions available now.
+                <strong className="text-purple-300"> Private Mode: </strong> Enhanced privacy via masternode mixing - available to everyone.
+              </p>
+              <p className="text-yellow-200 text-xs mt-2">
+                💡 <strong>Run a Masternode:</strong> Earn mixing fees by providing privacy services. Requires 10,000 WEPO collateral.
+              </p>
             </div>
           </div>
-          <div className="bg-black/30 rounded-lg p-3">
-            <div className="text-gray-400">Mode</div>
-            <div className="text-white font-semibold">
-              Public Mode
-            </div>
-            <div className="text-blue-400 text-xs mt-1">
-              Direct Bitcoin
-            </div>
-          </div>
-          <div className="bg-black/30 rounded-lg p-3">
-            <div className="text-gray-400">Private Mode</div>
-            <div className="text-white font-semibold">
-              {masternodesEnabled ? 'Available' : 'Coming Soon'}
-            </div>
-            <div className={`text-xs mt-1 ${masternodesEnabled ? 'text-green-400' : 'text-gray-500'}`}>
-              {masternodesEnabled ? 'Via Masternodes' : 'Need Active Masternodes'}
-            </div>
-          </div>
-          <div className="bg-black/30 rounded-lg p-3">
-            <div className="text-gray-400">Your Keys</div>
-            <div className="text-green-400 font-semibold">Your Control</div>
-            <div className="text-green-400 text-xs mt-1">True self-custody</div>
-          </div>
-        </div>
-        
-        <div className="mt-4 p-3 bg-orange-900/30 rounded-lg">
-          <p className="text-orange-200 text-sm">
-            🔐 <strong>Self-Custodial Bitcoin Wallet (MAINNET):</strong> Your Bitcoin private keys are generated from your WEPO seed phrase. 
-            <strong className="text-green-300"> Public Mode: </strong> Direct Bitcoin transactions available now.
-            <strong className="text-purple-300"> Private Mode: </strong> Enhanced privacy via masternode mixing - available to everyone (small mixing fees apply).
-          </p>
-          <p className="text-yellow-200 text-xs mt-2">
-            💡 <strong>Run a Masternode:</strong> Earn mixing fees by providing privacy services to the network. Requires 10,000 WEPO collateral.
-          </p>
-        </div>
+        )}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <button 
