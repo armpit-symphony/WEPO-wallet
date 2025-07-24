@@ -339,22 +339,23 @@ def test_self_custodial_bitcoin_wallet():
         
         # Test 3.1: Bitcoin Wallet Initialization
         init_request = {
-            "wepo_address": generate_valid_wepo_address(),
             "seed_phrase": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            "wallet_name": "test_wallet"
+            "passphrase": ""
         }
         
         response = requests.post(f"{API_URL}/bitcoin/wallet/init", json=init_request)
         
         if response.status_code == 200:
             data = response.json()
-            if 'btc_address' in data and 'wallet_id' in data:
+            if data.get('success') and data.get('wallet_initialized') and data.get('addresses'):
                 print(f"  ✅ Wallet Initialization: Successfully initialized Bitcoin wallet")
-                print(f"    BTC Address: {data.get('btc_address', 'N/A')}")
+                print(f"    Master Fingerprint: {data.get('master_fingerprint', 'N/A')}")
+                print(f"    Address Count: {data.get('address_count', 0)}")
                 checks_passed += 1
-                btc_address = data.get('btc_address')
+                wallet_fingerprint = data.get('wallet_fingerprint')
+                addresses = [addr['address'] for addr in data.get('addresses', [])]
             else:
-                print(f"  ❌ Wallet Initialization: Missing btc_address or wallet_id")
+                print(f"  ❌ Wallet Initialization: Missing required fields in response")
         elif response.status_code == 400:
             print(f"  ❌ Wallet Initialization: Parameter validation error - {response.text}")
         elif response.status_code == 404:
@@ -365,7 +366,6 @@ def test_self_custodial_bitcoin_wallet():
         # Test 3.2: Bitcoin Wallet Sync
         test_address = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
         sync_request = {
-            "btc_address": test_address,
             "wallet_fingerprint": "test_fingerprint",
             "addresses": [test_address]
         }
@@ -373,12 +373,13 @@ def test_self_custodial_bitcoin_wallet():
         
         if response.status_code == 200:
             data = response.json()
-            if 'balance' in data or 'sync_status' in data:
+            if data.get('success') and ('balance' in data or 'sync_status' in data):
                 print(f"  ✅ Wallet Sync: Successfully synced Bitcoin wallet")
-                print(f"    Sync Status: {data.get('sync_status', 'N/A')}")
+                print(f"    Sync Status: {data.get('sync_status', 'completed')}")
+                print(f"    Balance: {data.get('balance', {}).get('total', 0)} BTC")
                 checks_passed += 1
             else:
-                print(f"  ❌ Wallet Sync: Invalid sync response")
+                print(f"  ❌ Wallet Sync: Invalid sync response structure")
         elif response.status_code == 400:
             print(f"  ❌ Wallet Sync: Parameter validation error - {response.text}")
         elif response.status_code == 404:
@@ -404,8 +405,9 @@ def test_self_custodial_bitcoin_wallet():
             print(f"  ❌ UTXO Management: HTTP {response.status_code} - {response.text}")
         
         # Test 3.4: Transaction Broadcasting Infrastructure
+        # Use a valid hex format (even if it's a dummy transaction)
         broadcast_request = {
-            "tx_hex": "0100000001000000000000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeebf0f0b0000000000"
+            "tx_hex": "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a01000000434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac00000000"
         }
         
         response = requests.post(f"{API_URL}/bitcoin/broadcast", json=broadcast_request)
@@ -413,24 +415,29 @@ def test_self_custodial_bitcoin_wallet():
         if response.status_code in [200, 400]:  # 400 is acceptable for invalid transaction
             if response.status_code == 200:
                 data = response.json()
-                if 'txid' in data or 'transaction_id' in data:
+                if data.get('success') and ('txid' in data or 'transaction_broadcasted' in data):
                     print(f"  ✅ Transaction Broadcasting: Infrastructure ready for broadcasting")
+                    print(f"    TXID: {data.get('txid', 'N/A')}")
                     checks_passed += 1
                 else:
                     print(f"  ❌ Transaction Broadcasting: Invalid broadcast response")
             else:
                 # 400 is acceptable - means endpoint exists but transaction is invalid
-                print(f"  ✅ Transaction Broadcasting: Infrastructure ready (validation working)")
-                checks_passed += 1
+                error_text = response.text.lower()
+                if 'invalid' in error_text or 'transaction' in error_text:
+                    print(f"  ✅ Transaction Broadcasting: Infrastructure ready (validation working)")
+                    checks_passed += 1
+                else:
+                    print(f"  ❌ Transaction Broadcasting: Unexpected validation error")
         elif response.status_code == 404:
             print(f"  ❌ Transaction Broadcasting: Endpoint not found - /api/bitcoin/broadcast not implemented")
         else:
             print(f"  ❌ Transaction Broadcasting: HTTP {response.status_code} - {response.text}")
         
         success_rate = (checks_passed / total_checks) * 100
-        log_test("Self-Custodial Bitcoin Wallet Functions", checks_passed >= 2,
+        log_test("Self-Custodial Bitcoin Wallet Functions", checks_passed >= 3,
                  details=f"Self-custodial Bitcoin wallet testing: {checks_passed}/{total_checks} functions operational ({success_rate:.1f}% success)")
-        return checks_passed >= 2
+        return checks_passed >= 3
         
     except Exception as e:
         log_test("Self-Custodial Bitcoin Wallet Functions", False, error=str(e))
