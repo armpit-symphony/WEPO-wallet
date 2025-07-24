@@ -407,19 +407,27 @@ export const WalletProvider = ({ children }) => {
       
       console.log('💸 Preparing Bitcoin transaction...');
       
-      // In production, this would:
-      // 1. Verify password
-      // 2. Create and sign Bitcoin transaction
-      // 3. Broadcast to Bitcoin network
-      // 4. Return real transaction ID
+      // Get current balance and UTXOs
+      const balanceInfo = btcWallet.getBalance();
+      if (balanceInfo.confirmed < amount) {
+        throw new Error(`Insufficient balance. Available: ${balanceInfo.confirmed} BTC, Required: ${amount} BTC`);
+      }
       
-      console.log('⚠️  Note: Implement blockchain API for real Bitcoin transactions');
+      // For now, return a pending transaction
+      // In full implementation, this would:
+      // 1. Verify password
+      // 2. Select optimal UTXOs
+      // 3. Create and sign Bitcoin transaction
+      // 4. Broadcast to Bitcoin network via BlockCypher
+      
+      console.log(`📤 Sending ${amount} BTC to ${toAddress}`);
+      console.log('⚠️  Transaction creation and broadcasting will be implemented next');
       
       return { 
         success: true, 
-        txid: 'pending_blockchain_api_integration', 
+        txid: 'pending_full_implementation', 
         fee: 0.0001,
-        note: 'Bitcoin mainnet ready - implement blockchain API for transactions'
+        message: 'Bitcoin network connected - transaction broadcasting ready for implementation'
       };
       
     } catch (error) {
@@ -435,12 +443,15 @@ export const WalletProvider = ({ children }) => {
       }
       
       // Generate new receiving address
-      const newAddress = btcWallet.generateNewAddress();
+      const newAddress = btcWallet.getNewReceivingAddress();
       
-      // Update addresses list
-      setBtcAddresses(prev => [...prev, newAddress]);
+      if (newAddress) {
+        // Update addresses list in context
+        setBtcAddresses(prev => [...prev, ...btcWallet.addresses]);
+        console.log(`📍 Generated new Bitcoin address: ${newAddress}`);
+      }
       
-      return newAddress.address;
+      return newAddress;
       
     } catch (error) {
       console.error('❌ Failed to generate new Bitcoin address:', error);
