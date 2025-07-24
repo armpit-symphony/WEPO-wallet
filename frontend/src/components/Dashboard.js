@@ -628,11 +628,11 @@ const Dashboard = ({ onLogout }) => {
           <div className="flex items-center gap-3">
             {/* Mode Toggle */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-300">Regular</span>
+              <span className="text-sm text-gray-300">Public</span>
               <button
                 onClick={handleModeToggle}
                 className="relative inline-flex items-center cursor-pointer"
-                title={isQuantumMode ? 'Switch to Regular Mode' : 'Switch to Quantum Mode'}
+                title={isQuantumMode ? 'Switch to Public Mode' : 'Switch to Private Mode'}
               >
                 {isQuantumMode ? (
                   <ToggleRight className="h-6 w-6 text-purple-400" />
@@ -640,7 +640,7 @@ const Dashboard = ({ onLogout }) => {
                   <ToggleLeft className="h-6 w-6 text-gray-400" />
                 )}
               </button>
-              <span className="text-sm text-gray-300">Quantum</span>
+              <span className="text-sm text-gray-300">Private</span>
             </div>
             
             <button
