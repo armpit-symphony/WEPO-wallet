@@ -479,7 +479,7 @@ const QuantumVault = ({ onClose }) => {
               <span className="text-sm text-gray-400">Total Deposits</span>
             </div>
             <div className="text-lg font-semibold text-white">
-              {selectedVault.statistics.total_deposits.toFixed(6)} WEPO
+              {selectedVault?.statistics?.total_deposits?.toFixed(6) || '0.000000'} WEPO
             </div>
           </div>
           
