@@ -57,8 +57,17 @@
 ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 ##
 ## agent_communication:
-##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+##     -agent: "main"
+##     -message: "User requested verification of the 10% gap in Bitcoin integration. Previous testing showed 90% success rate for Bitcoin Privacy Mixing Service Integration. Need to identify and verify what's causing the remaining 10% gap to achieve 100% functionality."
+
+## test_plan:
+##   current_focus:
+##     - "Bitcoin Integration 10% Gap Verification" 
+##     - "Bitcoin Privacy Mixing Service Endpoints"
+##     - "Self-Custodial Bitcoin Wallet Functionality"
+##   stuck_tasks: []
+##   test_all: false
+##   test_priority: "high_first"
 
 # Protocol Guidelines for Main agent
 #
