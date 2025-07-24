@@ -327,7 +327,8 @@ def test_self_custodial_bitcoin_wallet():
         # Test 3.1: Bitcoin Wallet Initialization
         init_request = {
             "wepo_address": generate_valid_wepo_address(),
-            "seed_phrase": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+            "seed_phrase": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+            "wallet_name": "test_wallet"
         }
         
         response = requests.post(f"{API_URL}/bitcoin/wallet/init", json=init_request)
@@ -341,6 +342,8 @@ def test_self_custodial_bitcoin_wallet():
                 btc_address = data.get('btc_address')
             else:
                 print(f"  ❌ Wallet Initialization: Missing btc_address or wallet_id")
+        elif response.status_code == 400:
+            print(f"  ❌ Wallet Initialization: Parameter validation error - {response.text}")
         elif response.status_code == 404:
             print(f"  ❌ Wallet Initialization: Endpoint not found - /api/bitcoin/wallet/init not implemented")
         else:
@@ -348,7 +351,12 @@ def test_self_custodial_bitcoin_wallet():
         
         # Test 3.2: Bitcoin Wallet Sync
         test_address = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-        response = requests.post(f"{API_URL}/bitcoin/wallet/sync", json={"btc_address": test_address})
+        sync_request = {
+            "btc_address": test_address,
+            "wallet_fingerprint": "test_fingerprint",
+            "addresses": [test_address]
+        }
+        response = requests.post(f"{API_URL}/bitcoin/wallet/sync", json=sync_request)
         
         if response.status_code == 200:
             data = response.json()
@@ -358,6 +366,8 @@ def test_self_custodial_bitcoin_wallet():
                 checks_passed += 1
             else:
                 print(f"  ❌ Wallet Sync: Invalid sync response")
+        elif response.status_code == 400:
+            print(f"  ❌ Wallet Sync: Parameter validation error - {response.text}")
         elif response.status_code == 404:
             print(f"  ❌ Wallet Sync: Endpoint not found - /api/bitcoin/wallet/sync not implemented")
         else:
@@ -382,7 +392,7 @@ def test_self_custodial_bitcoin_wallet():
         
         # Test 3.4: Transaction Broadcasting Infrastructure
         broadcast_request = {
-            "raw_transaction": "0100000001000000000000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeebf0f0b0000000000"
+            "tx_hex": "0100000001000000000000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeebf0f0b0000000000"
         }
         
         response = requests.post(f"{API_URL}/bitcoin/broadcast", json=broadcast_request)
