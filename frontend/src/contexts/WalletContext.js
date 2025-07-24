@@ -362,6 +362,116 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
+  const loadBitcoinWallet = async (seedPhrase, password) => {
+    try {
+      console.log('🔄 Loading Bitcoin wallet with real backend integration...');
+
+      // Initialize Bitcoin wallet with backend
+      const response = await fetch(`${backendUrl}/api/bitcoin/wallet/init`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          seed_phrase: seedPhrase,
+          passphrase: password || ''
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bitcoin wallet initialization failed: ${response.status}`);
+      }
+
+      const walletData = await response.json();
+      
+      if (walletData.success) {
+        // Store wallet fingerprint for sync operations
+        setBtcWalletFingerprint(walletData.wallet_fingerprint);
+        
+        // Set initial addresses
+        const addresses = walletData.addresses.map(addr => addr.address);
+        setBtcAddresses(addresses);
+        
+        // Initialize with zero balance until sync
+        setBtcBalance(0.0);
+        setBtcTransactions([]);
+        setBtcUtxos([]);
+        
+        console.log('✅ Bitcoin wallet initialized successfully');
+        console.log(`📍 Generated ${addresses.length} addresses`);
+        
+        // Auto-sync the wallet after initialization
+        await syncBitcoinWallet(walletData.wallet_fingerprint, addresses);
+        
+        return { 
+          success: true, 
+          restored: true, 
+          addresses: addresses,
+          wallet_fingerprint: walletData.wallet_fingerprint
+        };
+      } else {
+        throw new Error('Bitcoin wallet initialization failed');
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to load Bitcoin wallet:', error);
+      
+      // Fallback to placeholder implementation
+      setBtcBalance(0.0);
+      setBtcAddresses([]);
+      setBtcTransactions([]);
+      setBtcUtxos([]);
+      
+      return { success: false, error: error.message };
+    }
+  };
+
+  const syncBitcoinWallet = async (walletFingerprint, addresses) => {
+    try {
+      console.log('🔄 Syncing Bitcoin wallet with blockchain...');
+
+      const response = await fetch(`${backendUrl}/api/bitcoin/wallet/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wallet_fingerprint: walletFingerprint,
+          addresses: addresses
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bitcoin wallet sync failed: ${response.status}`);
+      }
+
+      const syncData = await response.json();
+      
+      if (syncData.success) {
+        // Update balance
+        setBtcBalance(syncData.total_balance_btc || 0);
+        
+        // Update transactions
+        setBtcTransactions(syncData.transactions || []);
+        
+        // Update address balances
+        const updatedAddresses = syncData.addresses || [];
+        setBtcAddresses(updatedAddresses.map(addr => addr.address));
+        
+        console.log(`✅ Bitcoin wallet synced: ${syncData.total_balance_btc} BTC`);
+        console.log(`📊 Found ${syncData.transactions?.length || 0} transactions`);
+        
+        return { success: true, balance: syncData.total_balance_btc };
+      } else {
+        throw new Error('Bitcoin wallet sync failed');
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to sync Bitcoin wallet:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   const loadBitcoinData = async (placeholder) => {
     try {
       console.log('📊 Loading Bitcoin data (placeholder)...');
