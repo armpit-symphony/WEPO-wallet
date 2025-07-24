@@ -310,7 +310,7 @@ const Dashboard = ({ onLogout }) => {
                 <div className="text-xs text-gray-400">Self-Custodial</div>
               </div>
               <div className={`transform transition-transform duration-200 ${showBitcoinDetails ? 'rotate-180' : ''}`}>
-                <RefreshCw className="h-4 w-4 text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-gray-400" />
               </div>
             </div>
           </div>
