@@ -206,6 +206,145 @@ class SelfCustodialBitcoinWallet {
   }
 
   /**
+   * Sync balances with Bitcoin network in background (non-blocking)
+   */
+  async syncBalancesInBackground() {
+    try {
+      console.log('🔄 Starting background Bitcoin balance sync...');
+      
+      // Don't block the UI - run in background
+      setTimeout(async () => {
+        await this.updateAllBalances();
+      }, 1000);
+      
+    } catch (error) {
+      console.warn('⚠️ Background balance sync failed:', error);
+    }
+  }
+
+  /**
+   * Update balances for all addresses
+   */
+  async updateAllBalances() {
+    if (!this.isInitialized) {
+      console.warn('⚠️ Wallet not initialized, skipping balance update');
+      return;
+    }
+
+    try {
+      console.log('💰 Updating Bitcoin balances...');
+      let totalBalance = 0;
+      let totalUnconfirmed = 0;
+
+      // Update balance for each address
+      for (const addressInfo of this.addresses) {
+        try {
+          const balanceData = await this.networkService.getAddressBalance(addressInfo.address);
+          
+          // Update address info
+          addressInfo.balance = balanceData.final_balance;
+          addressInfo.unconfirmed_balance = balanceData.unconfirmed_balance;
+          addressInfo.confirmed_balance = balanceData.balance;
+          
+          totalBalance += balanceData.final_balance;
+          totalUnconfirmed += balanceData.unconfirmed_balance;
+          
+          console.log(`📍 Address ${addressInfo.address}: ${this.networkService.satoshisToBTC(balanceData.final_balance)} BTC`);
+          
+        } catch (error) {
+          console.warn(`⚠️ Failed to update balance for ${addressInfo.address}:`, error);
+        }
+      }
+
+      // Update total wallet balance
+      this.balance = this.networkService.satoshisToBTC(totalBalance);
+      
+      console.log(`✅ Total Bitcoin balance: ${this.balance} BTC (${totalUnconfirmed} sat unconfirmed)`);
+      
+      // Update UTXOs if we have balance
+      if (totalBalance > 0) {
+        await this.updateUTXOs();
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to update Bitcoin balances:', error);
+    }
+  }
+
+  /**
+   * Update UTXOs for all addresses with balance
+   */
+  async updateUTXOs() {
+    try {
+      console.log('🔄 Updating UTXOs...');
+      this.utxos = [];
+
+      for (const addressInfo of this.addresses) {
+        if (addressInfo.balance > 0) {
+          try {
+            const utxos = await this.networkService.getUnspentOutputs(addressInfo.address);
+            
+            // Add address info to UTXOs
+            const enhancedUtxos = utxos.map(utxo => ({
+              ...utxo,
+              address: addressInfo.address,
+              derivationPath: addressInfo.derivationPath,
+              privateKey: addressInfo.privateKey
+            }));
+            
+            this.utxos.push(...enhancedUtxos);
+            console.log(`📦 Found ${utxos.length} UTXOs for ${addressInfo.address}`);
+            
+          } catch (error) {
+            console.warn(`⚠️ Failed to get UTXOs for ${addressInfo.address}:`, error);
+          }
+        }
+      }
+
+      console.log(`✅ Total UTXOs: ${this.utxos.length}`);
+      
+    } catch (error) {
+      console.error('❌ Failed to update UTXOs:', error);
+    }
+  }
+
+  /**
+   * Get current wallet balance
+   * @returns {object} Balance information
+   */
+  getBalance() {
+    return {
+      confirmed: this.balance,
+      unconfirmed: this.addresses.reduce((sum, addr) => 
+        sum + this.networkService.satoshisToBTC(addr.unconfirmed_balance || 0), 0),
+      total: this.balance
+    };
+  }
+
+  /**
+   * Get new receiving address
+   * @returns {string} Bitcoin address
+   */
+  getNewReceivingAddress() {
+    try {
+      const newAddress = this.generateAddress(0, this.nextReceiveIndex);
+      this.nextReceiveIndex++;
+      return newAddress.address;
+    } catch (error) {
+      console.error('❌ Failed to generate new receiving address:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Generate new address and add to wallet
+   * @returns {object} Address information
+   */
+  generateNewAddress() {
+    return this.generateAddress(0, this.nextReceiveIndex++);
+  }
+
+  /**
    * Initialize wallet from seed phrase
    * @param {string} seedPhrase - BIP39 mnemonic seed phrase
    * @param {string} passphrase - Optional BIP39 passphrase
