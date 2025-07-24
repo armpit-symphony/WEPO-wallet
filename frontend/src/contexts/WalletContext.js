@@ -31,6 +31,7 @@ export const WalletProvider = ({ children }) => {
   const [btcWallet, setBtcWallet] = useState(null);
   const [btcAddresses, setBtcAddresses] = useState([]);
   const [btcUtxos, setBtcUtxos] = useState([]);
+  const [btcWalletFingerprint, setBtcWalletFingerprint] = useState(null);
   const [isBtcLoading, setIsBtcLoading] = useState(false);
 
   // Enable masternodes immediately (require 10,000 WEPO collateral)
