@@ -287,7 +287,7 @@ const Dashboard = ({ onLogout }) => {
             <div className="flex items-center gap-3">
               <Zap className="h-8 w-8 text-yellow-400" />
               <div>
-                <h3 className="text-white font-semibold">Quantum Security Status</h3>
+                <h3 className="text-white font-semibold">Privacy Security Status</h3>
                 <p className="text-sm text-gray-300">Post-quantum cryptography active</p>
               </div>
             </div>
