@@ -434,7 +434,7 @@ const QuantumVault = ({ onClose }) => {
             <div>
               <span className="text-sm text-indigo-200">Private Balance</span>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">{formatBalance(selectedVault.private_balance)} WEPO</span>
+                <span className="text-2xl font-bold">{formatBalance(selectedVault?.assets?.WEPO?.balance || 0)} WEPO</span>
                 <button
                   onClick={() => setShowBalance(!showBalance)}
                   className="text-indigo-200 hover:text-white"
