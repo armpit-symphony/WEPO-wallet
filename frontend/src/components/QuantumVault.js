@@ -125,6 +125,15 @@ const QuantumVault = ({ onClose }) => {
       setLoading(true);
       setError('');
       
+      // Debug logging
+      console.log('Creating Quantum Vault...');
+      console.log('Current address:', currentAddress);
+      console.log('Backend URL:', backendUrl);
+      
+      if (!currentAddress) {
+        throw new Error('Wallet address not available. Please ensure wallet is properly loaded.');
+      }
+      
       const response = await fetch(`${backendUrl}/api/vault/create`, {
         method: 'POST',
         headers: {
@@ -135,7 +144,9 @@ const QuantumVault = ({ onClose }) => {
         }),
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
       
       if (data.success) {
         setSuccess('Quantum Vault created successfully! Ultimate privacy enabled.');
@@ -145,7 +156,7 @@ const QuantumVault = ({ onClose }) => {
       }
     } catch (err) {
       console.error('Error creating vault:', err);
-      setError('Failed to create vault');
+      setError(`Failed to create vault: ${err.message}`);
     } finally {
       setLoading(false);
     }
