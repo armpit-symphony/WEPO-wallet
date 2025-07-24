@@ -3,7 +3,8 @@ import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import { sessionManager, secureLog } from '../utils/securityUtils';
 // import { generateWepoAddress, generateBitcoinAddress, validateAddress } from '../utils/addressUtils';
-import SelfCustodialBitcoinWallet from '../utils/SelfCustodialBitcoinWallet';
+// Temporarily comment out Bitcoin wallet import to prevent runtime errors
+// import SelfCustodialBitcoinWallet from '../utils/SelfCustodialBitcoinWallet';
 
 const WalletContext = createContext();
 
