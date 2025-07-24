@@ -4178,15 +4178,18 @@ class WepoFastTestBridge:
                 if not wallet_address:
                     raise HTTPException(status_code=400, detail="wallet_address parameter required")
                 
-                # Get wallet balance
+                # Get wallet balance for masternode eligibility check
                 wallet_balance = self.blockchain.get_balance(wallet_address)
                 required_collateral = self.blockchain.get_dynamic_masternode_collateral(len(self.blockchain.blocks) - 1)
                 
-                # Check if user has enough WEPO for masternode operations
-                has_masternode_collateral = wallet_balance >= required_collateral
+                # Check if user has enough WEPO to run their own masternode
+                can_run_masternode = wallet_balance >= required_collateral
                 
-                # Check if there are active masternodes available for mixing
+                # Check if there are active masternodes available for mixing services
                 active_masternodes = len([mn for mn in self.blockchain.masternodes if mn.get("active", False)])
+                
+                # Privacy mixing is available to EVERYONE as long as there are active masternodes
+                privacy_mixing_available = active_masternodes > 0
                 
                 return {
                     "public_mode": {
@@ -4195,20 +4198,23 @@ class WepoFastTestBridge:
                         "status": "active"
                     },
                     "private_mode": {
-                        "available": has_masternode_collateral and active_masternodes > 0,
-                        "description": "Bitcoin mixing via masternodes",
-                        "status": "available" if has_masternode_collateral and active_masternodes > 0 else "locked",
+                        "available": privacy_mixing_available,
+                        "description": "Bitcoin mixing via masternodes - available to all users",
+                        "status": "available" if privacy_mixing_available else "waiting_for_masternodes",
+                        "mixing_fee_estimate": "0.001 BTC per mixing round",
+                        "privacy_levels": "1-4 mixing rounds available",
                         "requirements": {
-                            "wepo_balance": wallet_balance,
-                            "required_collateral": required_collateral,
-                            "has_sufficient_wepo": has_masternode_collateral,
-                            "active_masternodes": active_masternodes,
-                            "needs_masternodes": active_masternodes == 0
+                            "user_requirement": "Any WEPO wallet can use privacy mixing",
+                            "network_requirement": f"Need active masternodes (currently: {active_masternodes})",
+                            "fees": "Small mixing fees paid to masternodes"
                         }
                     },
-                    "masternode_eligibility": {
-                        "can_run_masternode": has_masternode_collateral,
-                        "collateral_needed": max(0, required_collateral - wallet_balance) if not has_masternode_collateral else 0
+                    "masternode_opportunity": {
+                        "can_run_masternode": can_run_masternode,
+                        "collateral_needed": max(0, required_collateral - wallet_balance) if not can_run_masternode else 0,
+                        "benefits": "Earn mixing fees from all network users",
+                        "current_balance": wallet_balance,
+                        "required_collateral": required_collateral
                     }
                 }
                 
