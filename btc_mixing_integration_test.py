@@ -27,7 +27,7 @@ import random
 import string
 
 # Use production backend URL from frontend/.env
-BACKEND_URL = "https://83b23ef8-5671-4022-98a3-7666ccc5a082.preview.emergentagent.com"
+BACKEND_URL = "https://d942fd3e-f74d-4b80-94d6-410a04ef8602.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔧 TESTING WEPO BITCOIN PRIVACY MIXING SERVICE INTEGRATION")
