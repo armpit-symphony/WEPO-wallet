@@ -21,13 +21,8 @@ class WalletManager: ObservableObject {
     private var refreshTimer: Timer?
     
     // Wallet data
-    private var currentWallet: WalletData?
+    @Published var currentWallet: WalletData?
     private var seedPhrase: String?
-    
-    // Add currentWallet as a published property for access from views
-    var currentWallet: WalletData? {
-        return self.currentWallet
-    }
     
     init() {
         startPeriodicRefresh()
