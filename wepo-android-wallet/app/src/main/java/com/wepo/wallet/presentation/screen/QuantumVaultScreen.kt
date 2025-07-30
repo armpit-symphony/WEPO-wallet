@@ -549,7 +549,7 @@ private fun getVaultColor(vaultType: String): androidx.compose.ui.graphics.Color
     return when (vaultType) {
         "privacy" -> WepoAccent
         "staking" -> WepoPrimary
-        else -> MaterialTheme.coilorScheme.primary
+        else -> MaterialTheme.colorScheme.primary
     }
 }
 
