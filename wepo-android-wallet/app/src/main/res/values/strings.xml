@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WEPO Wallet</string>
+    
+    <!-- Wallet Setup -->
+    <string name="create_wallet">Create Wallet</string>
+    <string name="import_wallet">Import Wallet</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="recovery_phrase">Recovery Phrase</string>
+    <string name="continue_button">Continue</string>
+    
+    <!-- Dashboard -->
+    <string name="dashboard">Dashboard</string>
+    <string name="balance">Balance</string>
+    <string name="send">Send</string>
+    <string name="receive">Receive</string>
+    <string name="mining">Mining</string>
+    <string name="staking">Staking</string>
+    
+    <!-- Transactions -->
+    <string name="send_wepo">Send WEPO</string>
+    <string name="receive_wepo">Receive WEPO</string>
+    <string name="recipient_address">Recipient Address</string>
+    <string name="amount">Amount</string>
+    <string name="private_transaction">Private Transaction</string>
+    <string name="transaction_summary">Transaction Summary</string>
+    <string name="network_fee">Network Fee</string>
+    <string name="total">Total</string>
+    
+    <!-- Bitcoin -->
+    <string name="bitcoin">Bitcoin</string>
+    <string name="bitcoin_balance">Bitcoin Balance</string>
+    <string name="your_bitcoin_address">Your Bitcoin Address</string>
+    <string name="copy">Copy</string>
+    <string name="qr_code">QR Code</string>
+    
+    <!-- Mining -->
+    <string name="mining_status">Mining Status</string>
+    <string name="mining_active">Mining Active</string>
+    <string name="mining_stopped">Mining Stopped</string>
+    <string name="start_mining">Start Mining</string>
+    <string name="stop_mining">Stop Mining</string>
+    <string name="hashrate">Hashrate</string>
+    <string name="blocks_found">Blocks Found</string>
+    <string name="earnings">Earnings</string>
+    
+    <!-- Quantum Vault -->
+    <string name="quantum_vault">Quantum Vault</string>
+    <string name="create_new_vault">Create New Vault</string>
+    <string name="privacy_vault">Privacy Vault</string>
+    <string name="staking_vault">Staking Vault</string>
+    <string name="vault_details">Vault Details</string>
+    
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="security">Security</string>
+    <string name="privacy">Privacy</string>
+    <string name="notifications">Notifications</string>
+    <string name="network">Network</string>
+    <string name="support">Support</string>
+    <string name="backup_recovery_phrase">Backup Recovery Phrase</string>
+    <string name="biometric_authentication">Biometric Authentication</string>
+    <string name="change_password">Change Password</string>
+    <string name="logout">Logout</string>
+    <string name="delete_wallet">Delete Wallet</string>
+    
+    <!-- Common -->
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="close">Close</string>
+    <string name="refresh">Refresh</string>
+    <string name="share">Share</string>
+    <string name="copy_address">Copy Address</string>
+    <string name="loading">Loading…</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+    
+    <!-- Disclaimers -->
+    <string name="wallet_disclaimer">This is a self-custodial wallet. You are responsible for securely storing your recovery phrase. Lost recovery phrases cannot be recovered.</string>
+    <string name="crypto_risk_disclaimer">Cryptocurrency investments carry risk. Only invest what you can afford to lose.</string>
+    
+    <!-- Network Status -->
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="block">Block</string>
+    
+    <!-- Validation Messages -->
+    <string name="invalid_address">Invalid address format</string>
+    <string name="insufficient_balance">Insufficient balance</string>
+    <string name="amount_required">Amount is required</string>
+    <string name="min_password_length">Password must be at least 8 characters</string>
+    <string name="passwords_dont_match">Passwords do not match</string>
+</resources>
