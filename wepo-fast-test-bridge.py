@@ -41,12 +41,22 @@ from wepo_community_mining_backend import mining_coordinator, setup_mining_route
 # Import masternode service manager
 from masternode_service_manager import get_masternode_manager
 
-# Import governance system
+# Import governance systems
 from wepo_governance_system import (
     governance_system, 
     ProposalType, 
     VoteChoice, 
     ProposalStatus
+)
+
+# Import halving-cycle governance system
+from wepo_halving_cycle_governance import (
+    halving_governance,
+    HalvingPhase,
+    ImmutableParameter,
+    GovernableParameter,
+    GovernanceWindowStatus,
+    ParameterType
 )
 
 # Community-Driven AMM System (No Admin)
