@@ -656,6 +656,7 @@ export const WalletProvider = ({ children }) => {
     setTransactions,
     validateMnemonic,
     recoverWallet,
+    createWallet,
     deriveSeedFromMnemonic,
     generateWalletFromSeed,
     
