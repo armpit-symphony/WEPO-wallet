@@ -105,9 +105,18 @@ class WepoHalvingCycleGovernance:
         self.immutable_parameters = self._initialize_immutable_parameters()
         self.governable_parameters = self._initialize_governable_parameters()
         
-        # Community veto tracking
+        # Enhanced Protection Mechanisms
         self.community_veto_threshold = 0.30  # 30% of community can veto
+        self.masternode_vote_weight = 1  # 1 masternode = 1 vote (not 10x)
         self.veto_votes: Dict[str, List[Dict]] = {}  # proposal_id -> veto votes
+        self.execution_delays = {
+            "low_risk": 7,      # 7 days for low-risk changes
+            "medium_risk": 30,  # 30 days for medium-risk changes  
+            "high_risk": 90     # 90 days for high-risk changes
+        }
+        
+        # Time-lock mechanism
+        self.time_locked_proposals: Dict[str, Dict] = {}  # proposal_id -> execution info
         
         # Governance window state
         self.current_window_status = GovernanceWindowStatus.CLOSED
@@ -117,6 +126,7 @@ class WepoHalvingCycleGovernance:
         logger.info(f"Initialized {len(self.halving_phases)} halving phases")
         logger.info(f"Protected {len(self.immutable_parameters)} immutable parameters")
         logger.info(f"Configured {len(self.governable_parameters)} governable parameters")
+        logger.info("Enhanced protection mechanisms: 30% community veto, 1:1 masternode voting, time-locked execution")
     
     def _initialize_halving_schedule(self) -> List[HalvingPhase]:
         """Initialize halving schedule from blockchain.py constants"""
