@@ -3798,10 +3798,10 @@ class WepoFastTestBridge:
                 "total_wepo": total / 100000000.0
             }
         
-        # Community-Driven AMM Endpoints (No Admin)
+        # Community-Driven AMM Endpoints (No Admin) + BOOTSTRAP INCENTIVES
         @self.app.get("/api/swap/rate")
         async def get_market_rate():
-            """Get current market-determined BTC/WEPO rate"""
+            """Get current market-determined BTC/WEPO rate + Update Community Price Oracle"""
             try:
                 price = btc_wepo_pool.get_price()
                 
@@ -3811,18 +3811,34 @@ class WepoFastTestBridge:
                         "message": "No liquidity pool exists yet. Any user can create the market.",
                         "btc_reserve": 0,
                         "wepo_reserve": 0,
-                        "can_bootstrap": True
+                        "total_liquidity_shares": 0,
+                        "fee_rate": btc_wepo_pool.fee_rate,
+                        "bootstrap_incentives": btc_wepo_pool.get_bootstrap_status(),
+                        "community_price": {
+                            "wepo_usd": 0.01,
+                            "source": "default_bootstrap"
+                        }
                     }
+                
+                # Update community price oracle with current DEX price
+                wepo_usd = community_price_oracle.get_wepo_usd_price(price)
                 
                 return {
                     "pool_exists": True,
                     "btc_to_wepo": price,
-                    "wepo_to_btc": 1 / price,
+                    "wepo_to_btc": 1.0 / price,
                     "btc_reserve": btc_wepo_pool.btc_reserve,
                     "wepo_reserve": btc_wepo_pool.wepo_reserve,
                     "total_liquidity_shares": btc_wepo_pool.total_shares,
                     "fee_rate": btc_wepo_pool.fee_rate,
-                    "last_updated": int(time.time())
+                    "last_updated": datetime.now().isoformat(),
+                    "bootstrap_incentives": btc_wepo_pool.get_bootstrap_status(),
+                    "community_price": {
+                        "wepo_usd": wepo_usd,
+                        "btc_reference": community_price_oracle.btc_usd_reference,
+                        "source": "community_dex",
+                        "stability_buffer": community_price_oracle.get_stable_price()
+                    }
                 }
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
