@@ -6371,7 +6371,230 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
-        # ===== GOVERNANCE FRAMEWORK ENDPOINTS - COMMUNITY DEMOCRACY =====
+        # ===== HALVING-CYCLE GOVERNANCE FRAMEWORK ENDPOINTS =====
+        
+        @self.app.get("/api/governance/halving-cycle/status")
+        async def get_halving_cycle_governance_status():
+            """Get current halving-cycle governance window status"""
+            try:
+                current_height = len(self.blockchain.blocks) - 1
+                governance_status = halving_governance.get_current_governance_window_status(current_height)
+                
+                return {
+                    "success": True,
+                    "governance_window_status": governance_status,
+                    "message": f"Governance window is {'OPEN' if governance_status['window_open'] else 'CLOSED'}"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/governance/halving-cycle/schedule")
+        async def get_halving_cycle_schedule():
+            """Get complete halving schedule with governance windows"""
+            try:
+                current_height = len(self.blockchain.blocks) - 1
+                halving_schedule = halving_governance.get_halving_schedule()
+                current_phase = halving_governance.get_current_phase(current_height)
+                
+                return {
+                    "success": True,
+                    "current_height": current_height,
+                    "current_phase": current_phase.phase_name,
+                    "halving_schedule": halving_schedule,
+                    "total_phases": len(halving_schedule),
+                    "message": "Halving-cycle governance schedule retrieved successfully"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/governance/halving-cycle/parameters")
+        async def get_governance_parameters():
+            """Get immutable and governable parameters"""
+            try:
+                immutable_params = halving_governance.get_immutable_parameters()
+                governable_params = halving_governance.get_governable_parameters()
+                
+                return {
+                    "success": True,
+                    "immutable_parameters": {
+                        "count": len(immutable_params),
+                        "parameters": immutable_params,
+                        "description": "These parameters can NEVER be changed through governance"
+                    },
+                    "governable_parameters": {
+                        "count": len(governable_params),
+                        "parameters": governable_params,
+                        "description": "These parameters can be changed during governance windows"
+                    },
+                    "message": "Governance parameters retrieved successfully"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/governance/halving-cycle/proposals/create")
+        async def create_halving_cycle_proposal(request: dict):
+            """Create a proposal with halving-cycle governance validation"""
+            try:
+                proposer_address = request.get("proposer_address")
+                title = request.get("title")
+                description = request.get("description")
+                proposal_type_str = request.get("proposal_type", "network_parameter")
+                target_parameter = request.get("target_parameter")
+                proposed_value = request.get("proposed_value")
+                current_value = request.get("current_value")
+                
+                # Validate required fields
+                if not all([proposer_address, title, description, target_parameter, proposed_value]):
+                    raise HTTPException(status_code=400, detail="Missing required fields")
+                
+                # Convert proposal type string to enum
+                try:
+                    if proposal_type_str == "collateral_override":
+                        proposal_type = ProposalType.COLLATERAL_OVERRIDE
+                    elif proposal_type_str == "network_parameter":
+                        proposal_type = ProposalType.NETWORK_PARAMETER
+                    elif proposal_type_str == "emergency_action":
+                        proposal_type = ProposalType.EMERGENCY_ACTION
+                    elif proposal_type_str == "economic_policy":
+                        proposal_type = ProposalType.ECONOMIC_POLICY
+                    elif proposal_type_str == "protocol_upgrade":
+                        proposal_type = ProposalType.PROTOCOL_UPGRADE
+                    elif proposal_type_str == "community_fund":
+                        proposal_type = ProposalType.COMMUNITY_FUND
+                    else:
+                        proposal_type = ProposalType.NETWORK_PARAMETER
+                except:
+                    proposal_type = ProposalType.NETWORK_PARAMETER
+                
+                # Create proposal through halving-cycle governance
+                success, message, proposal_id = halving_governance.create_halving_cycle_proposal(
+                    proposer_address=proposer_address,
+                    title=title,
+                    description=description,
+                    proposal_type=proposal_type,
+                    target_parameter=target_parameter,
+                    proposed_value=proposed_value,
+                    current_value=current_value
+                )
+                
+                if success:
+                    return {
+                        "success": True,
+                        "proposal_id": proposal_id,
+                        "proposal_created": True,
+                        "message": message,
+                        "next_steps": [
+                            f"Proposal {proposal_id} created and ready for activation",
+                            "Use /api/governance/proposals/{proposal_id}/activate to start voting",
+                            "Proposal requires community voting during governance window"
+                        ]
+                    }
+                else:
+                    if "window is closed" in message.lower():
+                        raise HTTPException(status_code=400, detail={
+                            "error": "Governance window closed",
+                            "message": message,
+                            "governance_status": "window_closed"
+                        })
+                    elif "immutable" in message.lower():
+                        raise HTTPException(status_code=403, detail={
+                            "error": "Parameter is immutable",
+                            "message": message,
+                            "parameter": target_parameter
+                        })
+                    else:
+                        raise HTTPException(status_code=400, detail=message)
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/governance/halving-cycle/veto/{proposal_id}")
+        async def cast_community_veto(proposal_id: str, request: dict):
+            """Cast a community veto vote on a proposal"""
+            try:
+                voter_address = request.get("voter_address")
+                signature = request.get("signature", "community_veto_signature")
+                
+                if not voter_address:
+                    raise HTTPException(status_code=400, detail="voter_address is required")
+                
+                # Cast community veto
+                success, message = halving_governance.cast_community_veto(
+                    proposal_id=proposal_id,
+                    voter_address=voter_address,
+                    signature=signature
+                )
+                
+                if success:
+                    return {
+                        "success": True,
+                        "veto_cast": True,
+                        "proposal_id": proposal_id,
+                        "voter_address": voter_address,
+                        "message": message
+                    }
+                else:
+                    if "not found" in message.lower():
+                        raise HTTPException(status_code=404, detail=message)
+                    elif "already cast" in message.lower():
+                        raise HTTPException(status_code=400, detail=message)
+                    elif "no veto power" in message.lower():
+                        raise HTTPException(status_code=403, detail=message)
+                    else:
+                        raise HTTPException(status_code=400, detail=message)
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/governance/halving-cycle/window-countdown") 
+        async def get_governance_window_countdown():
+            """Get countdown to next governance window"""
+            try:
+                current_height = len(self.blockchain.blocks) - 1
+                governance_status = halving_governance.get_current_governance_window_status(current_height)
+                
+                if governance_status["window_open"]:
+                    return {
+                        "success": True,
+                        "window_status": "OPEN",
+                        "days_remaining": governance_status["governance_window"]["days_remaining"],
+                        "current_phase": governance_status["current_phase"]["name"],
+                        "message": f"Governance window is OPEN! {governance_status['governance_window']['days_remaining']:.1f} days remaining"
+                    }
+                else:
+                    days_until_next = governance_status["next_governance_window"]["days_until_next"]
+                    next_phase = governance_status["next_governance_window"]["next_phase"]
+                    
+                    if days_until_next is not None:
+                        return {
+                            "success": True,
+                            "window_status": "CLOSED",
+                            "days_until_next": days_until_next,
+                            "next_phase": next_phase,
+                            "current_phase": governance_status["current_phase"]["name"],
+                            "message": f"Governance window is CLOSED. Next window opens in {days_until_next:.1f} days ({next_phase})"
+                        }
+                    else:
+                        return {
+                            "success": True,
+                            "window_status": "CLOSED",
+                            "days_until_next": None,
+                            "next_phase": None,
+                            "current_phase": governance_status["current_phase"]["name"],
+                            "message": "No upcoming governance windows scheduled"
+                        }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        # ===== END HALVING-CYCLE GOVERNANCE ENDPOINTS =====
         
         @self.app.post("/api/governance/proposals/create")
         async def create_governance_proposal(request: dict):
