@@ -789,55 +789,66 @@ def test_wepo_halving_cycle_governance_system():
     print("\n🏛️ TESTING WEPO HALVING-CYCLE GOVERNANCE SYSTEM")
     print("Testing new halving-cycle governance endpoints and integration...")
     
+    # Use the bridge URL for governance testing since that's where the endpoints are implemented
+    BRIDGE_URL = "http://localhost:8001/api"
+    
     try:
         checks_passed = 0
         total_checks = 6
         
         # Test 1: Governance Window Status
         print("\n  📊 Test 1: Governance Window Status")
-        response = requests.get(f"{API_URL}/governance/halving-cycle/status")
+        response = requests.get(f"{BRIDGE_URL}/governance/halving-cycle/status")
         
         if response.status_code == 200:
             data = response.json()
-            required_fields = ['window_status', 'window_open', 'current_phase', 'governance_window', 'current_height']
-            if all(field in data for field in required_fields):
-                print(f"    ✅ Governance Status: Successfully retrieved governance window status")
-                print(f"      Window Status: {data.get('window_status', 'N/A')}")
-                print(f"      Window Open: {data.get('window_open', 'N/A')}")
-                print(f"      Current Phase: {data.get('current_phase', {}).get('name', 'N/A')}")
-                print(f"      Current Height: {data.get('current_height', 'N/A')}")
-                checks_passed += 1
+            if data.get('success') and 'governance_window_status' in data:
+                governance_status = data['governance_window_status']
+                required_fields = ['window_status', 'window_open', 'current_phase', 'governance_window', 'current_height']
+                if all(field in governance_status for field in required_fields):
+                    print(f"    ✅ Governance Status: Successfully retrieved governance window status")
+                    print(f"      Window Status: {governance_status.get('window_status', 'N/A')}")
+                    print(f"      Window Open: {governance_status.get('window_open', 'N/A')}")
+                    print(f"      Current Phase: {governance_status.get('current_phase', {}).get('name', 'N/A')}")
+                    print(f"      Current Height: {governance_status.get('current_height', 'N/A')}")
+                    checks_passed += 1
+                else:
+                    print(f"    ❌ Governance Status: Missing required fields in governance_window_status")
             else:
-                print(f"    ❌ Governance Status: Missing required fields in response")
+                print(f"    ❌ Governance Status: Missing success or governance_window_status in response")
         else:
             print(f"    ❌ Governance Status: HTTP {response.status_code} - {response.text}")
         
         # Test 2: Halving Schedule with Governance Windows
         print("\n  📅 Test 2: Halving Schedule with Governance Windows")
-        response = requests.get(f"{API_URL}/governance/halving-cycle/schedule")
+        response = requests.get(f"{BRIDGE_URL}/governance/halving-cycle/schedule")
         
         if response.status_code == 200:
             data = response.json()
-            if isinstance(data, list) and len(data) > 0:
-                phase_count = len(data)
-                governance_phases = len([p for p in data if p.get('governance_window_start', -1) != -1])
-                print(f"    ✅ Halving Schedule: Successfully retrieved complete halving schedule")
-                print(f"      Total Phases: {phase_count}")
-                print(f"      Governance Phases: {governance_phases}")
-                print(f"      First Phase: {data[0].get('phase_name', 'N/A')}")
-                checks_passed += 1
+            if data.get('success') and 'halving_schedule' in data:
+                schedule = data['halving_schedule']
+                if isinstance(schedule, list) and len(schedule) > 0:
+                    phase_count = len(schedule)
+                    governance_phases = len([p for p in schedule if p.get('governance_window_start', -1) != -1])
+                    print(f"    ✅ Halving Schedule: Successfully retrieved complete halving schedule")
+                    print(f"      Total Phases: {phase_count}")
+                    print(f"      Governance Phases: {governance_phases}")
+                    print(f"      First Phase: {schedule[0].get('phase_name', 'N/A')}")
+                    checks_passed += 1
+                else:
+                    print(f"    ❌ Halving Schedule: Invalid schedule format or empty")
             else:
-                print(f"    ❌ Halving Schedule: Invalid schedule format or empty")
+                print(f"    ❌ Halving Schedule: Missing success or halving_schedule in response")
         else:
             print(f"    ❌ Halving Schedule: HTTP {response.status_code} - {response.text}")
         
         # Test 3: Immutable vs Governable Parameters
         print("\n  🔒 Test 3: Parameter Classification")
-        response = requests.get(f"{API_URL}/governance/halving-cycle/parameters")
+        response = requests.get(f"{BRIDGE_URL}/governance/halving-cycle/parameters")
         
         if response.status_code == 200:
             data = response.json()
-            if 'immutable_parameters' in data and 'governable_parameters' in data:
+            if data.get('success') and 'immutable_parameters' in data and 'governable_parameters' in data:
                 immutable_count = len(data.get('immutable_parameters', {}))
                 governable_count = len(data.get('governable_parameters', {}))
                 print(f"    ✅ Parameter Classification: Successfully retrieved parameter types")
@@ -849,6 +860,12 @@ def test_wepo_halving_cycle_governance_system():
                 key_immutable = ['total_supply', 'zero_fees', 'quantum_resistance']
                 found_key_params = [p for p in key_immutable if p in immutable_params]
                 print(f"      Key Immutable Found: {len(found_key_params)}/{len(key_immutable)}")
+                
+                # Check for key governable parameters
+                governable_params = data.get('governable_parameters', {})
+                key_governable = ['block_size_limit', 'masternode_collateral_override']
+                found_governable = [p for p in key_governable if p in governable_params]
+                print(f"      Key Governable Found: {len(found_governable)}/{len(key_governable)}")
                 checks_passed += 1
             else:
                 print(f"    ❌ Parameter Classification: Missing parameter categories")
@@ -867,7 +884,7 @@ def test_wepo_halving_cycle_governance_system():
             "current_value": "2097152"    # 2MB
         }
         
-        response = requests.post(f"{API_URL}/governance/halving-cycle/proposals/create", json=proposal_data)
+        response = requests.post(f"{BRIDGE_URL}/governance/halving-cycle/proposals/create", json=proposal_data)
         
         if response.status_code in [200, 400]:  # 200 if window open, 400 if closed
             if response.status_code == 200:
@@ -888,7 +905,7 @@ def test_wepo_halving_cycle_governance_system():
                     checks_passed += 1
                     proposal_id = None
                 else:
-                    print(f"    ❌ Proposal Creation: Unexpected validation error")
+                    print(f"    ❌ Proposal Creation: Unexpected validation error - {response.text}")
                     proposal_id = None
         else:
             print(f"    ❌ Proposal Creation: HTTP {response.status_code} - {response.text}")
@@ -902,7 +919,7 @@ def test_wepo_halving_cycle_governance_system():
             "signature": "veto_signature_test"
         }
         
-        response = requests.post(f"{API_URL}/governance/halving-cycle/veto/{test_proposal_id}", json=veto_data)
+        response = requests.post(f"{BRIDGE_URL}/governance/halving-cycle/veto/{test_proposal_id}", json=veto_data)
         
         if response.status_code in [200, 400, 404]:
             if response.status_code == 200:
@@ -921,30 +938,35 @@ def test_wepo_halving_cycle_governance_system():
                 error_text = response.text.lower()
                 if any(term in error_text for term in ['proposal', 'veto', 'already', 'power']):
                     print(f"    ✅ Community Veto: Proper veto validation")
+                    print(f"      Validation: {response.text}")
                     checks_passed += 1
                 else:
-                    print(f"    ❌ Community Veto: Unexpected validation error")
+                    print(f"    ❌ Community Veto: Unexpected validation error - {response.text}")
         else:
             print(f"    ❌ Community Veto: HTTP {response.status_code} - {response.text}")
         
         # Test 6: Governance Window Countdown
         print("\n  ⏰ Test 6: Governance Window Countdown")
-        response = requests.get(f"{API_URL}/governance/halving-cycle/window-countdown")
+        response = requests.get(f"{BRIDGE_URL}/governance/halving-cycle/window-countdown")
         
         if response.status_code == 200:
             data = response.json()
-            required_fields = ['current_window_status', 'time_info']
-            if all(field in data for field in required_fields):
-                print(f"    ✅ Window Countdown: Successfully retrieved countdown information")
-                print(f"      Current Status: {data.get('current_window_status', 'N/A')}")
-                time_info = data.get('time_info', {})
-                if 'days_remaining' in time_info or 'days_until_next' in time_info:
-                    print(f"      Time Info: Available")
-                    checks_passed += 1
+            if data.get('success') and 'countdown_info' in data:
+                countdown_info = data['countdown_info']
+                required_fields = ['current_window_status', 'time_info']
+                if all(field in countdown_info for field in required_fields):
+                    print(f"    ✅ Window Countdown: Successfully retrieved countdown information")
+                    print(f"      Current Status: {countdown_info.get('current_window_status', 'N/A')}")
+                    time_info = countdown_info.get('time_info', {})
+                    if 'days_remaining' in time_info or 'days_until_next' in time_info:
+                        print(f"      Time Info: Available")
+                        checks_passed += 1
+                    else:
+                        print(f"    ❌ Window Countdown: Missing time information")
                 else:
-                    print(f"    ❌ Window Countdown: Missing time information")
+                    print(f"    ❌ Window Countdown: Missing required fields")
             else:
-                print(f"    ❌ Window Countdown: Missing required fields")
+                print(f"    ❌ Window Countdown: Missing success or countdown_info in response")
         else:
             print(f"    ❌ Window Countdown: HTTP {response.status_code} - {response.text}")
         
@@ -958,6 +980,7 @@ def test_wepo_halving_cycle_governance_system():
             print(f"  ✅ GOVERNANCE SYSTEM: Substantially operational")
             print(f"  ✅ Core Features: Governance windows, parameter protection, proposal validation")
             print(f"  ✅ Integration: Halving schedule integration working")
+            print(f"  ✅ Bridge Implementation: All endpoints accessible via wepo-fast-test-bridge.py")
             return True
         else:
             print(f"  ❌ GOVERNANCE SYSTEM: Critical issues found")
