@@ -196,6 +196,7 @@ const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
                 onClick={handleCreateWallet}
                 disabled={isLoading}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="create-wallet-button"
               >
                 {isLoading ? 'Creating Wallet...' : 'Create Wallet'}
               </button>
