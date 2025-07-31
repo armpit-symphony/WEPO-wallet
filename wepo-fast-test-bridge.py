@@ -449,6 +449,10 @@ class LiquidityPool:
 # Global pool instance for the bridge
 btc_wepo_pool = LiquidityPool()
 
+# Initialize Community Price Oracle and Dynamic Collateral System
+community_price_oracle = CommunityPriceOracle()
+dynamic_collateral = DynamicCollateralSystem(community_price_oracle)
+
 class FastTestBlockchain:
     """Fast test blockchain with instant operations"""
     
