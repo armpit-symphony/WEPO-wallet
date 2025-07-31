@@ -301,7 +301,7 @@ class LiquidityPool:
         return output_amount
     
     def bootstrap_pool(self, user_address: str, btc_amount: float, wepo_amount: float):
-        """First user creates the market - no admin required"""
+        """First user creates the market - no admin required + BOOTSTRAP INCENTIVES"""
         if self.total_shares > 0:
             raise Exception("Pool already exists")
         
@@ -311,21 +311,33 @@ class LiquidityPool:
         # Set initial reserves (user determines initial price)
         self.btc_reserve = btc_amount
         self.wepo_reserve = wepo_amount
+        self.creation_timestamp = datetime.now()
         
         # Initial shares = geometric mean of reserves
         self.total_shares = math.sqrt(btc_amount * wepo_amount)
         self.lp_positions[user_address] = self.total_shares
         
-        return {
-            "initial_price": wepo_amount / btc_amount,
+        # 🎉 FIRST PROVIDER BOOTSTRAP BONUS
+        first_provider_bonus = self.bootstrap_incentives.check_first_provider_bonus(user_address, True)
+        
+        # Calculate initial market price
+        initial_price = wepo_amount / btc_amount
+        
+        result = {
+            "initial_price": initial_price,
             "shares_minted": self.total_shares,
             "pool_created": True,
             "btc_reserve": self.btc_reserve,
-            "wepo_reserve": self.wepo_reserve
+            "wepo_reserve": self.wepo_reserve,
+            "market_created_by": user_address,
+            "creation_time": self.creation_timestamp.isoformat(),
+            "bootstrap_bonus": first_provider_bonus
         }
+        
+        return result
     
     def add_liquidity(self, user_address: str, btc_amount: float, wepo_amount: float):
-        """Add liquidity to existing pool"""
+        """Add liquidity to existing pool + EARLY PROVIDER INCENTIVES"""
         if self.total_shares == 0:
             return self.bootstrap_pool(user_address, btc_amount, wepo_amount)
         
@@ -352,16 +364,22 @@ class LiquidityPool:
         else:
             self.lp_positions[user_address] = shares_to_mint
         
-        return {
+        # 🚀 EARLY PROVIDER BOOTSTRAP BONUS
+        early_provider_bonus = self.bootstrap_incentives.check_early_provider_bonus(user_address)
+        
+        result = {
             "shares_minted": shares_to_mint,
             "total_shares": self.total_shares,
             "new_price": self.get_price(),
             "btc_reserve": self.btc_reserve,
-            "wepo_reserve": self.wepo_reserve
+            "wepo_reserve": self.wepo_reserve,
+            "early_provider_bonus": early_provider_bonus
         }
+        
+        return result
     
-    def execute_swap(self, input_amount: float, input_is_btc: bool) -> Dict:
-        """Execute swap and update reserves"""
+    def execute_swap(self, input_amount: float, input_is_btc: bool, user_address: str = None) -> Dict:
+        """Execute swap and update reserves + VOLUME REWARDS"""
         if self.total_shares == 0:
             raise Exception("No liquidity in pool")
         
@@ -372,17 +390,60 @@ class LiquidityPool:
         if input_is_btc:
             self.btc_reserve += input_amount
             self.wepo_reserve -= output_amount
+            volume_btc = input_amount
         else:
             self.wepo_reserve += input_amount
             self.btc_reserve -= output_amount
+            volume_btc = input_amount / self.get_price()  # Convert WEPO to BTC equivalent
         
-        return {
+        # Update stats
+        self.total_volume_btc += volume_btc
+        self.total_swaps += 1
+        
+        # 📊 VOLUME-BASED REWARDS
+        volume_reward = {"eligible": False, "reward": 0, "type": "none"}
+        if user_address:
+            volume_reward = self.bootstrap_incentives.calculate_volume_reward(user_address, volume_btc)
+        
+        result = {
             "input_amount": input_amount,
             "output_amount": output_amount,
             "fee_amount": fee_amount,
             "new_price": self.get_price(),
             "btc_reserve": self.btc_reserve,
-            "wepo_reserve": self.wepo_reserve
+            "wepo_reserve": self.wepo_reserve,
+            "volume_reward": volume_reward,
+            "total_volume_btc": self.total_volume_btc,
+            "swap_count": self.total_swaps
+        }
+        
+        return result
+    
+    def get_bootstrap_status(self) -> Dict:
+        """Get status of bootstrap incentive system"""
+        return {
+            "total_distributed": self.bootstrap_incentives.total_distributed,
+            "first_provider": {
+                "claimed": self.bootstrap_incentives.incentives["first_liquidity_provider"]["claimed"],
+                "reward": self.bootstrap_incentives.incentives["first_liquidity_provider"]["reward"],
+                "claimer": self.bootstrap_incentives.incentives["first_liquidity_provider"]["claimer"]
+            },
+            "early_providers": {
+                "claimed_count": self.bootstrap_incentives.incentives["early_providers"]["claimed_count"],
+                "max_recipients": self.bootstrap_incentives.incentives["early_providers"]["max_recipients"],
+                "reward_per_provider": self.bootstrap_incentives.incentives["early_providers"]["reward"],
+                "remaining_slots": self.bootstrap_incentives.incentives["early_providers"]["max_recipients"] - self.bootstrap_incentives.incentives["early_providers"]["claimed_count"]
+            },
+            "volume_rewards": {
+                "threshold_btc": self.bootstrap_incentives.incentives["volume_rewards"]["threshold"],
+                "reward_rate": f"{self.bootstrap_incentives.incentives['volume_rewards']['reward_rate'] * 100}%",
+                "active_traders": len(self.bootstrap_incentives.incentives["volume_rewards"]["participants"])
+            },
+            "pool_stats": {
+                "total_volume_btc": self.total_volume_btc,
+                "total_swaps": self.total_swaps,
+                "creation_time": self.creation_timestamp.isoformat() if self.creation_timestamp else None
+            }
         }
 
 # Global pool instance for the bridge
