@@ -59,12 +59,208 @@ from wepo_halving_cycle_governance import (
     ParameterType
 )
 
-# Community-Driven AMM System (No Admin)
+# Community-Driven AMM System (No Admin) + Dynamic Collateral
 import math
 from typing import Dict, Optional
+from datetime import datetime, timedelta
+
+class CommunityPriceOracle:
+    """Community-driven price oracle using DEX data - NO EXTERNAL ORACLES"""
+    
+    def __init__(self):
+        self.btc_usd_reference = 45000  # Reference BTC price (can be updated via governance)
+        self.price_history = []  # Track price history for stability
+        self.last_update = None
+        
+    def get_wepo_usd_price(self, wepo_per_btc: float) -> float:
+        """Calculate WEPO/USD price using community DEX rate"""
+        if wepo_per_btc <= 0:
+            return 0.01  # Minimum price floor
+        
+        # WEPO/USD = (WEPO/BTC) * (BTC/USD)
+        wepo_usd = (wepo_per_btc / 1.0) * self.btc_usd_reference if wepo_per_btc else 0.01
+        
+        # Add to price history for stability calculation
+        self.price_history.append({
+            "price": wepo_usd,
+            "timestamp": datetime.now(),
+            "wepo_per_btc": wepo_per_btc
+        })
+        
+        # Keep only last 100 price points
+        if len(self.price_history) > 100:
+            self.price_history = self.price_history[-100:]
+            
+        self.last_update = datetime.now()
+        return wepo_usd
+    
+    def get_stable_price(self) -> float:
+        """Get price with stability buffer to prevent manipulation"""
+        if len(self.price_history) < 3:
+            return 0.01  # Default during bootstrap
+        
+        # Use median of last 10 prices to prevent single-trade manipulation
+        recent_prices = [p["price"] for p in self.price_history[-10:]]
+        return sorted(recent_prices)[len(recent_prices) // 2]
+    
+    def update_btc_reference(self, new_btc_price: float):
+        """Update BTC reference price (governance-controlled)"""
+        self.btc_usd_reference = new_btc_price
+
+class DynamicCollateralSystem:
+    """Dynamic collateral adjustment based on community-determined WEPO price"""
+    
+    def __init__(self, price_oracle: CommunityPriceOracle):
+        self.price_oracle = price_oracle
+        self.target_usd_values = {
+            "masternode": 10000,    # Target $10,000 USD for masternode
+            "pos_staking": 1000     # Target $1,000 USD for PoS staking
+        }
+        self.minimum_floors = {
+            "masternode": 100,      # Never below 100 WEPO
+            "pos_staking": 10       # Never below 10 WEPO
+        }
+        self.maximum_caps = {
+            "masternode": 50000,    # Never above 50,000 WEPO
+            "pos_staking": 5000     # Never above 5,000 WEPO
+        }
+        
+    def calculate_masternode_collateral(self) -> Dict:
+        """Calculate dynamic masternode collateral based on community price"""
+        wepo_usd_price = self.price_oracle.get_stable_price()
+        target_usd = self.target_usd_values["masternode"]
+        
+        # Calculate required WEPO amount
+        required_wepo = target_usd / wepo_usd_price if wepo_usd_price > 0 else self.maximum_caps["masternode"]
+        
+        # Apply floors and caps
+        adjusted_collateral = max(
+            self.minimum_floors["masternode"],
+            min(required_wepo, self.maximum_caps["masternode"])
+        )
+        
+        return {
+            "required_wepo": round(adjusted_collateral, 2),
+            "current_usd_value": round(adjusted_collateral * wepo_usd_price, 2),
+            "wepo_usd_price": round(wepo_usd_price, 6),
+            "target_usd": target_usd,
+            "price_source": "community_dex",
+            "last_updated": self.price_oracle.last_update.isoformat() if self.price_oracle.last_update else None
+        }
+    
+    def calculate_pos_collateral(self) -> Dict:
+        """Calculate dynamic PoS staking collateral based on community price"""
+        wepo_usd_price = self.price_oracle.get_stable_price()
+        target_usd = self.target_usd_values["pos_staking"]
+        
+        # Calculate required WEPO amount
+        required_wepo = target_usd / wepo_usd_price if wepo_usd_price > 0 else self.maximum_caps["pos_staking"]
+        
+        # Apply floors and caps
+        adjusted_collateral = max(
+            self.minimum_floors["pos_staking"],
+            min(required_wepo, self.maximum_caps["pos_staking"])
+        )
+        
+        return {
+            "required_wepo": round(adjusted_collateral, 2),
+            "current_usd_value": round(adjusted_collateral * wepo_usd_price, 2),
+            "wepo_usd_price": round(wepo_usd_price, 6),
+            "target_usd": target_usd,
+            "price_source": "community_dex",
+            "last_updated": self.price_oracle.last_update.isoformat() if self.price_oracle.last_update else None
+        }
+
+class BootstrapIncentiveSystem:
+    """Bootstrap incentives for early liquidity providers"""
+    
+    def __init__(self):
+        self.incentives = {
+            "first_liquidity_provider": {
+                "reward": 1000,          # 1000 WEPO bonus
+                "claimed": False,
+                "claimer": None
+            },
+            "early_providers": {
+                "reward": 500,           # 500 WEPO bonus each
+                "max_recipients": 10,    # First 10 early providers
+                "claimed_count": 0,
+                "claimers": []
+            },
+            "volume_rewards": {
+                "threshold": 1.0,        # 1 BTC volume threshold
+                "reward_rate": 0.01,     # 1% of volume in WEPO rewards
+                "participants": {}
+            }
+        }
+        self.total_distributed = 0
+        
+    def check_first_provider_bonus(self, user_address: str, is_first: bool) -> Dict:
+        """Check and award first liquidity provider bonus"""
+        if is_first and not self.incentives["first_liquidity_provider"]["claimed"]:
+            self.incentives["first_liquidity_provider"]["claimed"] = True
+            self.incentives["first_liquidity_provider"]["claimer"] = user_address
+            self.total_distributed += self.incentives["first_liquidity_provider"]["reward"]
+            
+            return {
+                "eligible": True,
+                "reward": self.incentives["first_liquidity_provider"]["reward"],
+                "type": "first_provider",
+                "message": "🎉 Congratulations! You created the WEPO market and earned the First Provider Bonus!"
+            }
+        
+        return {"eligible": False, "reward": 0, "type": "none"}
+    
+    def check_early_provider_bonus(self, user_address: str) -> Dict:
+        """Check and award early provider bonus"""
+        early_incentive = self.incentives["early_providers"]
+        
+        if (early_incentive["claimed_count"] < early_incentive["max_recipients"] and 
+            user_address not in early_incentive["claimers"]):
+            
+            early_incentive["claimed_count"] += 1
+            early_incentive["claimers"].append(user_address)
+            self.total_distributed += early_incentive["reward"]
+            
+            return {
+                "eligible": True,
+                "reward": early_incentive["reward"],
+                "type": "early_provider",
+                "position": early_incentive["claimed_count"],
+                "message": f"🚀 Early Provider Bonus! You're provider #{early_incentive['claimed_count']}/10!"
+            }
+        
+        return {"eligible": False, "reward": 0, "type": "none"}
+    
+    def calculate_volume_reward(self, user_address: str, volume_btc: float) -> Dict:
+        """Calculate volume-based rewards"""
+        volume_rewards = self.incentives["volume_rewards"]
+        
+        if user_address not in volume_rewards["participants"]:
+            volume_rewards["participants"][user_address] = {"volume": 0, "rewards": 0}
+        
+        # Add to user's volume
+        volume_rewards["participants"][user_address]["volume"] += volume_btc
+        total_volume = volume_rewards["participants"][user_address]["volume"]
+        
+        # Calculate reward if above threshold
+        if total_volume >= volume_rewards["threshold"]:
+            reward = volume_btc * volume_rewards["reward_rate"] * 1000  # Convert to WEPO (assuming 1000 WEPO/BTC ratio)
+            volume_rewards["participants"][user_address]["rewards"] += reward
+            self.total_distributed += reward
+            
+            return {
+                "eligible": True,
+                "reward": reward,
+                "type": "volume_reward",
+                "total_volume": total_volume,
+                "message": f"📊 Volume Reward! Earned {reward:.2f} WEPO for {volume_btc:.6f} BTC trading volume"
+            }
+        
+        return {"eligible": False, "reward": 0, "type": "none", "total_volume": total_volume}
 
 class LiquidityPool:
-    """Community-driven liquidity pool with no admin control"""
+    """Community-driven liquidity pool with no admin control + Bootstrap Incentives"""
     
     def __init__(self):
         self.btc_reserve = 0.0
@@ -72,6 +268,10 @@ class LiquidityPool:
         self.total_shares = 0.0
         self.lp_positions = {}  # user_address: shares
         self.fee_rate = 0.003  # 0.3% trading fee
+        self.bootstrap_incentives = BootstrapIncentiveSystem()
+        self.creation_timestamp = None
+        self.total_volume_btc = 0.0
+        self.total_swaps = 0
     
     def get_price(self) -> Optional[float]:
         """Get current WEPO per BTC price"""
