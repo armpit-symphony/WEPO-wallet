@@ -1206,14 +1206,15 @@ def test_community_driven_dynamic_collateral():
         
         if response.status_code == 200:
             data = response.json()
-            if data.get('success') and 'collateral_requirements' in data:
-                collateral_req = data['collateral_requirements']
-                required_fields = ['required_wepo', 'current_usd_value', 'target_usd', 'adjustment_factor']
+            if data.get('success') and 'pos_requirement' in data:
+                collateral_req = data['pos_requirement']
+                required_fields = ['required_wepo', 'current_usd_value', 'target_usd', 'wepo_usd_price']
                 if all(field in collateral_req for field in required_fields):
                     print(f"    ✅ PoS Staking: Successfully retrieved dynamic requirements")
                     print(f"      Required WEPO: {collateral_req.get('required_wepo', 'N/A')}")
                     print(f"      Current USD Value: ${collateral_req.get('current_usd_value', 'N/A')}")
                     print(f"      Target USD: ${collateral_req.get('target_usd', 'N/A')}")
+                    print(f"      WEPO/USD Price: ${collateral_req.get('wepo_usd_price', 'N/A')}")
                     checks_passed += 1
                 else:
                     print(f"    ❌ PoS Staking: Missing required fields")
