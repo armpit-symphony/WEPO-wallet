@@ -17,7 +17,8 @@ import {
   Palette,
   Shield,
   Eye,
-  EyeOff
+  EyeOff,
+  Trophy
 } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 
