@@ -6407,7 +6407,13 @@ class WepoFastTestBridge:
                 }
                 
             except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
+                logger.error(f"Error getting halving schedule: {e}")
+                return {
+                    "success": False,
+                    "error": str(e),
+                    "current_height": len(self.blockchain.blocks) - 1,
+                    "message": "Failed to retrieve halving schedule"
+                }
         
         @self.app.get("/api/governance/halving-cycle/parameters")
         async def get_governance_parameters():
