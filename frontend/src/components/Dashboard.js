@@ -41,6 +41,7 @@ import UnifiedExchange from './UnifiedExchange';
 import StakingInterface from './StakingInterface';
 import MasternodeInterface from './MasternodeInterface';
 import SettingsPanel from './SettingsPanel';
+import GovernanceDashboard from './GovernanceDashboard';
 
 const Dashboard = ({ onLogout }) => {
   const { 
