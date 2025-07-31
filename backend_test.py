@@ -996,13 +996,16 @@ def test_phase_3_protection_mechanisms():
     print("\n🛡️ TESTING PHASE 3 PROTECTION MECHANISMS")
     print("Testing enhanced protection endpoints for WEPO Halving-Cycle Governance System...")
     
+    # Use the bridge URL where the governance endpoints are implemented
+    BRIDGE_URL = "http://localhost:8001/api"
+    
     try:
         checks_passed = 0
         total_checks = 5
         
         # Test 1: Protection Status Endpoint
         print("\n  🔍 Test 1: Protection Mechanisms Status")
-        response = requests.get(f"{API_URL}/governance/halving-cycle/protection-status")
+        response = requests.get(f"{BRIDGE_URL}/governance/halving-cycle/protection-status")
         
         if response.status_code == 200:
             data = response.json()
@@ -1045,7 +1048,7 @@ def test_phase_3_protection_mechanisms():
                 "risk_level": risk_level
             }
             
-            response = requests.post(f"{API_URL}/governance/halving-cycle/schedule-execution/{test_proposal_id}", 
+            response = requests.post(f"{BRIDGE_URL}/governance/halving-cycle/schedule-execution/{test_proposal_id}", 
                                    json=schedule_request)
             
             if response.status_code in [200, 400]:  # 400 acceptable if proposal doesn't exist
@@ -1076,7 +1079,7 @@ def test_phase_3_protection_mechanisms():
         
         # Test 3: Execute Time-locked Proposal (Should fail - delay not passed)
         print("\n  🚫 Test 3: Execute Time-locked Proposal Validation")
-        response = requests.post(f"{API_URL}/governance/halving-cycle/execute-time-locked/{test_proposal_id}")
+        response = requests.post(f"{BRIDGE_URL}/governance/halving-cycle/execute-time-locked/{test_proposal_id}")
         
         if response.status_code in [200, 400]:
             if response.status_code == 400 or (response.status_code == 200 and not response.json().get('success')):
@@ -1095,7 +1098,7 @@ def test_phase_3_protection_mechanisms():
         
         # Test 4: Get Time-locked Proposals
         print("\n  📋 Test 4: Get Time-locked Proposals")
-        response = requests.get(f"{API_URL}/governance/halving-cycle/time-locked-proposals")
+        response = requests.get(f"{BRIDGE_URL}/governance/halving-cycle/time-locked-proposals")
         
         if response.status_code == 200:
             data = response.json()
@@ -1115,7 +1118,7 @@ def test_phase_3_protection_mechanisms():
             "signature": "test_veto_signature"
         }
         
-        response = requests.post(f"{API_URL}/governance/halving-cycle/veto/{test_proposal_id}", 
+        response = requests.post(f"{BRIDGE_URL}/governance/halving-cycle/veto/{test_proposal_id}", 
                                json=veto_request)
         
         if response.status_code in [200, 400, 404]:
