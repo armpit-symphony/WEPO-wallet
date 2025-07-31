@@ -24,7 +24,7 @@ import re
 from datetime import datetime
 
 # Use preview backend URL from frontend/.env
-BACKEND_URL = "https://d942fd3e-f74d-4b80-94d6-410a04ef8602.preview.emergentagent.com"
+BACKEND_URL = "https://130f3a1c-445d-47c5-ac8a-2b468eeb6e1f.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔐 COMPREHENSIVE SECURITY VERIFICATION - FINAL AUDIT")
@@ -594,7 +594,7 @@ import hashlib
 import re
 
 # Use preview backend URL from frontend/.env
-BACKEND_URL = "https://d942fd3e-f74d-4b80-94d6-410a04ef8602.preview.emergentagent.com"
+BACKEND_URL = "https://130f3a1c-445d-47c5-ac8a-2b468eeb6e1f.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔐 WEPO COMPREHENSIVE SECURITY VERIFICATION - FINAL 100% SECURITY SCORE")
