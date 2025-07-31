@@ -1228,6 +1228,112 @@ const UnifiedExchange = ({ onBack }) => {
         </div>
       )}
 
+      {/* Bootstrap Incentives & Dynamic Collateral Info */}
+      {(bootstrapIncentives || dynamicCollateral) && (
+        <div className="space-y-4">
+          {/* Bootstrap Incentives */}
+          {bootstrapIncentives && (
+            <div className="bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-lg p-4 border border-green-500/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Trophy className="h-5 w-5 text-yellow-400" />
+                <span className="text-lg font-semibold text-green-200">🎉 Bootstrap Incentives Active!</span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                <div className="bg-yellow-900/30 rounded-lg p-3">
+                  <div className="text-yellow-200 font-medium">First Provider Bonus</div>
+                  <div className="text-2xl font-bold text-yellow-400">
+                    {bootstrapIncentives.incentives_status?.first_provider?.claimed ? '✅ Claimed' : '1000 WEPO'}
+                  </div>
+                  <div className="text-xs text-yellow-300">
+                    {bootstrapIncentives.incentives_status?.first_provider?.claimed 
+                      ? `Claimed by ${bootstrapIncentives.incentives_status?.first_provider?.claimer?.slice(0,8)}...`
+                      : 'Create the market, earn the bonus!'
+                    }
+                  </div>
+                </div>
+                
+                <div className="bg-blue-900/30 rounded-lg p-3">
+                  <div className="text-blue-200 font-medium">Early Provider Bonus</div>
+                  <div className="text-2xl font-bold text-blue-400">500 WEPO</div>
+                  <div className="text-xs text-blue-300">
+                    {bootstrapIncentives.incentives_status?.early_providers?.remaining_slots || 0} slots remaining
+                    ({bootstrapIncentives.incentives_status?.early_providers?.claimed_count || 0}/10 claimed)
+                  </div>
+                </div>
+                
+                <div className="bg-purple-900/30 rounded-lg p-3">
+                  <div className="text-purple-200 font-medium">Volume Rewards</div>
+                  <div className="text-2xl font-bold text-purple-400">1% of Volume</div>
+                  <div className="text-xs text-purple-300">
+                    Trade >1 BTC to earn WEPO rewards
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center text-green-300 text-sm">
+                💡 <strong>Philosophy:</strong> {bootstrapIncentives.philosophy}
+              </div>
+            </div>
+          )}
+          
+          {/* Dynamic Collateral Info */}
+          {dynamicCollateral && (
+            <div className="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 rounded-lg p-4 border border-indigo-500/30">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="h-5 w-5 text-indigo-400" />
+                <span className="text-lg font-semibold text-indigo-200">Dynamic Collateral System</span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                <div className="bg-indigo-900/30 rounded-lg p-3">
+                  <div className="text-indigo-200 font-medium">Masternode Requirement</div>
+                  <div className="text-2xl font-bold text-indigo-400">
+                    {dynamicCollateral.collateral_requirements?.masternode?.required_wepo?.toFixed(0) || 'N/A'} WEPO
+                  </div>
+                  <div className="text-xs text-indigo-300">
+                    ≈ ${dynamicCollateral.collateral_requirements?.masternode?.current_usd_value?.toFixed(0) || 'N/A'} USD
+                    (Target: ${dynamicCollateral.collateral_requirements?.masternode?.target_usd || 'N/A'})
+                  </div>
+                </div>
+                
+                <div className="bg-purple-900/30 rounded-lg p-3">
+                  <div className="text-purple-200 font-medium">PoS Staking Requirement</div>
+                  <div className="text-2xl font-bold text-purple-400">
+                    {dynamicCollateral.collateral_requirements?.pos_staking?.required_wepo?.toFixed(0) || 'N/A'} WEPO
+                  </div>
+                  <div className="text-xs text-purple-300">
+                    ≈ ${dynamicCollateral.collateral_requirements?.pos_staking?.current_usd_value?.toFixed(0) || 'N/A'} USD
+                    (Target: ${dynamicCollateral.collateral_requirements?.pos_staking?.target_usd || 'N/A'})
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-800/50 rounded-lg p-3">
+                <div className="text-sm text-gray-300 mb-2">
+                  <strong className="text-indigo-300">Community Price Oracle:</strong> WEPO/USD = $
+                  {dynamicCollateral.price_oracle?.wepo_usd_price?.toFixed(6) || 'N/A'}
+                </div>
+                <div className="text-xs text-gray-400 space-y-1">
+                  <div>🎯 Source: {dynamicCollateral.price_oracle?.source || 'Community DEX'}</div>
+                  <div>📊 History Points: {dynamicCollateral.price_oracle?.price_history_points || 0}</div>
+                  <div>🔄 Last Update: {dynamicCollateral.price_oracle?.last_update ? 
+                    new Date(dynamicCollateral.price_oracle.last_update).toLocaleString() : 'Never'}</div>
+                </div>
+              </div>
+              
+              <div className="mt-3 text-center">
+                <div className="text-xs text-indigo-300 space-y-1">
+                  <div>✅ No external oracle manipulation</div>
+                  <div>✅ Community-determined fair pricing</div>
+                  <div>✅ Automatic accessibility adjustment</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Privacy & Security Notice */}
       <div className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-500/30">
         <div className="flex items-center gap-2 mb-2">
