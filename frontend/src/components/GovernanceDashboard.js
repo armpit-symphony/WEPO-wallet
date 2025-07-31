@@ -97,6 +97,21 @@ const GovernanceDashboard = ({ onBack }) => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <button 
+              onClick={onBack}
+              className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Dashboard
+            </button>
+            <div className="text-right">
+              <div className="text-sm text-gray-400">WEPO Network</div>
+              <div className="text-xs text-gray-500">Christmas Day 2025 Launch</div>
+            </div>
+          </div>
           <h1 className="text-4xl font-bold text-center mb-4">
             🏛️ WEPO Halving-Cycle Governance
           </h1>
