@@ -109,12 +109,35 @@ const UnifiedExchange = ({ onBack }) => {
           btc_reserve: data.btc_reserve,
           wepo_reserve: data.wepo_reserve,
           total_liquidity: data.total_liquidity_shares,
-          fee_rate: data.fee_rate
+          fee_rate: data.fee_rate,
+          bootstrap_incentives: data.bootstrap_incentives,
+          community_price: data.community_price
         });
+        
+        // Store bootstrap incentives separately for display
+        if (data.bootstrap_incentives) {
+          setBootstrapIncentives(data.bootstrap_incentives);
+        }
       } else {
         setExchangeRate(null);
         setError('No liquidity pool exists yet. You can create the market by adding liquidity.');
+        // Show bootstrap opportunity
+        if (data.bootstrap_incentives) {
+          setBootstrapIncentives(data.bootstrap_incentives);
+        }
       }
+      
+      // Fetch dynamic collateral overview
+      try {
+        const collateralResponse = await fetch(`${backendUrl}/api/collateral/dynamic/overview`);
+        if (collateralResponse.ok) {
+          const collateralData = await collateralResponse.json();
+          setDynamicCollateral(collateralData);
+        }
+      } catch (collateralError) {
+        console.warn('Could not fetch dynamic collateral data:', collateralError);
+      }
+      
     } catch (err) {
       console.error('Error fetching exchange rate:', err);
       setError('Failed to fetch market data');
