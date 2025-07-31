@@ -223,6 +223,8 @@ const Dashboard = ({ onLogout }) => {
         return <StakingInterface onBack={() => setActiveTab('dashboard')} />;
       case 'masternode':
         return <MasternodeInterface onBack={() => setActiveTab('dashboard')} />;
+      case 'governance':
+        return <GovernanceDashboard onBack={() => setActiveTab('dashboard')} />;
       case 'settings':
         return <SettingsPanel onClose={() => setActiveTab('dashboard')} />;
       case 'messaging':
