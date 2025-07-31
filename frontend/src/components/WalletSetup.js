@@ -50,27 +50,20 @@ const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
 
     setIsLoading(true);
     try {
-      // PROPER BIP-39 IMPLEMENTATION - CRYPTOGRAPHICALLY SECURE
-      // Use the wallet context's secure mnemonic generation
-      const secureMnemonic = generateMnemonic();
+      // Use wallet context's secure createWallet function
+      const result = await createWallet(formData.username, formData.password, formData.confirmPassword);
       
-      if (!secureMnemonic) {
+      if (result && result.mnemonic) {
+        setMnemonic(result.mnemonic);
+        console.log('✅ Secure BIP-39 seed phrase generated successfully');
+        console.log(`📊 Entropy: ${result.mnemonic.split(' ').length} words (${result.mnemonic.split(' ').length * 11} bits)`);
+        setStep(2);
+      } else {
         throw new Error('Failed to generate secure seed phrase');
       }
-      
-      // Validate the generated mnemonic
-      if (!validateMnemonic || !validateMnemonic(secureMnemonic)) {
-        throw new Error('Generated invalid mnemonic, please try again');
-      }
-      
-      setMnemonic(secureMnemonic);
-      
-      console.log('✅ Secure BIP-39 seed phrase generated successfully');
-      console.log(`📊 Entropy: ${secureMnemonic.split(' ').length} words (${secureMnemonic.split(' ').length * 11} bits)`);
-      setStep(2);
     } catch (error) {
-      console.error('❌ Seed phrase generation failed:', error);
-      setError('Failed to generate secure seed phrase: ' + error.message);
+      console.error('❌ Wallet creation failed:', error);
+      setError('Failed to create wallet: ' + error.message);
     } finally {
       setIsLoading(false);
     }
