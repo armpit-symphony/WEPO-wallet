@@ -1267,7 +1267,7 @@ const UnifiedExchange = ({ onBack }) => {
                   <div className="text-purple-200 font-medium">Volume Rewards</div>
                   <div className="text-2xl font-bold text-purple-400">1% of Volume</div>
                   <div className="text-xs text-purple-300">
-                    Trade >1 BTC to earn WEPO rewards
+                    Trade &gt;1 BTC to earn WEPO rewards
                   </div>
                 </div>
               </div>
