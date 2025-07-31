@@ -3889,7 +3889,7 @@ class WepoFastTestBridge:
 
         @self.app.post("/api/liquidity/add")
         async def add_liquidity_to_pool(request: dict):
-            """Add liquidity to BTC-WEPO pool (or create if first)"""
+            """Add liquidity to BTC-WEPO pool (or create if first) + BOOTSTRAP INCENTIVES"""
             try:
                 wallet_address = request.get("wallet_address")
                 btc_amount = float(request.get("btc_amount", 0))
@@ -3900,6 +3900,11 @@ class WepoFastTestBridge:
                 
                 # Add liquidity
                 result = btc_wepo_pool.add_liquidity(wallet_address, btc_amount, wepo_amount)
+                
+                # Update community price oracle after liquidity addition
+                new_price = btc_wepo_pool.get_price()
+                if new_price:
+                    community_price_oracle.get_wepo_usd_price(new_price)
                 
                 return {
                     "lp_id": f"lp_{int(time.time())}_{wallet_address[:8]}",
