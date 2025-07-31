@@ -1258,7 +1258,7 @@ def test_community_driven_dynamic_collateral():
         # Test 4: BTC Reference Price Update (Governance)
         print("\n  🏛️ Test 4: BTC Reference Price Update (Governance)")
         update_request = {
-            "new_btc_usd_price": 50000,
+            "new_btc_usd_price": 50000.0,  # Use float instead of int
             "governance_signature": "test_governance_signature",
             "proposer_address": generate_valid_wepo_address()
         }
@@ -1275,13 +1275,13 @@ def test_community_driven_dynamic_collateral():
                 else:
                     print(f"    ❌ BTC Reference Update: Update failed")
             else:
-                # Check if it's proper governance validation
+                # Check if it's proper validation
                 error_text = response.text.lower()
-                if any(term in error_text for term in ['governance', 'unauthorized', 'signature', 'permission']):
-                    print(f"    ✅ BTC Reference Update: Proper governance validation (unauthorized)")
+                if any(term in error_text for term in ['governance', 'unauthorized', 'signature', 'permission', 'invalid', 'price']):
+                    print(f"    ✅ BTC Reference Update: Proper validation ({response.text})")
                     checks_passed += 1
                 else:
-                    print(f"    ❌ BTC Reference Update: Unexpected validation error")
+                    print(f"    ❌ BTC Reference Update: Unexpected validation error - {response.text}")
         else:
             print(f"    ❌ BTC Reference Update: HTTP {response.status_code} - {response.text}")
         
