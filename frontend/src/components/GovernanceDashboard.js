@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const GovernanceDashboard = () => {
+const GovernanceDashboard = ({ onBack }) => {
   const [governanceStatus, setGovernanceStatus] = useState(null);
   const [halvingSchedule, setHalvingSchedule] = useState(null);
   const [protectionMechanisms, setProtectionMechanisms] = useState(null);
