@@ -245,14 +245,15 @@ const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
               </div>
 
               <div className="space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer">
+                <label className="flex items-start gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={agreedToTerms}
                     onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                    className="w-5 h-5 mt-0.5 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
+                    data-testid="terms-checkbox"
                   />
-                  <span className="text-sm text-purple-200">
+                  <span className="text-sm text-purple-200 leading-relaxed">
                     I understand that I am responsible for keeping my recovery phrase secure and that WEPO cannot recover my wallet if I lose it.
                   </span>
                 </label>
