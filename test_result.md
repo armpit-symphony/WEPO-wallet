@@ -400,9 +400,9 @@ backend:
 frontend:
   - task: "WEPO Governance Dashboard Integration - Phase 4 Halving-Cycle Democracy"
     implemented: true
-    working: true
+    working: false
     file: "frontend/src/components/GovernanceDashboard.js, frontend/src/components/Dashboard.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
