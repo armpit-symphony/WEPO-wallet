@@ -558,6 +558,157 @@ class WepoHalvingCycleGovernance:
         # Simulate total community power for veto calculation
         return 500  # Simulated total community veto power
     
+    def calculate_enhanced_voting_power(self, address: str) -> int:
+        """
+        Calculate enhanced voting power with 1 masternode = 1 vote principle
+        This overrides the base governance system's 10x masternode multiplier
+        """
+        if "masternode" in address.lower():
+            return 1  # 1 masternode = 1 vote (democratic principle)
+        else:
+            # Stakers get proportional voting power based on stake  
+            stake_amount = self.base_governance._get_stake_amount(address)
+            return max(1, int(stake_amount / 1000))  # 1 vote per 1000 WEPO
+    
+    def schedule_time_locked_execution(self, proposal_id: str, risk_level: str = "medium_risk") -> Dict[str, Any]:
+        """Schedule time-locked execution of passed proposal"""
+        try:
+            if proposal_id not in self.base_governance.proposals:
+                return {"success": False, "error": "Proposal not found"}
+            
+            proposal = self.base_governance.proposals[proposal_id]
+            if proposal.status != ProposalStatus.PASSED:
+                return {"success": False, "error": "Only passed proposals can be scheduled for execution"}
+            
+            # Calculate execution delay based on risk level
+            delay_days = self.execution_delays.get(risk_level, 30)
+            current_height = self._get_current_block_height()
+            
+            # Convert days to blocks (9-minute blocks after PoS activation)
+            blocks_per_day = int(24 * 60 / 9)  # ~160 blocks per day
+            execution_delay_blocks = delay_days * blocks_per_day
+            execution_height = current_height + execution_delay_blocks
+            
+            # Schedule execution
+            execution_info = {
+                "proposal_id": proposal_id,
+                "scheduled_at": int(time.time()),
+                "execution_height": execution_height,
+                "execution_time": int(time.time()) + (delay_days * 24 * 60 * 60),
+                "risk_level": risk_level,
+                "delay_days": delay_days,
+                "can_be_vetoed": True  # Can still be vetoed during delay period
+            }
+            
+            self.time_locked_proposals[proposal_id] = execution_info
+            
+            logger.info(f"Proposal {proposal_id} scheduled for execution in {delay_days} days ({risk_level})")
+            
+            return {
+                "success": True,
+                "execution_scheduled": True,
+                "execution_info": execution_info,
+                "message": f"Proposal scheduled for execution in {delay_days} days"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error scheduling time-locked execution: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def execute_time_locked_proposal(self, proposal_id: str) -> Dict[str, Any]:
+        """Execute a time-locked proposal if delay period has passed"""
+        try:
+            if proposal_id not in self.time_locked_proposals:
+                return {"success": False, "error": "Proposal not scheduled for execution"}
+            
+            execution_info = self.time_locked_proposals[proposal_id]
+            current_time = int(time.time())
+            current_height = self._get_current_block_height()
+            
+            # Check if delay period has passed
+            if current_time < execution_info["execution_time"]:
+                remaining_hours = (execution_info["execution_time"] - current_time) / 3600
+                return {
+                    "success": False, 
+                    "error": f"Time-lock still active. {remaining_hours:.1f} hours remaining"
+                }
+            
+            if current_height < execution_info["execution_height"]:
+                remaining_blocks = execution_info["execution_height"] - current_height
+                return {
+                    "success": False,
+                    "error": f"Block height requirement not met. {remaining_blocks} blocks remaining"
+                }
+            
+            # Check for community veto during delay period
+            if self._has_community_veto_during_delay(proposal_id):
+                return {
+                    "success": False,
+                    "error": "Proposal vetoed by community during delay period"
+                }
+            
+            # Execute through base governance system
+            execution_result = self.base_governance.execute_proposal(proposal_id)
+            
+            # Remove from time-locked proposals
+            del self.time_locked_proposals[proposal_id]
+            
+            return {
+                "success": True,
+                "executed": True,
+                "execution_result": execution_result,
+                "message": "Time-locked proposal executed successfully"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error executing time-locked proposal: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def _has_community_veto_during_delay(self, proposal_id: str) -> bool:
+        """Check if community veto threshold was reached during delay period"""
+        if proposal_id not in self.veto_votes:
+            return False
+        
+        total_veto_power = sum(v["veto_power"] for v in self.veto_votes[proposal_id])
+        total_community_power = self._calculate_total_community_power()
+        veto_percentage = total_veto_power / total_community_power if total_community_power > 0 else 0
+        
+        return veto_percentage >= self.community_veto_threshold
+    
+    def get_protection_mechanisms_status(self) -> Dict[str, Any]:
+        """Get status of all protection mechanisms"""
+        return {
+            "community_veto": {
+                "threshold": f"{self.community_veto_threshold:.1%}",
+                "description": "30% of community can veto any proposal",
+                "active_vetos": len(self.veto_votes)
+            },
+            "masternode_voting": {
+                "weight": self.masternode_vote_weight,
+                "description": "1 masternode = 1 vote (democratic principle)",
+                "prevents": "Masternode dominance in governance decisions"
+            },
+            "time_locked_execution": {
+                "delays": self.execution_delays,
+                "description": "Execution delays based on risk level",
+                "scheduled_executions": len(self.time_locked_proposals)
+            },
+            "immutable_protection": {
+                "protected_parameters": len(self.immutable_parameters),
+                "description": "Core parameters can never be changed",
+                "prevents": "Economic manipulation and security weakening"
+            },
+            "governance_windows": {
+                "description": "Governance only active during halving-cycle windows",
+                "prevents": "Constant governance instability",
+                "ensures": "Maximum network stability between halvings"
+            }
+        }
+    
+    def get_time_locked_proposals(self) -> Dict[str, Dict]:
+        """Get all proposals scheduled for time-locked execution"""
+        return self.time_locked_proposals.copy()
+    
     def get_immutable_parameters(self) -> Dict[str, Dict]:
         """Get all immutable parameters"""
         return {name: asdict(param) for name, param in self.immutable_parameters.items()}
