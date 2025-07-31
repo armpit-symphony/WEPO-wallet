@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Copy, Eye, EyeOff, AlertTriangle } from 'lucide-react';
-import { generateMnemonic, validateMnemonic } from 'bip39';
+import { useWallet } from '../contexts/WalletContext';
 
 const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
   const [step, setStep] = useState(1);
@@ -16,6 +16,9 @@ const WalletSetup = ({ onWalletCreated, onLoginRedirect }) => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Use wallet context for proper integration
+  const { createWallet, setWallet } = useWallet();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
