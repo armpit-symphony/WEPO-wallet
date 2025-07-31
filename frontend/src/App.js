@@ -61,7 +61,7 @@ const MainApp = () => {
       )}
       {currentView === 'login' && (
         <WalletLogin 
-          onSuccess={() => handleViewChange('dashboard')}
+          onWalletLoaded={() => handleViewChange('dashboard')}
           onCreateNew={() => handleViewChange('setup')}
         />
       )}
