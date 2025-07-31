@@ -491,6 +491,18 @@ const Dashboard = ({ onLogout }) => {
         </button>
         
         <button 
+          onClick={() => setActiveTab('governance')}
+          className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50 relative"
+        >
+          <Users className="h-6 w-6 text-blue-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Governance</span>
+          <div className="text-xs text-gray-400 mt-1">Halving-Cycle Democracy</div>
+          <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+            NEW
+          </div>
+        </button>
+        
+        <button 
           onClick={() => setActiveTab('settings')}
           className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all duration-200 hover:border-purple-400/50"
         >
