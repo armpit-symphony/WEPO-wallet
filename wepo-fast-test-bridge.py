@@ -6599,6 +6599,96 @@ class WepoFastTestBridge:
                 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/governance/halving-cycle/protection-status")
+        async def get_protection_mechanisms_status():
+            """Get status of all governance protection mechanisms"""
+            try:
+                protection_status = halving_governance.get_protection_mechanisms_status()
+                
+                return {
+                    "success": True,
+                    "protection_mechanisms": protection_status,
+                    "message": "Governance protection mechanisms status retrieved successfully"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/governance/halving-cycle/schedule-execution/{proposal_id}")
+        async def schedule_time_locked_execution(proposal_id: str, request: dict):
+            """Schedule time-locked execution of passed proposal"""
+            try:
+                risk_level = request.get("risk_level", "medium_risk")
+                
+                if risk_level not in ["low_risk", "medium_risk", "high_risk"]:
+                    raise HTTPException(status_code=400, detail="Invalid risk_level. Must be: low_risk, medium_risk, or high_risk")
+                
+                result = halving_governance.schedule_time_locked_execution(proposal_id, risk_level)
+                
+                if result["success"]:
+                    return {
+                        "success": True,
+                        "proposal_id": proposal_id,
+                        "execution_scheduled": True,
+                        "execution_info": result["execution_info"],
+                        "message": result["message"]
+                    }
+                else:
+                    if "not found" in result["error"].lower():
+                        raise HTTPException(status_code=404, detail=result["error"])
+                    else:
+                        raise HTTPException(status_code=400, detail=result["error"])
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.post("/api/governance/halving-cycle/execute-time-locked/{proposal_id}")
+        async def execute_time_locked_proposal(proposal_id: str):
+            """Execute a time-locked proposal after delay period"""
+            try:
+                result = halving_governance.execute_time_locked_proposal(proposal_id)
+                
+                if result["success"]:
+                    return {
+                        "success": True,
+                        "proposal_id": proposal_id,
+                        "executed": True,
+                        "execution_result": result["execution_result"],
+                        "message": result["message"]
+                    }
+                else:
+                    if "not scheduled" in result["error"].lower():
+                        raise HTTPException(status_code=404, detail=result["error"])
+                    elif "time-lock still active" in result["error"].lower():
+                        raise HTTPException(status_code=400, detail=result["error"])
+                    elif "vetoed" in result["error"].lower():
+                        raise HTTPException(status_code=403, detail=result["error"])
+                    else:
+                        raise HTTPException(status_code=400, detail=result["error"])
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        
+        @self.app.get("/api/governance/halving-cycle/time-locked-proposals")
+        async def get_time_locked_proposals():
+            """Get all proposals scheduled for time-locked execution"""
+            try:
+                time_locked_proposals = halving_governance.get_time_locked_proposals()
+                
+                return {
+                    "success": True,
+                    "time_locked_proposals": time_locked_proposals,
+                    "total_scheduled": len(time_locked_proposals),
+                    "message": f"Found {len(time_locked_proposals)} proposals scheduled for time-locked execution"
+                }
+                
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
 
         # ===== END HALVING-CYCLE GOVERNANCE ENDPOINTS =====
         
