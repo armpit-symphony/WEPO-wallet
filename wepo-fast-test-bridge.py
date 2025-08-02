@@ -1336,9 +1336,13 @@ class WepoFastTestBridge:
                 "mining_active": mining_active,
                 "current_block_height": height,
                 "current_reward_per_block": current_reward,
+                "block_reward": current_reward,  # Expected by tests
                 "phase": phase,
+                "mining_phase": phase,  # Expected by tests
                 "network_hashrate_estimate": hashrate_estimate,
+                "total_hash_rate": hashrate_estimate,  # Expected by tests
                 "active_miners": total_miners,
+                "connected_miners": total_miners,  # Expected by tests
                 "difficulty": 1,
                 "algorithm": "Argon2 + SHA256 Dual-Layer",
                 "mempool_transactions": len(self.blockchain.mempool),
