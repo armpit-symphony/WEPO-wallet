@@ -58,9 +58,9 @@ import re
 BACKEND_URL = "https://4fc16d3d-b093-48ef-affa-636fa6aa3b78.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
-print(f"🎯 WEPO COMPREHENSIVE END-TO-END BACKEND TESTING")
+print(f"🎯 WEPO FOCUSED BACKEND TESTING - PRIORITY ISSUES")
 print(f"Preview Backend API URL: {API_URL}")
-print(f"Focus: Comprehensive system testing with wallet authentication investigation")
+print(f"Focus: Mining System, Network Status, Staking System, Database Testing")
 print("=" * 80)
 
 # Test results tracking
