@@ -116,17 +116,6 @@ const UnifiedExchange = ({ onBack }) => {
         setError('No liquidity pool exists yet. You can create the market by adding liquidity.');
       }
       
-      // Fetch dynamic collateral overview
-      try {
-        const collateralResponse = await fetch(`${backendUrl}/api/collateral/dynamic/overview`);
-        if (collateralResponse.ok) {
-          const collateralData = await collateralResponse.json();
-          setDynamicCollateral(collateralData);
-        }
-      } catch (collateralError) {
-        console.warn('Could not fetch dynamic collateral data:', collateralError);
-      }
-      
     } catch (err) {
       console.error('Error fetching exchange rate:', err);
       setError('Failed to fetch market data');
