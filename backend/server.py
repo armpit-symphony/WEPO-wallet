@@ -437,10 +437,13 @@ async def login_wallet(request: Request, data: dict):
         
         if not SecurityManager.verify_password(password, password_hash):
             # Record failed login attempt
+            print(f"DEBUG: Password verification failed for {username}")  # Debug log
             failed_info = SecurityManager.record_failed_login(username)
+            print(f"DEBUG: Failed info returned: {failed_info}")  # Debug log
             
             # Lock account if too many failed attempts
             if failed_info["is_locked"]:
+                print(f"DEBUG: Account should be locked - updating database")  # Debug log
                 await db.wallets.update_one(
                     {"username": username},
                     {
@@ -462,6 +465,7 @@ async def login_wallet(request: Request, data: dict):
                     }
                 )
             
+            print(f"DEBUG: Account not locked yet - {failed_info['attempts']}/{failed_info['max_attempts']} attempts")  # Debug log
             logger.warning(f"Failed login for {username} from {client_id} - {failed_info['attempts']}/{failed_info['max_attempts']} attempts")
             raise HTTPException(status_code=401, detail="Invalid username or password")
         
