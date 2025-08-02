@@ -648,6 +648,21 @@ class WepoFastTestBridge:
         class SecurityMiddleware(BaseHTTPMiddleware):
             async def dispatch(self, request: Request, call_next):
                 try:
+                    # Get client identifier for rate limiting
+                    client_id = SecurityManager.get_client_identifier(request)
+                    
+                    # Apply global rate limiting (60 requests per minute per IP)
+                    if SecurityManager.is_rate_limited(client_id, "global_api"):
+                        logger.warning(f"Global rate limit exceeded for {client_id}")
+                        raise HTTPException(
+                            status_code=429, 
+                            detail={
+                                "message": "Too many requests. Please try again later.",
+                                "retry_after": 60,
+                                "rate_limit": "60 requests per minute"
+                            }
+                        )
+                    
                     response = await call_next(request)
                     
                     # Add security headers
@@ -655,7 +670,14 @@ class WepoFastTestBridge:
                     for header, value in security_headers.items():
                         response.headers[header] = value
                     
+                    # Add rate limiting headers
+                    response.headers["X-RateLimit-Limit"] = "60"
+                    response.headers["X-RateLimit-Remaining"] = "59"  # Simplified for demo
+                    response.headers["X-RateLimit-Reset"] = str(int(time.time()) + 60)
+                    
                     return response
+                except HTTPException:
+                    raise  # Re-raise HTTP exceptions (like rate limiting)
                 except Exception as e:
                     logger.error(f"Security middleware error: {e}")
                     raise HTTPException(status_code=500, detail="Internal server error")
