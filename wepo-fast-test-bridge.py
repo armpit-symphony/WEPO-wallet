@@ -760,23 +760,23 @@ class WepoFastTestBridge:
                     # Get client identifier for rate limiting
                     client_id = SecurityManager.get_client_identifier(request)
                     
-                    # Apply global rate limiting
-                    if self.bridge.check_rate_limit(client_id, "global"):
-                        logger.warning(f"Global rate limit exceeded for {client_id}")
-                        from fastapi.responses import JSONResponse
-                        return JSONResponse(
-                            status_code=429,
-                            content={
-                                "error": "Too many requests. Please try again later.",
-                                "retry_after": 60,
-                                "rate_limit": f"{GLOBAL_RATE_LIMIT} requests per minute"
-                            },
-                            headers={
-                                "X-RateLimit-Limit": str(GLOBAL_RATE_LIMIT),
-                                "X-RateLimit-Reset": str(int(time.time()) + RATE_LIMIT_WINDOW),
-                                "Retry-After": "60"
-                            }
-                        )
+                    # Apply global rate limiting (DISABLED - using SlowAPI instead)
+                    # if self.bridge.check_rate_limit(client_id, "global"):
+                    #     logger.warning(f"Global rate limit exceeded for {client_id}")
+                    #     from fastapi.responses import JSONResponse
+                    #     return JSONResponse(
+                    #         status_code=429,
+                    #         content={
+                    #             "error": "Too many requests. Please try again later.",
+                    #             "retry_after": 60,
+                    #             "rate_limit": f"{GLOBAL_RATE_LIMIT} requests per minute"
+                    #         },
+                    #         headers={
+                    #             "X-RateLimit-Limit": str(GLOBAL_RATE_LIMIT),
+                    #             "X-RateLimit-Reset": str(int(time.time()) + RATE_LIMIT_WINDOW),
+                    #             "Retry-After": "60"
+                    #         }
+                    #     )
                     
                     response = await call_next(request)
                     
