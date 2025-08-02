@@ -3801,47 +3801,43 @@ class WepoFastTestBridge:
                 "total_wepo": total / 100000000.0
             }
         
-        # Community-Driven AMM Endpoints (No Admin) + BOOTSTRAP INCENTIVES
+        # Community-Driven Fair Market DEX - ORIGINAL WEPO DESIGN
         @self.app.get("/api/swap/rate")
         async def get_market_rate():
-            """Get current market-determined BTC/WEPO rate + Update Community Price Oracle"""
+            """Get current community-determined BTC/WEPO rate - Original WEPO Design"""
             try:
-                price = btc_wepo_pool.get_price()
+                # Use original community fair market system
+                market_stats = community_fair_market.get_market_stats()
                 
-                if price is None:
+                if not market_stats["pool_exists"]:
                     return {
                         "pool_exists": False,
-                        "message": "No liquidity pool exists yet. Any user can create the market.",
+                        "message": "No liquidity pool exists yet. Any user can create the market and set initial price.",
                         "btc_reserve": 0,
                         "wepo_reserve": 0,
                         "total_liquidity_shares": 0,
-                        "fee_rate": btc_wepo_pool.fee_rate,
-                        "bootstrap_incentives": btc_wepo_pool.get_bootstrap_status(),
-                        "community_price": {
-                            "wepo_usd": 0.01,
-                            "source": "default_bootstrap"
-                        }
+                        "fee_rate": market_stats["fee_rate"],
+                        "philosophy": market_stats["philosophy"]
                     }
                 
-                # Update community price oracle with current DEX price
-                wepo_usd = community_price_oracle.get_wepo_usd_price(price)
+                current_price = market_stats["current_price"]
                 
                 return {
                     "pool_exists": True,
-                    "btc_to_wepo": price,
-                    "wepo_to_btc": 1.0 / price,
-                    "btc_reserve": btc_wepo_pool.btc_reserve,
-                    "wepo_reserve": btc_wepo_pool.wepo_reserve,
-                    "total_liquidity_shares": btc_wepo_pool.total_shares,
-                    "fee_rate": btc_wepo_pool.fee_rate,
+                    "btc_to_wepo": current_price,  # Community-determined price
+                    "wepo_to_btc": 1.0 / current_price if current_price > 0 else 0,
+                    "btc_reserve": market_stats["btc_reserve"],
+                    "wepo_reserve": market_stats["wepo_reserve"],
+                    "total_liquidity_shares": market_stats["total_liquidity_shares"],
+                    "fee_rate": market_stats["fee_rate"],
                     "last_updated": datetime.now().isoformat(),
-                    "bootstrap_incentives": btc_wepo_pool.get_bootstrap_status(),
-                    "community_price": {
-                        "wepo_usd": wepo_usd,
-                        "btc_reference": community_price_oracle.btc_usd_reference,
-                        "source": "community_dex",
-                        "stability_buffer": community_price_oracle.get_stable_price()
-                    }
+                    "total_volume_btc": market_stats["total_volume_btc"],
+                    "total_swaps": market_stats["total_swaps"],
+                    "liquidity_providers": market_stats["liquidity_providers"],
+                    "creation_time": market_stats["creation_time"],
+                    "philosophy": market_stats["philosophy"],
+                    "price_source": "community_fair_market",
+                    "message": "Price determined by community through fair market trading"
                 }
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
