@@ -1012,7 +1012,6 @@ class WepoFastTestBridge:
                 }
         
         @self.app.post("/api/wallet/create")
-        @limiter.limit("3/minute")
         async def create_wallet(request: Request):
             """Create a new WEPO wallet with definitive security"""
             client_id = SecurityManager.get_client_identifier(request)
