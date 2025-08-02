@@ -1,53 +1,29 @@
 #!/usr/bin/env python3
 """
-WEPO ORIGINAL COMMUNITY FAIR MARKET DESIGN - FINAL VERIFICATION TESTING
+WEPO BACKEND TESTING - SPECIFIC ISSUES INVESTIGATION
 
-**MAJOR CLEANUP COMPLETED - FINAL VERIFICATION TESTS**
+**ISSUES TO INVESTIGATE:**
 
-Testing the COMPLETELY CLEANED WEPO Original Community Fair Market Design after major cleanup.
+**1. PoS Collateral System Verification**
+- Check if the original WEPO PoS collateral requirements are accessible via API
+- Test endpoints like `/api/pos/collateral`, `/api/staking/requirements`, `/api/blockchain/collateral`
+- Verify the dynamic schedule: 1,000→600→300→150→100 WEPO based on halving phases
 
-**MAJOR CLEANUP COMPLETED:**
-1. ✅ **Removed entire complex system** - Deleted ~400 lines of CommunityPriceOracle, DynamicCollateralSystem, BootstrapIncentiveSystem, and complex LiquidityPool classes
-2. ✅ **Clean import only** - Now only imports from `wepo_community_fair_market.py`
-3. ✅ **Replaced btc_wepo_pool** - Now points to clean `community_fair_market` instance
-4. ✅ **Removed bootstrap endpoints** - `/api/bootstrap/incentives/status` removed
-5. ✅ **Removed dynamic collateral endpoints** - All USD targeting endpoints removed
+**2. Liquidity Addition HTTP 500 Error**
+- Test POST `/api/liquidity/add` to reproduce the 'total_shares' error from previous testing
+- Use valid test data to see the exact error message
+- Previous testing showed: "HTTP 500 error with 'total_shares' but no bootstrap contamination"
 
-**WHAT SHOULD NOW BE 100% CLEAN:**
-- No bootstrap bonuses, incentives, or volume rewards anywhere in code
-- No USD targeting or complex price oracle calculations
-- No external oracle dependencies
-- Simple `CommunityFairMarketDEX` with clean community-driven pricing
-- Original WEPO blockchain.py dynamic collateral integration (10K→6K→3K→1.5K→1K WEPO)
+**3. Masternode Collateral Verification**
+- Check if there are endpoints to get current masternode collateral requirements
+- Verify the dynamic schedule: 10,000→6,000→3,000→1,500→1,000 WEPO based on halving phases
+- Test endpoints like `/api/masternode/collateral`, `/api/blockchain/masternode-requirements`
 
-**FINAL VERIFICATION TESTS:**
+**4. Blockchain Integration Test**
+- Check if blockchain.py collateral functions are accessible
 
-**Test 1: Clean Community Fair Market Rate (Should be 100% clean)**
-- GET `/api/swap/rate` should use `CommunityFairMarketDEX.get_market_stats()`
-- Should return ONLY: philosophy, current_price, pool stats
-- Should NOT return: bootstrap_incentives, first_provider, early_providers, volume_rewards, community_price, usd_calculations
-
-**Test 2: Clean Liquidity Addition (Should be 100% clean)**
-- POST `/api/liquidity/add` should use `CommunityFairMarketDEX.add_liquidity()`
-- Should return clean results without any bootstrap contamination
-- Should include community philosophy message
-
-**Test 3: Removed Endpoints Return 404**
-- GET `/api/bootstrap/incentives/status` should return 404 (completely removed)
-- GET `/api/collateral/dynamic/overview` should return 404 (completely removed)
-
-**Test 4: Original WEPO Integration**
-- Should integrate with blockchain.py collateral system
-- Should show 10,000 WEPO masternode requirement (original design)
-
-**EXPECTED RESULTS - 100% SUCCESS:**
-- ✅ All endpoints return clean data from `CommunityFairMarketDEX`
-- ✅ Philosophy: "Community creates the market, community determines the price"
-- ✅ No bootstrap, USD, or oracle contamination anywhere
-- ✅ Removed endpoints return 404
-- ✅ Original WEPO design fully restored
-
-This should now achieve 100% success rate with the original WEPO community fair market design exactly as requested by the user.
+**GOAL:** 
+Provide comprehensive list of what's broken and needs fixing.
 """
 import requests
 import json
