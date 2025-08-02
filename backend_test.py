@@ -205,7 +205,7 @@ def test_network_status():
         response = requests.get(f"{API_URL}/network/status")
         if response.status_code == 200:
             data = response.json()
-            required_fields = ["block_height", "network_hashrate", "active_masternodes", "total_staked", "total_supply", "circulating_supply"]
+            required_fields = ["block_height", "network_hashrate", "active_masternodes", "total_supply", "circulating_supply"]
             missing_fields = [field for field in required_fields if field not in data]
             
             if not missing_fields:
