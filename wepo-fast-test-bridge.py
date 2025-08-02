@@ -1108,27 +1108,11 @@ class WepoFastTestBridge:
                 raise HTTPException(status_code=500, detail="Failed to create wallet due to internal error")
 
         @self.app.post("/api/wallet/login")
+        @self.limiter.limit("5/minute")
         async def login_wallet(request: Request):
-            """Login to existing WEPO wallet with enhanced security"""
+            """Login to existing WEPO wallet with definitive security"""
             client_id = SecurityManager.get_client_identifier(request)
             logger.info(f"Wallet login attempt from {client_id}")
-            
-            # Implement rate limiting for login attempts (5 per minute)
-            if self.check_rate_limit(client_id, "wallet_login"):
-                logger.warning(f"Rate limit exceeded for login from {client_id}")
-                raise HTTPException(
-                    status_code=429, 
-                    detail={
-                        "error": "Too many login attempts. Please try again later.",
-                        "retry_after": 60,
-                        "rate_limit": "5 login attempts per minute"
-                    },
-                    headers={
-                        "X-RateLimit-Limit": "5",
-                        "X-RateLimit-Reset": str(int(time.time()) + 60),
-                        "Retry-After": "60"
-                    }
-                )
             
             try:
                 # Get request data
@@ -1141,7 +1125,7 @@ class WepoFastTestBridge:
                 if not username or not password:
                     raise HTTPException(status_code=400, detail="Username and password required")
                 
-                # CHECK ACCOUNT LOCKOUT FIRST
+                # CHECK ACCOUNT LOCKOUT FIRST - DEFINITIVE SECURITY FIX
                 lockout_status = self.check_account_lockout(username)
                 if lockout_status['is_locked']:
                     logger.warning(f"Account {username} is locked, {lockout_status['time_remaining']} seconds remaining")
@@ -1151,7 +1135,7 @@ class WepoFastTestBridge:
                             "message": "Account temporarily locked due to too many failed login attempts",
                             "attempts": lockout_status['attempts'],
                             "time_remaining": lockout_status['time_remaining'],
-                            "max_attempts": LOCKOUT_THRESHOLD
+                            "max_attempts": lockout_status['max_attempts']
                         }
                     )
                 
