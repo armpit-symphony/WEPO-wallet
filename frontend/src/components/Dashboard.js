@@ -634,20 +634,46 @@ const Dashboard = ({ onLogout }) => {
           
           {masternodesEnabled ? (
             <div>
-              <div className="mb-3 p-3 bg-purple-900/30 rounded-lg">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-300">Collateral Required:</span>
-                  <span className="text-purple-400 font-semibold">10,000 WEPO</span>
+              {/* Masternode Collateral Information */}
+              {posCollateralLoading ? (
+                <div className="text-center text-gray-400 mb-3">
+                  <div className="animate-spin inline-block h-5 w-5 border-2 border-gray-300 rounded-full border-t-transparent"></div>
                 </div>
-                <div className="flex items-center justify-between text-sm mt-1">
-                  <span className="text-gray-300">Your Balance:</span>
-                  <span className={`font-semibold ${balance >= 10000 ? 'text-green-400' : 'text-red-400'}`}>
-                    {formatBalance(balance)} WEPO
-                  </span>
+              ) : posCollateralInfo ? (
+                <div className="mb-3 p-3 bg-purple-900/30 rounded-lg">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-300">Collateral Required:</span>
+                    <span className="text-purple-400 font-semibold">
+                      {posCollateralInfo.masternode_collateral_wepo?.toLocaleString() || 10000} WEPO
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-gray-300">Current Phase:</span>
+                    <span className="text-purple-400">{posCollateralInfo.phase}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-gray-300">Your Balance:</span>
+                    <span className={`font-semibold ${balance >= (posCollateralInfo.masternode_collateral_wepo || 10000) ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatBalance(balance)} WEPO
+                    </span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="mb-3 p-3 bg-purple-900/30 rounded-lg">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-300">Collateral Required:</span>
+                    <span className="text-purple-400 font-semibold">10,000 WEPO</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-gray-300">Your Balance:</span>
+                    <span className={`font-semibold ${balance >= 10000 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatBalance(balance)} WEPO
+                    </span>
+                  </div>
+                </div>
+              )}
               
-              {balance >= 10000 ? (
+              {balance >= (posCollateralInfo?.masternode_collateral_wepo || 10000) ? (
                 <button
                   onClick={() => setActiveTab('masternodes')}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
