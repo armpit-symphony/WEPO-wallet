@@ -4052,34 +4052,6 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
-        # ===== BOOTSTRAP INCENTIVE ENDPOINTS =====
-        
-        @self.app.get("/api/bootstrap/incentives/status")
-        async def get_bootstrap_incentives_status():
-            """Get current status of bootstrap incentive programs"""
-            try:
-                status = btc_wepo_pool.get_bootstrap_status()
-                
-                return {
-                    "success": True,
-                    "bootstrap_program": "WEPO Fair Market Launch Incentives",
-                    "incentives_status": status,
-                    "participation_guide": {
-                        "first_provider": "Create the market and earn 1000 WEPO bonus",
-                        "early_providers": "First 10 liquidity providers earn 500 WEPO each",
-                        "volume_trading": "Earn 1% of trading volume as WEPO rewards (min 1 BTC volume)",
-                        "how_to_participate": [
-                            "1. Add liquidity to bootstrap the BTC/WEPO market",
-                            "2. Trade to build volume and earn rewards",
-                            "3. Help create fair, community-driven pricing"
-                        ]
-                    },
-                    "philosophy": "Community creates the market, community determines the price"
-                }
-                
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
-
         @self.app.get("/api/liquidity/stats")
         async def get_liquidity_stats():
             """Get current pool statistics"""
