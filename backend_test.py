@@ -319,12 +319,11 @@ def test_staking_system():
     try:
         test_address = generate_valid_wepo_address()
         stake_data = {
-            "wallet_address": test_address,
-            "amount": 1000.0,
-            "lock_period_months": 12
+            "staker_address": test_address,
+            "amount": 1000.0
         }
         
-        response = requests.post(f"{API_URL}/stake", json=stake_data)
+        response = requests.post(f"{API_URL}/staking/create", json=stake_data)
         
         if response.status_code == 404:
             log_test("Staking Validation Parameters", True, "staking_system",
