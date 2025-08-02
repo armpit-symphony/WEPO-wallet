@@ -1,19 +1,54 @@
 #!/usr/bin/env python3
 """
-WEPO BACKEND TESTING - PoS COLLATERAL API ENDPOINTS AUDIT
+WEPO COMPREHENSIVE END-TO-END BACKEND TESTING
 
 **REVIEW REQUEST FOCUS:**
-Test the current PoS (Proof of Stake) collateral API endpoints to identify what's missing or not working properly.
+Conduct comprehensive end-to-end backend testing of the entire WEPO system to identify the current status 
+of all components and specifically investigate recurring wallet authentication login issues.
 
-**SPECIFIC ENDPOINTS TO TEST:**
-1. **Current PoS Collateral Requirements**: Test `/api/collateral/requirements` to see if it properly shows PoS collateral amounts
-2. **PoS Collateral Schedule**: Test `/api/collateral/schedule` to verify it shows the complete PoS collateral progression
-3. **Staking System Info**: Test `/api/staking/info` to see what PoS-related information is available
-4. **Individual PoS Stakes**: Test `/api/staking/stakes/{address}` with a test address to see what's returned
-5. **Missing PoS Endpoints**: Identify what specific PoS collateral information is NOT available through existing endpoints
+**COMPREHENSIVE BACKEND TESTING SCOPE:**
+
+**1. System Health and Integration**
+- Test all core API endpoints for basic functionality
+- Verify backend service status and database connectivity
+- Check integration between different system components
+
+**2. Wallet Authentication Deep Investigation**
+- Test wallet creation endpoint thoroughly (identify any failures)
+- Test wallet login/authentication flow (isolate recurring issues)
+- Test session management and wallet context handling  
+- Identify specific authentication failure points
+
+**3. Core WEPO Features Integration**
+- Test PoS collateral system endpoints (confirmed working previously)
+- Test masternode system integration
+- Test mining system endpoints
+- Test Bitcoin wallet integration endpoints
+- Test governance system endpoints
+
+**4. Community Fair Market DEX**
+- Test swap rate calculation
+- Test liquidity management  
+- Test market statistics
+
+**5. Security and Validation**
+- Test input validation across all endpoints
+- Test security headers and CORS configuration
+- Test rate limiting and error handling
+
+**6. Database and Storage**
+- Test data persistence and retrieval
+- Test blockchain data consistency
+- Test wallet data storage and security
+
+**FOCUS AREAS:**
+- **Priority 1**: Isolate the specific wallet authentication issues that keep recurring
+- **Priority 2**: Verify end-to-end system integration works properly
+- **Priority 3**: Identify any components that need cleanup or optimization
 
 **GOAL:** 
-Understand exactly what PoS collateral functionality is missing so we can implement the specific endpoints needed.
+Comprehensive status report of all backend components with specific identification of wallet authentication 
+failure points and overall system health assessment.
 """
 import requests
 import json
