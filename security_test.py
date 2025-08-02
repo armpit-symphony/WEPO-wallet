@@ -44,7 +44,7 @@ import random
 import string
 
 # Use preview backend URL from frontend/.env
-BACKEND_URL = "https://4fc16d3d-b093-48ef-affa-636fa6aa3b78.preview.emergentagent.com"
+BACKEND_URL = "https://012c0f35-c7c0-44db-b244-9d40fad5e286.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔐 WEPO SECURITY VERIFICATION TEST - BRUTE FORCE PROTECTION & RATE LIMITING")
@@ -770,7 +770,7 @@ import hashlib
 import re
 
 # Use preview backend URL from frontend/.env
-BACKEND_URL = "https://4fc16d3d-b093-48ef-affa-636fa6aa3b78.preview.emergentagent.com"
+BACKEND_URL = "https://012c0f35-c7c0-44db-b244-9d40fad5e286.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔐 TESTING WEPO SECURITY ENHANCEMENTS VERIFICATION")
