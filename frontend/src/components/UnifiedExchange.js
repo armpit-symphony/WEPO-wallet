@@ -57,8 +57,6 @@ const UnifiedExchange = ({ onBack }) => {
   const [liquidityBtcAmount, setLiquidityBtcAmount] = useState('');
   const [liquidityWepoAmount, setLiquidityWepoAmount] = useState('');
   const [poolStats, setPoolStats] = useState(null);
-  const [bootstrapIncentives, setBootstrapIncentives] = useState(null);
-  const [dynamicCollateral, setDynamicCollateral] = useState(null);
   
   // BTC address from wallet (remove the hardcoded one)
   // const [btcAddress, setBtcAddress] = useState('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa');
