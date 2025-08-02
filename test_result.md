@@ -112,7 +112,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implement missing PoS (Proof of Stake) collateral API endpoints to make staking requirements accessible and ensure proper frontend integration for displaying PoS collateral information to users."
+user_problem_statement: "Conduct comprehensive end-to-end testing of the entire WEPO system to ensure all components work together properly. Clean up any unnecessary code or components. Focus on isolating and fixing recurring wallet authentication login issues that keep appearing."
 
 ## CRITICAL WALLET AUTHENTICATION ISSUE RESOLVED
 
