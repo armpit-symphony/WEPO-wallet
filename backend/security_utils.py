@@ -239,8 +239,10 @@ class SecurityManager:
             time_remaining = 0
             
             if is_locked:
+                # Calculate time remaining from when the lockout started (first failed attempt that triggered lockout)
+                lockout_start_time = attempts_info.get("last_attempt", current_time)
                 time_remaining = max(0, SecurityManager.LOCKOUT_DURATION - 
-                                   (current_time - attempts_info.get("last_attempt", current_time)))
+                                   (current_time - lockout_start_time))
             
             return {
                 "is_locked": is_locked and time_remaining > 0,
