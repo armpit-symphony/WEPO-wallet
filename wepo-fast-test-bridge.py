@@ -1010,10 +1010,22 @@ class WepoFastTestBridge:
             client_id = SecurityManager.get_client_identifier(request)
             logger.info(f"Wallet creation attempt from {client_id}")
             
-            # Implement manual rate limiting (3/minute for wallet creation)
-            if SecurityManager.is_rate_limited(client_id, "wallet_create"):
+            # Implement rate limiting for wallet creation (3 per minute)
+            if self.check_rate_limit(client_id, "wallet_create"):
                 logger.warning(f"Rate limit exceeded for wallet creation from {client_id}")
-                raise HTTPException(status_code=429, detail="Too many wallet creation attempts. Please try again later.")
+                raise HTTPException(
+                    status_code=429, 
+                    detail={
+                        "error": "Too many wallet creation attempts. Please try again later.",
+                        "retry_after": 60,
+                        "rate_limit": "3 wallet creations per minute"
+                    },
+                    headers={
+                        "X-RateLimit-Limit": "3",
+                        "X-RateLimit-Reset": str(int(time.time()) + 60),
+                        "Retry-After": "60"
+                    }
+                )
             
             try:
                 # Get request data
