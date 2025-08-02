@@ -686,7 +686,7 @@ const Dashboard = ({ onLogout }) => {
                     Insufficient WEPO for masternode
                   </div>
                   <div className="text-xs text-gray-500">
-                    Need {(10000 - balance).toLocaleString()} more WEPO
+                    Need {((posCollateralInfo?.masternode_collateral_wepo || 10000) - balance).toLocaleString()} more WEPO
                   </div>
                 </div>
               )}
