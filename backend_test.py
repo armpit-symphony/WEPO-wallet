@@ -349,12 +349,11 @@ def test_staking_system():
     try:
         test_address = generate_valid_wepo_address()
         low_stake_data = {
-            "wallet_address": test_address,
-            "amount": 100.0,  # Below minimum of 1000
-            "lock_period_months": 12
+            "staker_address": test_address,
+            "amount": 100.0  # Below minimum of 1000
         }
         
-        response = requests.post(f"{API_URL}/stake", json=low_stake_data)
+        response = requests.post(f"{API_URL}/staking/create", json=low_stake_data)
         
         if response.status_code == 400:
             error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text
