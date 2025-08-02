@@ -449,10 +449,10 @@ class LiquidityPool:
 # Import WEPO Original Community Fair Market System
 from wepo_community_fair_market import community_fair_market
 
-# Global pool instance for the bridge (keeping for compatibility)
-btc_wepo_pool = LiquidityPool()
+# Replace complex pool with original design
+btc_wepo_pool = community_fair_market
 
-# Initialize Community Price Oracle and Dynamic Collateral System
+# Initialize Community Price Oracle and Dynamic Collateral System (for API compatibility)
 community_price_oracle = CommunityPriceOracle()
 dynamic_collateral = DynamicCollateralSystem(community_price_oracle)
 
