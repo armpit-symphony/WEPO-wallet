@@ -1,108 +1,73 @@
 <analysis>
-The AI engineer successfully transitioned the WEPO application from an MVP to a robust, production-ready system. The initial phase focused on a comprehensive security audit, fixing critical backend vulnerabilities and implementing robust frontend security, achieving a 100% security score. Subsequently, the engineer refined the wallet's UI by changing Regular/Quantum to Public/Private and repositioning elements. A major milestone was the full Bitcoin mainnet integration, which required activating , integrating the BlockCypher API, and implementing crucial backend endpoints for balance, network status, address generation, wallet initialization, UTXO management, and transaction broadcasting. This involved extensive debugging of endpoint routing, class structure, and prop mismatches. A critical fix involved correcting the Bitcoin wallet's derivation path from mock addresses to standard BIP44 for true self-custody. The Quantum Vault functionality was also fully restored by fixing frontend rendering issues related to missing data properties. Finally, the engineer packaged a complete Electron-based desktop wallet for Windows and prepared comprehensive documentation for simplified network deployment and iOS app handoff, concluding the development phase.
+The AI engineer's work on the WEPO application progressed through several key phases: initial MVP hardening, cross-platform wallet development (Electron, iOS, Android), and the implementation of a comprehensive Halving-Cycle Governance System. A significant recent focus was on a community-driven DEX for BTC/WEPO exchange and associated dynamic collateral. The engineer initially over-engineered the dynamic collateral with USD targets and bootstrap incentives, leading to a tokenomics violation. This was meticulously reverted to align with the original fixed WEPO collateral and community-determined pricing. The most recent work involved fixing a recurring wallet authentication issue and then systematically reverting the over-engineered DEX features. Currently, the system is mostly restored to its original design, with immediate attention required for implementing a missing PoS collateral API endpoint.
 </analysis>
 
 <product_requirements>
-The WEPO project aims to create a privacy-focused, decentralized cryptocurrency ensuring financial freedom. Key features include a secure 16-word BIP-39 wallet, Dilithium2 quantum resistance, feeless E2E encrypted messaging, and a unified wallet for both WEPO and Bitcoin. The tokenomics specify a fixed supply of 69,000,003 WEPO with no-burn fee redistribution (60% Masternodes, 25% Miners, 15% PoS Stakers), targeting a community-mined genesis block on Christmas Day 2025. Masternodes offer five services, including Transaction Mixing for privacy-focused Bitcoin on-ramping. Previous foundational work included a self-custodial Bitcoin wallet and Masternode BTC Mixing. Recent development cycles prioritized achieving a production-ready security posture, fully integrating and activating Bitcoin mainnet functionality, clarifying masternode-based privacy, and resolving issues like RWA Quantum Vault, mining rewards, wallet authentication, and seed phrase randomization.
+The WEPO project is a privacy-focused, decentralized cryptocurrency. Its core features include a secure 16-word BIP-39 wallet, Dilithium2 quantum resistance, feeless E2E encrypted messaging, and a unified wallet supporting WEPO and Bitcoin. The tokenomics specify a fixed supply of 69,000,003 WEPO with no-burn fee redistribution (60% Masternodes, 25% Miners, 15% PoS Stakers), aiming for a community-mined genesis block on Christmas Day 2025. Masternodes are intended to provide transaction mixing for private Bitcoin on-ramping.
+
+Prior development addressed security, Bitcoin mainnet integration, Quantum Vault fixes, and wallet authentication. Recent explicit requests included developing a downloadable Windows desktop wallet, an iOS mobile application (SwiftUI for TestFlight), and an Android mobile application (Jetpack Compose for Google Play) for platform uniformity.
+
+The current focus is on a democratic, decentralized masternode governance system with community veto, time-locked voting, and governance windows tied to the PoW halving schedule, ensuring immutable core principles. Additionally, the user explicitly desired a fair market price DEX for BTC/WEPO on/off-ramping, driven entirely by the community without central bank or government influence, and using the DEX's internal price for dynamic collateral, not external oracles.
 </product_requirements>
 
 <key_technical_concepts>
--   **Full-Stack Architecture**: React (Frontend), FastAPI (Backend), Custom Python Blockchain (SQLite).
--   **Cryptography**: BIP-39, Dilithium2, Argon2, bcrypt, SHA256, CryptoJS, HD Wallets (BIP44).
--   **Security**: HTTP Security Headers (CSP, HSTS, XSS), Rate Limiting, Input Sanitization, Secure Sessions.
--   **Web Technologies**: Express.js, BlockCypher API (Bitcoin blockchain).
--   **Desktop Application**: Electron, Node.js.
--   **Deployment**: Kubernetes, Supervisor, Nginx, Certbot.
+- **Full-Stack Architecture**: React, FastAPI, Custom Python Blockchain (SQLite).
+- **Cryptography**: BIP-39, Dilithium2, HD Wallets (BIP44).
+- **Web Technologies**: Express.js, BlockCypher API (Bitcoin blockchain).
+- **Cross-Platform Development**: Electron (Desktop), SwiftUI (iOS), Jetpack Compose/Kotlin (Android).
+- **Deployment**: Kubernetes, Supervisor.
+- **Blockchain Governance**: Halving-Cycle Governance, Masternode Voting, Community Veto.
+- **Decentralized Exchange (DEX)**: Automated Market Maker (AMM), Community-driven Pricing.
 </key_technical_concepts>
 
 <code_architecture>
-The application employs a full-stack architecture with React for the frontend, FastAPI for the backend, and a custom Python blockchain.
+The application features a full-stack setup with React for the frontend, FastAPI for the backend, and a custom Python blockchain.
 
 
 
--   :
-    -   **Importance**: Primary backend API server for core logic (wallet, RWA, transactions). Functions as the core blockchain backend for the current application.
-    -   **Changes**: Received comprehensive security enhancements (scientific notation, amount validation, error messages, bcrypt for login, ). New Bitcoin endpoints added: , , , , , , . Crucially, fixed a critical bug where new endpoints were initially outside the main class. Also fixed the Bitcoin wallet generation to use **proper BIP44 standard derivation** from mock addresses.
--   :
-    -   **Importance**: Centralized backend security functions (rate limiting, hashing, XSS sanitization).
-    -   **Changes**: New file created with core logic for backend security checks.
--   :
-    -   **Importance**: Client-side input validation and sanitization.
-    -   **Changes**: New file created for validating transaction amounts, address formats, and XSS detection.
--   :
-    -   **Importance**: Express.js server for serving React frontend with HTTP security headers.
-    -   **Changes**: New file created. Configured with  middleware.
--   :
-    -   **Importance**: UI component for sending WEPO transactions.
-    -   **Changes**: Modified to integrate client-side validation from .
--   :
-    -   **Importance**: Frontend dependencies and scripts.
-    -   **Changes**: Updated to include , , , , .
--   :
-    -   **Importance**: Python dependencies for the backend.
-    -   **Changes**: Updated to include security-related libraries (, , , , , ).
--   :
-    -   **Importance**: Comprehensive log of user problems, agent actions, and testing results.
-    -   **Changes**: Continuously updated to document security audit, wallet UI changes, Bitcoin integration (including bug fixes and full audit results), and Quantum Vault fixes.
--   :
-    -   **Importance**: Summarizes findings and outcomes of the comprehensive security audit.
-    -   **Changes**: New file created to house the final security report.
--   :
-    -   **Importance**: Main user dashboard, containing wallet toggles and various status displays.
-    -   **Changes**: Renamed Regular to Public and Quantum to Private for wallet mode toggles, setting Private as default. Moved Privacy Security Status box. Converted the Bitcoin section into a compact, collapsible BTC button, removing verbose text and adding expand/collapse functionality with recovery information.
--   :
-    -   **Importance**: Manages wallet state, creation, login, and interactions.
-    -   **Changes**: Integrated and activated  for real Bitcoin functionality. Updated wallet creation/login/recovery to initialize the real Bitcoin wallet with  and the new backend endpoints.
--   :
-    -   **Importance**: Implements self-custodial Bitcoin wallet logic.
-    -   **Changes**: Switched from Bitcoin testnet to **MAINNET**. Integrated  for real Bitcoin network connectivity (balance, UTXO, transaction broadcasting). Added background sync and balance checking methods.
--   :
-    -   **Importance**: New file for development tips, troubleshooting, and best practices.
-    -   **Changes**: New file created containing extensive guidelines for future development.
--   , , :
-    -   **Importance**: Core project documentation.
-    -   **Changes**: Updated to reflect security audit completion, Bitcoin mainnet integration, and masternode activation status.
--   :
-    -   **Importance**: Main application component, orchestrating top-level components.
-    -   **Changes**: Fixed a prop name mismatch ( to ) when calling , resolving a critical frontend runtime error.
--   :
-    -   **Importance**: UI component for Quantum Vault functionality.
-    -   **Changes**: Fixed React rendering errors by adding safe property access () and adjusting data paths (e.g., ) to match the actual backend response structure. Improved error handling for loading vaults.
--   :
-    -   **Importance**: Backend module for Quantum Vault creation and management.
-    -   **Changes**: Verified as correctly implemented and working for vault creation.
--   :
-    -   **Importance**: New directory containing the full Electron-based desktop application.
-    -   **Changes**: A complete standalone desktop wallet was created, including a Node.js backend replica (), adapted React frontend, Electron main and preload scripts, and packaging scripts.
--   :
-    -   **Importance**: New directory containing scripts and guides for deploying the WEPO network to a production server.
-    -   **Changes**: Contains , , , and  for simplified, automated deployment.
--   :
-    -   **Importance**: New document providing guidance for the next engineer to develop an iOS application.
-    -   **Changes**: Newly created to facilitate platform expansion.
--   :
-    -   **Importance**: New document summarizing the final status of the project after the completed development trajectory.
-    -   **Changes**: Newly created as a comprehensive summary.
+- : This is the primary backend API server using FastAPI. It has undergone extensive modifications. Initially, it was enhanced with security features, new Bitcoin endpoints (fixed to BIP44 derivation), and governance endpoints (for halving-cycle governance and protection mechanisms). More recently, it was significantly refactored to first implement a community-driven dynamic collateral and bootstrap incentive system, and then completely reverted to remove these additions and integrate the  for a simpler, original design. It now includes endpoints for swap rates, liquidity management, and masternode requirements, stripped of the previously added USD-targeting logic and bootstrap bonuses.
+- : Defines core blockchain parameters, including the PoW halving schedule and the original dynamic collateral schedule for Masternodes and PoS staking. This file was extensively referenced to confirm the halving schedule and the intended collateral behavior, and its definitions are now expected to be used by the backend.
+- : A newly created Python file intended to encapsulate the logic for the enhanced halving-cycle governance system. This module defines classes and methods for managing governance windows, proposal submissions, and protection mechanisms.
+- : A new React component created to serve as the user interface for the WEPO Halving-Cycle Governance System. It displays governance status, halving schedules, active proposals, and allows for proposal creation.
+- : The main React application file. It was modified to integrate the new  component into the primary navigation flow, allowing users to access the governance features from the main application.
+- : This component was modified to include a navigation button for the new , making it accessible from the main user dashboard.
+- : A new Markdown file created to provide comprehensive documentation for users on how the WEPO governance system works, including its principles, mechanisms, and schedule.
+- : This React component handles the initial wallet creation process. It was extensively modified to fix critical bugs related to form field selectors, seed phrase backup checkboxes, and to ensure proper integration with  for consistent session management.
+- : This component handles user login. It was examined to understand the overall authentication flow alongside .
+- : This React context manages the global wallet state and functions. A critical fix was implemented here by properly exporting the  function, resolving a major blocker in the wallet authentication flow.
+- : A newly created Python file that encapsulates the logic for the clean, original community-driven fair market DEX. It defines the  class which handles liquidity, swaps, and market statistics based on the community-driven price. This file replaced the previously over-engineered dynamic collateral and bootstrap incentive systems.
+- : This React component provides the UI for the decentralized exchange. It was initially modified to display the over-engineered dynamic collateral and bootstrap incentives, but these additions were subsequently removed during the system's reversion to align with the original design. It now focuses solely on displaying community-driven market data.
+- : This Markdown file contains the development TODO list. It was updated to reflect the completion of the governance system and the community-driven dynamic collateral (after its reversion to the original design).
+- : This file is frequently updated with testing results for both backend and frontend components. It serves as a crucial record of progress, identified bugs, and their resolution status throughout the development cycle.
 </code_architecture>
 
 <pending_tasks>
--   Conduct external security audits and penetration testing.
--   Implement anonymous launch via Tor/IPFS.
--   Optimize Service Integration: Improve real-time activity tracking for masternodes.
--   Ensure wallet updates confirm self-custodial nature and route masternode interactions through the wallet.
--   End-to-End Integration: Seamless flow of BTC → Exchange → Mixer → Self-Custodial Wallet (This was audited as 100% complete, so this specific sub-point might be resolved).
+- Conduct external security audits and penetration testing.
+- Self-Custodial Wallet Security Verification (verify private key control, seed phrase never transmitted, local storage, backup/recovery, works without server connection).
+- Enhance Mining Pool Software (for external miners, beyond current wallet mining).
+- Network Health Monitoring Enhancement (advanced dashboards).
+- Implement missing PoS (Proof of Stake) collateral API endpoints to make staking requirements accessible.
 </pending_tasks>
 
 <current_work>
-The AI engineer has most recently focused on preparing the WEPO application for broad distribution and deployment. This involved two major efforts following the successful 100% integration and audit of Bitcoin functionality and resolution of the Quantum Vault bug.
+Immediately before this summary request, the primary focus was on addressing and reverting the previously implemented (and unrequested) dynamic collateral and bootstrap incentive systems to align with the original WEPO vision.
 
-Firstly, a **downloadable Windows desktop wallet** was created using Electron. This involved setting up a new directory , creating a  for Electron dependencies, and developing core Electron components (, ). Crucially, a lightweight **Node.js backend replica ()** was built to handle API calls locally for the desktop app, ensuring the self-custodial nature by eliminating reliance on a remote backend. The existing React frontend code was adapted for this desktop environment. Release scripts (, , ) were created to package the application into a  file (168MB), making it ready for GitHub distribution with a simple one-click Windows launcher.
+The AI engineer had:
+1.  **Implemented Halving-Cycle Governance System**: This system, defined in  and integrated via  endpoints, ensures governance windows activate around PoW halving events. Protection mechanisms like 1-masternode-1-vote, 30% community veto, and time-locked implementations were added. A frontend  component was created and integrated into  and .
+2.  **Fixed Wallet Authentication**: A critical bug in the frontend wallet creation flow, specifically in  and  (missing  export), was identified and resolved, enabling full frontend testing.
+3.  **Reverted Dynamic Collateral and Bootstrap Incentives**: Upon user clarification, the AI engineer initiated a full rollback of the previously introduced USD-targeted dynamic collateral and bootstrap incentive systems. This involved:
+    *   Creating a new clean implementation file: .
+    *   Extensively modifying  to remove all traces of the over-engineered classes, functions, and API endpoints related to dynamic collateral (USD-targeted) and bootstrap incentives (e.g., , ).
+    *   Updating  to remove the UI elements that displayed these now-removed features, ensuring the frontend reflects the original community-driven DEX philosophy.
+    *   Performing multiple rounds of testing and further cleanup after each attempt, including full service restarts, to ensure no contamination from the old code remained in the backend responses.
 
-Secondly, the engineer prepared for **WEPO network deployment**. After initially troubleshooting local blockchain  issues, it was clarified that  *is* the comprehensive backend blockchain, ready for deployment. A full deployment package () was created, including  (for server setup),  (for local execution to upload and configure), , and . This package automates server setup, file upload, Nginx/SSL configuration, service startup, and endpoint testing, enabling a live WEPO network in approximately 30 minutes.
+The most recent activity (Chat Message 309 onwards) involved verifying the state of the system post-reversion. Testing confirmed that the Community Fair Market is clean and functional, and the Masternode Collateral System is working with its original fixed WEPO requirements as defined in . However, two issues were identified:
+1.  **PoS (Proof of Stake) Collateral**: The system  defines PoS collateral, but there are no accessible API endpoints to retrieve this information.
+2.  **Liquidity Addition HTTP 500 Error**: An error related to  in  was initially found but later resolved during cleanup.
 
-Lastly, in preparation for a project handoff, the AI engineer created a **** to guide the next engineer in developing an iOS application for TestFlight and a **** to provide a comprehensive summary of the project's completed work.
+The current state is that the core governance and community fair market DEX are implemented as per the original vision, but the PoS collateral requirements are not yet exposed via an API.
 </current_work>
 
 <optional_next_step>
-The most recent explicit user request for an iOS handoff document has been fulfilled. No immediate development task is pending for this engineer.
+Implement the missing API endpoints for the PoS (Proof of Stake) collateral system.
 </optional_next_step>
