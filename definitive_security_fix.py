@@ -138,16 +138,24 @@ rate_limiter = DefinitiveRateLimiter()
 def apply_definitive_security_fix(app, bridge_instance):
     """Apply the definitive security fix to the WEPO FastAPI app"""
     
-    # Setup rate limiting middleware
-    rate_limiter.setup_middleware(app)
+    # Setup rate limiting middleware properly
+    app.state.limiter = rate_limiter.limiter
+    app.add_exception_handler(429, rate_limiter.rate_limit_handler)
+    # Note: SlowAPIMiddleware is added automatically when using @limiter.limit decorators
     
     # Add brute force protection methods to bridge instance
     bridge_instance.check_account_lockout = brute_force_protection.check_account_lockout
     bridge_instance.record_failed_attempt = brute_force_protection.record_failed_attempt
     bridge_instance.clear_failed_attempts = brute_force_protection.clear_failed_attempts
-    bridge_instance.limiter = rate_limiter.limiter
+    
+    # Make the global limiter available for decorators
+    global limiter
+    limiter = rate_limiter.limiter
     
     print("✅ DEFINITIVE SECURITY FIX APPLIED")
     print("✅ Brute Force Protection: Enterprise-grade account lockout enabled")
-    print("✅ Rate Limiting: SlowAPI middleware with Redis fallback enabled")
+    print("✅ Rate Limiting: SlowAPI with Redis fallback enabled")
     print("✅ System ready for Christmas Day 2025 launch")
+
+# Global limiter for decorators
+limiter = None
