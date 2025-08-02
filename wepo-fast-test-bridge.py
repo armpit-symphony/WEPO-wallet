@@ -652,14 +652,24 @@ class WepoFastTestBridge:
                     client_id = SecurityManager.get_client_identifier(request)
                     
                     # Apply global rate limiting (60 requests per minute per IP)
+                    current_time = time.time()
+                    global_key = f"rate_limit:{client_id}:global_api"
+                    
+                    # Check if client is rate limited
                     if SecurityManager.is_rate_limited(client_id, "global_api"):
                         logger.warning(f"Global rate limit exceeded for {client_id}")
-                        raise HTTPException(
-                            status_code=429, 
-                            detail={
+                        from fastapi.responses import JSONResponse
+                        return JSONResponse(
+                            status_code=429,
+                            content={
                                 "message": "Too many requests. Please try again later.",
                                 "retry_after": 60,
                                 "rate_limit": "60 requests per minute"
+                            },
+                            headers={
+                                "X-RateLimit-Limit": "60",
+                                "X-RateLimit-Reset": str(int(current_time) + 60),
+                                "Retry-After": "60"
                             }
                         )
                     
@@ -672,8 +682,7 @@ class WepoFastTestBridge:
                     
                     # Add rate limiting headers
                     response.headers["X-RateLimit-Limit"] = "60"
-                    response.headers["X-RateLimit-Remaining"] = "59"  # Simplified for demo
-                    response.headers["X-RateLimit-Reset"] = str(int(time.time()) + 60)
+                    response.headers["X-RateLimit-Reset"] = str(int(current_time) + 60)
                     
                     return response
                 except HTTPException:
