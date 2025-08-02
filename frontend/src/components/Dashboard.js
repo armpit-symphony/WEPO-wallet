@@ -86,6 +86,10 @@ const Dashboard = ({ onLogout }) => {
   // Bitcoin section state
   const [showBitcoinDetails, setShowBitcoinDetails] = useState(false);
   
+  // PoS Collateral state
+  const [posCollateralInfo, setPosCollateralInfo] = useState(null);
+  const [posCollateralLoading, setPosCollateralLoading] = useState(true);
+  
   // Dilithium info for quantum security display (dynamic from backend)
   const dilithiumInfo = quantumStatus ? {
     algorithm: quantumStatus.algorithm || 'Dilithium2',
