@@ -1,54 +1,44 @@
 #!/usr/bin/env python3
 """
-WEPO COMPREHENSIVE END-TO-END BACKEND TESTING
+WEPO FOCUSED BACKEND TESTING - PRIORITY ISSUES
 
 **REVIEW REQUEST FOCUS:**
-Conduct comprehensive end-to-end backend testing of the entire WEPO system to identify the current status 
-of all components and specifically investigate recurring wallet authentication login issues.
+Run focused testing on the specific issues that were identified as failing in the previous comprehensive backend test:
 
-**COMPREHENSIVE BACKEND TESTING SCOPE:**
+**Priority Testing Focus:**
 
-**1. System Health and Integration**
-- Test all core API endpoints for basic functionality
-- Verify backend service status and database connectivity
-- Check integration between different system components
+**1. Mining System Testing**
+- Test the new `/api/mining/status` endpoint that was just added
+- Verify `/api/mining/info` still works properly
+- Check if all required mining data fields are present
 
-**2. Wallet Authentication Deep Investigation**
-- Test wallet creation endpoint thoroughly (identify any failures)
-- Test wallet login/authentication flow (isolate recurring issues)
-- Test session management and wallet context handling  
-- Identify specific authentication failure points
+**2. Network Status Testing**
+- Test the new `/api/network/status` endpoint for WEPO network information
+- Verify it returns all required network data fields
+- Check if it provides comprehensive system health information
 
-**3. Core WEPO Features Integration**
-- Test PoS collateral system endpoints (confirmed working previously)
-- Test masternode system integration
-- Test mining system endpoints
-- Test Bitcoin wallet integration endpoints
-- Test governance system endpoints
+**3. Staking System Testing**
+- Test `/api/staking/info` endpoint after removing the duplicate
+- Test `/api/staking/stakes/{address}` with a test address
+- Verify staking validation parameters are working correctly
 
-**4. Community Fair Market DEX**
-- Test swap rate calculation
-- Test liquidity management  
-- Test market statistics
+**4. Database and Storage Testing**
+- Test blockchain data endpoints and storage functionality
+- Verify transaction data persistence and retrieval
+- Check any remaining database connectivity issues
 
-**5. Security and Validation**
-- Test input validation across all endpoints
-- Test security headers and CORS configuration
-- Test rate limiting and error handling
+**5. Integration Verification**
+- Quick verification that wallet authentication still works (100% previously)
+- Verify Community Fair Market DEX still functional (100% previously)
+- Check security validation still operational (100% previously)
 
-**6. Database and Storage**
-- Test data persistence and retrieval
-- Test blockchain data consistency
-- Test wallet data storage and security
+**Expected Results:**
+- Mining system should now be fully functional with new status endpoint
+- Network status should provide comprehensive WEPO network information
+- Staking system should work without duplicate endpoint conflicts
+- Overall backend health should improve from 68.4% to 85%+ success rate
 
-**FOCUS AREAS:**
-- **Priority 1**: Isolate the specific wallet authentication issues that keep recurring
-- **Priority 2**: Verify end-to-end system integration works properly
-- **Priority 3**: Identify any components that need cleanup or optimization
-
-**GOAL:** 
-Comprehensive status report of all backend components with specific identification of wallet authentication 
-failure points and overall system health assessment.
+**Goal:** Verify that the critical mining, staking, and network status fixes have resolved the backend integration issues identified in the previous comprehensive testing.
 """
 import requests
 import json
