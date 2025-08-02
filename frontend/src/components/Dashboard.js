@@ -705,6 +705,59 @@ const Dashboard = ({ onLogout }) => {
         </div>
       </div>
 
+      {/* PoS Collateral Schedule Display */}
+      {posCollateralInfo && !posCollateralLoading && (
+        <div className="bg-gray-800 border border-gray-600 rounded-xl p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <TrendingUp className="h-6 w-6 text-blue-400" />
+            <div>
+              <h3 className="text-white font-semibold">PoS Collateral Schedule</h3>
+              <p className="text-sm text-gray-400">Halving-cycle progression • {posCollateralInfo.adjustment_reason}</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-semibold text-gray-300 mb-2">Current Status</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Block Height:</span>
+                  <span className="text-white">{posCollateralInfo.block_height?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Phase:</span>
+                  <span className="text-blue-400">{posCollateralInfo.phase}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">PoS Available:</span>
+                  <span className={posCollateralInfo.pos_available ? 'text-green-400' : 'text-yellow-400'}>
+                    {posCollateralInfo.pos_available ? 'Yes' : 'At Block 131,400'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-semibold text-gray-300 mb-2">Current Requirements</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">PoS Minimum:</span>
+                  <span className="text-blue-400 font-semibold">
+                    {posCollateralInfo.pos_collateral_wepo?.toLocaleString() || 'Not Available'} WEPO
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Masternode:</span>
+                  <span className="text-purple-400 font-semibold">
+                    {posCollateralInfo.masternode_collateral_wepo?.toLocaleString()} WEPO
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Privacy Status Card (only show in private mode) - Moved to bottom */}
       {isQuantumMode && (
         <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-xl p-6 mb-6">
