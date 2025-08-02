@@ -109,14 +109,8 @@ const UnifiedExchange = ({ onBack }) => {
           wepo_reserve: data.wepo_reserve,
           total_liquidity: data.total_liquidity_shares,
           fee_rate: data.fee_rate,
-          bootstrap_incentives: data.bootstrap_incentives,
-          community_price: data.community_price
+          philosophy: data.philosophy
         });
-        
-        // Store bootstrap incentives separately for display
-        if (data.bootstrap_incentives) {
-          setBootstrapIncentives(data.bootstrap_incentives);
-        }
       } else {
         setExchangeRate(null);
         setError('No liquidity pool exists yet. You can create the market by adding liquidity.');
