@@ -21,6 +21,9 @@ from datetime import datetime
 # Import security utilities
 from security_utils import SecurityManager, init_redis
 
+# Import definitive security fix
+from definitive_security_fix import apply_definitive_security_fix
+
 # Initialize security features
 init_redis()
 
