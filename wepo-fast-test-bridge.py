@@ -64,10 +64,13 @@ from wepo_community_fair_market import community_fair_market
 # Replace complex pool with original design
 btc_wepo_pool = community_fair_market
 
-# In-memory storage for failed login attempts (fallback when Redis unavailable)
+# In-memory storage for security features (production should use Redis)
 failed_login_attempts = {}
+rate_limit_storage = {}
 LOCKOUT_THRESHOLD = 5
 LOCKOUT_TIME_SECONDS = 300  # 5 minutes
+GLOBAL_RATE_LIMIT = 60  # requests per minute
+RATE_LIMIT_WINDOW = 60  # seconds
 
 class FastTestBlockchain:
     """Fast test blockchain with instant operations"""
