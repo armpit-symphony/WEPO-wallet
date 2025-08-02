@@ -1013,12 +1013,10 @@ class WepoFastTestBridge:
                     raise HTTPException(status_code=400, detail="Username and password required")
                 
                 # Check for account lockout FIRST before attempting login
-                failed_login_info = SecurityManager.record_failed_login.__func__(username) if hasattr(SecurityManager, 'record_failed_login') else None
-                
-                # Get current lockout status without recording a new attempt yet
                 current_time = time.time()
                 key = f"failed_login:{username}"
                 
+                # Get current lockout status without recording a new attempt yet
                 try:
                     from security_utils import redis_client, failed_attempts_storage
                     attempts_info = None
@@ -1026,6 +1024,7 @@ class WepoFastTestBridge:
                     if redis_client:
                         attempts_data = redis_client.get(key)
                         if attempts_data:
+                            import json
                             attempts_info = json.loads(attempts_data)
                     else:
                         # Check in-memory storage  
