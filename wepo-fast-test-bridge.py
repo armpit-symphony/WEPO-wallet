@@ -4665,53 +4665,6 @@ class WepoFastTestBridge:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
         
-        @self.app.get("/api/staking/info")
-        async def get_staking_info():
-            """Get staking information"""
-            current_height = len(self.blockchain.blocks) - 1
-            activation_height = 78840  # 18 months
-            
-            # Get dynamic masternode collateral info
-            current_collateral = self.blockchain.get_dynamic_masternode_collateral(current_height)
-            
-            # Find next reduction
-            collateral_schedule = {
-                0: 10000.0,
-                262800: 5000.0,
-                525600: 1000.0,
-                1051200: 500.0,
-            }
-            
-            next_reduction = None
-            for milestone_height, collateral in sorted(collateral_schedule.items()):
-                if milestone_height > current_height:
-                    next_reduction = {
-                        "block_height": milestone_height,
-                        "new_collateral": collateral,
-                        "blocks_until": milestone_height - current_height,
-                        "years_until": round((milestone_height - current_height) / 525600, 1)
-                    }
-                    break
-            
-            return {
-                "pos_activated": current_height >= activation_height,
-                "activation_height": activation_height,
-                "current_height": current_height,
-                "blocks_until_activation": max(0, activation_height - current_height),
-                "active_stakes_count": len(self.blockchain.stakes),
-                "total_staked_amount": sum(stake["amount"] for stake in self.blockchain.stakes.values()),
-                "active_masternodes_count": len(self.blockchain.masternodes),
-                "min_stake_amount": 1000.0,
-                "masternode_collateral": current_collateral,  # Dynamic collateral
-                "masternode_collateral_info": {
-                    "current_collateral": current_collateral,
-                    "next_reduction": next_reduction,
-                    "schedule": collateral_schedule
-                },
-                "staking_reward_percentage": 60,
-                "masternode_reward_percentage": 40
-            }
-        
         @self.app.post("/api/masternode")
         async def create_masternode(request: dict):
             """Create masternode"""
