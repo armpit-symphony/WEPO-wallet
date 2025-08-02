@@ -2461,17 +2461,7 @@ if __name__ == "__main__":
         print("❌ Implementation may not match original clean design")
         print("\n🚨 REVERSION INCOMPLETE - ADDITIONAL CLEANUP REQUIRED")
     
-    # Also run a quick Bitcoin integration check if requested
-    print("\n" + "=" * 80)
-    print("📋 OPTIONAL: COMPREHENSIVE BITCOIN INTEGRATION TESTING")
-    print("=" * 80)
-    
-    user_input = input("Run comprehensive Bitcoin integration testing? (y/N): ").lower().strip()
-    if user_input == 'y':
-        bitcoin_result = run_comprehensive_bitcoin_integration_testing()
-        print(f"\n₿ Bitcoin Integration Result: {'✅ WORKING' if bitcoin_result else '❌ NEEDS WORK'}")
-    else:
-        print("Skipping Bitcoin integration testing - focusing on Community Fair Market reversion verification.")
+    print("\nFocusing on Community Fair Market reversion verification - Bitcoin integration testing skipped.")
 
 def test_minimum_amount_validation_consistency():
     """Test 1: Minimum Amount Validation Consistency - Zero and Negative Amounts with 0.00000001 WEPO"""
