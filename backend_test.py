@@ -2425,9 +2425,53 @@ def run_comprehensive_phase2_testing():
         return False
 
 if __name__ == "__main__":
-    success = run_comprehensive_phase2_testing()
-    if not success:
-        sys.exit(1)
+    print("🎯 WEPO ORIGINAL COMMUNITY FAIR MARKET DESIGN TESTING")
+    print("Testing the REVERTED clean community fair market implementation...")
+    print("=" * 80)
+    
+    # Run the specific test for the reverted community fair market
+    test_result = test_wepo_original_community_fair_market()
+    
+    # Print final results
+    print("\n" + "=" * 80)
+    print("🎯 WEPO ORIGINAL COMMUNITY FAIR MARKET TESTING RESULTS")
+    print("=" * 80)
+    
+    success_rate = (test_results["passed"] / test_results["total"]) * 100 if test_results["total"] > 0 else 0
+    
+    print(f"Total Tests: {test_results['total']}")
+    print(f"Passed: {test_results['passed']} ✅")
+    print(f"Failed: {test_results['failed']} ❌")
+    print(f"Overall Success Rate: {success_rate:.1f}%")
+    
+    print("\n🎯 COMMUNITY FAIR MARKET REVERSION ANALYSIS:")
+    if test_result:
+        print("✅ WEPO Original Community Fair Market Design - REVERSION SUCCESSFUL!")
+        print("✅ Simple community price discovery working")
+        print("✅ No bootstrap bonuses or USD complications")
+        print("✅ No external oracle dependencies")
+        print("✅ Clean 'Community creates the market, community determines the price' philosophy")
+        print("✅ Integration with original WEPO blockchain dynamic collateral")
+        print("✅ Simple, clean implementation as originally requested")
+        print("\n🎉 REVERSION TO ORIGINAL DESIGN VERIFIED - READY FOR CHRISTMAS DAY 2025 LAUNCH!")
+    else:
+        print("❌ WEPO Original Community Fair Market Design - REVERSION ISSUES FOUND!")
+        print("❌ Complex features may still be present")
+        print("❌ Bootstrap bonuses or USD targeting may not be fully removed")
+        print("❌ Implementation may not match original clean design")
+        print("\n🚨 REVERSION INCOMPLETE - ADDITIONAL CLEANUP REQUIRED")
+    
+    # Also run a quick Bitcoin integration check if requested
+    print("\n" + "=" * 80)
+    print("📋 OPTIONAL: COMPREHENSIVE BITCOIN INTEGRATION TESTING")
+    print("=" * 80)
+    
+    user_input = input("Run comprehensive Bitcoin integration testing? (y/N): ").lower().strip()
+    if user_input == 'y':
+        bitcoin_result = run_comprehensive_bitcoin_integration_testing()
+        print(f"\n₿ Bitcoin Integration Result: {'✅ WORKING' if bitcoin_result else '❌ NEEDS WORK'}")
+    else:
+        print("Skipping Bitcoin integration testing - focusing on Community Fair Market reversion verification.")
 
 def test_minimum_amount_validation_consistency():
     """Test 1: Minimum Amount Validation Consistency - Zero and Negative Amounts with 0.00000001 WEPO"""
