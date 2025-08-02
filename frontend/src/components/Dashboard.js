@@ -541,33 +541,80 @@ const Dashboard = ({ onLogout }) => {
 
       {/* PoS and Masternode Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className={`bg-gray-800 border rounded-xl p-6 ${posEnabled ? 'border-green-500/30' : 'border-gray-600'}`}>
+        <div className={`bg-gray-800 border rounded-xl p-6 ${posCollateralInfo?.pos_available ? 'border-green-500/30' : 'border-gray-600'}`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Coins className={`h-8 w-8 ${posEnabled ? 'text-green-400' : 'text-gray-500'}`} />
+              <Coins className={`h-8 w-8 ${posCollateralInfo?.pos_available ? 'text-green-400' : 'text-gray-500'}`} />
               <div>
                 <h3 className="text-white font-semibold">Proof of Stake</h3>
                 <p className="text-sm text-gray-400">Earn by staking WEPO</p>
               </div>
             </div>
-            {!posEnabled && <Lock className="h-5 w-5 text-gray-500" />}
+            {!posCollateralInfo?.pos_available && <Lock className="h-5 w-5 text-gray-500" />}
           </div>
           
-          {posEnabled ? (
-            <button
-              onClick={() => setActiveTab('staking')}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-            >
-              Start Staking
-            </button>
+          {/* PoS Collateral Information */}
+          {posCollateralLoading ? (
+            <div className="text-center text-gray-400">
+              <div className="animate-spin inline-block h-6 w-6 border-2 border-gray-300 rounded-full border-t-transparent mb-2"></div>
+              <p className="text-sm">Loading PoS info...</p>
+            </div>
+          ) : posCollateralInfo ? (
+            <div className="mb-4">
+              <div className="p-3 bg-blue-900/30 rounded-lg mb-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-300">Minimum Stake:</span>
+                  <span className="text-blue-400 font-semibold">
+                    {posCollateralInfo.pos_available 
+                      ? `${posCollateralInfo.pos_collateral_wepo?.toLocaleString() || 1000} WEPO`
+                      : `${posCollateralInfo.pos_collateral_wepo?.toLocaleString() || 1000} WEPO (at activation)`
+                    }
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-1">
+                  <span className="text-gray-300">Current Phase:</span>
+                  <span className="text-blue-400">{posCollateralInfo.phase}</span>
+                </div>
+                {!posCollateralInfo.pos_available && (
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-gray-300">Activates at Block:</span>
+                    <span className="text-yellow-400">131,400</span>
+                  </div>
+                )}
+              </div>
+              
+              {posCollateralInfo.pos_available ? (
+                <button
+                  onClick={() => setActiveTab('staking')}
+                  className={`w-full font-medium py-2 px-4 rounded-lg transition-colors ${
+                    balance >= (posCollateralInfo.pos_collateral_wepo || 1000)
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                  }`}
+                  disabled={balance < (posCollateralInfo.pos_collateral_wepo || 1000)}
+                >
+                  {balance >= (posCollateralInfo.pos_collateral_wepo || 1000) ? 'Start Staking' : 'Insufficient Balance'}
+                </button>
+              ) : (
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 text-gray-400 mb-2">
+                    <Clock size={16} />
+                    <span className="text-sm">Activates at block 131,400</span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {posCollateralInfo.phase_description || 'Currently in Pre-PoS Mining phase'}
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 text-gray-400 mb-2">
-                <Clock size={16} />
-                <span className="text-sm">Unlocks in 18 months</span>
+                <AlertCircle size={16} />
+                <span className="text-sm">PoS info unavailable</span>
               </div>
               <div className="text-xs text-gray-500">
-                After first PoW block is mined
+                Check network connection
               </div>
             </div>
           )}
