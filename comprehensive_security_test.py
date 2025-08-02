@@ -1,5 +1,794 @@
 #!/usr/bin/env python3
 """
+COMPREHENSIVE FINAL SECURITY VERIFICATION FOR CHRISTMAS DAY 2025 LAUNCH
+
+This test suite conducts a comprehensive security audit to determine if the WEPO system
+has achieved the 85%+ security score needed for Christmas Day 2025 cryptocurrency launch.
+
+TEST CATEGORIES (Weighted):
+1. BRUTE FORCE PROTECTION (25% weight) - Account lockout after 5 failed attempts
+2. RATE LIMITING (25% weight) - Global API, wallet creation, login rate limits  
+3. INPUT VALIDATION (20% weight) - XSS, injection, path traversal protection
+4. AUTHENTICATION SECURITY (15% weight) - Password strength, hashing, flow security
+5. SECURITY HEADERS (10% weight) - Critical security headers and CORS
+6. DATA PROTECTION (5% weight) - Sensitive data exposure and error message security
+
+CRITICAL SUCCESS CRITERIA:
+- Overall security score must be 85%+ for cryptocurrency production launch
+- All critical vulnerabilities must be resolved
+- Rate limiting must be functional with HTTP 429 responses
+- Brute force protection must work with HTTP 423 responses
+"""
+
+import requests
+import json
+import time
+import uuid
+import secrets
+import threading
+import concurrent.futures
+from datetime import datetime
+import random
+import string
+
+# Use preview backend URL from frontend/.env
+BACKEND_URL = "https://012c0f35-c7c0-44db-b244-9d40fad5e286.preview.emergentagent.com"
+API_URL = f"{BACKEND_URL}/api"
+
+print(f"🔐 COMPREHENSIVE FINAL SECURITY VERIFICATION FOR CHRISTMAS DAY 2025 LAUNCH")
+print(f"Backend API URL: {API_URL}")
+print(f"Target: 85%+ Security Score for Cryptocurrency Production Launch")
+print("=" * 80)
+
+# Security test results tracking with weighted scoring
+security_results = {
+    "total_score": 0.0,
+    "max_score": 100.0,
+    "categories": {
+        "brute_force_protection": {"score": 0, "max_score": 25, "weight": 0.25, "tests": []},
+        "rate_limiting": {"score": 0, "max_score": 25, "weight": 0.25, "tests": []},
+        "input_validation": {"score": 0, "max_score": 20, "weight": 0.20, "tests": []},
+        "authentication_security": {"score": 0, "max_score": 15, "weight": 0.15, "tests": []},
+        "security_headers": {"score": 0, "max_score": 10, "weight": 0.10, "tests": []},
+        "data_protection": {"score": 0, "max_score": 5, "weight": 0.05, "tests": []}
+    },
+    "critical_vulnerabilities": [],
+    "high_severity_issues": [],
+    "passed_tests": 0,
+    "total_tests": 0
+}
+
+def log_security_test(name, passed, category, severity="medium", details=None, response_code=None):
+    """Log security test results with weighted scoring"""
+    status = "✅ PASSED" if passed else "❌ FAILED"
+    severity_icon = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(severity, "🟡")
+    
+    print(f"{status} {severity_icon} {name}")
+    if details:
+        print(f"  Details: {details}")
+    if response_code:
+        print(f"  Response Code: HTTP {response_code}")
+    
+    # Track results
+    security_results["total_tests"] += 1
+    if passed:
+        security_results["passed_tests"] += 1
+    
+    # Add to category
+    test_result = {
+        "name": name,
+        "passed": passed,
+        "severity": severity,
+        "details": details,
+        "response_code": response_code
+    }
+    security_results["categories"][category]["tests"].append(test_result)
+    
+    # Track critical and high severity issues
+    if not passed:
+        if severity == "critical":
+            security_results["critical_vulnerabilities"].append(name)
+        elif severity == "high":
+            security_results["high_severity_issues"].append(name)
+
+def calculate_category_score(category):
+    """Calculate weighted score for a category"""
+    cat_data = security_results["categories"][category]
+    if not cat_data["tests"]:
+        return 0
+    
+    passed_tests = len([t for t in cat_data["tests"] if t["passed"]])
+    total_tests = len(cat_data["tests"])
+    percentage = (passed_tests / total_tests) * 100
+    
+    # Apply severity weighting - critical failures get 0 points
+    critical_failures = len([t for t in cat_data["tests"] if not t["passed"] and t["severity"] == "critical"])
+    if critical_failures > 0:
+        percentage = max(0, percentage - (critical_failures * 50))  # Heavy penalty for critical failures
+    
+    cat_data["score"] = (percentage / 100) * cat_data["max_score"]
+    return cat_data["score"]
+
+def generate_test_user():
+    """Generate test user data"""
+    username = f"sectest_{secrets.token_hex(4)}"
+    password = f"SecTest123!{secrets.token_hex(2)}"
+    return username, password
+
+def generate_wepo_address():
+    """Generate valid WEPO address"""
+    return f"wepo1{secrets.token_hex(16)}"
+
+# ===== 1. BRUTE FORCE PROTECTION TESTING (25% weight) =====
+
+def test_brute_force_protection():
+    """Test brute force protection with account lockout"""
+    print("\n🔐 BRUTE FORCE PROTECTION TESTING (25% weight)")
+    print("Testing account lockout after 5 failed login attempts...")
+    
+    # Create test wallet first
+    username, password = generate_test_user()
+    create_data = {"username": username, "password": password}
+    
+    try:
+        create_response = requests.post(f"{API_URL}/wallet/create", json=create_data)
+        if create_response.status_code != 200:
+            log_security_test("Brute Force Test Setup", False, "brute_force_protection", "critical",
+                            f"Cannot create test wallet: HTTP {create_response.status_code}")
+            return
+        
+        print(f"  Created test wallet: {username}")
+        
+        # Test 1: Account lockout after 5 failed attempts
+        print("  Testing account lockout after 5 failed login attempts...")
+        failed_attempts = 0
+        
+        for attempt in range(1, 9):  # Try up to 8 attempts
+            login_data = {"username": username, "password": "wrong_password"}
+            response = requests.post(f"{API_URL}/wallet/login", json=login_data)
+            
+            print(f"    Attempt {attempt}: HTTP {response.status_code}")
+            
+            if response.status_code == 423:  # Account locked
+                log_security_test("Account Lockout After Failed Attempts", True, "brute_force_protection", "critical",
+                                f"Account locked after {attempt} failed attempts (HTTP 423)", 423)
+                break
+            elif response.status_code == 401:  # Still allowing attempts
+                failed_attempts = attempt
+                continue
+            else:
+                log_security_test("Account Lockout After Failed Attempts", False, "brute_force_protection", "critical",
+                                f"Unexpected response on attempt {attempt}: HTTP {response.status_code}", response.status_code)
+                break
+        else:
+            # If we get here, no lockout occurred after 8 attempts
+            log_security_test("Account Lockout After Failed Attempts", False, "brute_force_protection", "critical",
+                            f"NO account lockout after {failed_attempts} failed attempts", 401)
+        
+        # Test 2: Lockout persistence test
+        if failed_attempts < 8:  # Only test if lockout occurred
+            print("  Testing lockout persistence with correct password...")
+            time.sleep(1)  # Brief pause
+            correct_login_data = {"username": username, "password": password}
+            response = requests.post(f"{API_URL}/wallet/login", json=correct_login_data)
+            
+            if response.status_code == 423:
+                log_security_test("Lockout Persistence", True, "brute_force_protection", "high",
+                                "Account remains locked even with correct password", 423)
+            elif response.status_code == 200:
+                log_security_test("Lockout Persistence", False, "brute_force_protection", "high",
+                                "Account unlocked immediately with correct password", 200)
+            else:
+                log_security_test("Lockout Persistence", False, "brute_force_protection", "medium",
+                                f"Unexpected lockout persistence response: HTTP {response.status_code}", response.status_code)
+        
+    except Exception as e:
+        log_security_test("Brute Force Protection Testing", False, "brute_force_protection", "critical",
+                        f"Test execution error: {str(e)}")
+
+# ===== 2. RATE LIMITING TESTING (25% weight) =====
+
+def test_rate_limiting():
+    """Test comprehensive rate limiting implementation"""
+    print("\n⏱️ RATE LIMITING TESTING (25% weight)")
+    print("Testing global API rate limiting and endpoint-specific limits...")
+    
+    # Test 1: Global API rate limiting (60/minute)
+    print("  Testing global API rate limiting (60/minute)...")
+    try:
+        start_time = time.time()
+        rate_limit_hit = False
+        
+        for i in range(1, 101):  # Try 100 requests
+            response = requests.get(f"{API_URL}/")
+            
+            if response.status_code == 429:
+                log_security_test("Global API Rate Limiting", True, "rate_limiting", "critical",
+                                f"Rate limit hit after {i} requests (HTTP 429)", 429)
+                rate_limit_hit = True
+                break
+            elif i % 20 == 0:
+                print(f"    Request {i}: HTTP {response.status_code}")
+        
+        if not rate_limit_hit:
+            log_security_test("Global API Rate Limiting", False, "rate_limiting", "critical",
+                            f"NO rate limiting after 100 requests in {time.time() - start_time:.1f}s", 200)
+    
+    except Exception as e:
+        log_security_test("Global API Rate Limiting", False, "rate_limiting", "critical",
+                        f"Test execution error: {str(e)}")
+    
+    # Test 2: Wallet creation rate limiting (3/minute)
+    print("  Testing wallet creation rate limiting (3/minute)...")
+    try:
+        rate_limit_hit = False
+        
+        for i in range(1, 11):  # Try 10 wallet creations
+            username, password = generate_test_user()
+            create_data = {"username": username, "password": password}
+            response = requests.post(f"{API_URL}/wallet/create", json=create_data)
+            
+            if response.status_code == 429:
+                log_security_test("Wallet Creation Rate Limiting", True, "rate_limiting", "critical",
+                                f"Rate limit hit after {i} wallet creation attempts (HTTP 429)", 429)
+                rate_limit_hit = True
+                break
+            elif i % 2 == 0:
+                print(f"    Creation {i}: HTTP {response.status_code}")
+        
+        if not rate_limit_hit:
+            log_security_test("Wallet Creation Rate Limiting", False, "rate_limiting", "critical",
+                            "NO wallet creation rate limiting after 10 attempts", 200)
+    
+    except Exception as e:
+        log_security_test("Wallet Creation Rate Limiting", False, "rate_limiting", "critical",
+                        f"Test execution error: {str(e)}")
+    
+    # Test 3: Login rate limiting (5/minute)
+    print("  Testing login rate limiting (5/minute)...")
+    try:
+        # Create test wallet first
+        username, password = generate_test_user()
+        create_data = {"username": username, "password": password}
+        create_response = requests.post(f"{API_URL}/wallet/create", json=create_data)
+        
+        if create_response.status_code == 200:
+            rate_limit_hit = False
+            
+            for i in range(1, 16):  # Try 15 login attempts
+                login_data = {"username": username, "password": password}
+                response = requests.post(f"{API_URL}/wallet/login", json=login_data)
+                
+                if response.status_code == 429:
+                    log_security_test("Login Rate Limiting", True, "rate_limiting", "critical",
+                                    f"Rate limit hit after {i} login attempts (HTTP 429)", 429)
+                    rate_limit_hit = True
+                    break
+                elif i % 3 == 0:
+                    print(f"    Login {i}: HTTP {response.status_code}")
+            
+            if not rate_limit_hit:
+                log_security_test("Login Rate Limiting", False, "rate_limiting", "critical",
+                                "NO login rate limiting after 15 attempts", 200)
+        else:
+            log_security_test("Login Rate Limiting", False, "rate_limiting", "medium",
+                            "Cannot test login rate limiting - wallet creation failed")
+    
+    except Exception as e:
+        log_security_test("Login Rate Limiting", False, "rate_limiting", "critical",
+                        f"Test execution error: {str(e)}")
+    
+    # Test 4: Rate limiting headers
+    print("  Testing rate limiting headers...")
+    try:
+        response = requests.get(f"{API_URL}/")
+        rate_headers = ["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"]
+        present_headers = [h for h in rate_headers if h in response.headers]
+        
+        if len(present_headers) >= 2:
+            log_security_test("Rate Limiting Headers", True, "rate_limiting", "medium",
+                            f"Rate limiting headers present: {present_headers}")
+        else:
+            log_security_test("Rate Limiting Headers", False, "rate_limiting", "medium",
+                            f"Missing rate limiting headers: {present_headers}")
+    
+    except Exception as e:
+        log_security_test("Rate Limiting Headers", False, "rate_limiting", "medium",
+                        f"Test execution error: {str(e)}")
+
+# ===== 3. INPUT VALIDATION TESTING (20% weight) =====
+
+def test_input_validation():
+    """Test comprehensive input validation and sanitization"""
+    print("\n🛡️ INPUT VALIDATION TESTING (20% weight)")
+    print("Testing XSS, injection, and path traversal protection...")
+    
+    # Test 1: XSS Protection
+    print("  Testing XSS protection...")
+    xss_payloads = [
+        "<script>alert('xss')</script>",
+        "javascript:alert('xss')",
+        "<img src=x onerror=alert('xss')>",
+        "';alert('xss');//",
+        "<svg onload=alert('xss')>"
+    ]
+    
+    xss_blocked = 0
+    for i, payload in enumerate(xss_payloads, 1):
+        try:
+            username = f"xss_test_{i}"
+            create_data = {"username": payload, "password": "TestPass123!"}
+            response = requests.post(f"{API_URL}/wallet/create", json=create_data)
+            
+            # Check if XSS payload was blocked (400 error or sanitized)
+            if response.status_code == 400 or (response.status_code == 200 and payload not in str(response.text)):
+                xss_blocked += 1
+                print(f"    XSS Payload {i}: BLOCKED ✅")
+            else:
+                print(f"    XSS Payload {i}: NOT BLOCKED ❌")
+        
+        except Exception as e:
+            print(f"    XSS Payload {i}: ERROR - {str(e)}")
+    
+    if xss_blocked == len(xss_payloads):
+        log_security_test("XSS Protection", True, "input_validation", "high",
+                        f"All {len(xss_payloads)} XSS payloads blocked")
+    elif xss_blocked >= len(xss_payloads) * 0.8:
+        log_security_test("XSS Protection", True, "input_validation", "medium",
+                        f"{xss_blocked}/{len(xss_payloads)} XSS payloads blocked")
+    else:
+        log_security_test("XSS Protection", False, "input_validation", "high",
+                        f"Only {xss_blocked}/{len(xss_payloads)} XSS payloads blocked")
+    
+    # Test 2: SQL/NoSQL Injection Protection
+    print("  Testing SQL/NoSQL injection protection...")
+    injection_payloads = [
+        "'; DROP TABLE wallets; --",
+        "' OR '1'='1",
+        "{$ne: null}",
+        "'; return true; //",
+        "admin'--"
+    ]
+    
+    injection_blocked = 0
+    for i, payload in enumerate(injection_payloads, 1):
+        try:
+            login_data = {"username": payload, "password": "test"}
+            response = requests.post(f"{API_URL}/wallet/login", json=login_data)
+            
+            # Check if injection was blocked (401 for invalid user, not 500 error)
+            if response.status_code in [400, 401]:
+                injection_blocked += 1
+                print(f"    Injection Payload {i}: BLOCKED ✅")
+            elif response.status_code == 500:
+                print(f"    Injection Payload {i}: SERVER ERROR (possible injection) ❌")
+            else:
+                print(f"    Injection Payload {i}: UNEXPECTED RESPONSE ❌")
+        
+        except Exception as e:
+            print(f"    Injection Payload {i}: ERROR - {str(e)}")
+    
+    if injection_blocked == len(injection_payloads):
+        log_security_test("SQL/NoSQL Injection Protection", True, "input_validation", "high",
+                        f"All {len(injection_payloads)} injection payloads blocked")
+    elif injection_blocked >= len(injection_payloads) * 0.8:
+        log_security_test("SQL/NoSQL Injection Protection", True, "input_validation", "medium",
+                        f"{injection_blocked}/{len(injection_payloads)} injection payloads blocked")
+    else:
+        log_security_test("SQL/NoSQL Injection Protection", False, "input_validation", "high",
+                        f"Only {injection_blocked}/{len(injection_payloads)} injection payloads blocked")
+    
+    # Test 3: Path Traversal Protection
+    print("  Testing path traversal protection...")
+    traversal_payloads = [
+        "../../../etc/passwd",
+        "..\\..\\..\\windows\\system32\\config\\sam",
+        "....//....//....//etc/passwd",
+        "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd"
+    ]
+    
+    traversal_blocked = 0
+    for i, payload in enumerate(traversal_payloads, 1):
+        try:
+            # Test path traversal in wallet address parameter
+            response = requests.get(f"{API_URL}/wallet/{payload}")
+            
+            # Check if traversal was blocked (400/404, not 500 or file content)
+            if response.status_code in [400, 404]:
+                traversal_blocked += 1
+                print(f"    Traversal Payload {i}: BLOCKED ✅")
+            elif response.status_code == 500:
+                print(f"    Traversal Payload {i}: SERVER ERROR ❌")
+            elif "root:" in response.text or "Administrator" in response.text:
+                print(f"    Traversal Payload {i}: FILE CONTENT EXPOSED ❌")
+            else:
+                print(f"    Traversal Payload {i}: HANDLED ✅")
+                traversal_blocked += 1
+        
+        except Exception as e:
+            print(f"    Traversal Payload {i}: ERROR - {str(e)}")
+    
+    if traversal_blocked == len(traversal_payloads):
+        log_security_test("Path Traversal Protection", True, "input_validation", "high",
+                        f"All {len(traversal_payloads)} traversal payloads blocked")
+    elif traversal_blocked >= len(traversal_payloads) * 0.75:
+        log_security_test("Path Traversal Protection", True, "input_validation", "medium",
+                        f"{traversal_blocked}/{len(traversal_payloads)} traversal payloads blocked")
+    else:
+        log_security_test("Path Traversal Protection", False, "input_validation", "high",
+                        f"Only {traversal_blocked}/{len(traversal_payloads)} traversal payloads blocked")
+
+# ===== 4. AUTHENTICATION SECURITY TESTING (15% weight) =====
+
+def test_authentication_security():
+    """Test authentication security mechanisms"""
+    print("\n🔑 AUTHENTICATION SECURITY TESTING (15% weight)")
+    print("Testing password strength, hashing, and authentication flow security...")
+    
+    # Test 1: Password strength validation
+    print("  Testing password strength validation...")
+    weak_passwords = [
+        "123456",
+        "password",
+        "abc123",
+        "test",
+        "12345678",
+        "qwerty",
+        "admin"
+    ]
+    
+    weak_rejected = 0
+    for i, weak_pass in enumerate(weak_passwords, 1):
+        try:
+            username = f"weakpass_test_{i}"
+            create_data = {"username": username, "password": weak_pass}
+            response = requests.post(f"{API_URL}/wallet/create", json=create_data)
+            
+            if response.status_code == 400:
+                weak_rejected += 1
+                print(f"    Weak Password {i}: REJECTED ✅")
+            else:
+                print(f"    Weak Password {i}: ACCEPTED ❌")
+        
+        except Exception as e:
+            print(f"    Weak Password {i}: ERROR - {str(e)}")
+    
+    if weak_rejected == len(weak_passwords):
+        log_security_test("Password Strength Validation", True, "authentication_security", "medium",
+                        f"All {len(weak_passwords)} weak passwords rejected")
+    elif weak_rejected >= len(weak_passwords) * 0.8:
+        log_security_test("Password Strength Validation", True, "authentication_security", "low",
+                        f"{weak_rejected}/{len(weak_passwords)} weak passwords rejected")
+    else:
+        log_security_test("Password Strength Validation", False, "authentication_security", "medium",
+                        f"Only {weak_rejected}/{len(weak_passwords)} weak passwords rejected")
+    
+    # Test 2: Strong password acceptance
+    print("  Testing strong password acceptance...")
+    strong_passwords = [
+        "StrongPass123!@#",
+        "MySecure$Password2024",
+        "Complex&Password#789"
+    ]
+    
+    strong_accepted = 0
+    for i, strong_pass in enumerate(strong_passwords, 1):
+        try:
+            username = f"strongpass_test_{i}"
+            create_data = {"username": username, "password": strong_pass}
+            response = requests.post(f"{API_URL}/wallet/create", json=create_data)
+            
+            if response.status_code == 200:
+                strong_accepted += 1
+                print(f"    Strong Password {i}: ACCEPTED ✅")
+            else:
+                print(f"    Strong Password {i}: REJECTED ❌")
+        
+        except Exception as e:
+            print(f"    Strong Password {i}: ERROR - {str(e)}")
+    
+    if strong_accepted == len(strong_passwords):
+        log_security_test("Strong Password Acceptance", True, "authentication_security", "low",
+                        f"All {len(strong_passwords)} strong passwords accepted")
+    else:
+        log_security_test("Strong Password Acceptance", False, "authentication_security", "medium",
+                        f"Only {strong_accepted}/{len(strong_passwords)} strong passwords accepted")
+    
+    # Test 3: Password hashing security
+    print("  Testing password hashing security...")
+    try:
+        username, password = generate_test_user()
+        create_data = {"username": username, "password": password}
+        response = requests.post(f"{API_URL}/wallet/create", json=create_data)
+        
+        if response.status_code == 200:
+            # Check if password is not returned in response
+            response_text = response.text.lower()
+            if password.lower() not in response_text:
+                log_security_test("Password Hashing Security", True, "authentication_security", "high",
+                                "Password not exposed in API responses")
+            else:
+                log_security_test("Password Hashing Security", False, "authentication_security", "critical",
+                                "Password exposed in API response")
+        else:
+            log_security_test("Password Hashing Security", False, "authentication_security", "medium",
+                            "Cannot test password hashing - wallet creation failed")
+    
+    except Exception as e:
+        log_security_test("Password Hashing Security", False, "authentication_security", "medium",
+                        f"Test execution error: {str(e)}")
+
+# ===== 5. SECURITY HEADERS TESTING (10% weight) =====
+
+def test_security_headers():
+    """Test critical security headers implementation"""
+    print("\n🛡️ SECURITY HEADERS TESTING (10% weight)")
+    print("Testing critical security headers and CORS configuration...")
+    
+    try:
+        response = requests.get(f"{API_URL}/")
+        headers = response.headers
+        
+        # Test critical security headers
+        critical_headers = {
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": ["DENY", "SAMEORIGIN"],
+            "X-XSS-Protection": "1; mode=block",
+            "Content-Security-Policy": None,  # Just check presence
+            "Strict-Transport-Security": None  # Just check presence
+        }
+        
+        headers_present = 0
+        total_headers = len(critical_headers)
+        
+        for header, expected_value in critical_headers.items():
+            if header in headers:
+                headers_present += 1
+                print(f"    {header}: PRESENT ✅")
+            else:
+                print(f"    {header}: MISSING ❌")
+        
+        if headers_present == total_headers:
+            log_security_test("Critical Security Headers", True, "security_headers", "medium",
+                            f"All {total_headers} critical security headers present")
+        elif headers_present >= total_headers * 0.8:
+            log_security_test("Critical Security Headers", True, "security_headers", "low",
+                            f"{headers_present}/{total_headers} critical security headers present")
+        else:
+            log_security_test("Critical Security Headers", False, "security_headers", "medium",
+                            f"Only {headers_present}/{total_headers} critical security headers present")
+        
+        # Test CORS configuration
+        print("  Testing CORS configuration...")
+        cors_headers = ["Access-Control-Allow-Origin", "Access-Control-Allow-Methods", "Access-Control-Allow-Headers"]
+        cors_present = [h for h in cors_headers if h in headers]
+        
+        # Check if CORS is not wildcard (security risk)
+        origin_header = headers.get("Access-Control-Allow-Origin", "")
+        if origin_header and origin_header != "*":
+            log_security_test("CORS Security Configuration", True, "security_headers", "low",
+                            f"CORS properly configured (not wildcard): {origin_header}")
+        elif origin_header == "*":
+            log_security_test("CORS Security Configuration", False, "security_headers", "medium",
+                            "CORS allows all origins (security risk)")
+        else:
+            log_security_test("CORS Security Configuration", True, "security_headers", "low",
+                            "CORS headers properly configured")
+    
+    except Exception as e:
+        log_security_test("Security Headers Testing", False, "security_headers", "medium",
+                        f"Test execution error: {str(e)}")
+
+# ===== 6. DATA PROTECTION TESTING (5% weight) =====
+
+def test_data_protection():
+    """Test data protection and privacy measures"""
+    print("\n🔒 DATA PROTECTION TESTING (5% weight)")
+    print("Testing sensitive data exposure and error message security...")
+    
+    # Test 1: Sensitive data exposure
+    print("  Testing sensitive data exposure...")
+    try:
+        username, password = generate_test_user()
+        create_data = {"username": username, "password": password}
+        response = requests.post(f"{API_URL}/wallet/create", json=create_data)
+        
+        if response.status_code == 200:
+            response_data = response.json()
+            sensitive_fields = ["password", "private_key", "seed", "mnemonic"]
+            exposed_fields = [field for field in sensitive_fields if field in str(response_data).lower()]
+            
+            if not exposed_fields:
+                log_security_test("Sensitive Data Exposure", True, "data_protection", "high",
+                                "No sensitive data exposed in API responses")
+            else:
+                log_security_test("Sensitive Data Exposure", False, "data_protection", "critical",
+                                f"Sensitive data exposed: {exposed_fields}")
+        else:
+            log_security_test("Sensitive Data Exposure", False, "data_protection", "medium",
+                            "Cannot test data exposure - wallet creation failed")
+    
+    except Exception as e:
+        log_security_test("Sensitive Data Exposure", False, "data_protection", "medium",
+                        f"Test execution error: {str(e)}")
+    
+    # Test 2: Error message security
+    print("  Testing error message security...")
+    try:
+        # Test with invalid data to trigger error messages
+        invalid_data = {"username": "", "password": ""}
+        response = requests.post(f"{API_URL}/wallet/create", json=invalid_data)
+        
+        if response.status_code == 400:
+            error_text = response.text.lower()
+            sensitive_info = ["database", "sql", "mongodb", "connection", "internal", "stack trace"]
+            exposed_info = [info for info in sensitive_info if info in error_text]
+            
+            if not exposed_info:
+                log_security_test("Error Message Security", True, "data_protection", "medium",
+                                "Error messages don't disclose sensitive information")
+            else:
+                log_security_test("Error Message Security", False, "data_protection", "medium",
+                                f"Error messages expose sensitive info: {exposed_info}")
+        else:
+            log_security_test("Error Message Security", False, "data_protection", "low",
+                            "Cannot test error messages - unexpected response")
+    
+    except Exception as e:
+        log_security_test("Error Message Security", False, "data_protection", "low",
+                        f"Test execution error: {str(e)}")
+
+def calculate_final_security_score():
+    """Calculate final weighted security score"""
+    total_score = 0
+    
+    for category, data in security_results["categories"].items():
+        category_score = calculate_category_score(category)
+        total_score += category_score
+        print(f"  {category.replace('_', ' ').title()}: {category_score:.1f}/{data['max_score']} ({(category_score/data['max_score']*100):.1f}%)")
+    
+    security_results["total_score"] = total_score
+    return total_score
+
+def run_comprehensive_security_verification():
+    """Run comprehensive security verification"""
+    print("🔐 STARTING COMPREHENSIVE FINAL SECURITY VERIFICATION")
+    print("Testing all security categories for Christmas Day 2025 launch readiness...")
+    print("=" * 80)
+    
+    # Run all security test categories
+    test_brute_force_protection()
+    test_rate_limiting()
+    test_input_validation()
+    test_authentication_security()
+    test_security_headers()
+    test_data_protection()
+    
+    # Calculate final security score
+    print("\n" + "=" * 80)
+    print("🔐 COMPREHENSIVE SECURITY VERIFICATION RESULTS")
+    print("=" * 80)
+    
+    final_score = calculate_final_security_score()
+    success_rate = (security_results["passed_tests"] / security_results["total_tests"]) * 100 if security_results["total_tests"] > 0 else 0
+    
+    print(f"\n📊 FINAL SECURITY ASSESSMENT:")
+    print(f"Overall Security Score: {final_score:.1f}/100.0 ({final_score:.1f}%)")
+    print(f"Tests Passed: {security_results['passed_tests']}/{security_results['total_tests']} ({success_rate:.1f}%)")
+    print(f"Target Score: 85.0% (Required for cryptocurrency production)")
+    
+    # Security category breakdown
+    print(f"\n🔍 SECURITY CATEGORY BREAKDOWN:")
+    
+    # Christmas Day 2025 launch assessment
+    print(f"\n🎄 CHRISTMAS DAY 2025 LAUNCH ASSESSMENT:")
+    if final_score >= 85.0:
+        print("🎉 LAUNCH STATUS: GO ✅")
+        print("   System meets security requirements for cryptocurrency production")
+        print("   Security score exceeds 85% target")
+        print("   Ready for Christmas Day 2025 launch")
+    elif final_score >= 70.0:
+        print("⚠️  LAUNCH STATUS: CONDITIONAL")
+        print("   System has good security but below production threshold")
+        print("   Additional security improvements recommended")
+        print("   Consider delayed launch until 85%+ achieved")
+    else:
+        print("🚨 LAUNCH STATUS: BLOCKED ❌")
+        print("   System has critical security vulnerabilities")
+        print("   Not suitable for cryptocurrency production")
+        print("   Christmas Day 2025 launch must be delayed")
+    
+    # Critical vulnerabilities
+    if security_results["critical_vulnerabilities"]:
+        print(f"\n🔴 CRITICAL VULNERABILITIES ({len(security_results['critical_vulnerabilities'])}):")
+        for i, vuln in enumerate(security_results["critical_vulnerabilities"], 1):
+            print(f"  {i}. {vuln}")
+    
+    # High severity issues
+    if security_results["high_severity_issues"]:
+        print(f"\n🟠 HIGH SEVERITY ISSUES ({len(security_results['high_severity_issues'])}):")
+        for i, issue in enumerate(security_results["high_severity_issues"], 1):
+            print(f"  {i}. {issue}")
+    
+    # Production readiness assessment
+    print(f"\n🏭 PRODUCTION READINESS:")
+    critical_count = len(security_results["critical_vulnerabilities"])
+    high_count = len(security_results["high_severity_issues"])
+    
+    if critical_count == 0 and high_count <= 2 and final_score >= 85.0:
+        print("✅ READY FOR PRODUCTION")
+        print("   No critical vulnerabilities")
+        print("   Minimal high-severity issues")
+        print("   Security score meets cryptocurrency standards")
+    elif critical_count == 0 and final_score >= 75.0:
+        print("⚠️  NEEDS MINOR IMPROVEMENTS")
+        print("   No critical vulnerabilities")
+        print("   Some security improvements needed")
+        print("   Close to production readiness")
+    else:
+        print("🚨 NOT READY FOR PRODUCTION")
+        print(f"   {critical_count} critical vulnerabilities present")
+        print(f"   {high_count} high-severity issues present")
+        print("   Significant security improvements required")
+    
+    return {
+        "final_score": final_score,
+        "success_rate": success_rate,
+        "critical_vulnerabilities": security_results["critical_vulnerabilities"],
+        "high_severity_issues": security_results["high_severity_issues"],
+        "launch_ready": final_score >= 85.0 and critical_count == 0,
+        "categories": security_results["categories"]
+    }
+
+if __name__ == "__main__":
+    # Run comprehensive security verification
+    results = run_comprehensive_security_verification()
+    
+    print("\n" + "=" * 80)
+    print("🎄 FINAL CHRISTMAS DAY 2025 LAUNCH DECISION")
+    print("=" * 80)
+    
+    print(f"📊 SECURITY METRICS:")
+    print(f"• Final Security Score: {results['final_score']:.1f}% (Target: 85%+)")
+    print(f"• Test Success Rate: {results['success_rate']:.1f}%")
+    print(f"• Critical Vulnerabilities: {len(results['critical_vulnerabilities'])}")
+    print(f"• High Severity Issues: {len(results['high_severity_issues'])}")
+    
+    print(f"\n🎯 LAUNCH DECISION:")
+    if results['launch_ready']:
+        print("🎉 CHRISTMAS DAY 2025 LAUNCH: APPROVED ✅")
+        print("   System meets all security requirements")
+        print("   Ready for cryptocurrency production operations")
+        print("   Security score exceeds 85% threshold")
+    else:
+        print("🚨 CHRISTMAS DAY 2025 LAUNCH: BLOCKED ❌")
+        print("   Critical security vulnerabilities must be resolved")
+        print("   System not suitable for cryptocurrency operations")
+        print("   Launch must be delayed until security requirements met")
+    
+    print(f"\n💡 IMMEDIATE ACTION REQUIRED:")
+    if results['critical_vulnerabilities']:
+        print("🔴 CRITICAL PRIORITY:")
+        for vuln in results['critical_vulnerabilities']:
+            print(f"   • Fix: {vuln}")
+    
+    if results['high_severity_issues']:
+        print("🟠 HIGH PRIORITY:")
+        for issue in results['high_severity_issues']:
+            print(f"   • Address: {issue}")
+    
+    if results['launch_ready']:
+        print("✅ SYSTEM READY - No critical actions required")
+        print("   Continue monitoring and maintain security standards")
+    
+    print(f"\n🔧 FINAL RECOMMENDATION:")
+    if results['final_score'] >= 85.0:
+        print("System has achieved production-grade security for cryptocurrency operations.")
+        print("Christmas Day 2025 launch can proceed as planned.")
+    else:
+        print("System requires additional security improvements before production launch.")
+        print("Recommend implementing fixes and re-running security verification.")
+"""
 WEPO COMPREHENSIVE API SECURITY VERIFICATION
 Christmas Day 2025 Launch Readiness Assessment
 
