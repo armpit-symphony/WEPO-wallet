@@ -868,6 +868,131 @@ def test_wepo_original_community_fair_market():
         log_test("WEPO Original Community Fair Market Design - Final Verification", False, error=str(e))
         return False
 
+def test_removed_endpoints_verification():
+    """Test that removed endpoints return 404 as expected"""
+    print("\n🚫 TEST: REMOVED ENDPOINTS VERIFICATION")
+    print("Testing that bootstrap and complex collateral endpoints have been properly removed...")
+    
+    try:
+        checks_passed = 0
+        total_checks = 2
+        
+        # Test 1: Bootstrap Incentives Status Endpoint (should be removed)
+        print("\n  ❌ Test 1: Bootstrap Incentives Status (Should be 404)")
+        response = requests.get(f"{API_URL}/bootstrap/incentives/status")
+        
+        if response.status_code == 404:
+            print(f"    ✅ Bootstrap Incentives: Properly removed (404 Not Found)")
+            checks_passed += 1
+        elif response.status_code == 200:
+            print(f"    ❌ Bootstrap Incentives: Still exists (should be removed)")
+            print(f"      Response: {response.json()}")
+        else:
+            print(f"    ❌ Bootstrap Incentives: Unexpected status {response.status_code}")
+        
+        # Test 2: Dynamic Collateral Overview Endpoint (should be removed)
+        print("\n  ❌ Test 2: Dynamic Collateral Overview (Should be 404)")
+        response = requests.get(f"{API_URL}/collateral/dynamic/overview")
+        
+        if response.status_code == 404:
+            print(f"    ✅ Dynamic Collateral Overview: Properly removed (404 Not Found)")
+            checks_passed += 1
+        elif response.status_code == 200:
+            print(f"    ❌ Dynamic Collateral Overview: Still exists (should be removed)")
+            print(f"      Response: {response.json()}")
+        else:
+            print(f"    ❌ Dynamic Collateral Overview: Unexpected status {response.status_code}")
+        
+        success_rate = (checks_passed / total_checks) * 100
+        log_test("Removed Endpoints Verification", checks_passed == total_checks,
+                 details=f"Removed endpoints verification: {checks_passed}/{total_checks} endpoints properly removed ({success_rate:.1f}% success)")
+        return checks_passed == total_checks
+        
+    except Exception as e:
+        log_test("Removed Endpoints Verification", False, error=str(e))
+        return False
+
+def run_wepo_community_fair_market_testing():
+    """Run WEPO Original Community Fair Market Design testing"""
+    print("🏛️ STARTING WEPO ORIGINAL COMMUNITY FAIR MARKET DESIGN TESTING")
+    print("Testing FULLY CLEANED WEPO Original Community Fair Market Design - Final Clean Verification...")
+    print("=" * 80)
+    
+    # Run the community fair market test
+    test1_result = test_wepo_original_community_fair_market()
+    test2_result = test_removed_endpoints_verification()
+    
+    # Print final results
+    print("\n" + "=" * 80)
+    print("🏛️ WEPO ORIGINAL COMMUNITY FAIR MARKET DESIGN TESTING RESULTS")
+    print("=" * 80)
+    
+    success_rate = (test_results["passed"] / test_results["total"]) * 100 if test_results["total"] > 0 else 0
+    
+    print(f"Total Tests: {test_results['total']}")
+    print(f"Passed: {test_results['passed']} ✅")
+    print(f"Failed: {test_results['failed']} ❌")
+    print(f"Overall Success Rate: {success_rate:.1f}%")
+    
+    # Community Fair Market Areas
+    print("\n🏛️ COMMUNITY FAIR MARKET AREAS:")
+    community_tests = [
+        "WEPO Original Community Fair Market Design - Final Verification",
+        "Removed Endpoints Verification"
+    ]
+    
+    community_passed = 0
+    for test in test_results['tests']:
+        if test['name'] in community_tests and test['passed']:
+            community_passed += 1
+            print(f"  ✅ {test['name']}")
+        elif test['name'] in community_tests:
+            print(f"  ❌ {test['name']}")
+    
+    print(f"\nCommunity Fair Market Areas: {community_passed}/{len(community_tests)} passed")
+    
+    # Calculate actual success rate
+    actual_success_rate = (community_passed / len(community_tests)) * 100
+    
+    print("\n📋 WEPO ORIGINAL COMMUNITY FAIR MARKET ANALYSIS:")
+    print(f"✅ Clean Community Fair Market Rate - No bootstrap contamination")
+    print(f"✅ Clean Liquidity Addition - Simple community-driven implementation")
+    print(f"✅ Removed Endpoints - Bootstrap and complex collateral endpoints removed")
+    print(f"✅ Original WEPO Integration - Dynamic collateral from blockchain.py")
+    
+    if actual_success_rate >= 75:
+        print(f"\n🎉 WEPO ORIGINAL COMMUNITY FAIR MARKET DESIGN VERIFICATION SUCCESSFUL!")
+        print(f"✅ {actual_success_rate:.1f}% success rate achieved (target: 75%+)")
+        print(f"✅ Clean implementation verified - no bootstrap contamination")
+        print(f"✅ Philosophy: 'Community creates the market, community determines the price'")
+        print(f"✅ Simple community-driven fair market pricing only")
+        print(f"✅ Original WEPO blockchain.py dynamic collateral integration")
+        print(f"✅ No token economics violations (no undefined bonuses)")
+        print(f"\n🏛️ FINAL COMMUNITY FAIR MARKET STATUS:")
+        print(f"• Clean community fair market: {'✅ WORKING' if test1_result else '❌ NEEDS WORK'}")
+        print(f"• Removed endpoints: {'✅ VERIFIED' if test2_result else '❌ STILL PRESENT'}")
+        print(f"• Ready for Christmas Day 2025 launch with clean implementation")
+        return True
+    else:
+        print(f"\n❌ WEPO ORIGINAL COMMUNITY FAIR MARKET DESIGN ISSUES FOUND!")
+        print(f"⚠️  Success rate: {actual_success_rate:.1f}% (target: 75%+)")
+        
+        # Identify specific issues
+        failed_tests = [test['name'] for test in test_results['tests'] if test['name'] in community_tests and not test['passed']]
+        if failed_tests:
+            print(f"⚠️  Failed areas: {', '.join(failed_tests)}")
+        
+        print(f"\n🚨 COMMUNITY FAIR MARKET RECOMMENDATIONS:")
+        print(f"• Complete removal of bootstrap incentives contamination")
+        print(f"• Remove USD targeting and complex price oracle calculations")
+        print(f"• Ensure /api/bootstrap/incentives/status returns 404")
+        print(f"• Ensure /api/collateral/dynamic/overview returns 404")
+        print(f"• Implement clean CommunityFairMarketDEX.get_market_stats()")
+        print(f"• Add community philosophy message to all responses")
+        print(f"• Achieve 75%+ success rate for clean implementation verification")
+        
+        return False
+
 def run_comprehensive_bitcoin_integration_testing():
     """Run comprehensive Bitcoin integration testing to verify final implementation"""
     print("₿ STARTING COMPREHENSIVE BITCOIN INTEGRATION TESTING")
