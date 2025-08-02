@@ -1,29 +1,19 @@
 #!/usr/bin/env python3
 """
-WEPO BACKEND TESTING - SPECIFIC ISSUES INVESTIGATION
+WEPO BACKEND TESTING - PoS COLLATERAL API ENDPOINTS AUDIT
 
-**ISSUES TO INVESTIGATE:**
+**REVIEW REQUEST FOCUS:**
+Test the current PoS (Proof of Stake) collateral API endpoints to identify what's missing or not working properly.
 
-**1. PoS Collateral System Verification**
-- Check if the original WEPO PoS collateral requirements are accessible via API
-- Test endpoints like `/api/pos/collateral`, `/api/staking/requirements`, `/api/blockchain/collateral`
-- Verify the dynamic schedule: 1,000→600→300→150→100 WEPO based on halving phases
-
-**2. Liquidity Addition HTTP 500 Error**
-- Test POST `/api/liquidity/add` to reproduce the 'total_shares' error from previous testing
-- Use valid test data to see the exact error message
-- Previous testing showed: "HTTP 500 error with 'total_shares' but no bootstrap contamination"
-
-**3. Masternode Collateral Verification**
-- Check if there are endpoints to get current masternode collateral requirements
-- Verify the dynamic schedule: 10,000→6,000→3,000→1,500→1,000 WEPO based on halving phases
-- Test endpoints like `/api/masternode/collateral`, `/api/blockchain/masternode-requirements`
-
-**4. Blockchain Integration Test**
-- Check if blockchain.py collateral functions are accessible
+**SPECIFIC ENDPOINTS TO TEST:**
+1. **Current PoS Collateral Requirements**: Test `/api/collateral/requirements` to see if it properly shows PoS collateral amounts
+2. **PoS Collateral Schedule**: Test `/api/collateral/schedule` to verify it shows the complete PoS collateral progression
+3. **Staking System Info**: Test `/api/staking/info` to see what PoS-related information is available
+4. **Individual PoS Stakes**: Test `/api/staking/stakes/{address}` with a test address to see what's returned
+5. **Missing PoS Endpoints**: Identify what specific PoS collateral information is NOT available through existing endpoints
 
 **GOAL:** 
-Provide comprehensive list of what's broken and needs fixing.
+Understand exactly what PoS collateral functionality is missing so we can implement the specific endpoints needed.
 """
 import requests
 import json
