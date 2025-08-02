@@ -31,6 +31,7 @@ def init_redis(redis_url: str = "redis://localhost:6379"):
         return True
     except Exception as e:
         logger.warning(f"Redis connection failed: {e}. Using in-memory fallback.")
+        redis_client = None  # Set to None so we use in-memory fallback
         return False
 
 # In-memory fallback for rate limiting when Redis is not available
