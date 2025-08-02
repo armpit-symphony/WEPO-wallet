@@ -981,6 +981,57 @@ class WepoFastTestBridge:
                 if not username or not password:
                     raise HTTPException(status_code=400, detail="Username and password required")
                 
+                # Check for account lockout due to failed login attempts
+                from security_utils import SecurityManager
+                lockout_info = SecurityManager.record_failed_login.__func__(username) if hasattr(SecurityManager.record_failed_login, '__func__') else SecurityManager.record_failed_login(username)
+                
+                # Get current lockout status without recording a new attempt
+                current_time = time.time()
+                key = f"failed_login:{username}"
+                
+                try:
+                    from security_utils import redis_client, failed_attempts_storage
+                    if redis_client:
+                        import json
+                        attempts_data = redis_client.get(key)
+                        if attempts_data:
+                            attempts_info = json.loads(attempts_data)
+                            is_locked = attempts_info["count"] >= SecurityManager.MAX_LOGIN_ATTEMPTS
+                            time_remaining = max(0, SecurityManager.LOCKOUT_DURATION - 
+                                               (current_time - attempts_info.get("last_attempt", current_time)))
+                            
+                            if is_locked and time_remaining > 0:
+                                raise HTTPException(
+                                    status_code=423, 
+                                    detail={
+                                        "message": "Account temporarily locked due to too many failed login attempts",
+                                        "attempts": attempts_info["count"],
+                                        "time_remaining": int(time_remaining),
+                                        "max_attempts": SecurityManager.MAX_LOGIN_ATTEMPTS
+                                    }
+                                )
+                    else:
+                        # Check in-memory storage
+                        if username in failed_attempts_storage:
+                            attempts_info = failed_attempts_storage[username]
+                            is_locked = attempts_info["count"] >= SecurityManager.MAX_LOGIN_ATTEMPTS
+                            time_remaining = max(0, SecurityManager.LOCKOUT_DURATION - 
+                                               (current_time - attempts_info.get("last_attempt", current_time)))
+                            
+                            if is_locked and time_remaining > 0:
+                                raise HTTPException(
+                                    status_code=423,
+                                    detail={
+                                        "message": "Account temporarily locked due to too many failed login attempts", 
+                                        "attempts": attempts_info["count"],
+                                        "time_remaining": int(time_remaining),
+                                        "max_attempts": SecurityManager.MAX_LOGIN_ATTEMPTS
+                                    }
+                                )
+                except Exception as e:
+                    logger.warning(f"Lockout check error: {e}")
+                    # Continue with login attempt if lockout check fails
+                
                 # Find wallet by username
                 wallet_address = None
                 wallet_data = None
