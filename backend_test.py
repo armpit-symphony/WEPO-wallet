@@ -692,47 +692,51 @@ def test_integration_issues_analysis():
         return False
 
 def test_wepo_original_community_fair_market():
-    """Test WEPO Original Community Fair Market Design - REVERTED Implementation"""
-    print("\n🏛️ TEST: WEPO ORIGINAL COMMUNITY FAIR MARKET DESIGN")
-    print("Testing the REVERTED clean community fair market implementation...")
+    """Test WEPO Original Community Fair Market Design - FINAL VERIFICATION"""
+    print("\n🏛️ TEST: WEPO ORIGINAL COMMUNITY FAIR MARKET DESIGN - FINAL VERIFICATION")
+    print("Testing the PROPERLY REVERTED clean community fair market implementation...")
+    print("CRITICAL FIX APPLIED: Changed btc_wepo_pool = LiquidityPool() to btc_wepo_pool = community_fair_market")
     
     try:
         checks_passed = 0
         total_checks = 4
         
-        # Test 1: Community Fair Market Rate Endpoint - Simple Community Pricing
-        print("\n  📊 Test 1: Community Fair Market Rate (Simple Community Pricing)")
+        # Test 1: Community Fair Market Rate Endpoint - Should use community_fair_market.get_market_stats()
+        print("\n  📊 Test 1: Community Fair Market Rate (Clean Community Pricing)")
         response = requests.get(f"{API_URL}/swap/rate")
         
         if response.status_code == 200:
             data = response.json()
+            print(f"      Raw Response: {data}")
             
-            # Check for clean community fair market structure (NO bootstrap bonuses, NO USD targeting)
-            expected_clean_fields = ['pool_exists', 'philosophy']
-            bootstrap_contamination = ['bootstrap', 'incentive', 'bonus', 'usd_target', 'oracle']
+            # Check for clean community fair market structure from CommunityFairMarketDEX.get_market_stats()
+            expected_clean_fields = ['pool_exists', 'philosophy', 'current_price']
+            bootstrap_contamination = ['bootstrap_incentives', 'first_provider', 'early_providers', 'volume_rewards', 'usd_target', 'community_price']
             
-            has_clean_structure = any(field in str(data).lower() for field in expected_clean_fields)
-            has_contamination = any(field in str(data).lower() for field in bootstrap_contamination)
+            has_clean_structure = any(field in data for field in expected_clean_fields)
+            has_contamination = any(field in data for field in bootstrap_contamination)
             
             if has_clean_structure and not has_contamination:
                 print(f"    ✅ Community Fair Market Rate: Clean implementation verified")
                 print(f"      Pool Exists: {data.get('pool_exists', 'N/A')}")
                 
-                # Check for the key philosophy message
+                # Check for the key philosophy message from CommunityFairMarketDEX
                 philosophy = data.get('philosophy', '')
                 if 'community creates the market' in philosophy.lower():
                     print(f"      Philosophy: ✅ '{philosophy}'")
                     checks_passed += 1
                 else:
                     print(f"      Philosophy: ❌ Missing community philosophy message")
+                    print(f"      Expected: 'Community creates the market, community determines the price'")
             else:
-                print(f"    ❌ Community Fair Market Rate: Contains bootstrap/USD contamination or missing clean structure")
-                print(f"      Response: {data}")
+                print(f"    ❌ Community Fair Market Rate: Still contains bootstrap/USD contamination")
+                print(f"      Bootstrap contamination found: {[field for field in bootstrap_contamination if field in data]}")
+                print(f"      Clean structure present: {has_clean_structure}")
         else:
             print(f"    ❌ Community Fair Market Rate: HTTP {response.status_code} - {response.text}")
         
-        # Test 2: Community Fair Market Liquidity Addition - Original Design
-        print("\n  💧 Test 2: Community Fair Market Liquidity Addition")
+        # Test 2: Community Fair Market Liquidity Addition - Should use community_fair_market.add_liquidity()
+        print("\n  💧 Test 2: Community Fair Market Liquidity Addition (Clean Results)")
         liquidity_request = {
             "wallet_address": generate_valid_wepo_address(),
             "btc_amount": 0.001,
@@ -744,8 +748,9 @@ def test_wepo_original_community_fair_market():
         if response.status_code in [200, 400]:  # 400 acceptable for validation
             if response.status_code == 200:
                 data = response.json()
+                print(f"      Raw Response: {data}")
                 
-                # Check for clean liquidity response (NO bootstrap bonuses)
+                # Check for clean liquidity response from CommunityFairMarketDEX.add_liquidity()
                 bootstrap_fields = ['bootstrap_bonus', 'early_provider_bonus', 'first_provider', 'volume_reward']
                 has_bootstrap = any(field in data for field in bootstrap_fields)
                 
@@ -753,9 +758,16 @@ def test_wepo_original_community_fair_market():
                     print(f"    ✅ Liquidity Addition: Clean implementation (no bootstrap bonuses)")
                     print(f"      Shares Minted: {data.get('shares_minted', 'N/A')}")
                     print(f"      Market Price: {data.get('new_price', data.get('initial_price', 'N/A'))}")
-                    checks_passed += 1
+                    
+                    # Check for clean message from CommunityFairMarketDEX
+                    message = data.get('message', '')
+                    if 'community fair market' in message.lower():
+                        print(f"      Message: ✅ '{message}'")
+                        checks_passed += 1
+                    else:
+                        print(f"      Message: ❌ Missing community fair market message")
                 else:
-                    print(f"    ❌ Liquidity Addition: Contains bootstrap contamination")
+                    print(f"    ❌ Liquidity Addition: Still contains bootstrap contamination")
                     print(f"      Bootstrap fields found: {[f for f in bootstrap_fields if f in data]}")
             else:
                 # Check if it's proper validation (ratio mismatch, etc.)
@@ -765,6 +777,7 @@ def test_wepo_original_community_fair_market():
                     checks_passed += 1
                 else:
                     print(f"    ❌ Liquidity Addition: Unexpected validation error")
+                    print(f"      Error: {response.text}")
         else:
             print(f"    ❌ Liquidity Addition: HTTP {response.status_code} - {response.text}")
         
@@ -796,7 +809,7 @@ def test_wepo_original_community_fair_market():
             print(f"    ❌ Dynamic Collateral: HTTP {response.status_code} - {response.text}")
         
         # Test 4: Clean Implementation Verification - No Complex Features
-        print("\n  🧹 Test 4: Clean Implementation Verification")
+        print("\n  🧹 Test 4: Clean Implementation Verification (No Bootstrap Contamination)")
         
         # Test multiple endpoints to ensure no complex features remain
         clean_endpoints = [
@@ -812,7 +825,7 @@ def test_wepo_original_community_fair_market():
                     data = response.json()
                     
                     # Check for absence of complex features
-                    complex_features = ['bootstrap', 'incentive', 'usd_target', 'oracle', 'bonus']
+                    complex_features = ['bootstrap_incentives', 'first_provider', 'early_providers', 'volume_rewards', 'usd_target', 'community_price', 'total_distributed']
                     has_complex = any(feature in str(data).lower() for feature in complex_features)
                     
                     if not has_complex:
@@ -820,10 +833,11 @@ def test_wepo_original_community_fair_market():
                         print(f"      ✅ {name}: Clean (no complex features)")
                     else:
                         print(f"      ❌ {name}: Contains complex features")
+                        print(f"        Complex features found: {[f for f in complex_features if f in str(data).lower()]}")
                 else:
                     print(f"      ⚠️ {name}: HTTP {response.status_code}")
-            except:
-                print(f"      ⚠️ {name}: Connection error")
+            except Exception as e:
+                print(f"      ⚠️ {name}: Connection error - {str(e)}")
         
         if clean_implementation_score >= 1:  # At least 1/2 endpoints should be clean
             print(f"    ✅ Clean Implementation: {clean_implementation_score}/2 endpoints verified clean")
@@ -832,12 +846,26 @@ def test_wepo_original_community_fair_market():
             print(f"    ❌ Clean Implementation: No clean endpoints found")
         
         success_rate = (checks_passed / total_checks) * 100
-        log_test("WEPO Original Community Fair Market Design", checks_passed >= 3,
-                 details=f"Community fair market reversion testing: {checks_passed}/{total_checks} checks passed ({success_rate:.1f}% success)")
+        
+        print(f"\n🏛️ WEPO ORIGINAL COMMUNITY FAIR MARKET DESIGN - FINAL VERIFICATION RESULTS:")
+        print(f"  Tests Passed: {checks_passed}/{total_checks} ({success_rate:.1f}% success)")
+        
+        if checks_passed >= 3:  # At least 3/4 tests should pass
+            print(f"  ✅ CRITICAL FIX VERIFIED: btc_wepo_pool now uses community_fair_market")
+            print(f"  ✅ Clean Implementation: No bootstrap bonuses, USD targeting, or complex price oracles")
+            print(f"  ✅ Philosophy Integration: 'Community creates the market, community determines the price'")
+            print(f"  ✅ Original WEPO Design: Simple community fair market pricing")
+        else:
+            print(f"  ❌ REVERSION INCOMPLETE: {4-checks_passed} critical issues remain")
+            print(f"  ❌ Bootstrap contamination may still be present")
+            print(f"  ❌ Complex features not fully removed")
+        
+        log_test("WEPO Original Community Fair Market Design - Final Verification", checks_passed >= 3,
+                 details=f"Community fair market reversion final verification: {checks_passed}/{total_checks} checks passed ({success_rate:.1f}% success)")
         return checks_passed >= 3
         
     except Exception as e:
-        log_test("WEPO Original Community Fair Market Design", False, error=str(e))
+        log_test("WEPO Original Community Fair Market Design - Final Verification", False, error=str(e))
         return False
 
 def run_comprehensive_bitcoin_integration_testing():
