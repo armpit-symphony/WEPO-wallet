@@ -33,9 +33,9 @@ import re
 BACKEND_URL = "https://4fc16d3d-b093-48ef-affa-636fa6aa3b78.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
-print(f"🎯 WEPO BACKEND TESTING - SPECIFIC ISSUES INVESTIGATION")
+print(f"🎯 WEPO BACKEND TESTING - PoS COLLATERAL API ENDPOINTS AUDIT")
 print(f"Preview Backend API URL: {API_URL}")
-print(f"Focus: Testing specific issues found in previous testing")
+print(f"Focus: Testing PoS collateral endpoints to identify gaps")
 print("=" * 80)
 
 # Test results tracking
@@ -79,221 +79,272 @@ def generate_valid_wepo_address():
     hex_part = random_data.hex()
     return f"wepo1{hex_part}"
 
-def test_pos_collateral_system():
-    """Test 1: PoS Collateral System Verification"""
-    print("\n🎯 TEST 1: PoS COLLATERAL SYSTEM VERIFICATION")
-    print("Testing PoS collateral requirements API endpoints...")
-    
-    pos_endpoints = [
-        "/api/pos/collateral",
-        "/api/staking/requirements", 
-        "/api/blockchain/collateral",
-        "/api/collateral/pos",
-        "/api/staking/collateral"
-    ]
-    
-    working_endpoints = []
-    pos_data_found = False
+def test_pos_collateral_requirements():
+    """Test 1: Current PoS Collateral Requirements - /api/collateral/requirements"""
+    print("\n🎯 TEST 1: CURRENT PoS COLLATERAL REQUIREMENTS")
+    print("Testing /api/collateral/requirements to see if it properly shows PoS collateral amounts...")
     
     try:
-        for endpoint in pos_endpoints:
-            try:
-                response = requests.get(f"{BACKEND_URL}{endpoint}")
-                if response.status_code == 200:
-                    data = response.json()
-                    working_endpoints.append(endpoint)
-                    
-                    # Check for PoS collateral data
-                    data_str = str(data).lower()
-                    if any(term in data_str for term in ['pos', 'staking', 'collateral', '1000', '600', '300', '150', '100']):
-                        pos_data_found = True
-                        print(f"  ✅ {endpoint} - Found PoS data: {list(data.keys())[:5]}")
-                    else:
-                        print(f"  ⚠️  {endpoint} - No PoS collateral data")
-                else:
-                    print(f"  ❌ {endpoint} - HTTP {response.status_code}")
-            except Exception as e:
-                print(f"  ❌ {endpoint} - Error: {str(e)}")
+        response = requests.get(f"{API_URL}/collateral/requirements")
         
-        if working_endpoints and pos_data_found:
-            log_test("PoS Collateral System", True, 
-                    details=f"✅ Found {len(working_endpoints)} working endpoints with PoS data")
-            return True
-        elif working_endpoints:
-            log_test("PoS Collateral System", False,
-                    details=f"⚠️  Found {len(working_endpoints)} endpoints but no PoS collateral data")
-            return False
-        else:
-            log_test("PoS Collateral System", False,
-                    details="❌ No working PoS collateral endpoints found")
-            return False
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  ✅ Endpoint accessible - Response keys: {list(data.keys())}")
             
-    except Exception as e:
-        log_test("PoS Collateral System", False, error=str(e))
-        return False
-
-def test_liquidity_addition_http_500():
-    """Test 2: Liquidity Addition HTTP 500 Error - Reproduce 'total_shares' error"""
-    print("\n🎯 TEST 2: LIQUIDITY ADDITION HTTP 500 ERROR")
-    print("Testing POST /api/liquidity/add to reproduce 'total_shares' error...")
-    
-    try:
-        # Generate test wallet address
-        test_wallet = generate_valid_wepo_address()
-        
-        # Test data from review request
-        liquidity_data = {
-            "wallet_address": test_wallet,
-            "btc_amount": 0.01,
-            "wepo_amount": 100.0
-        }
-        
-        response = requests.post(f"{API_URL}/liquidity/add", json=liquidity_data)
-        
-        if response.status_code == 500:
-            error_text = response.text
-            if 'total_shares' in error_text.lower():
-                log_test("Liquidity Addition HTTP 500", True,
-                        details=f"✅ Reproduced 'total_shares' error: {error_text[:100]}...")
-                return True
+            # Check for PoS collateral information
+            data_str = str(data).lower()
+            pos_indicators = ['pos', 'proof of stake', 'staking', 'stake_amount', 'pos_collateral']
+            
+            pos_data_found = any(indicator in data_str for indicator in pos_indicators)
+            
+            if pos_data_found:
+                log_test("PoS Collateral Requirements Endpoint", True,
+                        details=f"✅ Found PoS collateral data in response: {json.dumps(data, indent=2)[:200]}...")
+                return True, data
             else:
-                log_test("Liquidity Addition HTTP 500", False,
-                        details=f"❌ HTTP 500 but different error: {error_text[:100]}...")
-                return False
-        elif response.status_code == 200:
-            log_test("Liquidity Addition HTTP 500", False,
-                    details="❌ Request succeeded (HTTP 200) - error may be fixed")
-            return False
+                log_test("PoS Collateral Requirements Endpoint", False,
+                        details=f"❌ No PoS collateral data found. Response: {json.dumps(data, indent=2)[:200]}...")
+                return False, data
+        elif response.status_code == 404:
+            log_test("PoS Collateral Requirements Endpoint", False,
+                    details="❌ Endpoint not found (404) - needs to be implemented")
+            return False, None
         else:
-            log_test("Liquidity Addition HTTP 500", False,
-                    details=f"❌ Unexpected status code: HTTP {response.status_code}")
-            return False
+            log_test("PoS Collateral Requirements Endpoint", False,
+                    details=f"❌ HTTP {response.status_code}: {response.text[:100]}...")
+            return False, None
             
     except Exception as e:
-        log_test("Liquidity Addition HTTP 500", False, error=str(e))
-        return False
+        log_test("PoS Collateral Requirements Endpoint", False, error=str(e))
+        return False, None
 
-def test_masternode_collateral_verification():
-    """Test 3: Masternode Collateral Verification"""
-    print("\n🎯 TEST 3: MASTERNODE COLLATERAL VERIFICATION")
-    print("Testing masternode collateral requirements API endpoints...")
+def test_pos_collateral_schedule():
+    """Test 2: PoS Collateral Schedule - /api/collateral/schedule"""
+    print("\n🎯 TEST 2: PoS COLLATERAL SCHEDULE")
+    print("Testing /api/collateral/schedule to verify it shows the complete PoS collateral progression...")
     
-    masternode_endpoints = [
-        "/api/masternode/collateral",
-        "/api/blockchain/masternode-requirements",
-        "/api/collateral/masternode",
-        "/api/masternode/requirements",
-        "/api/blockchain/collateral"
+    try:
+        response = requests.get(f"{API_URL}/collateral/schedule")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  ✅ Endpoint accessible - Response keys: {list(data.keys())}")
+            
+            # Check for PoS collateral schedule information
+            data_str = str(data).lower()
+            schedule_indicators = ['schedule', 'progression', 'phase', 'pos', 'staking', 'collateral']
+            
+            schedule_data_found = any(indicator in data_str for indicator in schedule_indicators)
+            
+            if schedule_data_found:
+                log_test("PoS Collateral Schedule Endpoint", True,
+                        details=f"✅ Found PoS collateral schedule data: {json.dumps(data, indent=2)[:200]}...")
+                return True, data
+            else:
+                log_test("PoS Collateral Schedule Endpoint", False,
+                        details=f"❌ No PoS collateral schedule data found. Response: {json.dumps(data, indent=2)[:200]}...")
+                return False, data
+        elif response.status_code == 404:
+            log_test("PoS Collateral Schedule Endpoint", False,
+                    details="❌ Endpoint not found (404) - needs to be implemented")
+            return False, None
+        else:
+            log_test("PoS Collateral Schedule Endpoint", False,
+                    details=f"❌ HTTP {response.status_code}: {response.text[:100]}...")
+            return False, None
+            
+    except Exception as e:
+        log_test("PoS Collateral Schedule Endpoint", False, error=str(e))
+        return False, None
+
+def test_staking_system_info():
+    """Test 3: Staking System Info - /api/staking/info"""
+    print("\n🎯 TEST 3: STAKING SYSTEM INFO")
+    print("Testing /api/staking/info to see what PoS-related information is available...")
+    
+    try:
+        response = requests.get(f"{API_URL}/staking/info")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  ✅ Endpoint accessible - Response keys: {list(data.keys())}")
+            
+            # Check for comprehensive PoS staking information
+            data_str = str(data).lower()
+            staking_indicators = ['staking', 'pos', 'stake', 'reward', 'apr', 'collateral', 'validator']
+            
+            staking_info_found = any(indicator in data_str for indicator in staking_indicators)
+            
+            if staking_info_found:
+                log_test("Staking System Info Endpoint", True,
+                        details=f"✅ Found PoS staking system info: {json.dumps(data, indent=2)[:200]}...")
+                return True, data
+            else:
+                log_test("Staking System Info Endpoint", False,
+                        details=f"❌ No PoS staking system info found. Response: {json.dumps(data, indent=2)[:200]}...")
+                return False, data
+        elif response.status_code == 404:
+            log_test("Staking System Info Endpoint", False,
+                    details="❌ Endpoint not found (404) - needs to be implemented")
+            return False, None
+        else:
+            log_test("Staking System Info Endpoint", False,
+                    details=f"❌ HTTP {response.status_code}: {response.text[:100]}...")
+            return False, None
+            
+    except Exception as e:
+        log_test("Staking System Info Endpoint", False, error=str(e))
+        return False, None
+
+def test_individual_pos_stakes():
+    """Test 4: Individual PoS Stakes - /api/staking/stakes/{address}"""
+    print("\n🎯 TEST 4: INDIVIDUAL PoS STAKES")
+    print("Testing /api/staking/stakes/{address} with a test address to see what's returned...")
+    
+    # Generate test address
+    test_address = generate_valid_wepo_address()
+    print(f"  Using test address: {test_address}")
+    
+    try:
+        response = requests.get(f"{API_URL}/staking/stakes/{test_address}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  ✅ Endpoint accessible - Response keys: {list(data.keys())}")
+            
+            # Check for individual stake information
+            data_str = str(data).lower()
+            stake_indicators = ['stake', 'amount', 'reward', 'status', 'position', 'balance']
+            
+            stake_info_found = any(indicator in data_str for indicator in stake_indicators)
+            
+            if stake_info_found:
+                log_test("Individual PoS Stakes Endpoint", True,
+                        details=f"✅ Found individual stake info: {json.dumps(data, indent=2)[:200]}...")
+                return True, data
+            else:
+                log_test("Individual PoS Stakes Endpoint", False,
+                        details=f"❌ No individual stake info found. Response: {json.dumps(data, indent=2)[:200]}...")
+                return False, data
+        elif response.status_code == 404:
+            # Check if it's endpoint not found vs address not found
+            if "not found" in response.text.lower() and "address" in response.text.lower():
+                log_test("Individual PoS Stakes Endpoint", True,
+                        details="✅ Endpoint exists but address not found (expected for test address)")
+                return True, {"message": "Address not found (expected)"}
+            else:
+                log_test("Individual PoS Stakes Endpoint", False,
+                        details="❌ Endpoint not found (404) - needs to be implemented")
+                return False, None
+        else:
+            log_test("Individual PoS Stakes Endpoint", False,
+                    details=f"❌ HTTP {response.status_code}: {response.text[:100]}...")
+            return False, None
+            
+    except Exception as e:
+        log_test("Individual PoS Stakes Endpoint", False, error=str(e))
+        return False, None
+
+def test_missing_pos_endpoints():
+    """Test 5: Missing PoS Endpoints - Identify what specific PoS collateral information is NOT available"""
+    print("\n🎯 TEST 5: MISSING PoS ENDPOINTS DISCOVERY")
+    print("Testing additional PoS-related endpoints to identify gaps...")
+    
+    # Additional PoS endpoints that might be expected
+    additional_endpoints = [
+        "/api/pos/status",
+        "/api/pos/validators", 
+        "/api/pos/rewards",
+        "/api/staking/pools",
+        "/api/staking/validators",
+        "/api/staking/rewards/{address}",
+        "/api/collateral/pos",
+        "/api/collateral/dynamic",
+        "/api/validators/list",
+        "/api/validators/info"
     ]
     
     working_endpoints = []
-    masternode_data_found = False
+    missing_endpoints = []
     
     try:
-        for endpoint in masternode_endpoints:
+        for endpoint in additional_endpoints:
             try:
-                response = requests.get(f"{BACKEND_URL}{endpoint}")
+                # For endpoints with {address}, use test address
+                test_endpoint = endpoint.replace("{address}", generate_valid_wepo_address())
+                response = requests.get(f"{API_URL}{test_endpoint}")
+                
                 if response.status_code == 200:
                     data = response.json()
-                    working_endpoints.append(endpoint)
-                    
-                    # Check for masternode collateral data
-                    data_str = str(data).lower()
-                    if any(term in data_str for term in ['masternode', 'collateral', '10000', '6000', '3000', '1500', '1000']):
-                        masternode_data_found = True
-                        print(f"  ✅ {endpoint} - Found masternode data: {list(data.keys())[:5]}")
-                    else:
-                        print(f"  ⚠️  {endpoint} - No masternode collateral data")
+                    working_endpoints.append({
+                        "endpoint": endpoint,
+                        "status": "working",
+                        "data_keys": list(data.keys())[:5]
+                    })
+                    print(f"  ✅ {endpoint} - Working")
+                elif response.status_code == 404:
+                    missing_endpoints.append({
+                        "endpoint": endpoint,
+                        "status": "missing",
+                        "reason": "404 Not Found"
+                    })
+                    print(f"  ❌ {endpoint} - Missing (404)")
                 else:
-                    print(f"  ❌ {endpoint} - HTTP {response.status_code}")
+                    missing_endpoints.append({
+                        "endpoint": endpoint,
+                        "status": "error",
+                        "reason": f"HTTP {response.status_code}"
+                    })
+                    print(f"  ⚠️  {endpoint} - Error (HTTP {response.status_code})")
+                    
             except Exception as e:
+                missing_endpoints.append({
+                    "endpoint": endpoint,
+                    "status": "error",
+                    "reason": str(e)
+                })
                 print(f"  ❌ {endpoint} - Error: {str(e)}")
         
-        if working_endpoints and masternode_data_found:
-            log_test("Masternode Collateral Verification", True, 
-                    details=f"✅ Found {len(working_endpoints)} working endpoints with masternode data")
-            return True
-        elif working_endpoints:
-            log_test("Masternode Collateral Verification", False,
-                    details=f"⚠️  Found {len(working_endpoints)} endpoints but no masternode collateral data")
-            return False
-        else:
-            log_test("Masternode Collateral Verification", False,
-                    details="❌ No working masternode collateral endpoints found")
-            return False
-            
-    except Exception as e:
-        log_test("Masternode Collateral Verification", False, error=str(e))
-        return False
-
-def test_blockchain_integration():
-    """Test 4: Blockchain Integration Test - Check if blockchain.py collateral functions are accessible"""
-    print("\n🎯 TEST 4: BLOCKCHAIN INTEGRATION TEST")
-    print("Testing blockchain.py collateral functions accessibility...")
-    
-    blockchain_endpoints = [
-        "/api/blockchain/collateral",
-        "/api/blockchain/status",
-        "/api/network/status",
-        "/api/collateral/requirements",
-        "/api/blockchain/info"
-    ]
-    
-    working_endpoints = []
-    blockchain_data_found = False
-    
-    try:
-        for endpoint in blockchain_endpoints:
-            try:
-                response = requests.get(f"{BACKEND_URL}{endpoint}")
-                if response.status_code == 200:
-                    data = response.json()
-                    working_endpoints.append(endpoint)
-                    
-                    # Check for blockchain integration data
-                    data_str = str(data).lower()
-                    if any(term in data_str for term in ['blockchain', 'block', 'height', 'collateral', 'phase']):
-                        blockchain_data_found = True
-                        print(f"  ✅ {endpoint} - Found blockchain data: {list(data.keys())[:5]}")
-                    else:
-                        print(f"  ⚠️  {endpoint} - No blockchain integration data")
-                else:
-                    print(f"  ❌ {endpoint} - HTTP {response.status_code}")
-            except Exception as e:
-                print(f"  ❌ {endpoint} - Error: {str(e)}")
+        # Analyze results
+        total_tested = len(additional_endpoints)
+        working_count = len(working_endpoints)
+        missing_count = len(missing_endpoints)
         
-        if working_endpoints and blockchain_data_found:
-            log_test("Blockchain Integration", True, 
-                    details=f"✅ Found {len(working_endpoints)} working endpoints with blockchain data")
-            return True
-        elif working_endpoints:
-            log_test("Blockchain Integration", False,
-                    details=f"⚠️  Found {len(working_endpoints)} endpoints but no blockchain integration data")
-            return False
+        if working_count > 0:
+            log_test("Missing PoS Endpoints Discovery", True,
+                    details=f"✅ Found {working_count}/{total_tested} additional PoS endpoints working")
         else:
-            log_test("Blockchain Integration", False,
-                    details="❌ No working blockchain integration endpoints found")
-            return False
+            log_test("Missing PoS Endpoints Discovery", False,
+                    details=f"❌ No additional PoS endpoints found - {missing_count}/{total_tested} missing")
+        
+        return {
+            "working_endpoints": working_endpoints,
+            "missing_endpoints": missing_endpoints,
+            "total_tested": total_tested,
+            "working_count": working_count,
+            "missing_count": missing_count
+        }
             
     except Exception as e:
-        log_test("Blockchain Integration", False, error=str(e))
-        return False
+        log_test("Missing PoS Endpoints Discovery", False, error=str(e))
+        return None
 
-def run_specific_issues_testing():
-    """Run specific issues testing"""
-    print("🔍 STARTING WEPO SPECIFIC ISSUES INVESTIGATION")
-    print("Testing specific issues found in previous testing that still need to be fixed...")
+def run_pos_collateral_audit():
+    """Run PoS collateral endpoints audit"""
+    print("🔍 STARTING WEPO PoS COLLATERAL API ENDPOINTS AUDIT")
+    print("Testing specific PoS collateral endpoints as requested in review...")
     print("=" * 80)
     
-    # Run the specific issue tests
-    test1_result = test_pos_collateral_system()
-    test2_result = test_liquidity_addition_http_500()
-    test3_result = test_masternode_collateral_verification()
-    test4_result = test_blockchain_integration()
+    # Run the PoS collateral tests
+    test1_result, test1_data = test_pos_collateral_requirements()
+    test2_result, test2_data = test_pos_collateral_schedule()
+    test3_result, test3_data = test_staking_system_info()
+    test4_result, test4_data = test_individual_pos_stakes()
+    test5_result = test_missing_pos_endpoints()
     
     # Print final results
     print("\n" + "=" * 80)
-    print("🔍 WEPO SPECIFIC ISSUES INVESTIGATION RESULTS")
+    print("🔍 WEPO PoS COLLATERAL API ENDPOINTS AUDIT RESULTS")
     print("=" * 80)
     
     success_rate = (test_results["passed"] / test_results["total"]) * 100 if test_results["total"] > 0 else 0
@@ -303,84 +354,111 @@ def run_specific_issues_testing():
     print(f"Failed: {test_results['failed']} ❌")
     print(f"Overall Success Rate: {success_rate:.1f}%")
     
-    # Specific Issues Areas
-    print("\n🔍 SPECIFIC ISSUES AREAS:")
-    specific_tests = [
-        "PoS Collateral System",
-        "Liquidity Addition HTTP 500", 
-        "Masternode Collateral Verification",
-        "Blockchain Integration"
+    # PoS Collateral Specific Results
+    print("\n🎯 PoS COLLATERAL ENDPOINTS STATUS:")
+    pos_tests = [
+        ("Current PoS Collateral Requirements", test1_result),
+        ("PoS Collateral Schedule", test2_result), 
+        ("Staking System Info", test3_result),
+        ("Individual PoS Stakes", test4_result),
+        ("Missing PoS Endpoints Discovery", test5_result is not None and test5_result.get("working_count", 0) > 0)
     ]
     
-    specific_passed = 0
-    for test in test_results['tests']:
-        if test['name'] in specific_tests and test['passed']:
-            specific_passed += 1
-            print(f"  ✅ {test['name']}")
-        elif test['name'] in specific_tests:
-            print(f"  ❌ {test['name']}")
+    pos_passed = 0
+    for test_name, test_result in pos_tests:
+        if test_result:
+            pos_passed += 1
+            print(f"  ✅ {test_name}")
+        else:
+            print(f"  ❌ {test_name}")
     
-    print(f"\nSpecific Issues Areas: {specific_passed}/{len(specific_tests)} passed")
-    
-    # Calculate actual success rate
-    actual_success_rate = (specific_passed / len(specific_tests)) * 100
-    
-    print("\n📋 SPECIFIC ISSUES ANALYSIS:")
-    print(f"{'✅' if test1_result else '❌'} PoS Collateral System - Original WEPO PoS collateral requirements API access")
-    print(f"{'✅' if test2_result else '❌'} Liquidity Addition HTTP 500 - 'total_shares' error reproduction")
-    print(f"{'✅' if test3_result else '❌'} Masternode Collateral Verification - Dynamic schedule API access")
-    print(f"{'✅' if test4_result else '❌'} Blockchain Integration - blockchain.py collateral functions accessibility")
+    print(f"\nPoS Collateral Endpoints: {pos_passed}/{len(pos_tests)} working")
     
     # Detailed findings
-    print("\n🚨 DETAILED FINDINGS:")
+    print("\n🚨 DETAILED PoS COLLATERAL FINDINGS:")
     
     failed_tests = [test for test in test_results['tests'] if not test['passed']]
     if failed_tests:
-        print("❌ ISSUES THAT NEED FIXING:")
+        print("❌ MISSING/BROKEN PoS ENDPOINTS:")
         for test in failed_tests:
             print(f"  • {test['name']}: {test['details'] or test['error']}")
     
     working_tests = [test for test in test_results['tests'] if test['passed']]
     if working_tests:
-        print("✅ WORKING SYSTEMS:")
+        print("✅ WORKING PoS ENDPOINTS:")
         for test in working_tests:
             print(f"  • {test['name']}: {test['details']}")
     
+    # Missing endpoints analysis
+    if test5_result:
+        print(f"\n📊 ADDITIONAL PoS ENDPOINTS ANALYSIS:")
+        print(f"• Working additional endpoints: {test5_result['working_count']}/{test5_result['total_tested']}")
+        print(f"• Missing additional endpoints: {test5_result['missing_count']}/{test5_result['total_tested']}")
+        
+        if test5_result['working_endpoints']:
+            print("✅ FOUND ADDITIONAL WORKING ENDPOINTS:")
+            for endpoint in test5_result['working_endpoints']:
+                print(f"  • {endpoint['endpoint']} - Keys: {endpoint['data_keys']}")
+        
+        if test5_result['missing_endpoints']:
+            print("❌ MISSING ENDPOINTS THAT SHOULD BE IMPLEMENTED:")
+            for endpoint in test5_result['missing_endpoints']:
+                print(f"  • {endpoint['endpoint']} - {endpoint['reason']}")
+    
     return {
-        "success_rate": actual_success_rate,
-        "pos_collateral": test1_result,
-        "liquidity_error": test2_result,
-        "masternode_collateral": test3_result,
-        "blockchain_integration": test4_result,
+        "success_rate": success_rate,
+        "pos_collateral_requirements": test1_result,
+        "pos_collateral_schedule": test2_result,
+        "staking_system_info": test3_result,
+        "individual_pos_stakes": test4_result,
+        "missing_endpoints_analysis": test5_result,
         "failed_tests": failed_tests,
-        "working_tests": working_tests
+        "working_tests": working_tests,
+        "pos_passed": pos_passed,
+        "pos_total": len(pos_tests)
     }
 
 if __name__ == "__main__":
-    # Run the specific issues investigation
-    results = run_specific_issues_testing()
+    # Run the PoS collateral audit
+    results = run_pos_collateral_audit()
     
     print("\n" + "=" * 80)
-    print("🎯 FINAL INVESTIGATION SUMMARY")
+    print("🎯 FINAL PoS COLLATERAL AUDIT SUMMARY")
     print("=" * 80)
     
-    if results["success_rate"] >= 75:
-        print(f"🎉 MOST ISSUES RESOLVED!")
+    if results["success_rate"] >= 60:
+        print(f"🎉 MOST PoS ENDPOINTS WORKING!")
         print(f"✅ {results['success_rate']:.1f}% success rate achieved")
-        print(f"✅ Most systems are working correctly")
+        print(f"✅ {results['pos_passed']}/{results['pos_total']} PoS endpoints functional")
     else:
-        print(f"🚨 CRITICAL ISSUES STILL NEED FIXING!")
+        print(f"🚨 CRITICAL PoS ENDPOINTS MISSING!")
         print(f"⚠️  Success rate: {results['success_rate']:.1f}%")
-        print(f"❌ Multiple systems require attention")
+        print(f"❌ {results['pos_passed']}/{results['pos_total']} PoS endpoints functional")
     
-    print(f"\n📊 SYSTEM STATUS:")
-    print(f"• PoS Collateral System: {'✅ WORKING' if results['pos_collateral'] else '❌ BROKEN'}")
-    print(f"• Liquidity Addition: {'✅ ERROR REPRODUCED' if results['liquidity_error'] else '❌ CANNOT REPRODUCE ERROR'}")
-    print(f"• Masternode Collateral: {'✅ WORKING' if results['masternode_collateral'] else '❌ BROKEN'}")
-    print(f"• Blockchain Integration: {'✅ WORKING' if results['blockchain_integration'] else '❌ BROKEN'}")
+    print(f"\n📊 PoS COLLATERAL ENDPOINT STATUS:")
+    print(f"• /api/collateral/requirements: {'✅ WORKING' if results['pos_collateral_requirements'] else '❌ MISSING/BROKEN'}")
+    print(f"• /api/collateral/schedule: {'✅ WORKING' if results['pos_collateral_schedule'] else '❌ MISSING/BROKEN'}")
+    print(f"• /api/staking/info: {'✅ WORKING' if results['staking_system_info'] else '❌ MISSING/BROKEN'}")
+    print(f"• /api/staking/stakes/{{address}}: {'✅ WORKING' if results['individual_pos_stakes'] else '❌ MISSING/BROKEN'}")
+    
+    if results["missing_endpoints_analysis"]:
+        additional_working = results["missing_endpoints_analysis"]["working_count"]
+        additional_total = results["missing_endpoints_analysis"]["total_tested"]
+        print(f"• Additional PoS endpoints: {additional_working}/{additional_total} working")
     
     if results["failed_tests"]:
-        print(f"\n🔧 PRIORITY FIXES NEEDED:")
+        print(f"\n🔧 PRIORITY PoS ENDPOINTS TO IMPLEMENT:")
         for i, test in enumerate(results["failed_tests"], 1):
             print(f"{i}. {test['name']}")
             print(f"   Issue: {test['details'] or test['error']}")
+    
+    print(f"\n💡 RECOMMENDATIONS:")
+    if results["success_rate"] < 60:
+        print("• Implement missing PoS collateral endpoints")
+        print("• Add comprehensive PoS staking information APIs")
+        print("• Create PoS collateral schedule progression endpoint")
+        print("• Ensure individual stake tracking functionality")
+    else:
+        print("• Most PoS endpoints are functional")
+        print("• Consider adding additional PoS management features")
+        print("• Enhance existing endpoints with more detailed information")
