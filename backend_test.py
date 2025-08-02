@@ -133,12 +133,12 @@ def test_mining_system():
         response = requests.get(f"{API_URL}/mining/status")
         if response.status_code == 200:
             data = response.json()
-            required_fields = ["connected_miners", "active_miners", "total_hashrate", "network_difficulty", "mining_mode"]
+            required_fields = ["connected_miners", "total_hash_rate", "difficulty", "block_reward", "mining_phase"]
             missing_fields = [field for field in required_fields if field not in data]
             
             if not missing_fields:
                 log_test("Mining Status Endpoint (NEW)", True, "mining_system",
-                        details=f"All required fields present: Active miners: {data.get('active_miners', 0)}, Hashrate: {data.get('total_hashrate', 0)} H/s, Mode: {data.get('mining_mode', 'Unknown')}")
+                        details=f"All required fields present: Connected miners: {data.get('connected_miners', 0)}, Hash rate: {data.get('total_hash_rate', 0)} H/s, Phase: {data.get('mining_phase', 'Unknown')}")
             else:
                 log_test("Mining Status Endpoint (NEW)", False, "mining_system",
                         details=f"Missing required fields: {missing_fields}")
