@@ -215,20 +215,33 @@ class SecurityManager:
         
         try:
             if redis_client:
-                print("DEBUG: Using Redis for failed login tracking")  # Debug log
-                # Use Redis for persistent storage
-                attempts_data = redis_client.get(key)
-                if attempts_data:
-                    attempts_info = json.loads(attempts_data)
-                else:
-                    attempts_info = {"count": 0, "first_attempt": current_time}
-                
-                attempts_info["count"] += 1
-                attempts_info["last_attempt"] = current_time
-                
-                # Store for lockout duration
-                redis_client.setex(key, SecurityManager.LOCKOUT_DURATION, json.dumps(attempts_info))
-                
+                print("DEBUG: Attempting to use Redis for failed login tracking")  # Debug log
+                try:
+                    # Use Redis for persistent storage
+                    attempts_data = redis_client.get(key)
+                    if attempts_data:
+                        attempts_info = json.loads(attempts_data)
+                    else:
+                        attempts_info = {"count": 0, "first_attempt": current_time}
+                    
+                    attempts_info["count"] += 1
+                    attempts_info["last_attempt"] = current_time
+                    
+                    # Store for lockout duration
+                    redis_client.setex(key, SecurityManager.LOCKOUT_DURATION, json.dumps(attempts_info))
+                    print(f"DEBUG: Redis storage successful: {attempts_info}")  # Debug log
+                    
+                except Exception as redis_error:
+                    print(f"DEBUG: Redis failed, falling back to in-memory: {redis_error}")  # Debug log
+                    # Redis failed, fall back to in-memory storage
+                    if username not in failed_attempts_storage:
+                        failed_attempts_storage[username] = {"count": 0, "first_attempt": current_time}
+                    
+                    failed_attempts_storage[username]["count"] += 1
+                    failed_attempts_storage[username]["last_attempt"] = current_time
+                    attempts_info = failed_attempts_storage[username]
+                    print(f"DEBUG: In-memory fallback successful: {attempts_info}")  # Debug log
+                    
             else:
                 print("DEBUG: Using in-memory storage for failed login tracking")  # Debug log
                 # Fallback to in-memory storage
@@ -238,6 +251,7 @@ class SecurityManager:
                 failed_attempts_storage[username]["count"] += 1
                 failed_attempts_storage[username]["last_attempt"] = current_time
                 attempts_info = failed_attempts_storage[username]
+                print(f"DEBUG: In-memory storage successful: {attempts_info}")  # Debug log
             
             print(f"DEBUG: Attempts info: {attempts_info}")  # Debug log
             
