@@ -209,6 +209,7 @@ class SecurityManager:
     @staticmethod
     def record_failed_login(username: str) -> Dict[str, Any]:
         """Record failed login attempt and check for lockout"""
+        print(f"DEBUG: ENTERING record_failed_login for {username}")  # Debug log
         current_time = time.time()
         key = f"failed_login:{username}"
         
