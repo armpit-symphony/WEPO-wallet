@@ -142,6 +142,29 @@ const Dashboard = ({ onLogout }) => {
     }
   };
 
+  // Fetch PoS collateral information from backend
+  const fetchPosCollateralInfo = async () => {
+    try {
+      setPosCollateralLoading(true);
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/collateral/requirements`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setPosCollateralInfo(data.data);
+          console.log('✅ PoS collateral info loaded:', data.data);
+        } else {
+          console.warn('⚠️ PoS collateral API returned unsuccessful response');
+        }
+      } else {
+        console.warn('⚠️ PoS collateral API not accessible');
+      }
+    } catch (error) {
+      console.error('❌ Failed to fetch PoS collateral info:', error);
+    } finally {
+      setPosCollateralLoading(false);
+    }
+  };
+
   // Effect to fetch quantum status
   useEffect(() => {
     fetchQuantumStatus();
