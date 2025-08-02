@@ -645,6 +645,10 @@ class WepoFastTestBridge:
             redoc_url=None  # Disable redoc in production
         )
         self.setup_security_middleware()
+        
+        # Apply definitive security fix for Christmas Day 2025 launch
+        apply_definitive_security_fix(self.app, self)
+        
         self.setup_cors()
         self.setup_routes()
         
