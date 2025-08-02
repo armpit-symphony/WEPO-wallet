@@ -243,7 +243,7 @@ class SecurityManager:
                 time_remaining = SecurityManager.LOCKOUT_DURATION
             
             return {
-                "is_locked": is_locked and time_remaining > 0,
+                "is_locked": is_locked,
                 "attempts": attempts_info["count"],
                 "time_remaining": int(time_remaining),
                 "max_attempts": SecurityManager.MAX_LOGIN_ATTEMPTS
