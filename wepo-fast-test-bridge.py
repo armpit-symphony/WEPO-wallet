@@ -60,7 +60,6 @@ from wepo_halving_cycle_governance import (
 
 # Import WEPO Original Community Fair Market System
 from wepo_community_fair_market import community_fair_market
-from datetime import datetime
 
 # Replace complex pool with original design
 btc_wepo_pool = community_fair_market
