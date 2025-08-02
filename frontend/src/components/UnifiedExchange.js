@@ -114,10 +114,6 @@ const UnifiedExchange = ({ onBack }) => {
       } else {
         setExchangeRate(null);
         setError('No liquidity pool exists yet. You can create the market by adding liquidity.');
-        // Show bootstrap opportunity
-        if (data.bootstrap_incentives) {
-          setBootstrapIncentives(data.bootstrap_incentives);
-        }
       }
       
       // Fetch dynamic collateral overview
