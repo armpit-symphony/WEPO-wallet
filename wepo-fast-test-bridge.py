@@ -1076,46 +1076,19 @@ class WepoFastTestBridge:
                 if not username or not password:
                     raise HTTPException(status_code=400, detail="Username and password required")
                 
-                # Check for account lockout FIRST before attempting login
-                current_time = time.time()
-                key = f"failed_login:{username}"
-                
-                # Get current lockout status without recording a new attempt yet
-                try:
-                    from security_utils import redis_client, failed_attempts_storage
-                    attempts_info = None
-                    
-                    if redis_client:
-                        attempts_data = redis_client.get(key)
-                        if attempts_data:
-                            import json
-                            attempts_info = json.loads(attempts_data)
-                    else:
-                        # Check in-memory storage  
-                        if username in failed_attempts_storage:
-                            attempts_info = failed_attempts_storage[username]
-                    
-                    # Check if account is currently locked
-                    if attempts_info:
-                        is_locked = attempts_info["count"] >= SecurityManager.MAX_LOGIN_ATTEMPTS
-                        time_remaining = max(0, SecurityManager.LOCKOUT_DURATION - 
-                                           (current_time - attempts_info.get("last_attempt", current_time)))
-                        
-                        if is_locked and time_remaining > 0:
-                            logger.warning(f"Account {username} is locked, {time_remaining} seconds remaining")
-                            raise HTTPException(
-                                status_code=423, 
-                                detail={
-                                    "message": "Account temporarily locked due to too many failed login attempts",
-                                    "attempts": attempts_info["count"],
-                                    "time_remaining": int(time_remaining),
-                                    "max_attempts": SecurityManager.MAX_LOGIN_ATTEMPTS
-                                }
-                            )
-                            
-                except Exception as e:
-                    logger.warning(f"Lockout check error for {username}: {e}")
-                    # Continue with login attempt if lockout check fails
+                # CHECK ACCOUNT LOCKOUT FIRST
+                lockout_status = self.check_account_lockout(username)
+                if lockout_status['is_locked']:
+                    logger.warning(f"Account {username} is locked, {lockout_status['time_remaining']} seconds remaining")
+                    raise HTTPException(
+                        status_code=423, 
+                        detail={
+                            "message": "Account temporarily locked due to too many failed login attempts",
+                            "attempts": lockout_status['attempts'],
+                            "time_remaining": lockout_status['time_remaining'],
+                            "max_attempts": LOCKOUT_THRESHOLD
+                        }
+                    )
                 
                 # Find wallet by username
                 wallet_address = None
@@ -1129,26 +1102,50 @@ class WepoFastTestBridge:
                 
                 if not wallet_data:
                     # Record failed login attempt for non-existent user
-                    failed_info = SecurityManager.record_failed_login(username)
+                    failed_info = self.record_failed_attempt(username)
                     logger.warning(f"Login failed for unknown user {username} from {client_id}")
-                    raise HTTPException(status_code=401, detail="Invalid username or password")
+                    
+                    if failed_info['is_locked']:
+                        raise HTTPException(
+                            status_code=423,
+                            detail={
+                                "message": "Account locked due to too many failed login attempts",
+                                "attempts": failed_info["attempts"],
+                                "time_remaining": failed_info["time_remaining"],
+                                "max_attempts": failed_info["max_attempts"]
+                            }
+                        )
+                    else:
+                        raise HTTPException(status_code=401, detail="Invalid username or password")
                 
                 # Verify password using bcrypt
                 stored_password_hash = wallet_data.get("password_hash")
                 if not stored_password_hash:
                     # Record failed login attempt
-                    failed_info = SecurityManager.record_failed_login(username) 
+                    failed_info = self.record_failed_attempt(username)
                     logger.error(f"No password hash found for user {username}")
-                    raise HTTPException(status_code=401, detail="Invalid username or password")
+                    
+                    if failed_info['is_locked']:
+                        raise HTTPException(
+                            status_code=423,
+                            detail={
+                                "message": "Account locked due to too many failed login attempts",
+                                "attempts": failed_info["attempts"],
+                                "time_remaining": failed_info["time_remaining"],
+                                "max_attempts": failed_info["max_attempts"]
+                            }
+                        )
+                    else:
+                        raise HTTPException(status_code=401, detail="Invalid username or password")
                 
                 # Use SecurityManager for proper bcrypt verification
                 if not SecurityManager.verify_password(password, stored_password_hash):
                     # Record failed login attempt for wrong password
-                    failed_info = SecurityManager.record_failed_login(username)
+                    failed_info = self.record_failed_attempt(username)
                     logger.warning(f"Login failed for user {username} from {client_id} - incorrect password")
                     
                     # Check if this failed attempt caused a lockout
-                    if failed_info.get("is_locked"):
+                    if failed_info['is_locked']:
                         raise HTTPException(
                             status_code=423,
                             detail={
@@ -1162,7 +1159,7 @@ class WepoFastTestBridge:
                         raise HTTPException(status_code=401, detail="Invalid username or password")
                 
                 # SUCCESSFUL LOGIN - Clear any failed login attempts
-                SecurityManager.clear_failed_login(username)
+                self.clear_failed_attempts(username)
                 logger.info(f"User {username} logged in successfully from {client_id}")
                 
                 return {
@@ -1180,9 +1177,10 @@ class WepoFastTestBridge:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.error(f"Login error for user {username} from {client_id}: {str(e)}")
+                logger.error(f"Login error for user {username if 'username' in locals() else 'unknown'} from {client_id}: {str(e)}")
                 # Record failed login attempt for system errors too
-                SecurityManager.record_failed_login(username)
+                if 'username' in locals():
+                    self.record_failed_attempt(username)
                 raise HTTPException(status_code=500, detail="Login failed due to internal error")
         
         @self.app.get("/api/wallet/{address}")
