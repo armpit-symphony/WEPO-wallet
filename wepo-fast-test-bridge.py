@@ -3888,7 +3888,7 @@ class WepoFastTestBridge:
 
         @self.app.post("/api/liquidity/add")
         async def add_liquidity_to_pool(request: dict):
-            """Add liquidity to BTC-WEPO pool (or create if first) + BOOTSTRAP INCENTIVES"""
+            """Add liquidity to community fair market - Original WEPO Design"""
             try:
                 wallet_address = request.get("wallet_address")
                 btc_amount = float(request.get("btc_amount", 0))
@@ -3897,13 +3897,8 @@ class WepoFastTestBridge:
                 if not wallet_address or btc_amount <= 0 or wepo_amount <= 0:
                     raise HTTPException(status_code=400, detail="Invalid amounts")
                 
-                # Add liquidity
-                result = btc_wepo_pool.add_liquidity(wallet_address, btc_amount, wepo_amount)
-                
-                # Update community price oracle after liquidity addition
-                new_price = btc_wepo_pool.get_price()
-                if new_price:
-                    community_price_oracle.get_wepo_usd_price(new_price)
+                # Use original community fair market system
+                result = community_fair_market.add_liquidity(wallet_address, btc_amount, wepo_amount)
                 
                 return {
                     "lp_id": f"lp_{int(time.time())}_{wallet_address[:8]}",
@@ -3915,7 +3910,8 @@ class WepoFastTestBridge:
                     "market_price": result.get("new_price") or result.get("initial_price"),
                     "pool_created": result.get("pool_created", False),
                     "btc_reserve": result["btc_reserve"],
-                    "wepo_reserve": result["wepo_reserve"]
+                    "wepo_reserve": result["wepo_reserve"],
+                    "philosophy": "Community creates the market, community determines the price"
                 }
                 
             except HTTPException:
