@@ -648,6 +648,65 @@ class WepoFastTestBridge:
         # Setup mining routes
         setup_mining_routes(self.app)
     
+    def check_account_lockout(self, username: str) -> dict:
+        """Check if account is locked due to failed login attempts"""
+        current_time = time.time()
+        
+        if username in failed_login_attempts:
+            attempt_data = failed_login_attempts[username]
+            
+            # Check if still locked
+            if attempt_data['count'] >= LOCKOUT_THRESHOLD:
+                time_since_lockout = current_time - attempt_data['lockout_time']
+                if time_since_lockout < LOCKOUT_TIME_SECONDS:
+                    return {
+                        'is_locked': True,
+                        'time_remaining': int(LOCKOUT_TIME_SECONDS - time_since_lockout),
+                        'attempts': attempt_data['count']
+                    }
+                else:
+                    # Lockout expired, reset
+                    del failed_login_attempts[username]
+        
+        return {'is_locked': False, 'time_remaining': 0, 'attempts': 0}
+    
+    def record_failed_attempt(self, username: str) -> dict:
+        """Record a failed login attempt"""
+        current_time = time.time()
+        
+        if username not in failed_login_attempts:
+            failed_login_attempts[username] = {
+                'count': 1,
+                'first_attempt': current_time,
+                'lockout_time': current_time
+            }
+        else:
+            failed_login_attempts[username]['count'] += 1
+            
+        attempt_data = failed_login_attempts[username]
+        
+        # Check if threshold reached
+        if attempt_data['count'] >= LOCKOUT_THRESHOLD:
+            failed_login_attempts[username]['lockout_time'] = current_time
+            return {
+                'is_locked': True,
+                'attempts': attempt_data['count'],
+                'time_remaining': LOCKOUT_TIME_SECONDS,
+                'max_attempts': LOCKOUT_THRESHOLD
+            }
+        
+        return {
+            'is_locked': False,
+            'attempts': attempt_data['count'],
+            'time_remaining': 0,
+            'max_attempts': LOCKOUT_THRESHOLD
+        }
+    
+    def clear_failed_attempts(self, username: str):
+        """Clear failed login attempts on successful login"""
+        if username in failed_login_attempts:
+            del failed_login_attempts[username]
+    
     def setup_security_middleware(self):
         """Add comprehensive security middleware"""
         class SecurityMiddleware(BaseHTTPMiddleware):
