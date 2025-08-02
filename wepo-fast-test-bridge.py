@@ -744,29 +744,29 @@ class WepoFastTestBridge:
     def setup_security_middleware(self):
         """Add comprehensive security middleware"""
         class SecurityMiddleware(BaseHTTPMiddleware):
+            def __init__(self, app, bridge_instance):
+                super().__init__(app)
+                self.bridge = bridge_instance
+                
             async def dispatch(self, request: Request, call_next):
                 try:
                     # Get client identifier for rate limiting
                     client_id = SecurityManager.get_client_identifier(request)
                     
-                    # Apply global rate limiting (60 requests per minute per IP)
-                    current_time = time.time()
-                    global_key = f"rate_limit:{client_id}:global_api"
-                    
-                    # Check if client is rate limited
-                    if SecurityManager.is_rate_limited(client_id, "global_api"):
+                    # Apply global rate limiting
+                    if self.bridge.check_rate_limit(client_id, "global"):
                         logger.warning(f"Global rate limit exceeded for {client_id}")
                         from fastapi.responses import JSONResponse
                         return JSONResponse(
                             status_code=429,
                             content={
-                                "message": "Too many requests. Please try again later.",
+                                "error": "Too many requests. Please try again later.",
                                 "retry_after": 60,
-                                "rate_limit": "60 requests per minute"
+                                "rate_limit": f"{GLOBAL_RATE_LIMIT} requests per minute"
                             },
                             headers={
-                                "X-RateLimit-Limit": "60",
-                                "X-RateLimit-Reset": str(int(current_time) + 60),
+                                "X-RateLimit-Limit": str(GLOBAL_RATE_LIMIT),
+                                "X-RateLimit-Reset": str(int(time.time()) + RATE_LIMIT_WINDOW),
                                 "Retry-After": "60"
                             }
                         )
@@ -779,8 +779,8 @@ class WepoFastTestBridge:
                         response.headers[header] = value
                     
                     # Add rate limiting headers
-                    response.headers["X-RateLimit-Limit"] = "60"
-                    response.headers["X-RateLimit-Reset"] = str(int(current_time) + 60)
+                    response.headers["X-RateLimit-Limit"] = str(GLOBAL_RATE_LIMIT)
+                    response.headers["X-RateLimit-Reset"] = str(int(time.time()) + RATE_LIMIT_WINDOW)
                     
                     return response
                 except HTTPException:
@@ -789,7 +789,7 @@ class WepoFastTestBridge:
                     logger.error(f"Security middleware error: {e}")
                     raise HTTPException(status_code=500, detail="Internal server error")
         
-        self.app.add_middleware(SecurityMiddleware)
+        self.app.add_middleware(SecurityMiddleware, bridge_instance=self)
     
     def setup_cors(self):
         self.app.add_middleware(
