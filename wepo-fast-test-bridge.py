@@ -1106,10 +1106,22 @@ class WepoFastTestBridge:
             client_id = SecurityManager.get_client_identifier(request)
             logger.info(f"Wallet login attempt from {client_id}")
             
-            # Implement rate limiting for login attempts
-            if SecurityManager.is_rate_limited(client_id, "wallet_login"):
+            # Implement rate limiting for login attempts (5 per minute)
+            if self.check_rate_limit(client_id, "wallet_login"):
                 logger.warning(f"Rate limit exceeded for login from {client_id}")
-                raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
+                raise HTTPException(
+                    status_code=429, 
+                    detail={
+                        "error": "Too many login attempts. Please try again later.",
+                        "retry_after": 60,
+                        "rate_limit": "5 login attempts per minute"
+                    },
+                    headers={
+                        "X-RateLimit-Limit": "5",
+                        "X-RateLimit-Reset": str(int(time.time()) + 60),
+                        "Retry-After": "60"
+                    }
+                )
             
             try:
                 # Get request data
