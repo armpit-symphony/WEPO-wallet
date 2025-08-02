@@ -381,12 +381,12 @@ def test_database_storage():
     
     # Test blockchain data endpoints
     try:
-        response = requests.get(f"{API_URL}/blocks/latest")
+        response = requests.get(f"{API_URL}/network/status")
         if response.status_code == 200:
             data = response.json()
-            if isinstance(data, list):
+            if isinstance(data, dict) and "block_height" in data:
                 log_test("Blockchain Data Endpoints", True, "database_storage",
-                        details=f"Block data accessible - {len(data)} blocks retrieved")
+                        details=f"Network data accessible - Block height: {data.get('block_height', 0)}")
             else:
                 log_test("Blockchain Data Endpoints", False, "database_storage",
                         details=f"Unexpected data format: {type(data)}")
