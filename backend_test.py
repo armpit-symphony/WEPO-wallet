@@ -70,12 +70,11 @@ test_results = {
     "failed": 0,
     "tests": [],
     "categories": {
-        "system_health": {"passed": 0, "total": 0},
-        "wallet_auth": {"passed": 0, "total": 0},
-        "core_features": {"passed": 0, "total": 0},
-        "dex_market": {"passed": 0, "total": 0},
-        "security": {"passed": 0, "total": 0},
-        "database": {"passed": 0, "total": 0}
+        "mining_system": {"passed": 0, "total": 0},
+        "network_status": {"passed": 0, "total": 0},
+        "staking_system": {"passed": 0, "total": 0},
+        "database_storage": {"passed": 0, "total": 0},
+        "integration_verification": {"passed": 0, "total": 0}
     }
 }
 
