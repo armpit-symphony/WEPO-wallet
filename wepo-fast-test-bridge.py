@@ -710,6 +710,37 @@ class WepoFastTestBridge:
         if username in failed_login_attempts:
             del failed_login_attempts[username]
     
+    def check_rate_limit(self, client_id: str, endpoint: str = "global") -> bool:
+        """Check if client is rate limited"""
+        current_time = time.time()
+        key = f"rate_limit:{client_id}:{endpoint}"
+        
+        # Get rate limits
+        limits = {
+            "global": GLOBAL_RATE_LIMIT,
+            "wallet_create": 3,
+            "wallet_login": 5
+        }
+        limit = limits.get(endpoint, GLOBAL_RATE_LIMIT)
+        
+        # Initialize storage for this key
+        if key not in rate_limit_storage:
+            rate_limit_storage[key] = []
+        
+        # Clean old entries
+        rate_limit_storage[key] = [
+            timestamp for timestamp in rate_limit_storage[key]
+            if current_time - timestamp < RATE_LIMIT_WINDOW
+        ]
+        
+        # Check if over limit
+        if len(rate_limit_storage[key]) >= limit:
+            return True
+        
+        # Record this request
+        rate_limit_storage[key].append(current_time)
+        return False
+    
     def setup_security_middleware(self):
         """Add comprehensive security middleware"""
         class SecurityMiddleware(BaseHTTPMiddleware):
