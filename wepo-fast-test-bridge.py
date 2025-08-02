@@ -1297,6 +1297,55 @@ class WepoFastTestBridge:
                 "genesis_special": "Block 0 = 400 WEPO commemorative reward"
             }
         
+        @self.app.get("/api/mining/status")
+        async def get_mining_status():
+            """Get current mining status with comprehensive mining metrics"""
+            height = len(self.blockchain.blocks) - 1
+            
+            # Calculate mining stats
+            total_miners = len([addr for addr in self.blockchain.wallets.keys() if addr.startswith('wepo1')])
+            hashrate_estimate = total_miners * 1000000  # Estimated H/s based on active miners
+            
+            # Determine if mining is currently active
+            mining_active = height < 920460  # Mining ends after 15 years
+            
+            # Get current reward based on height
+            if height == 0:
+                current_reward = 400.0
+                phase = "Genesis Block"
+            elif height < 131400:
+                current_reward = 52.51
+                phase = "Phase 1 - Pre-PoS Mining"
+            elif height < 288540:
+                current_reward = 33.17
+                phase = "Phase 2a - Post-PoS Years 1-3"
+            elif height < 604140:
+                current_reward = 16.58
+                phase = "Phase 2b - Post-PoS Years 4-9"
+            elif height < 762300:
+                current_reward = 8.29
+                phase = "Phase 2c - Post-PoS Years 10-12"
+            elif height < 920460:
+                current_reward = 4.15
+                phase = "Phase 2d - Post-PoS Years 13-15"
+            else:
+                current_reward = 0.0
+                phase = "Mining Complete"
+            
+            return {
+                "mining_active": mining_active,
+                "current_block_height": height,
+                "current_reward_per_block": current_reward,
+                "phase": phase,
+                "network_hashrate_estimate": hashrate_estimate,
+                "active_miners": total_miners,
+                "difficulty": 1,
+                "algorithm": "Argon2 + SHA256 Dual-Layer",
+                "mempool_transactions": len(self.blockchain.mempool),
+                "blocks_until_next_phase": 131400 - height if height < 131400 else None,
+                "mining_progress_percentage": round((height / 920460) * 100, 2) if height < 920460 else 100.0
+            }
+        
         @self.app.post("/api/test/mine-block")
         async def mine_test_block():
             block = self.blockchain.mine_block()
