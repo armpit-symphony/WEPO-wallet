@@ -211,8 +211,11 @@ class SecurityManager:
         current_time = time.time()
         key = f"failed_login:{username}"
         
+        print(f"DEBUG: Recording failed login for {username}")  # Debug log
+        
         try:
             if redis_client:
+                print("DEBUG: Using Redis for failed login tracking")  # Debug log
                 # Use Redis for persistent storage
                 attempts_data = redis_client.get(key)
                 if attempts_data:
@@ -227,6 +230,7 @@ class SecurityManager:
                 redis_client.setex(key, SecurityManager.LOCKOUT_DURATION, json.dumps(attempts_info))
                 
             else:
+                print("DEBUG: Using in-memory storage for failed login tracking")  # Debug log
                 # Fallback to in-memory storage
                 if username not in failed_attempts_storage:
                     failed_attempts_storage[username] = {"count": 0, "first_attempt": current_time}
@@ -235,6 +239,8 @@ class SecurityManager:
                 failed_attempts_storage[username]["last_attempt"] = current_time
                 attempts_info = failed_attempts_storage[username]
             
+            print(f"DEBUG: Attempts info: {attempts_info}")  # Debug log
+            
             is_locked = attempts_info["count"] >= SecurityManager.MAX_LOGIN_ATTEMPTS
             time_remaining = SecurityManager.LOCKOUT_DURATION  # Default to full duration
             
@@ -242,15 +248,19 @@ class SecurityManager:
                 # For a fresh lockout, give full duration
                 time_remaining = SecurityManager.LOCKOUT_DURATION
             
-            return {
+            result = {
                 "is_locked": is_locked,
                 "attempts": attempts_info["count"],
                 "time_remaining": int(time_remaining),
                 "max_attempts": SecurityManager.MAX_LOGIN_ATTEMPTS
             }
+            
+            print(f"DEBUG: Returning result: {result}")  # Debug log
+            return result
         
         except Exception as e:
             logger.error(f"Failed login recording error: {e}")
+            print(f"DEBUG: Exception in record_failed_login: {e}")  # Debug log
             return {"is_locked": False, "attempts": 1, "time_remaining": 0, "max_attempts": SecurityManager.MAX_LOGIN_ATTEMPTS}
     
     @staticmethod
