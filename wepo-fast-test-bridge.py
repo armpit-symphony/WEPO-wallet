@@ -1528,6 +1528,65 @@ class WepoFastTestBridge:
                 logger.error(f"Bitcoin network status error: {str(e)}")
                 raise HTTPException(status_code=500, detail=f"Failed to get Bitcoin network status: {str(e)}")
 
+        @self.app.get("/api/network/status")
+        async def get_network_status():
+            """Get WEPO network status information"""
+            try:
+                height = len(self.blockchain.blocks) - 1
+                total_wallets = len(self.blockchain.wallets)
+                active_masternodes = len([mn for mn in self.blockchain.masternodes.values() if mn.get('status') == 'active'])
+                total_stakes = len([stake for stakes in self.blockchain.stakes.values() for stake in stakes])
+                
+                # Calculate network hashrate estimate
+                network_hashrate = max(total_wallets * 1000000, 1000000)  # Base 1MH/s minimum
+                
+                # Calculate total supply in circulation
+                blocks_mined = height + 1  # +1 because genesis is block 0
+                
+                # Calculate total supply based on reward schedule
+                total_supply_mined = 0
+                if height >= 0:
+                    total_supply_mined += 400  # Genesis block
+                if height >= 1:
+                    phase1_blocks = min(height, 131399)  # Blocks 1-131399
+                    total_supply_mined += phase1_blocks * 52.51
+                if height >= 131400:
+                    phase2a_blocks = min(height - 131400, 157140)  # Blocks 131400-288539
+                    total_supply_mined += phase2a_blocks * 33.17
+                if height >= 288540:
+                    phase2b_blocks = min(height - 288540, 315600)  # Blocks 288540-604139
+                    total_supply_mined += phase2b_blocks * 16.58
+                if height >= 604140:
+                    phase2c_blocks = min(height - 604140, 158160)  # Blocks 604140-762299
+                    total_supply_mined += phase2c_blocks * 8.29
+                if height >= 762300:
+                    phase2d_blocks = min(height - 762300, 158160)  # Blocks 762300-920459
+                    total_supply_mined += phase2d_blocks * 4.15
+                
+                return {
+                    "success": True,
+                    "network_name": "WEPO",
+                    "block_height": height,
+                    "network_hashrate": network_hashrate,
+                    "active_masternodes": active_masternodes,
+                    "total_supply": 69000003,  # Total fixed supply
+                    "circulating_supply": int(total_supply_mined),
+                    "total_wallets": total_wallets,
+                    "active_stakes": total_stakes,
+                    "pos_active": height >= 131400,
+                    "pos_activation_block": 131400,
+                    "difficulty": 1,
+                    "algorithm": "Argon2 + SHA256 Dual-Layer",
+                    "quantum_resistant": True,
+                    "consensus": "PoW + PoS Hybrid",
+                    "mempool_size": len(self.blockchain.mempool),
+                    "timestamp": int(time.time())
+                }
+                
+            except Exception as e:
+                logger.error(f"WEPO network status error: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to get WEPO network status: {str(e)}")
+
         @self.app.post("/api/bitcoin/address/generate")
         async def generate_bitcoin_address(request: dict):
             """Generate a new Bitcoin address (for demo purposes)"""
