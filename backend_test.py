@@ -177,16 +177,16 @@ def test_mining_system():
             status_data = status_response.json()
             info_data = info_response.json()
             
-            # Check if difficulty values are consistent
-            status_difficulty = status_data.get("network_difficulty", 0)
-            info_difficulty = info_data.get("difficulty", 0)
+            # Check if reward values are consistent
+            status_reward = status_data.get("block_reward", 0)
+            info_reward = info_data.get("current_reward", 0)
             
-            if status_difficulty == info_difficulty:
+            if status_reward == info_reward:
                 log_test("Mining Data Consistency", True, "mining_system",
-                        details=f"Difficulty values consistent: {status_difficulty}")
+                        details=f"Reward values consistent: {status_reward} WEPO")
             else:
                 log_test("Mining Data Consistency", False, "mining_system",
-                        details=f"Difficulty mismatch - Status: {status_difficulty}, Info: {info_difficulty}")
+                        details=f"Reward mismatch - Status: {status_reward}, Info: {info_reward}")
         else:
             log_test("Mining Data Consistency", False, "mining_system",
                     details="Cannot verify consistency - One or both endpoints failed")
