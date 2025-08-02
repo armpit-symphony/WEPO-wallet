@@ -454,7 +454,12 @@ async def login_wallet(request: Request, data: dict):
                 logger.warning(f"Account {username} locked after {failed_info['attempts']} failed attempts from {client_id}")
                 raise HTTPException(
                     status_code=423, 
-                    detail=f"Account locked due to {failed_info['attempts']} failed login attempts. Try again in {failed_info['time_remaining']} seconds."
+                    detail={
+                        "message": f"Account locked due to {failed_info['attempts']} failed login attempts. Try again in {failed_info['time_remaining']} seconds.",
+                        "attempts": failed_info['attempts'],
+                        "time_remaining": failed_info['time_remaining'],
+                        "max_attempts": failed_info['max_attempts']
+                    }
                 )
             
             logger.warning(f"Failed login for {username} from {client_id} - {failed_info['attempts']}/{failed_info['max_attempts']} attempts")
