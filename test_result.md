@@ -112,7 +112,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Conduct comprehensive security audit and penetration testing of the entire WEPO cryptocurrency system. Focus on identifying authentication vulnerabilities, cryptographic weaknesses, API security flaws, wallet security issues, blockchain consensus vulnerabilities, privacy feature security, network attack vectors, and data storage security. Provide detailed security assessment with remediation recommendations for production launch readiness."
+user_problem_statement: "Implement missing PoS (Proof of Stake) collateral API endpoints to make staking requirements accessible and ensure proper frontend integration for displaying PoS collateral information to users."
 
 ## CRITICAL WALLET AUTHENTICATION ISSUE RESOLVED
 
