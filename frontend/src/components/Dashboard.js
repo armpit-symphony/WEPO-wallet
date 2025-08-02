@@ -165,9 +165,10 @@ const Dashboard = ({ onLogout }) => {
     }
   };
 
-  // Effect to fetch quantum status
+  // Effect to fetch quantum status and PoS collateral info
   useEffect(() => {
     fetchQuantumStatus();
+    fetchPosCollateralInfo();
   }, []);
 
   const handleModeToggle = () => {
