@@ -1093,26 +1093,12 @@ class WepoFastTestBridge:
                 raise HTTPException(status_code=500, detail="Failed to create wallet due to internal error")
 
         @self.app.post("/api/wallet/login")
+        @limiter.limit("5/minute")
         async def login_wallet(request: Request):
-            """Login to existing WEPO wallet with definitive security"""
+            """Login to existing WEPO wallet with optimized security"""
             client_id = SecurityManager.get_client_identifier(request)
             logger.info(f"Wallet login attempt from {client_id}")
             
-            # Apply endpoint-specific rate limiting  
-            if self.check_rate_limit(client_id, "wallet_login"):
-                raise HTTPException(
-                    status_code=429,
-                    detail={
-                        "error": "Wallet login rate limit exceeded", 
-                        "message": "Too many login attempts. Please try again later.",
-                        "retry_after": 60
-                    },
-                    headers={
-                        "X-RateLimit-Limit": "5",
-                        "X-RateLimit-Reset": str(int(time.time()) + 60),
-                        "Retry-After": "60"
-                    }
-                )
             
             try:
                 # Get request data
