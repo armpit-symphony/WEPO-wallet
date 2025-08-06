@@ -224,15 +224,11 @@ def apply_true_optimized_security_fix(app, bridge_instance):
 def apply_definitive_security_fix(app, bridge_instance):
     """Apply the definitive security fix to the WEPO FastAPI app"""
     
-    # Add rate limiter to bridge instance for access
-    bridge_instance.rate_limiter = rate_limiter
-    
     # Add brute force protection methods to bridge instance
     bridge_instance.check_account_lockout = brute_force_protection.check_account_lockout
     bridge_instance.record_failed_attempt = brute_force_protection.record_failed_attempt
     bridge_instance.clear_failed_attempts = brute_force_protection.clear_failed_attempts
     
-    print("✅ TRUE OPTIMIZED SECURITY FIX APPLIED")
-    print("✅ Brute Force Protection: Enterprise-grade account lockout enabled")
-    print("✅ Rate Limiting: TRUE optimized with proper X-RateLimit headers")
+    print("✅ DEFINITIVE SECURITY FIX APPLIED")
+    print("✅ Brute Force Protection: Enterprise-grade account lockout enabled") 
     print("✅ System ready for Christmas Day 2025 launch")
