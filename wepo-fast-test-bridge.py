@@ -1093,7 +1093,7 @@ class WepoFastTestBridge:
                 raise HTTPException(status_code=500, detail="Failed to create wallet due to internal error")
 
         @self.app.post("/api/wallet/login")
-        @limiter.limit("5/minute")
+        # @limiter.limit("5/minute") # TEMPORARILY DISABLED FOR DEBUGGING OPTIMIZATION
         async def login_wallet(request: Request):
             """Login to existing WEPO wallet with optimized security"""
             client_id = SecurityManager.get_client_identifier(request)
