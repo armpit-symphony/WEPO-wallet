@@ -21,8 +21,8 @@ from datetime import datetime
 # Import security utilities
 from security_utils import SecurityManager, init_redis
 
-# Import definitive security fix
-from definitive_security_fix import apply_definitive_security_fix
+# Import optimized security fix
+from definitive_security_fix import apply_optimized_security_fix, limiter
 
 # Initialize security features
 init_redis()
@@ -645,8 +645,8 @@ class WepoFastTestBridge:
             redoc_url=None  # Disable redoc in production
         )
         
-        # Apply definitive security fix BEFORE setting up routes (critical timing fix)
-        apply_definitive_security_fix(self.app, self)
+        # Apply optimized security fix BEFORE setting up routes (critical timing fix)
+        apply_optimized_security_fix(self.app, self)
         
         self.setup_security_middleware()
         self.setup_cors()
