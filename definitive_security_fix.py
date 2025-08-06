@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-DEFINITIVE SECURITY FIX FOR WEPO CRYPTOCURRENCY SYSTEM
-Implements enterprise-grade brute force protection and rate limiting
+DEFINITIVE SECURITY FIX FOR WEPO CRYPTOCURRENCY SYSTEM - OPTIMIZED VERSION
+Implements enterprise-grade brute force protection and rate limiting with SlowAPI integration
 
 This module provides the complete solution for the critical security vulnerabilities
 that are blocking the Christmas Day 2025 launch.
@@ -14,6 +14,7 @@ from typing import Dict, Any, Optional
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
+from slowapi.errors import RateLimitExceeded
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 
@@ -21,6 +22,9 @@ from fastapi.responses import JSONResponse
 failed_login_storage = {}
 LOCKOUT_THRESHOLD = 5
 LOCKOUT_DURATION = 300  # 5 minutes
+
+# Global limiter instance for decorators (initialized later)
+limiter = None
 
 class DefinitiveBruteForceProtection:
     """Enterprise-grade brute force protection with account lockout"""
