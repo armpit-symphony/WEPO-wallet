@@ -778,26 +778,6 @@ class WepoFastTestBridge:
                             }
                         )
                     
-                    # Check TRUE optimized rate limiting if available (TEMPORARILY DISABLED FOR DEBUGGING)
-                    # if hasattr(self.bridge, 'rate_limiter'):
-                    #     is_limited, limit_headers, limit_type = self.bridge.rate_limiter.check_rate_limit(
-                    #         request, 
-                    #         request.url.path if request.url else None
-                    #     )
-                    #     
-                    #     if is_limited:
-                    #         logger.warning(f"Rate limit exceeded for {client_id} on {request.url.path if request.url else 'unknown'} ({limit_type})")
-                    #         return JSONResponse(
-                    #             status_code=429,
-                    #             content={
-                    #                 "error": "Rate limit exceeded",
-                    #                 "message": "Too many requests. Please slow down and try again.",
-                    #                 "retry_after": 60,
-                    #                 "limit_type": limit_type
-                    #             },
-                    #             headers={**limit_headers, "Retry-After": "60"}
-                    #         )
-                    
                     response = await call_next(request)
                     
                     # Add security headers
@@ -805,18 +785,24 @@ class WepoFastTestBridge:
                     for header, value in security_headers.items():
                         response.headers[header] = value
                     
-                    # Add TRUE optimized rate limiting headers if available (TEMPORARILY DISABLED FOR DEBUGGING)
-                    # if hasattr(self.bridge, 'rate_limiter'):
-                    #     rate_limit_headers = self.bridge.rate_limiter.record_request(
-                    #         request,
-                    #         request.url.path if request.url else None
-                    #     )
-                    #     for header, value in rate_limit_headers.items():
-                    #         response.headers[header] = value
-                    # else:
-                    #     # Fallback rate limiting headers
-                    #     response.headers["X-RateLimit-Limit"] = str(GLOBAL_RATE_LIMIT)
-                    #     response.headers["X-RateLimit-Reset"] = str(int(time.time()) + RATE_LIMIT_WINDOW)
+                    # Add TRUE optimized rate limiting headers
+                    if hasattr(self.bridge, 'rate_limiter'):
+                        try:
+                            rate_limit_headers = self.bridge.rate_limiter.record_request(
+                                request,
+                                request.url.path if request.url else None
+                            )
+                            for header, value in rate_limit_headers.items():
+                                response.headers[header] = value
+                        except Exception as e:
+                            logger.error(f"Rate limiting header error: {e}")
+                            # Fallback headers
+                            response.headers["X-RateLimit-Limit"] = "60"
+                            response.headers["X-RateLimit-Reset"] = str(int(time.time()) + 60)
+                    else:
+                        # Fallback rate limiting headers
+                        response.headers["X-RateLimit-Limit"] = str(GLOBAL_RATE_LIMIT)
+                        response.headers["X-RateLimit-Reset"] = str(int(time.time()) + RATE_LIMIT_WINDOW)
                     
                     return response
                 except HTTPException:
