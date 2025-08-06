@@ -1013,12 +1013,28 @@ class WepoFastTestBridge:
                 }
         
         @self.app.post("/api/wallet/create")
-        @definitive_security_fix.limiter.limit("3/minute")
         async def create_wallet(request: Request):
             """Create a new WEPO wallet with optimized security"""
             client_id = SecurityManager.get_client_identifier(request)
             logger.info(f"Wallet creation attempt from {client_id}")
             
+            # Apply optimized endpoint-specific rate limiting
+            if self.check_rate_limit(client_id, "wallet_create"):
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error": "Wallet creation rate limit exceeded",
+                        "message": "Too many wallet creation attempts. Please slow down.",
+                        "retry_after": 60,
+                        "limit_type": "endpoint_rate_limit"
+                    },
+                    headers={
+                        "X-RateLimit-Limit": "3",
+                        "X-RateLimit-Reset": str(int(time.time()) + 60),
+                        "X-RateLimit-Remaining": "0",
+                        "Retry-After": "60"
+                    }
+                )
             
             try:
                 # Get request data
