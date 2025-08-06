@@ -97,54 +97,78 @@ class DefinitiveBruteForceProtection:
         if username in failed_login_storage:
             del failed_login_storage[username]
 
-class DefinitiveRateLimiter:
-    """Enterprise-grade rate limiting using SlowAPI with in-memory fallback"""
+class OptimizedRateLimiter:
+    """Optimized enterprise-grade rate limiting using SlowAPI"""
     
     def __init__(self):
-        # Initialize limiter with in-memory storage as fallback
+        global limiter
+        print("🔧 Initializing optimized rate limiting system...")
+        
+        # Try Redis first, with graceful fallback to in-memory
         try:
-            # Try Redis first
-            self.limiter = Limiter(
+            print("🔗 Attempting Redis connection for rate limiting...")
+            limiter = Limiter(
                 key_func=get_remote_address,
-                storage_uri="redis://localhost:6379"
+                storage_uri="redis://localhost:6379",
+                default_limits=["60/minute"]  # Global default limit
             )
-        except Exception:
-            # Fallback to in-memory storage
-            self.limiter = Limiter(key_func=get_remote_address)
+            self.limiter = limiter
+            print("✅ Redis-based rate limiting initialized successfully")
+        except Exception as e:
+            print(f"⚠️ Redis unavailable ({e}), using in-memory storage")
+            limiter = Limiter(
+                key_func=get_remote_address,
+                default_limits=["60/minute"]  # Global default limit
+            )
+            self.limiter = limiter
+            print("✅ In-memory rate limiting initialized successfully")
     
-    def setup_middleware(self, app):
-        """Setup rate limiting middleware on FastAPI app"""
+    def setup_app_integration(self, app):
+        """Setup optimized rate limiting integration with FastAPI app"""
+        print("🔧 Setting up SlowAPI middleware integration...")
+        
+        # Add limiter to app state
         app.state.limiter = self.limiter
-        app.add_exception_handler(429, self.rate_limit_handler)
+        
+        # Add SlowAPI middleware 
         app.add_middleware(SlowAPIMiddleware)
+        
+        # Add custom rate limit exception handler
+        app.add_exception_handler(RateLimitExceeded, self.enhanced_rate_limit_handler)
+        
+        print("✅ SlowAPI middleware integration completed")
     
     @staticmethod
-    async def rate_limit_handler(request: Request, exc) -> JSONResponse:
-        """Custom rate limit error handler"""
+    async def enhanced_rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+        """Enhanced rate limit error handler with better UX"""
+        retry_after = int(exc.retry_after) if hasattr(exc, 'retry_after') else 60
+        
         return JSONResponse(
             status_code=429,
             content={
                 "error": "Rate limit exceeded",
-                "message": "Too many requests. Please try again later.",
-                "retry_after": 60
+                "message": "Too many requests. Please slow down and try again.",
+                "retry_after": retry_after,
+                "limit_type": "api_rate_limit"
             },
             headers={
-                "X-RateLimit-Limit": "60",
-                "X-RateLimit-Reset": str(int(time.time()) + 60),
-                "Retry-After": "60"
+                "X-RateLimit-Limit": str(exc.limit) if hasattr(exc, 'limit') else "60",
+                "X-RateLimit-Reset": str(int(time.time()) + retry_after),
+                "X-RateLimit-Remaining": "0",
+                "Retry-After": str(retry_after)
             }
         )
 
 # Initialize the definitive security components
 brute_force_protection = DefinitiveBruteForceProtection()
-rate_limiter = DefinitiveRateLimiter()
+rate_limiter = OptimizedRateLimiter()
 
 def apply_definitive_security_fix(app, bridge_instance):
     """Apply the definitive security fix to the WEPO FastAPI app"""
     
     # Setup rate limiting middleware properly
     app.state.limiter = rate_limiter.limiter
-    app.add_exception_handler(429, rate_limiter.rate_limit_handler)
+    app.add_exception_handler(RateLimitExceeded, rate_limiter.enhanced_rate_limit_handler)
     # Note: SlowAPIMiddleware is added automatically when using @limiter.limit decorators
     
     # Add brute force protection methods to bridge instance
