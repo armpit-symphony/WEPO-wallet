@@ -22,7 +22,8 @@ from datetime import datetime
 from security_utils import SecurityManager, init_redis
 
 # Import optimized security fix
-from definitive_security_fix import apply_optimized_security_fix, limiter
+from definitive_security_fix import apply_optimized_security_fix
+import definitive_security_fix
 
 # Initialize security features
 init_redis()
