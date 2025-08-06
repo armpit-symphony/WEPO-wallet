@@ -180,3 +180,20 @@ def apply_optimized_security_fix(app, bridge_instance):
     print("✅ Rate Limiting: Optimized SlowAPI with Redis fallback enabled")
     print("✅ Global Rate Limiting: 60 requests/minute default")
     print("✅ System optimized and ready for Christmas Day 2025 launch")
+
+def apply_definitive_security_fix(app, bridge_instance):
+    """Apply the definitive security fix to the WEPO FastAPI app (legacy version for debugging)"""
+    
+    # Setup rate limiting middleware properly
+    app.state.limiter = rate_limiter.limiter
+    app.add_exception_handler(RateLimitExceeded, rate_limiter.enhanced_rate_limit_handler)
+    
+    # Add brute force protection methods to bridge instance
+    bridge_instance.check_account_lockout = brute_force_protection.check_account_lockout
+    bridge_instance.record_failed_attempt = brute_force_protection.record_failed_attempt
+    bridge_instance.clear_failed_attempts = brute_force_protection.clear_failed_attempts
+    
+    print("✅ DEFINITIVE SECURITY FIX APPLIED")
+    print("✅ Brute Force Protection: Enterprise-grade account lockout enabled")
+    print("✅ Rate Limiting: SlowAPI with Redis fallback enabled")
+    print("✅ System ready for Christmas Day 2025 launch")
