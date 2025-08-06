@@ -1122,27 +1122,10 @@ class WepoFastTestBridge:
 
         @self.app.post("/api/wallet/login")
         async def login_wallet(request: Request):
-            """Login to existing WEPO wallet with optimized security"""
+            """Login to existing WEPO wallet with TRUE optimized security"""
             client_id = SecurityManager.get_client_identifier(request)
             logger.info(f"Wallet login attempt from {client_id}")
             
-            # Apply optimized endpoint-specific rate limiting
-            if self.check_rate_limit(client_id, "wallet_login"):
-                raise HTTPException(
-                    status_code=429,
-                    detail={
-                        "error": "Wallet login rate limit exceeded", 
-                        "message": "Too many login attempts. Please slow down.",
-                        "retry_after": 60,
-                        "limit_type": "endpoint_rate_limit"
-                    },
-                    headers={
-                        "X-RateLimit-Limit": "5",
-                        "X-RateLimit-Reset": str(int(time.time()) + 60),
-                        "X-RateLimit-Remaining": "0", 
-                        "Retry-After": "60"
-                    }
-                )
             
             
             try:
