@@ -761,7 +761,7 @@ class WepoFastTestBridge:
                     client_id = SecurityManager.get_client_identifier(request)
                     
                     # Apply global rate limiting 
-                    if self.bridge.check_rate_limit(client_id, "global"):
+                    if self.check_rate_limit(client_id, "global"):
                         logger.warning(f"Global rate limit exceeded for {client_id}")
                         from fastapi.responses import JSONResponse
                         return JSONResponse(
@@ -778,6 +778,26 @@ class WepoFastTestBridge:
                             }
                         )
                     
+                    # Check TRUE optimized rate limiting if available
+                    if hasattr(self.bridge, 'rate_limiter'):
+                        is_limited, limit_headers, limit_type = self.bridge.rate_limiter.check_rate_limit(
+                            request, 
+                            request.url.path if request.url else None
+                        )
+                        
+                        if is_limited:
+                            logger.warning(f"Rate limit exceeded for {client_id} on {request.url.path if request.url else 'unknown'} ({limit_type})")
+                            return JSONResponse(
+                                status_code=429,
+                                content={
+                                    "error": "Rate limit exceeded",
+                                    "message": "Too many requests. Please slow down and try again.",
+                                    "retry_after": 60,
+                                    "limit_type": limit_type
+                                },
+                                headers={**limit_headers, "Retry-After": "60"}
+                            )
+                    
                     response = await call_next(request)
                     
                     # Add security headers
@@ -785,9 +805,18 @@ class WepoFastTestBridge:
                     for header, value in security_headers.items():
                         response.headers[header] = value
                     
-                    # Add rate limiting headers
-                    response.headers["X-RateLimit-Limit"] = str(GLOBAL_RATE_LIMIT)
-                    response.headers["X-RateLimit-Reset"] = str(int(time.time()) + RATE_LIMIT_WINDOW)
+                    # Add TRUE optimized rate limiting headers if available
+                    if hasattr(self.bridge, 'rate_limiter'):
+                        rate_limit_headers = self.bridge.rate_limiter.record_request(
+                            request,
+                            request.url.path if request.url else None
+                        )
+                        for header, value in rate_limit_headers.items():
+                            response.headers[header] = value
+                    else:
+                        # Fallback rate limiting headers
+                        response.headers["X-RateLimit-Limit"] = str(GLOBAL_RATE_LIMIT)
+                        response.headers["X-RateLimit-Reset"] = str(int(time.time()) + RATE_LIMIT_WINDOW)
                     
                     return response
                 except HTTPException:
