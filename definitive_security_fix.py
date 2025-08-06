@@ -202,37 +202,26 @@ class TrueOptimizedRateLimiter:
 brute_force_protection = DefinitiveBruteForceProtection()
 rate_limiter = TrueOptimizedRateLimiter()
 
-def apply_optimized_security_fix(app, bridge_instance):
-    """Apply the optimized security fix with enhanced rate limiting"""
-    print("🔧 Applying optimized security fix for Christmas Day 2025 launch...")
+def apply_true_optimized_security_fix(app, bridge_instance):
+    """Apply the TRUE optimized security fix with proper rate limiting headers"""
+    print("🔧 Applying TRUE optimized security fix for Christmas Day 2025 launch...")
     
-    # Setup optimized rate limiting integration
-    rate_limiter.setup_app_integration(app)
+    # Add rate limiter to bridge instance for middleware use
+    bridge_instance.rate_limiter = rate_limiter
     
     # Add brute force protection methods to bridge instance
     bridge_instance.check_account_lockout = brute_force_protection.check_account_lockout
     bridge_instance.record_failed_attempt = brute_force_protection.record_failed_attempt
     bridge_instance.clear_failed_attempts = brute_force_protection.clear_failed_attempts
     
-    print("✅ OPTIMIZED SECURITY FIX APPLIED SUCCESSFULLY")
+    print("✅ TRUE OPTIMIZED SECURITY FIX APPLIED SUCCESSFULLY")
     print("✅ Brute Force Protection: Enterprise-grade account lockout enabled")
-    print("✅ Rate Limiting: Optimized SlowAPI with Redis fallback enabled")
-    print("✅ Global Rate Limiting: 60 requests/minute default")
-    print("✅ System optimized and ready for Christmas Day 2025 launch")
+    print("✅ Rate Limiting: TRUE optimized with proper X-RateLimit headers")
+    print("✅ Global Rate Limiting: 60 requests/minute")
+    print("✅ Endpoint Rate Limiting: Wallet create (3/min), Login (5/min)")
+    print("✅ System TRUE optimized and ready for Christmas Day 2025 launch")
 
 def apply_definitive_security_fix(app, bridge_instance):
-    """Apply the definitive security fix to the WEPO FastAPI app (legacy version for debugging)"""
-    
-    # Setup rate limiting middleware properly
-    app.state.limiter = rate_limiter.limiter
-    app.add_exception_handler(RateLimitExceeded, rate_limiter.enhanced_rate_limit_handler)
-    
-    # Add brute force protection methods to bridge instance
-    bridge_instance.check_account_lockout = brute_force_protection.check_account_lockout
-    bridge_instance.record_failed_attempt = brute_force_protection.record_failed_attempt
-    bridge_instance.clear_failed_attempts = brute_force_protection.clear_failed_attempts
-    
-    print("✅ DEFINITIVE SECURITY FIX APPLIED")
-    print("✅ Brute Force Protection: Enterprise-grade account lockout enabled")
-    print("✅ Rate Limiting: SlowAPI with Redis fallback enabled")
-    print("✅ System ready for Christmas Day 2025 launch")
+    """Apply the definitive security fix to the WEPO FastAPI app (legacy compatibility)"""
+    # Delegate to the true optimized version
+    apply_true_optimized_security_fix(app, bridge_instance)
