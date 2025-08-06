@@ -1014,9 +1014,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "WEPO Original Community Fair Market Design - REVERTED Implementation"
+    - "Comprehensive Rate Limiting Optimization Testing"
+    - "Rate Limiting Headers Implementation"
+    - "Global Rate Limiting Middleware"
+    - "Endpoint-Specific Rate Limiting Enforcement"
   stuck_tasks:
-    - "WEPO Original Community Fair Market Design - REVERTED Implementation"
+    - "Comprehensive Rate Limiting Optimization Testing"
   test_all: false
   test_priority: "critical"
 
