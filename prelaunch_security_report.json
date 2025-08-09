@@ -1,9 +1,9 @@
 {
   "suite": "prelaunch_security_suite",
-  "timestamp": 1754774834,
+  "timestamp": 1754775689,
   "backend_url": "https://aea01d90-48a6-486b-8542-99124e732ecc.preview.emergentagent.com/api",
-  "scope": "full",
-  "final_score": 45.33,
+  "scope": "api",
+  "final_score": 57.0,
   "categories": {
     "security_headers": {
       "score": 10.0,
@@ -46,14 +46,14 @@
       ]
     },
     "rate_limiting": {
-      "score": 10.0,
+      "score": 25.0,
       "max": 25.0,
       "tests": [
         {
           "name": "Global Rate Limiting",
-          "passed": false,
-          "weight": 0.0,
-          "details": "No 429 after 65 requests",
+          "passed": true,
+          "weight": 10.0,
+          "details": "HTTP 429 after ~2 requests",
           "severity": "critical"
         },
         {
@@ -72,9 +72,9 @@
         },
         {
           "name": "Rate Limit Headers",
-          "passed": false,
+          "passed": true,
           "weight": 5.0,
-          "details": "Missing in response",
+          "details": "Present: X-RateLimit-Limit, X-RateLimit-Reset, Retry-After",
           "severity": "medium"
         }
       ]
@@ -127,56 +127,21 @@
       ]
     },
     "blockchain_sanity": {
-      "score": 3.3333333333333335,
+      "score": 0.0,
       "max": 10.0,
-      "tests": [
-        {
-          "name": "Quantum Status",
-          "passed": false,
-          "weight": 0.0,
-          "details": "HTTP 404",
-          "severity": "high"
-        },
-        {
-          "name": "Collateral Schedule",
-          "passed": false,
-          "weight": 0.0,
-          "details": "HTTP 404",
-          "severity": "high"
-        },
-        {
-          "name": "Swap Rate",
-          "passed": true,
-          "weight": 3.3333333333333335,
-          "details": "HTTP 200",
-          "severity": "medium"
-        }
-      ]
+      "tests": []
     },
     "messaging_e2e": {
       "score": 0.0,
       "max": 5.0,
-      "tests": [
-        {
-          "name": "TRUE E2E Messaging",
-          "passed": false,
-          "weight": 0.0,
-          "details": "Module error: Cannot set DRBG seed due to missing dependencies, try installing requirements: pip -r install requirements",
-          "severity": "high"
-        }
-      ]
+      "tests": []
     }
   },
-  "critical": [
-    "Global Rate Limiting"
-  ],
+  "critical": [],
   "high": [
     "XSS Protection",
     "SQL/NoSQL Injection Protection",
-    "Password Exposure",
-    "Quantum Status",
-    "Collateral Schedule",
-    "TRUE E2E Messaging"
+    "Password Exposure"
   ],
   "notes": []
 }
