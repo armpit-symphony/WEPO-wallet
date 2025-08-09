@@ -1,6 +1,6 @@
 {
   "suite": "prelaunch_security_suite",
-  "timestamp": 1754775689,
+  "timestamp": 1754776146,
   "backend_url": "https://aea01d90-48a6-486b-8542-99124e732ecc.preview.emergentagent.com/api",
   "scope": "api",
   "final_score": 57.0,
@@ -53,7 +53,7 @@
           "name": "Global Rate Limiting",
           "passed": true,
           "weight": 10.0,
-          "details": "HTTP 429 after ~2 requests",
+          "details": "HTTP 429 after ~10 requests",
           "severity": "critical"
         },
         {
