@@ -822,6 +822,49 @@ async def get_latest_blocks(limit: int = 10):
     blocks = await db.blocks.find().sort("height", -1).limit(limit).to_list(limit)
     return blocks
 
+@api_router.get("/quantum/status")
+async def quantum_status():
+    try:
+        import sys
+        sys.path.append('/app/wepo-blockchain/core')
+        from dilithium import DilithiumSigner
+        signer = DilithiumSigner()
+        info = {
+            "quantum_resistant": bool(getattr(signer, 'is_real_dilithium', False)),
+            "algorithm": getattr(signer, 'algorithm', 'Unknown'),
+            "security_level": 128 if getattr(signer, 'is_real_dilithium', False) else 0,
+            "post_quantum": bool(getattr(signer, 'is_real_dilithium', False)),
+            "nist_approved": bool(getattr(signer, 'is_real_dilithium', False)),
+        }
+        return {"success": True, "data": info, "timestamp": int(time.time())}
+    except Exception as e:
+        return {"success": True, "data": {"quantum_resistant": False, "algorithm": "RSA Simulation", "error": str(e)}, "timestamp": int(time.time())}
+
+@api_router.get("/collateral/schedule")
+async def collateral_schedule():
+    current_height = await get_current_block_height()
+    HALVING_SCHEDULE = [
+        {"height": 0, "mn": 10000, "pos": 0, "phase": "Phase 1", "desc": "Genesis → PoS Activation (18 months)", "pos_avail": False},
+        {"height": 131400, "mn": 10000, "pos": 1000, "phase": "Phase 2A", "desc": "PoS Activation → 2nd Halving (4.5 years)", "pos_avail": True},
+        {"height": 306600, "mn": 6000, "pos": 600, "phase": "Phase 2B", "desc": "2nd Halving → 3rd Halving (10.5 years)", "pos_avail": True},
+        {"height": 657000, "mn": 3000, "pos": 300, "phase": "Phase 2C", "desc": "3rd Halving → 4th Halving (13.5 years)", "pos_avail": True},
+        {"height": 832200, "mn": 1500, "pos": 150, "phase": "Phase 2D", "desc": "4th Halving → 5th Halving (16.5 years)", "pos_avail": True},
+        {"height": 1007400, "mn": 1000, "pos": 100, "phase": "Phase 3", "desc": "5th Halving+ (Post-PoW Era)", "pos_avail": True},
+    ]
+    schedule = []
+    for entry in HALVING_SCHEDULE:
+        schedule.append({
+            "block_height": entry["height"],
+            "masternode_collateral": entry["mn"],
+            "pos_collateral": entry["pos"],
+            "pos_available": entry["pos_avail"],
+            "phase": entry["phase"],
+            "phase_description": entry["desc"],
+            "is_current": current_height >= entry["height"],
+            "is_next": entry["height"] > current_height
+        })
+    return {"success": True, "data": {"current_height": current_height, "schedule": schedule}, "timestamp": int(time.time())}
+
 @api_router.get("/mining/info")
 async def get_mining_info():
     """Get mining information"""
