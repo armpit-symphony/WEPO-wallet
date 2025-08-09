@@ -759,6 +759,49 @@ class WepoFastTestBridge:
                 try:
                     # Get client identifier for rate limiting
                     client_id = SecurityManager.get_client_identifier(request)
+
+                    # Early input validation for high-risk endpoints
+                    path = str(request.url.path)
+                    method = request.method.upper()
+                    if method == "POST" and path.startswith("/api/wallet/create"):
+                        try:
+                            body = await request.body()
+                            data = json.loads(body) if body else {}
+                            username = data.get("username", "")
+                            password = data.get("password", "")
+
+                            # Strict username policy
+                            if not isinstance(username, str) or not re.match(r'^[a-zA-Z0-9_]{3,50}$', username):
+                                from fastapi.responses import JSONResponse
+                                return JSONResponse(status_code=400, content={"error": "Invalid username format"})
+
+                            # Block common XSS/injection/path traversal patterns
+                            raw = username
+                            patterns = [
+                                r"<script.*?>.*?</script>", r"javascript:", r"on\w+\s*=",
+                                r"<iframe", r"<object", r"<embed", r"eval\(",
+                                r"document\.cookie", r"window\.location", r"\$\{.*\}",
+                                r"';\s*DROP|INSERT|SELECT|UPDATE|DELETE| UNION ", r"\{\$ne:"
+                            ]
+                            if any(re.search(p, raw, re.IGNORECASE) for p in patterns) or ('../' in raw or '..\\' in raw):
+                                from fastapi.responses import JSONResponse
+                                return JSONResponse(status_code=400, content={"error": "Malicious input detected"})
+
+                            # Password strength enforcement
+                            validation = SecurityManager.validate_password_strength(password)
+                            if not validation.get("is_valid"):
+                                from fastapi.responses import JSONResponse
+                                return JSONResponse(status_code=400, content={
+                                    "error": "Password does not meet security requirements",
+                                    "issues": validation.get("issues", [])
+                                })
+                        except json.JSONDecodeError:
+                            from fastapi.responses import JSONResponse
+                            return JSONResponse(status_code=400, content={"error": "Invalid JSON"})
+                        except Exception as e:
+                            # Fail closed for security
+                            from fastapi.responses import JSONResponse
+                            return JSONResponse(status_code=400, content={"error": f"Validation error: {str(e)}"})
                     
                     # Apply global rate limiting 
                     if self.bridge.check_rate_limit(client_id, "global"):
