@@ -1,0 +1,182 @@
+{
+  "suite": "prelaunch_security_suite",
+  "timestamp": 1754774834,
+  "backend_url": "https://aea01d90-48a6-486b-8542-99124e732ecc.preview.emergentagent.com/api",
+  "scope": "full",
+  "final_score": 45.33,
+  "categories": {
+    "security_headers": {
+      "score": 10.0,
+      "max": 10.0,
+      "tests": [
+        {
+          "name": "Critical Security Headers",
+          "passed": true,
+          "weight": 10.0,
+          "details": "X-Content-Type-Options: OK, X-Frame-Options: OK, X-XSS-Protection: OK, Strict-Transport-Security: OK, Content-Security-Policy: OK",
+          "severity": "medium"
+        },
+        {
+          "name": "CORS Configuration",
+          "passed": true,
+          "weight": 0.0,
+          "details": "CORS acceptable (not set)",
+          "severity": "medium"
+        }
+      ]
+    },
+    "brute_force": {
+      "score": 22.0,
+      "max": 25.0,
+      "tests": [
+        {
+          "name": "Account Lockout",
+          "passed": true,
+          "weight": 15.0,
+          "details": "Locked after 4 failures (HTTP 423)",
+          "severity": "critical"
+        },
+        {
+          "name": "Lockout Persistence (Rate-limited)",
+          "passed": true,
+          "weight": 7.0,
+          "details": "Rate limiting in place during lockout",
+          "severity": "high"
+        }
+      ]
+    },
+    "rate_limiting": {
+      "score": 10.0,
+      "max": 25.0,
+      "tests": [
+        {
+          "name": "Global Rate Limiting",
+          "passed": false,
+          "weight": 0.0,
+          "details": "No 429 after 65 requests",
+          "severity": "critical"
+        },
+        {
+          "name": "Wallet Creation Rate Limit",
+          "passed": true,
+          "weight": 5.0,
+          "details": "429 observed on create",
+          "severity": "high"
+        },
+        {
+          "name": "Login Rate Limit",
+          "passed": true,
+          "weight": 5.0,
+          "details": "429/423 observed on login",
+          "severity": "high"
+        },
+        {
+          "name": "Rate Limit Headers",
+          "passed": false,
+          "weight": 5.0,
+          "details": "Missing in response",
+          "severity": "medium"
+        }
+      ]
+    },
+    "input_validation": {
+      "score": 0.0,
+      "max": 20.0,
+      "tests": [
+        {
+          "name": "Password Strength Validation",
+          "passed": false,
+          "weight": 0.0,
+          "details": "Rejected 0/3 weak passwords",
+          "severity": "medium"
+        },
+        {
+          "name": "XSS Protection",
+          "passed": false,
+          "weight": 0.0,
+          "details": "Blocked 0/3 XSS payloads",
+          "severity": "high"
+        },
+        {
+          "name": "SQL/NoSQL Injection Protection",
+          "passed": false,
+          "weight": 0.0,
+          "details": "Blocked 0/3 injection payloads",
+          "severity": "high"
+        },
+        {
+          "name": "Path Traversal Protection",
+          "passed": false,
+          "weight": 0.0,
+          "details": "Blocked 0/2 path traversal payloads",
+          "severity": "medium"
+        }
+      ]
+    },
+    "auth_security": {
+      "score": 0.0,
+      "max": 5.0,
+      "tests": [
+        {
+          "name": "Password Exposure",
+          "passed": false,
+          "weight": 0.0,
+          "details": "Wallet create failed (HTTP 429)",
+          "severity": "high"
+        }
+      ]
+    },
+    "blockchain_sanity": {
+      "score": 3.3333333333333335,
+      "max": 10.0,
+      "tests": [
+        {
+          "name": "Quantum Status",
+          "passed": false,
+          "weight": 0.0,
+          "details": "HTTP 404",
+          "severity": "high"
+        },
+        {
+          "name": "Collateral Schedule",
+          "passed": false,
+          "weight": 0.0,
+          "details": "HTTP 404",
+          "severity": "high"
+        },
+        {
+          "name": "Swap Rate",
+          "passed": true,
+          "weight": 3.3333333333333335,
+          "details": "HTTP 200",
+          "severity": "medium"
+        }
+      ]
+    },
+    "messaging_e2e": {
+      "score": 0.0,
+      "max": 5.0,
+      "tests": [
+        {
+          "name": "TRUE E2E Messaging",
+          "passed": false,
+          "weight": 0.0,
+          "details": "Module error: Cannot set DRBG seed due to missing dependencies, try installing requirements: pip -r install requirements",
+          "severity": "high"
+        }
+      ]
+    }
+  },
+  "critical": [
+    "Global Rate Limiting"
+  ],
+  "high": [
+    "XSS Protection",
+    "SQL/NoSQL Injection Protection",
+    "Password Exposure",
+    "Quantum Status",
+    "Collateral Schedule",
+    "TRUE E2E Messaging"
+  ],
+  "notes": []
+}
