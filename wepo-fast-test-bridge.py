@@ -761,7 +761,7 @@ class WepoFastTestBridge:
                     client_id = SecurityManager.get_client_identifier(request)
                     
                     # Apply global rate limiting 
-                    if self.check_rate_limit(client_id, "global"):
+                    if self.bridge.check_rate_limit(client_id, "global"):
                         logger.warning(f"Global rate limit exceeded for {client_id}")
                         from fastapi.responses import JSONResponse
                         return JSONResponse(
