@@ -778,6 +778,29 @@ class WepoFastTestBridge:
                             }
                         )
                     
+                    # Check TRUE optimized rate limiting if available
+                    if hasattr(self.bridge, 'rate_limiter'):
+                        try:
+                            is_limited, limit_headers, limit_type = self.bridge.rate_limiter.check_rate_limit(
+                                request, 
+                                request.url.path if request.url else None
+                            )
+                            
+                            if is_limited:
+                                logger.warning(f"Rate limit exceeded for {client_id} on {request.url.path if request.url else 'unknown'} ({limit_type})")
+                                return JSONResponse(
+                                    status_code=429,
+                                    content={
+                                        "error": "Rate limit exceeded",
+                                        "message": "Too many requests. Please slow down and try again.",
+                                        "retry_after": 60,
+                                        "limit_type": limit_type
+                                    },
+                                    headers={**limit_headers, "Retry-After": "60"}
+                                )
+                        except Exception as e:
+                            logger.error(f"Rate limiting check error: {e}")
+                    
                     response = await call_next(request)
                     
                     # Add security headers
