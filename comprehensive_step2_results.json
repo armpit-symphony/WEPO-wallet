@@ -1,0 +1,55 @@
+{
+  "timestamp": 1754778001,
+  "backend_url": "https://aea01d90-48a6-486b-8542-99124e732ecc.preview.emergentagent.com/api",
+  "tests": [
+    {
+      "name": "Weak Password - 123456",
+      "username": "user_1754778001",
+      "password": "123456",
+      "type": "weak_password",
+      "result": "blocked"
+    },
+    {
+      "name": "Weak Password - password",
+      "username": "user_1754778001",
+      "password": "password",
+      "type": "weak_password",
+      "result": "blocked"
+    },
+    {
+      "name": "XSS - Script Tag",
+      "username": "<script>alert('xss')</script>",
+      "password": "ValidPass123!",
+      "type": "xss",
+      "result": "sanitized"
+    },
+    {
+      "name": "XSS - JavaScript URL",
+      "username": "javascript:alert('xss')",
+      "password": "ValidPass123!",
+      "type": "xss",
+      "result": "blocked"
+    },
+    {
+      "name": "SQL Injection - DROP TABLE",
+      "username": "'; DROP TABLE users; --",
+      "password": "ValidPass123!",
+      "type": "sql_injection",
+      "result": "blocked"
+    },
+    {
+      "name": "NoSQL Injection - OR condition",
+      "username": "' OR '1'='1",
+      "password": "ValidPass123!",
+      "type": "nosql_injection",
+      "result": "blocked"
+    },
+    {
+      "name": "Path Traversal - Unix",
+      "username": "../../../etc/passwd",
+      "password": "ValidPass123!",
+      "type": "path_traversal",
+      "result": "blocked"
+    }
+  ]
+}
