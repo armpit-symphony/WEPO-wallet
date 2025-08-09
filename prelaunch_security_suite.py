@@ -102,6 +102,15 @@ def log(cat: str, name: str, passed: bool, weight: float, details: str, results:
             results["high"].append(name)
     results["categories"][cat]["tests"].append(entry)
 
+# ----------------------------- API Helpers -----------------------------
+
+def api_create_wallet(api_base: str, username: str, password: str) -> requests.Response:
+    return requests.post(f"{api_base}/wallet/create", json={"username": username, "password": password}, timeout=10)
+
+
+def api_login(api_base: str, username: str, password: str) -> requests.Response:
+    return requests.post(f"{api_base}/wallet/login", json={"username": username, "password": password}, timeout=10)
+
 # ----------------------------- API Tests -----------------------------
 
 def test_security_headers(api_base: str, results: Dict[str, Any]):
@@ -144,12 +153,78 @@ def test_security_headers(api_base: str, results: Dict[str, Any]):
         log("security_headers", "Critical Security Headers", False, 0.0, f"Error: {e}", results, severity="high")
 
 
-def api_create_wallet(api_base: str, username: str, password: str) -> requests.Response:
-    return requests.post(f"{api_base}/wallet/create", json={"username": username, "password": password}, timeout=10)
+def test_input_validation(api_base: str, results: Dict[str, Any]):
+    # Reordered to run BEFORE rate limiting/brute force tests
+    # Weak password validation quick check
+    try:
+        weak_pwds = ["123456", "password", "abc123"]
+        rejected = 0
+        attempts = 0
+        for wp in weak_pwds:
+            attempts += 1
+            u, _ = gen_user()
+            r = api_create_wallet(api_base, u, wp)
+            if r.status_code == 400:
+                rejected += 1
+            elif r.status_code == 429:
+                # try a different user after a short pause
+                time.sleep(0.2)
+        detail = f"Rejected {rejected}/{len(weak_pwds)} weak passwords (attempts={attempts})"
+        log("input_validation", "Password Strength Validation", rejected >= 2, 0.0, detail, results, severity="medium")
+    except Exception as e:
+        log("input_validation", "Password Strength Validation", False, 0.0, f"Error: {e}", results, severity="medium")
 
+    # XSS
+    try:
+        xss_payloads = [
+            "<script>alert('xss')</script>",
+            "javascript:alert('xss')",
+            "<img src=x onerror=alert('xss')>"
+        ]
+        blocked = 0
+        for pl in xss_payloads:
+            r = api_create_wallet(api_base, pl, "ValidPass123!")
+            if r.status_code == 400:
+                blocked += 1
+            elif r.status_code == 429:
+                time.sleep(0.2)
+                continue
+        rate = blocked / max(1, len(xss_payloads))
+        log("input_validation", "XSS Protection", rate >= 0.66, 8.0 * rate, f"Blocked {blocked}/{len(xss_payloads)} XSS payloads", results, severity="high")
+    except Exception as e:
+        log("input_validation", "XSS Protection", False, 0.0, f"Error: {e}", results, severity="high")
 
-def api_login(api_base: str, username: str, password: str) -> requests.Response:
-    return requests.post(f"{api_base}/wallet/login", json={"username": username, "password": password}, timeout=10)
+    # Injection
+    try:
+        inj_payloads = ["'; DROP TABLE users; --", "' OR '1'='1", "{$ne: null}"]
+        blocked = 0
+        for pl in inj_payloads:
+            r = api_create_wallet(api_base, pl, "ValidPass123!")
+            if r.status_code == 400:
+                blocked += 1
+            elif r.status_code == 429:
+                time.sleep(0.2)
+                continue
+        rate = blocked / max(1, len(inj_payloads))
+        log("input_validation", "SQL/NoSQL Injection Protection", rate >= 0.66, 8.0 * rate, f"Blocked {blocked}/{len(inj_payloads)} injection payloads", results, severity="high")
+    except Exception as e:
+        log("input_validation", "SQL/NoSQL Injection Protection", False, 0.0, f"Error: {e}", results, severity="high")
+
+    # Path traversal (proxy through username content)
+    try:
+        pt_payloads = ["../../../etc/passwd", "..\\..\\..\\windows\\system32\\config\\sam"]
+        blocked = 0
+        for pl in pt_payloads:
+            r = api_create_wallet(api_base, pl, "ValidPass123!")
+            if r.status_code == 400:
+                blocked += 1
+            elif r.status_code == 429:
+                time.sleep(0.2)
+                continue
+        rate = blocked / max(1, len(pt_payloads))
+        log("input_validation", "Path Traversal Protection", rate >= 0.5, 4.0 * rate, f"Blocked {blocked}/{len(pt_payloads)} path traversal payloads", results, severity="medium")
+    except Exception as e:
+        log("input_validation", "Path Traversal Protection", False, 0.0, f"Error: {e}", results, severity="medium")
 
 
 def test_brute_force_and_lockout(api_base: str, results: Dict[str, Any]):
@@ -262,95 +337,6 @@ def test_rate_limiting(api_base: str, results: Dict[str, Any]):
     except Exception as e:
         log("rate_limiting", "Rate Limit Headers", False, 0.0, f"Error: {e}", results, severity="medium")
 
-
-def test_input_validation(api_base: str, results: Dict[str, Any]):
-    # 20% weight (8 XSS + 8 Injection + 4 Path traversal proxy via username)
-    # Weak password validation quick check
-    try:
-        weak_pwds = ["123456", "password", "abc123"]
-        rejected = 0
-        for wp in weak_pwds:
-            u, _ = gen_user()
-            r = api_create_wallet(api_base, u, wp)
-            if r.status_code == 400:
-                rejected += 1
-            elif r.status_code == 429:
-                break
-        detail = f"Rejected {rejected}/{len(weak_pwds)} weak passwords"
-        log("input_validation", "Password Strength Validation", rejected >= 2, 0.0, detail, results, severity="medium")
-    except Exception as e:
-        log("input_validation", "Password Strength Validation", False, 0.0, f"Error: {e}", results, severity="medium")
-
-    # XSS
-    try:
-        xss_payloads = [
-            "<script>alert('xss')</script>",
-            "javascript:alert('xss')",
-            "<img src=x onerror=alert('xss')>"
-        ]
-        blocked = 0
-        for pl in xss_payloads:
-            u = f"xss_{secrets.token_hex(2)}"
-            r = api_create_wallet(api_base, pl, "ValidPass123!")
-            if r.status_code == 400:
-                blocked += 1
-            elif r.status_code == 429:
-                break
-        rate = blocked / max(1, len(xss_payloads))
-        log("input_validation", "XSS Protection", rate >= 0.66, 8.0 * rate, f"Blocked {blocked}/{len(xss_payloads)} XSS payloads", results, severity="high")
-    except Exception as e:
-        log("input_validation", "XSS Protection", False, 0.0, f"Error: {e}", results, severity="high")
-
-    # Injection
-    try:
-        inj_payloads = ["'; DROP TABLE users; --", "' OR '1'='1", "{$ne: null}"]
-        blocked = 0
-        for pl in inj_payloads:
-            r = api_create_wallet(api_base, pl, "ValidPass123!")
-            if r.status_code == 400:
-                blocked += 1
-            elif r.status_code == 429:
-                break
-        rate = blocked / max(1, len(inj_payloads))
-        log("input_validation", "SQL/NoSQL Injection Protection", rate >= 0.66, 8.0 * rate, f"Blocked {blocked}/{len(inj_payloads)} injection payloads", results, severity="high")
-    except Exception as e:
-        log("input_validation", "SQL/NoSQL Injection Protection", False, 0.0, f"Error: {e}", results, severity="high")
-
-    # Path traversal (proxy through username content)
-    try:
-        pt_payloads = ["../../../etc/passwd", "..\\..\\..\\windows\\system32\\config\\sam"]
-        blocked = 0
-        for pl in pt_payloads:
-            r = api_create_wallet(api_base, pl, "ValidPass123!")
-            if r.status_code == 400:
-                blocked += 1
-            elif r.status_code == 429:
-                break
-        rate = blocked / max(1, len(pt_payloads))
-        log("input_validation", "Path Traversal Protection", rate >= 0.5, 4.0 * rate, f"Blocked {blocked}/{len(pt_payloads)} path traversal payloads", results, severity="medium")
-    except Exception as e:
-        log("input_validation", "Path Traversal Protection", False, 0.0, f"Error: {e}", results, severity="medium")
-
-
-def test_auth_security(api_base: str, results: Dict[str, Any]):
-    try:
-        u, p = gen_user()
-        cr = api_create_wallet(api_base, u, p)
-        if cr.status_code == 200:
-            lr = api_login(api_base, u, p)
-            if lr.status_code == 200:
-                resp = lr.json()
-                expose = json.dumps(resp).lower()
-                ok = ("password" not in expose) and (p.lower() not in expose)
-                log("auth_security", "Password Exposure", ok, 5.0 if ok else 0.0,
-                    "No password data in login response" if ok else "Password field/content exposed", results, severity=("high" if not ok else "medium"))
-            else:
-                log("auth_security", "Password Exposure", False, 0.0, f"Login failed (HTTP {lr.status_code})", results, severity="high")
-        else:
-            log("auth_security", "Password Exposure", False, 0.0, f"Wallet create failed (HTTP {cr.status_code})", results, severity="high")
-    except Exception as e:
-        log("auth_security", "Password Exposure", False, 0.0, f"Error: {e}", results, severity="high")
-
 # ----------------------------- Blockchain Sanity -----------------------------
 
 def test_blockchain_sanity(api_base: str, results: Dict[str, Any]):
@@ -439,13 +425,35 @@ def main():
     results["backend_url"] = api_base
     results["scope"] = args.scope
 
-    # API layer tests
-    print("\n🛡️ API Security")
+    # Run low-noise tests first to avoid tripping endpoint rate limits
+    print("\n🛡️ API Security - Low Noise Phase")
     test_security_headers(api_base, results)
+    test_input_validation(api_base, results)
+
+    # Then run brute force and rate limiting tests
+    print("\n⚡ API Security - Load Phase")
     test_brute_force_and_lockout(api_base, results)
     test_rate_limiting(api_base, results)
-    test_input_validation(api_base, results)
-    test_auth_security(api_base, results)
+
+    # Authentication exposure
+    print("\n🔑 Authentication Security")
+    try:
+        u, p = gen_user()
+        cr = api_create_wallet(api_base, u, p)
+        if cr.status_code == 200:
+            lr = api_login(api_base, u, p)
+            if lr.status_code == 200:
+                resp = lr.json()
+                expose = json.dumps(resp).lower()
+                ok = ("password" not in expose) and (p.lower() not in expose)
+                log("auth_security", "Password Exposure", ok, 5.0 if ok else 0.0,
+                    "No password data in login response" if ok else "Password field/content exposed", results, severity=("high" if not ok else "medium"))
+            else:
+                log("auth_security", "Password Exposure", False, 0.0, f"Login failed (HTTP {lr.status_code})", results, severity="high")
+        else:
+            log("auth_security", "Password Exposure", False, 0.0, f"Wallet create failed (HTTP {cr.status_code})", results, severity="high")
+    except Exception as e:
+        log("auth_security", "Password Exposure", False, 0.0, f"Error: {e}", results, severity="high")
 
     # Blockchain sanity
     if args.scope in ("full",):
