@@ -45,19 +45,45 @@ app = FastAPI(
     redoc_url=None  # Disable redoc in production for security
 )
 
-# Security middleware
+# Security middleware with global rate limiting and headers
+from fastapi.responses import JSONResponse
 class SecurityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Add security headers and processing
         try:
+            # Identify client for rate limiting
+            client_id = SecurityManager.get_client_identifier(request)
+            # Apply global API rate limiting (60/min default)
+            if SecurityManager.is_rate_limited(client_id, "global_api"):
+                retry_after = 60
+                reset_ts = int(time.time()) + retry_after
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "error": "Too many requests. Please try again later.",
+                        "retry_after": retry_after,
+                        "rate_limit": "60 requests per minute"
+                    },
+                    headers={
+                        "X-RateLimit-Limit": "60",
+                        "X-RateLimit-Reset": str(reset_ts),
+                        "Retry-After": str(retry_after)
+                    }
+                )
+
             response = await call_next(request)
-            
+
             # Add security headers
             security_headers = SecurityManager.get_security_headers()
             for header, value in security_headers.items():
                 response.headers[header] = value
-            
+
+            # Add basic rate limiting headers for observability
+            response.headers["X-RateLimit-Limit"] = "60"
+            response.headers["X-RateLimit-Reset"] = str(int(time.time()) + 60)
+
             return response
+        except HTTPException:
+            raise
         except Exception as e:
             logging.error(f"Security middleware error: {e}")
             raise HTTPException(status_code=500, detail="Internal server error")
