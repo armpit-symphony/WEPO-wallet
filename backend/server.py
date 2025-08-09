@@ -52,8 +52,18 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         try:
             # Identify client for rate limiting
             client_id = SecurityManager.get_client_identifier(request)
+            path = str(request.url.path)
+            method = request.method.upper()
+
+            # Skip global limiter for endpoints that already have strict per-endpoint limits
+            skip_global = (
+                (method == "POST" and path.startswith("/api/wallet/create")) or
+                (method == "POST" and path.startswith("/api/wallet/login")) or
+                (method == "POST" and path.startswith("/api/transaction/send"))
+            )
+
             # Apply global API rate limiting (60/min default)
-            if SecurityManager.is_rate_limited(client_id, "global_api"):
+            if not skip_global and SecurityManager.is_rate_limited(client_id, "global_api"):
                 retry_after = 60
                 reset_ts = int(time.time()) + retry_after
                 return JSONResponse(
