@@ -1,0 +1,85 @@
+{
+  "timestamp": 1754777662,
+  "backend_url": "https://aea01d90-48a6-486b-8542-99124e732ecc.preview.emergentagent.com/api",
+  "weak_password_results": [
+    {
+      "password": "123456",
+      "rejected": true,
+      "status": 400
+    },
+    {
+      "password": "password",
+      "rejected": true,
+      "status": 400
+    },
+    {
+      "password": "abc123",
+      "rejected": true,
+      "status": 400
+    },
+    {
+      "password": "qwerty",
+      "rejected": "rate_limited",
+      "status": 429
+    },
+    {
+      "password": "12345678",
+      "rejected": "rate_limited",
+      "status": 429
+    }
+  ],
+  "xss_injection_results": [
+    {
+      "type": "XSS",
+      "payload": "<script>alert('xss')</script>",
+      "blocked": "rate_limited",
+      "status": 429
+    },
+    {
+      "type": "XSS",
+      "payload": "javascript:alert('xss')",
+      "blocked": "rate_limited",
+      "status": 429
+    },
+    {
+      "type": "XSS",
+      "payload": "<img src=x onerror=alert('xss')>",
+      "blocked": "rate_limited",
+      "status": 429
+    },
+    {
+      "type": "SQL_Injection",
+      "payload": "'; DROP TABLE users; --",
+      "blocked": "rate_limited",
+      "status": 429
+    },
+    {
+      "type": "NoSQL_Injection",
+      "payload": "' OR '1'='1",
+      "blocked": "rate_limited",
+      "status": 429
+    },
+    {
+      "type": "NoSQL_Injection",
+      "payload": "{$ne: null}",
+      "blocked": "rate_limited",
+      "status": 429
+    },
+    {
+      "type": "Path_Traversal",
+      "payload": "../../../etc/passwd",
+      "blocked": "rate_limited",
+      "status": 429
+    },
+    {
+      "type": "Path_Traversal",
+      "payload": "..\\..\\..\\windows\\system32\\config\\sam",
+      "blocked": "rate_limited",
+      "status": 429
+    }
+  ],
+  "rate_limiting_results": {
+    "rate_limit_hit": true,
+    "requests_made": 11
+  }
+}
