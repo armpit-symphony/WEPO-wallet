@@ -51,7 +51,7 @@ import hashlib
 import re
 
 # Use preview backend URL from frontend/.env
-BACKEND_URL = "https://aea01d90-48a6-486b-8542-99124e732ecc.preview.emergentagent.com"
+BACKEND_URL = "https://blockchain-sectest.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔐 WEPO COMPREHENSIVE SECURITY TESTING - CHRISTMAS DAY 2025 LAUNCH READINESS")
@@ -1024,7 +1024,7 @@ import random
 import string
 
 # Use preview backend URL from frontend/.env
-BACKEND_URL = "https://aea01d90-48a6-486b-8542-99124e732ecc.preview.emergentagent.com"
+BACKEND_URL = "https://blockchain-sectest.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🔐 WEPO CRITICAL SECURITY TESTING FOR CHRISTMAS DAY 2025 LAUNCH")

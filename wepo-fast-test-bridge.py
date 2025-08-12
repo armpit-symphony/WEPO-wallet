@@ -887,7 +887,7 @@ class WepoFastTestBridge:
         self.app.add_middleware(
             CORSMiddleware,
             allow_origins=[
-                "https://aea01d90-48a6-486b-8542-99124e732ecc.preview.emergentagent.com",  # Production frontend
+                "https://blockchain-sectest.preview.emergentagent.com",  # Production frontend
                 "http://localhost:3000",  # Development frontend
                 "http://127.0.0.1:3000",  # Alternative localhost
             ],

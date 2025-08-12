@@ -57,7 +57,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Use preview backend URL from frontend/.env
-BACKEND_URL = "https://aea01d90-48a6-486b-8542-99124e732ecc.preview.emergentagent.com"
+BACKEND_URL = "https://blockchain-sectest.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 print(f"🎯 WEPO RATE LIMITING OPTIMIZATION STATUS CHECK")
