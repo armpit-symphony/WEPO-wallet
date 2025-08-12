@@ -282,7 +282,7 @@ const QuantumVault = ({ onClose }) => {
         ? { wallet_address: currentAddress }
         : { wallet_address: currentAddress, vault_id: selectedVault.vault_id };
       
-      const response = await fetch(`${backendUrl}/api/vault/auto-deposit/${endpoint}`, {
+      const response = await fetchWithTimeout(`${backendUrl}/api/vault/auto-deposit/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
