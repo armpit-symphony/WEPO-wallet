@@ -259,8 +259,17 @@ class UniversalQuantumMessaging:
             recipient_keypair = self.get_messaging_keypair(to_address)
             
             # Encrypt message content
+            # Use recipient RSA public key (TRUE E2E) to encrypt symmetric key
+            recipient_rsa_pub = None
+            if hasattr(self, 'rsa_public_keys') and to_address in self.rsa_public_keys:
+                recipient_rsa_pub = self.rsa_public_keys[to_address]
+            else:
+                # Ensure recipient has RSA keys generated
+                self.generate_messaging_keypair(to_address)
+                recipient_rsa_pub = self.rsa_public_keys[to_address]
+
             encrypted_content, encrypted_key = self.encrypt_message_content(
-                content, recipient_keypair.public_key
+                content, recipient_rsa_pub
             )
             
             # Create message
