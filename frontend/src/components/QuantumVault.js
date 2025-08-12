@@ -54,6 +54,18 @@ const QuantumVault = ({ onClose }) => {
   const currentAddress = wallet?.address;
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
+  // Utility: fetch with timeout to avoid infinite pending requests
+  const fetchWithTimeout = async (url, options = {}, timeoutMs = 8000) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const resp = await fetch(url, { ...options, signal: controller.signal });
+      return resp;
+    } finally {
+      clearTimeout(id);
+    }
+  };
+
   useEffect(() => {
     if (currentAddress) {
       loadWalletVaults();
