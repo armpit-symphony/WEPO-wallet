@@ -83,7 +83,7 @@ const QuantumVault = ({ onClose }) => {
     if (!selectedVault) return;
     
     try {
-      const response = await fetch(`${backendUrl}/api/vault/ghost-transfer/pending/${selectedVault.vault_id}`);
+      const response = await fetchWithTimeout(`${backendUrl}/api/vault/ghost-transfer/pending/${selectedVault.vault_id}`, {}, 8000);
       const data = await response.json();
       
       if (data.success) {
