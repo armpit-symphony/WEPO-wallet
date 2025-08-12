@@ -124,7 +124,7 @@ const ReceiveWepo = ({ onClose }) => {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Address:</span>
-            <span className="text-white font-mono text-xs">{wallet.address.substring(0, 20)}...</span>
+            <span className="text-white font-mono text-xs">{wallet?.address ? `${wallet.address.substring(0, 20)}...` : 'N/A'}</span>
           </div>
           {amount && (
             <div className="flex justify-between">
