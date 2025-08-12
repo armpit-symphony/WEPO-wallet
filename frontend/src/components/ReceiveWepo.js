@@ -9,7 +9,9 @@ const ReceiveWepo = ({ onClose }) => {
   const [label, setLabel] = useState('');
 
   const copyAddress = () => {
-    navigator.clipboard.writeText(wallet.address);
+    const addr = wallet?.address || '';
+    if (!addr) return;
+    navigator.clipboard.writeText(addr);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
