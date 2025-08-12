@@ -362,7 +362,7 @@ const QuantumVault = ({ onClose }) => {
       setLoading(true);
       setError('');
       
-      const response = await fetch(`${backendUrl}/api/vault/ghost-transfer/accept`, {
+      const response = await fetchWithTimeout(`${backendUrl}/api/vault/ghost-transfer/accept`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
