@@ -158,7 +158,7 @@ const QuantumVault = ({ onClose }) => {
         throw new Error('Wallet address not available. Please ensure wallet is properly loaded.');
       }
       
-      const response = await fetch(`${backendUrl}/api/vault/create`, {
+      const response = await fetchWithTimeout(`${backendUrl}/api/vault/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
