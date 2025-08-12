@@ -79,7 +79,10 @@ class UniversalQuantumMessaging:
         """Generate quantum messaging keys AND RSA E2E encryption keys for any wallet address"""
         try:
             # Generate Dilithium keypair for signing
-            dilithium_private_key, dilithium_public_key = generate_dilithium_keypair()
+            # Generate Dilithium keypair for quantum signatures
+            dilithium_kp = generate_dilithium_keypair()
+            dilithium_public_key = getattr(dilithium_kp, 'public_key')
+            dilithium_private_key = getattr(dilithium_kp, 'private_key')
             
             # Generate RSA keypair for TRUE E2E encryption
             from cryptography.hazmat.primitives.asymmetric import rsa
@@ -103,25 +106,26 @@ class UniversalQuantumMessaging:
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
             )
             
-            # Create extended keypair with both Dilithium and RSA keys
-            extended_keypair = DilithiumKeyPair(
-                private_key=dilithium_private_key,
-                public_key=rsa_public_pem  # Use RSA public key for E2E encryption
+            # Store Dilithium keys for signing/verification
+            dilithium_keypair = DilithiumKeyPair(
+                public_key=dilithium_public_key,
+                private_key=dilithium_private_key
             )
+            self.user_keys[address] = dilithium_keypair
             
-            # Store both keypairs for this address
-            self.user_keys[address] = extended_keypair
-            
-            # Store RSA private key separately for decryption
+            # Store RSA keys separately for E2E encryption
             if not hasattr(self, 'rsa_private_keys'):
                 self.rsa_private_keys = {}
+            if not hasattr(self, 'rsa_public_keys'):
+                self.rsa_public_keys = {}
             self.rsa_private_keys[address] = rsa_private_pem
+            self.rsa_public_keys[address] = rsa_public_pem
             
             print(f"✓ Generated TRUE E2E encryption keys for {address}")
             print(f"   Dilithium: Quantum-resistant signing")
             print(f"   RSA: End-to-end message encryption")
             
-            return extended_keypair
+            return dilithium_keypair
             
         except Exception as e:
             print(f"Failed to generate E2E messaging keypair: {e}")
