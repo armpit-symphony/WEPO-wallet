@@ -196,7 +196,7 @@ const QuantumVault = ({ onClose }) => {
       setLoading(true);
       setError('');
       
-      const response = await fetch(`${backendUrl}/api/vault/deposit`, {
+      const response = await fetchWithTimeout(`${backendUrl}/api/vault/deposit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
