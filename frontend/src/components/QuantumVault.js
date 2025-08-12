@@ -240,7 +240,7 @@ const QuantumVault = ({ onClose }) => {
       setLoading(true);
       setError('');
       
-      const response = await fetch(`${backendUrl}/api/vault/withdraw`, {
+      const response = await fetchWithTimeout(`${backendUrl}/api/vault/withdraw`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
