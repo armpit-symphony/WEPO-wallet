@@ -146,6 +146,8 @@ export const WalletProvider = ({ children }) => {
         mnemonic,
         wepo: walletKeys.wepo,
         btc: walletKeys.btc,
+        // Add top-level address for UI compatibility
+        address: walletKeys.wepo.address,
         createdAt: new Date().toISOString(),
         version: '3.0', // Updated version for proper BIP-39 implementation
         entropy: seed.toString('hex').substring(0, 32) + '...', // Store first part for verification (not the full seed!)
