@@ -675,7 +675,7 @@ const CommunityMining = ({ onBack, miningMode = 'genesis' }) => {
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-blue-400" />
                   <span className="font-medium text-blue-400">
-                    {miningStats.connectedMiners}
+                    {isConnected ? miningStats.connectedMiners : 0}
                   </span>
                 </div>
               </div>
