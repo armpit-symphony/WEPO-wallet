@@ -28,7 +28,7 @@ const QuantumVault = ({ onClose }) => {
   // State management
   const [vaults, setVaults] = useState([]);
   const [selectedVault, setSelectedVault] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
