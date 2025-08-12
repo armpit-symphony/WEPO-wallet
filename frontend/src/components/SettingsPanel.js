@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, ArrowLeft, Key, Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 
