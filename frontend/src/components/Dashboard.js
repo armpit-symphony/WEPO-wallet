@@ -24,6 +24,8 @@ const Dashboard = ({ onLogout }) => {
   const [showBalance, setShowBalance] = useState(true);
   const [isPreGenesis, setIsPreGenesis] = useState(true);
   const [showVaultModal, setShowVaultModal] = useState(false);
+  const [genesisLaunchTime, setGenesisLaunchTime] = useState(null);
+  const [posCountdown, setPosCountdown] = useState('Calculating...');
 
   useEffect(() => {
     // Restore session wallet and data
