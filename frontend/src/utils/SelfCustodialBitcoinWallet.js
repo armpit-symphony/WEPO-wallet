@@ -154,24 +154,26 @@ class BitcoinNetworkService {
     }
   }
 
-  async broadcastTransaction(hexTx) {
+  async broadcastTransaction(hexTx, relayOnly = true) {
+    // Route through WEPO masternode relay to preserve network privacy
     try {
-      const data = await this.rateLimitedRequest(BLOCKCYPHER_API.ENDPOINTS.BROADCAST_TX, {
+      const url = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_BACKEND_URL)
+        ? `${process.env.REACT_APP_BACKEND_URL}/api/bitcoin/relay/broadcast`
+        : '/api/bitcoin/relay/broadcast';
+      const resp = await fetch(url, {
         method: 'POST',
-        body: JSON.stringify({ tx: hexTx })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rawtx: hexTx, relay_only: relayOnly })
       });
-      return {
-        success: true,
-        txid: data.tx.hash,
-        message: 'Transaction broadcast successfully'
-      };
+      if (!resp.ok) throw new Error(`Relay HTTP ${resp.status}`);
+      const data = await resp.json();
+      if (data.success && data.relayed) {
+        return { success: true, txid: data.txid, path: data.path, peers: data.peers, message: 'Relayed via WEPO masternodes' };
+      }
+      return { success: false, error: data.fallback_error || 'Relay unsuccessful', path: data.path, peers: data.peers };
     } catch (error) {
-      console.error('Failed to broadcast transaction:', error);
-      return {
-        success: false,
-        error: error.message,
-        message: 'Failed to broadcast transaction'
-      };
+      console.error('Failed to relay transaction:', error);
+      return { success: false, error: error.message };
     }
   }
 
