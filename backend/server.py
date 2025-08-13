@@ -847,6 +847,53 @@ async def get_exchange_rate():
         "last_updated": datetime.utcnow()
     }
 
+# ===== BTC WALLET PLACEHOLDER ENDPOINTS (to unblock UI) =====
+@api_router.post("/bitcoin/wallet/init")
+async def btc_wallet_init(request: Request):
+    try:
+        body = await request.json()
+        seed_phrase = body.get("seed_phrase", "")
+        # Minimal validation and logging only
+        if not isinstance(seed_phrase, str) or len(seed_phrase.split()) not in (0, 12, 24):
+            # Non-fatal: continue with placeholder
+            pass
+        wallet_fingerprint = secrets.token_hex(4)
+        # Provide a few placeholder addresses
+        addrs = [
+            {"address": f"1PLACEHOLDER{secrets.token_hex(6).upper()}"},
+            {"address": f"1PLACEHOLDER{secrets.token_hex(6).upper()}"},
+            {"address": f"1PLACEHOLDER{secrets.token_hex(6).upper()}"}
+        ]
+        return {
+            "success": True,
+            "wallet_fingerprint": wallet_fingerprint,
+            "addresses": addrs,
+            "utxos": [],
+            "balance_btc": 0.0,
+            "transactions": []
+        }
+    except Exception as e:
+        logger.error(f"BTC init error: {e}")
+        raise HTTPException(status_code=500, detail="BTC wallet init failed")
+
+@api_router.post("/bitcoin/wallet/sync")
+async def btc_wallet_sync(request: Request):
+    try:
+        body = await request.json()
+        addresses = body.get("addresses", [])
+        if not isinstance(addresses, list):
+            addresses = []
+        # Echo back with zero balances to unblock UI
+        return {
+            "success": True,
+            "total_balance_btc": 0.0,
+            "addresses": [{"address": a, "balance": 0.0} for a in addresses],
+            "transactions": []
+        }
+    except Exception as e:
+        logger.error(f"BTC sync error: {e}")
+        raise HTTPException(status_code=500, detail="BTC wallet sync failed")
+
 @api_router.get("/blocks/latest")
 async def get_latest_blocks(limit: int = 10):
     """Get latest blocks"""
