@@ -1,9 +1,9 @@
 {
   "suite": "prelaunch_security_suite",
-  "timestamp": 1755044589,
+  "timestamp": 1755044939,
   "backend_url": "https://blockchain-sectest.preview.emergentagent.com/api",
   "scope": "full",
-  "final_score": 82.0,
+  "final_score": 87.0,
   "categories": {
     "security_headers": {
       "score": 10.0,
@@ -114,15 +114,15 @@
       ]
     },
     "auth_security": {
-      "score": 0.0,
+      "score": 5.0,
       "max": 5.0,
       "tests": [
         {
           "name": "Password Exposure",
-          "passed": false,
-          "weight": 0.0,
-          "details": "Wallet create failed (HTTP 429)",
-          "severity": "high"
+          "passed": true,
+          "weight": 5.0,
+          "details": "No password data in login response",
+          "severity": "medium"
         }
       ]
     },
@@ -170,8 +170,6 @@
   "critical": [
     "Global Rate Limiting"
   ],
-  "high": [
-    "Password Exposure"
-  ],
+  "high": [],
   "notes": []
 }
