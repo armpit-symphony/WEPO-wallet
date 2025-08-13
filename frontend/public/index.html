@@ -26,13 +26,21 @@
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
         <script>
-            // Global polyfills for crypto libraries
+            // Global polyfills for crypto libraries - CRITICAL for BTC functionality
             if (typeof global === 'undefined') {
                 window.global = window;
             }
             
-            // These will be provided by webpack
+            // Ensure global is available
             window.global = window.global || window;
+            
+            // Add basic polyfills before React loads
+            if (typeof window.process === 'undefined') {
+                window.process = { env: {}, browser: true };
+            }
+            
+            // Buffer polyfill will be provided by webpack
+            console.log('Polyfills initialized');
         </script>
         <!--
       This HTML file is a template.
