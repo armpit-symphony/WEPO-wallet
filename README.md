@@ -145,6 +145,46 @@
 
 ---
 
+## 🧭 DIRECTIONS OF USE (Wallet Owners)
+- Create a new wallet or log in with an existing one.
+- Pre-Genesis (before launch):
+  - BTC wallet is fully usable (self-custodial). You can view balances and (once BTC provider is connected) send BTC.
+  - Connect your miner in Community Mining to be counted in the genesis queue. Start/Submit is disabled until genesis.
+  - WEPO Send and Quantum Vault actions are disabled until genesis for safety.
+- Post-Genesis (after launch):
+  - Mining switches to PoW mode. Send WEPO becomes available per network rules.
+- Privacy (BTC):
+  - By default, BTC broadcasts are relayed via WEPO masternodes (privacy by design).
+  - To change fallback behavior, go to Settings → Network Status → "Relay BTC via Masternodes only".
+  - To see your last relay result (txid, path, peers), click "Show Last BTC Relay" in Settings.
+
+## 🧭 DIRECTIONS OF USE (Operators)
+- Settings → Network Status (staging only):
+  - "Simulate PoW" / "Simulate Pre-Genesis" toggles flip UI state for testing.
+  - BTC relay diagnostics available via "Show Last BTC Relay".
+- Backend Diagnostics:
+  - Masternode BTC relay endpoints: POST /api/bitcoin/relay/broadcast, GET /api/bitcoin/relay/status.
+  - Mining status: GET /api/mining/status.
+
+---
+
+## 🏁 LAUNCH DAY CHECKLIST (Operators)
+- Pre-Launch
+  - Re-run Full Prelaunch Security Suite (expect ≥85/100, GO) → prelaunch_security_report.json.
+  - Verify /api/mining/status reflects correct genesis status and block height.
+  - Ensure masternodes are online and accepting BTCR relay messages (check relay status endpoint/logs).
+  - Confirm frontend REACT_APP_BACKEND_URL points to production ingress.
+- Hour of Launch
+  - Monitor miner connections and hashrate in Community Mining.
+  - Watch first PoW block arrival; verify UI flips from Pre-Genesis → PoW.
+  - Confirm WEPO Send/Vault enable as per launch policy.
+  - Verify BTC relay via masternodes (Settings → Show Last BTC Relay) on a small test send.
+- Post-Launch
+  - Supervisor health: sudo supervisorctl status; logs: tail -n 100 /var/log/supervisor/backend.*.log
+  - Re-run smoke tests and document any incidents.
+
+---
+
 ## 🏗️ WEPO ECOSYSTEM ARCHITECTURE
 
 ### **Blockchain Infrastructure**

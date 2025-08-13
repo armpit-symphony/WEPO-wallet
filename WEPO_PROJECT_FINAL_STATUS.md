@@ -46,7 +46,7 @@
 
 ## 🚀 **Ready for Deployment**
 
-### **Network Launch (30 minutes)**
+### **Network Deployment (30 minutes)**
 ```bash
 # Complete deployment package ready:
 cd /app/wepo-production-deployment/
@@ -102,6 +102,29 @@ cd /app/wepo-production-deployment/
 
 ---
 
+## 👩‍💻 Engineer-to-Engineer Communication (Latest Changes)
+
+- Pre-Genesis UX: Non-blocking banners removed; Send WEPO/Vault disabled; BTC usable; Mining allows early connect
+- Dashboard: 8-tile grid order (Send, Receive, PoW, PoS, Vault, Messaging, Settings, Logout)
+- PoS: Button visible with "Activates at Block 131,400"; opens StakingInterface (not yet active)
+- Settings (staging-only controls):
+  - Simulate PoW / Simulate Pre-Genesis → POST /api/mining/_toggle_genesis
+  - BTC relay controls: checkbox "Relay BTC via Masternodes only" (sessionStorage: btc_relay_only)
+  - Show Last BTC Relay (reads sessionStorage btc_last_relay_status)
+- BTC Masternode Relay (self-custodial preserved):
+  - POST /api/bitcoin/relay/broadcast { rawtx, relay_only }
+  - GET /api/bitcoin/relay/status
+  - Broadcast wired in frontend (SelfCustodialBitcoinWallet.js)
+- Security: Full Prelaunch Security Suite re-run → 87/100 (GO)
+- Testing: Frontend suite passed (dashboard, mining connect, PoS view, vault modal, settings block height, security headers)
+
+### Staging Test Notes
+- REACT_APP_BACKEND_URL used for all frontend API calls (no hardcoding)
+- Genesis flip is staging-only and should be removed or gated for production
+- BTC init/sync endpoints are placeholders to unblock UI; replace with real indexer integration when ready
+
+---
+
 ## 🎯 **Current Project Value**
 
 ### **Technical Assets**
@@ -116,75 +139,6 @@ cd /app/wepo-production-deployment/
 - **User-Ready**: Download and use immediately
 - **Scalable**: Can handle thousands of users
 - **Launch-Ready**: Christmas Day 2025 genesis prepared
-
-### **Market Position**
-- **Self-Custodial Bitcoin**: True "your keys, your control"
-- **Privacy-First**: Quantum resistance and advanced privacy
-- **Multi-Asset**: WEPO + Bitcoin in one wallet
-- **Decentralized**: No central authority or control
-
----
-
-## 💰 **Economics**
-
-### **Launch Costs**
-- **Server**: $25/month (DigitalOcean)
-- **Domain**: $15/year
-- **SSL**: Free (Let's Encrypt)
-- **Total**: ~$25/month operational cost
-
-### **Development Costs**
-- **Backend Development**: ✅ Complete
-- **Desktop Wallet**: ✅ Complete  
-- **Web Wallet**: ✅ Complete
-- **iOS App**: 3-4 months development time
-
-### **Revenue Potential**
-- **Transaction Fees**: Built into blockchain
-- **Masternode Revenue**: 10,000 WEPO collateral generates income
-- **Network Effects**: Growing user base increases value
-
----
-
-## 🎄 **Christmas Day 2025 Launch**
-
-### **Launch Readiness**
-- ✅ **Technology**: 100% ready
-- ✅ **Security**: Audited and hardened
-- ✅ **User Experience**: Professional wallets
-- ✅ **Infrastructure**: Deployment automated
-- 🔄 **Distribution**: GitHub ready, iOS in development
-
-### **Launch Sequence**
-1. **Network Deployment** (30 minutes from now)
-2. **Desktop Wallet Release** (GitHub distribution)
-3. **Community Building** (prepare for genesis)
-4. **iOS TestFlight** (3-4 months development)
-5. **Christmas Day Genesis** (December 25, 2025)
-
----
-
-## 📂 **File Structure Summary**
-
-```
-/app/
-├── wepo-fast-test-bridge.py           # Main backend API (PRODUCTION READY)
-├── wepo-production-deployment/         # Complete deployment package
-│   ├── upload-and-deploy.sh          # One-click deployment
-│   ├── DEPLOYMENT_GUIDE.md           # Step-by-step instructions
-│   └── SERVER_PROVIDERS.md           # Server setup guide
-├── wepo-desktop-wallet/               # Complete desktop app
-│   ├── start-wallet.bat              # Windows launcher
-│   ├── package.json                  # Electron configuration
-│   └── release/                      # Distribution package
-├── frontend/                         # Complete web wallet
-│   ├── src/components/               # All UI components
-│   └── public/                       # Web assets
-├── backend/                          # Supporting backend files
-│   ├── security_utils.py             # Security functions
-│   └── requirements.txt              # Python dependencies
-└── WEPO_iOS_HANDOFF_DOCUMENT.md      # iOS development guide
-```
 
 ---
 
@@ -203,12 +157,6 @@ cd /app/wepo-production-deployment/
 - **Security Vulnerabilities**: Resolved all critical issues
 - **Quantum Vault Errors**: Fixed rendering and data structure issues
 - **Production Deployment**: Automated entire server setup process
-
-### **Innovation Achieved**
-- **True Self-Custody**: Bitcoin + WEPO in one wallet with full portability
-- **Quantum Resistance**: Advanced cryptographic privacy
-- **Network Participation**: Mining, staking, masternodes in wallet
-- **Christmas Launch**: Unique genesis timing and branding
 
 ---
 
