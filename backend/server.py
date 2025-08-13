@@ -59,7 +59,13 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             skip_global = (
                 (method == "POST" and path.startswith("/api/wallet/create")) or
                 (method == "POST" and path.startswith("/api/wallet/login")) or
-                (method == "POST" and path.startswith("/api/transaction/send"))
+                (method == "POST" and path.startswith("/api/transaction/send")) or
+                # Read-only sanity endpoints should never be globally throttled
+                (method == "GET" and (
+                    path.startswith("/api/quantum/status") or
+                    path.startswith("/api/collateral/schedule") or
+                    path.startswith("/api/swap/rate")
+                ))
             )
 
             # Apply global API rate limiting (60/min default)
@@ -80,8 +86,20 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                     }
                 )
 
-            response = await call_next(request)
-
+            try:
+                response = await call_next(request)
+            except HTTPException as e:
+                # Normalize HTTPExceptions so we can attach headers consistently
+                status = e.status_code or 500
+                retry_after = SecurityManager.get_rate_limit_reset_seconds(client_id, "global_api") if status == 429 else 0
+                reset_ts = int(time.time()) + (retry_after or 60)
+                content = {"error": e.detail or "Request failed"}
+                if status == 429:
+                    content["retry_after"] = retry_after
+                    content["rate_limit"] = "60 requests per minute"
+                response = JSONResponse(status_code=status, content=content)
+                # fallthrough to header attachment below
+            
             # Add security headers
             security_headers = SecurityManager.get_security_headers()
             for header, value in security_headers.items():
@@ -92,11 +110,24 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             response.headers["X-RateLimit-Reset"] = str(int(time.time()) + 60)
 
             return response
-        except HTTPException:
-            raise
         except Exception as e:
             logging.error(f"Security middleware error: {e}")
-            raise HTTPException(status_code=500, detail="Internal server error")
+            # Never raise from middleware; return safe JSON with headers
+            retry_after = 60
+            reset_ts = int(time.time()) + retry_after
+            response = JSONResponse(
+                status_code=500,
+                content={"error": "Internal server error"},
+                headers={
+                    "X-RateLimit-Limit": "60",
+                    "X-RateLimit-Reset": str(reset_ts),
+                    "Retry-After": str(retry_after)
+                }
+            )
+            security_headers = SecurityManager.get_security_headers()
+            for header, value in security_headers.items():
+                response.headers[header] = value
+            return response
 
 app.add_middleware(SecurityMiddleware)
 
