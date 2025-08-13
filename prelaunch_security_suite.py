@@ -227,7 +227,11 @@ def test_input_validation(api_base: str, results: Dict[str, Any]):
             if r.status_code == 400:
                 blocked += 1
             elif r.status_code == 429:
-                time.sleep(0.2)
+                retry_after = int(r.headers.get('Retry-After', '1'))
+                time.sleep(retry_after + 0.2)
+                r2 = api_create_wallet(api_base, pl + "_b", "ValidPass123!")
+                if r2.status_code == 400:
+                    blocked += 1
                 continue
         rate = blocked / max(1, len(pt_payloads))
         log("input_validation", "Path Traversal Protection", rate >= 0.5, 4.0 * rate, f"Blocked {blocked}/{len(pt_payloads)} path traversal payloads", results, severity="medium")
