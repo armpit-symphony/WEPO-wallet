@@ -162,15 +162,22 @@ def test_input_validation(api_base: str, results: Dict[str, Any]):
         weak_pwds = ["123456", "password", "abc123"]
         rejected = 0
         attempts = 0
+        base_ip = 100
         for wp in weak_pwds:
             attempts += 1
             u, _ = gen_user()
-            r = api_create_wallet(api_base, u, wp)
+            # Use a rotating client IP to avoid tripping the create limiter
+            client_ip = f"10.0.0.{base_ip}"
+            base_ip += 1
+            r = api_create_wallet(api_base, u, wp, client_ip=client_ip)
             if r.status_code == 400:
                 rejected += 1
             elif r.status_code == 429:
-                # try a different user after a short pause
-                time.sleep(0.2)
+                retry_after = int(r.headers.get('Retry-After', '1'))
+                time.sleep(retry_after + 0.2)
+                r2 = api_create_wallet(api_base, u + "_b", wp, client_ip=client_ip)
+                if r2.status_code == 400:
+                    rejected += 1
         detail = f"Rejected {rejected}/{len(weak_pwds)} weak passwords (attempts={attempts})"
         log("input_validation", "Password Strength Validation", rejected >= 2, 0.0, detail, results, severity="medium")
     except Exception as e:
