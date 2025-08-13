@@ -273,19 +273,32 @@ const SettingsPanel = ({ onClose }) => {
 
       <div className="bg-gray-700/50 rounded-lg p-4">
         <h3 className="text-white font-medium mb-4">Network Status</h3>
-        <div className="mb-3">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <button onClick={async () => {
             try {
               const url = process.env.REACT_APP_BACKEND_URL || '';
               await fetch(`${url}/api/mining/_toggle_genesis`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: false }) });
             } catch {}
-          }} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded mr-2">Simulate PoW</button>
+          }} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded">Simulate PoW</button>
           <button onClick={async () => {
             try {
               const url = process.env.REACT_APP_BACKEND_URL || '';
               await fetch(`${url}/api/mining/_toggle_genesis`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: true }) });
             } catch {}
           }} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded">Simulate Pre-Genesis</button>
+          <div className="h-4 w-px bg-gray-700 mx-1" />
+          <label className="text-xs text-gray-300 flex items-center gap-2">
+            <input type="checkbox" defaultChecked onChange={(e) => {
+              try { sessionStorage.setItem('btc_relay_only', e.target.checked ? 'true' : 'false'); } catch {}
+            }} />
+            Relay BTC via Masternodes only (no fallback)
+          </label>
+          <button onClick={() => {
+            try {
+              const st = sessionStorage.getItem('btc_last_relay_status');
+              alert(st ? st : 'No relay yet');
+            } catch { alert('No relay yet'); }
+          }} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded">Show Last BTC Relay</button>
         </div>
         <div className="space-y-3 text-sm">
           <div className="flex justify-between">
