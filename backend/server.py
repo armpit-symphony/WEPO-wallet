@@ -847,52 +847,68 @@ async def get_exchange_rate():
         "last_updated": datetime.utcnow()
     }
 
-# ===== BTC WALLET PLACEHOLDER ENDPOINTS (to unblock UI) =====
-@api_router.post("/bitcoin/wallet/init")
-async def btc_wallet_init(request: Request):
-    try:
-        body = await request.json()
-        seed_phrase = body.get("seed_phrase", "")
-        # Minimal validation and logging only
-        if not isinstance(seed_phrase, str) or len(seed_phrase.split()) not in (0, 12, 24):
-            # Non-fatal: continue with placeholder
-            pass
-        wallet_fingerprint = secrets.token_hex(4)
-        # Provide a few placeholder addresses
-        addrs = [
-            {"address": f"1PLACEHOLDER{secrets.token_hex(6).upper()}"},
-            {"address": f"1PLACEHOLDER{secrets.token_hex(6).upper()}"},
-            {"address": f"1PLACEHOLDER{secrets.token_hex(6).upper()}"}
-        ]
-        return {
-            "success": True,
-            "wallet_fingerprint": wallet_fingerprint,
-            "addresses": addrs,
-            "utxos": [],
-            "balance_btc": 0.0,
-            "transactions": []
-        }
-    except Exception as e:
-        logger.error(f"BTC init error: {e}")
-        raise HTTPException(status_code=500, detail="BTC wallet init failed")
+# ===== BTC ESPLORA PROXY ENDPOINTS (READ-ONLY) =====
+ESPLORA_BASE = "https://blockstream.info/api"
 
-@api_router.post("/bitcoin/wallet/sync")
-async def btc_wallet_sync(request: Request):
+def _esplora_get(path: str, timeout=10):
+    import requests
+    url = f"{ESPLORA_BASE}{path}"
+    r = requests.get(url, timeout=timeout)
+    if r.status_code != 200:
+        raise HTTPException(status_code=r.status_code, detail=f"Esplora error {r.status_code}")
     try:
-        body = await request.json()
-        addresses = body.get("addresses", [])
-        if not isinstance(addresses, list):
-            addresses = []
-        # Echo back with zero balances to unblock UI
-        return {
-            "success": True,
-            "total_balance_btc": 0.0,
-            "addresses": [{"address": a, "balance": 0.0} for a in addresses],
-            "transactions": []
-        }
+        return r.json()
+    except Exception:
+        return r.text
+
+@api_router.get("/bitcoin/address/{addr}")
+async def btc_address_info(addr: str):
+    try:
+        info = _esplora_get(f"/address/{addr}")
+        # Also include a small recent txs page for UX
+        try:
+            txs = _esplora_get(f"/address/{addr}/txs")
+        except Exception:
+            txs = []
+        return {"success": True, "data": info, "txs": txs}
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"BTC sync error: {e}")
-        raise HTTPException(status_code=500, detail="BTC wallet sync failed")
+        logger.error(f"Esplora address info error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to query address")
+
+@api_router.get("/bitcoin/address/{addr}/utxo")
+async def btc_address_utxo(addr: str):
+    try:
+        utxos = _esplora_get(f"/address/{addr}/utxo")
+        return {"success": True, "data": utxos}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Esplora utxo error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to query utxos")
+
+@api_router.get("/bitcoin/tx/{txid}")
+async def btc_tx_info(txid: str):
+    try:
+        tx = _esplora_get(f"/tx/{txid}")
+        return {"success": True, "data": tx}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Esplora tx error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to query tx")
+
+@api_router.get("/bitcoin/fee-estimates")
+async def btc_fee_estimates():
+    try:
+        fees = _esplora_get("/fee-estimates")
+        return {"success": True, "data": fees}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Esplora fee error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to query fee estimates")
 
 @api_router.get("/blocks/latest")
 async def get_latest_blocks(limit: int = 10):
