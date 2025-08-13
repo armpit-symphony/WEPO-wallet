@@ -31,6 +31,7 @@ const CommunityMining = ({ onBack, miningMode = 'genesis', isPreGenesis = true }
           mode_display: data.mode_display || (isPreGenesis ? 'Pre-Genesis (Not connected)' : 'PoW Mining'),
           genesis_status: data.genesis_status || (isPreGenesis ? 'pending' : 'found')
         });
+        if (data.connected_miners > 0) sessionStorage.setItem('wepo_miner_connected', 'true');
       }
     } catch (e) {
       // ignore, keep defaults
