@@ -450,69 +450,39 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
-  const loadBitcoinWallet = async (seedPhrase, password) => {
+  const loadBitcoinWallet = async (mnemonic, password) => {
     try {
-      console.log('🔄 Loading Bitcoin wallet with real backend integration...');
-
-      // Check if we have a real backend connection
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-
-      // Initialize Bitcoin wallet with backend
-      const response = await fetch(`${backendUrl}/api/bitcoin/wallet/init`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          seed_phrase: seedPhrase,
-          passphrase: password || ''
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Bitcoin wallet initialization failed: ${response.status}`);
+      console.log('🔄 Initializing self-custodial Bitcoin wallet (client-side derivation)...');
+      // Derive seed and HD nodes
+      const seed = await bip39.mnemonicToSeed(mnemonic, password || '');
+      const bip32 = BIP32Factory(ecc);
+      const root = bip32.fromSeed(seed);
+      const account = root.derivePath("m/84'/0'/0'"); // BIP84 P2WPKH
+      // Generate first 5 receive addresses
+      const addrs = [];
+      for (let i = 0; i < 5; i++) {
+        const node = account.derivePath(`0/${i}`);
+        const { payments } = bitcoin;
+        const p2wpkh = payments.p2wpkh({ pubkey: node.publicKey, network: bitcoin.networks.bitcoin });
+        addrs.push({ address: p2wpkh.address, index: i, change: 0 });
       }
-
-      const walletData = await response.json();
-      
-      if (walletData.success) {
-        // Store wallet fingerprint for sync operations
-        setBtcWalletFingerprint(walletData.wallet_fingerprint);
-        
-        // Set initial addresses
-        const addresses = walletData.addresses.map(addr => addr.address);
-        setBtcAddresses(addresses);
-        
-        // Initialize with zero balance until sync
-        setBtcBalance(0.0);
-        setBtcTransactions([]);
-        setBtcUtxos([]);
-        
-        console.log('✅ Bitcoin wallet initialized successfully');
-        console.log(`📍 Generated ${addresses.length} addresses`);
-        
-        // Auto-sync the wallet after initialization
-        await syncBitcoinWallet(walletData.wallet_fingerprint, addresses);
-        
-        return { 
-          success: true, 
-          restored: true, 
-          addresses: addresses,
-          wallet_fingerprint: walletData.wallet_fingerprint
-        };
-      } else {
-        throw new Error('Bitcoin wallet initialization failed');
-      }
-      
+      setBtcAddresses(addrs.map(a => a.address));
+      setBtcBalance(0);
+      setBtcTransactions([]);
+      setBtcUtxos([]);
+      // Stash derivation context for signing
+      setBtcWallet({ accountXPrv: account.toBase58(), nextReceive: 5, nextChange: 0 });
+      setBtcWalletFingerprint(account.fingerprint?.toString('hex') || '');
+      console.log('✅ Bitcoin wallet initialized with 5 addresses');
+      // Sync balances and history
+      await syncBitcoinViaEsplora(addrs.map(a => a.address));
+      return { success: true, restored: true, addresses: addrs.map(a => a.address) };
     } catch (error) {
-      console.error('❌ Failed to load Bitcoin wallet:', error);
-      
-      // Fallback to placeholder implementation
+      console.error('❌ Failed to init Bitcoin wallet:', error);
       setBtcBalance(0.0);
       setBtcAddresses([]);
       setBtcTransactions([]);
       setBtcUtxos([]);
-      
       return { success: false, error: error.message };
     }
   };
