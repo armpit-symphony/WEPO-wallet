@@ -103,7 +103,11 @@ frontend:
     file: "frontend/src/components/Dashboard.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Reordered 8-tile grid per user spec; restored BTC section; added PoS tile linking to StakingInterface with activation block label; fixed duplicate tiles. Needs UI retest."
     status_history:
       - working: true
         agent: "testing"
