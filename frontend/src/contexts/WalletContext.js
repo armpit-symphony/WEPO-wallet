@@ -487,6 +487,33 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
+  const syncBitcoinViaEsplora = async (addresses) => {
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      let total = 0;
+      const txsAll = [];
+      for (const addr of addresses) {
+        const infoResp = await fetch(`${backendUrl}/api/bitcoin/address/${addr}`);
+        if (!infoResp.ok) continue;
+        const info = await infoResp.json();
+        const data = info.data || {};
+        const chain = data.chain_stats || {};
+        const mempool = data.mempool_stats || {};
+        const confirmed = (chain.funded_txo_sum || 0) - (chain.spent_txo_sum || 0);
+        const unconfirmed = (mempool.funded_txo_sum || 0) - (mempool.spent_txo_sum || 0);
+        const addrBal = ((confirmed + unconfirmed) / 1e8) || 0;
+        total += addrBal;
+        if (Array.isArray(info.txs)) txsAll.push(...info.txs);
+      }
+      setBtcBalance(total);
+      setBtcTransactions(txsAll);
+      return { success: true, balance: total, txs: txsAll };
+    } catch (e) {
+      console.warn('BTC Esplora sync failed', e);
+      return { success: false, error: e.message };
+    }
+  };
+
   const syncBitcoinWallet = async (walletFingerprint, addresses) => {
     try {
       console.log('🔄 Syncing Bitcoin wallet with blockchain...');
