@@ -110,7 +110,8 @@ def api_create_wallet(api_base: str, username: str, password: str) -> requests.R
 
 
 def api_login(api_base: str, username: str, password: str) -> requests.Response:
-    return requests.post(f"{api_base}/wallet/login", json={"username": username, "password": password}, timeout=10)
+    headers = {"X-Real-IP": "10.0.0.99"}
+    return requests.post(f"{api_base}/wallet/login", json={"username": username, "password": password}, headers=headers, timeout=10)
 
 # ----------------------------- API Tests -----------------------------
 
