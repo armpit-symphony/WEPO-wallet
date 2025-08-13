@@ -1232,6 +1232,9 @@ class WalletMiner:
             "mining_mode": "genesis"  # "genesis" or "pow"
         }
         self.genesis_launch_time = 1735153200  # Dec 25, 2025 8pm UTC (3pm EST)
+        
+        # Staging-only manual override for genesis active flag
+        self._force_genesis_active: Optional[bool] = None
     
     def is_genesis_active(self):
         """Check if genesis mining is still active"""
