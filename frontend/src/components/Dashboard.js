@@ -202,6 +202,7 @@ const Dashboard = ({ onLogout }) => {
       {activeTab === 'mining' && <CommunityMining onBack={() => setActiveTab('overview')} isPreGenesis={isPreGenesis} />}
       {activeTab === 'settings' && <SettingsPanel onClose={() => setActiveTab('overview')} />}
       {activeTab === 'messaging' && <QuantumMessaging onBack={() => setActiveTab('overview')} />}
+      {activeTab === 'staking' && <StakingInterface onClose={() => setActiveTab('overview')} />}
 
       {showVaultModal && (
         <QuantumVault onClose={() => setShowVaultModal(false)} isPreGenesis={isPreGenesis} />
