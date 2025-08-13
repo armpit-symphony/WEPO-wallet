@@ -1498,6 +1498,10 @@ async def get_mining_status():
 # Staging-only: toggle genesis active state (no auth in this environment). DO NOT EXPOSE IN PROD.
 @api_router.post("/mining/_toggle_genesis")
 async def toggle_genesis(request: dict):
+    # Disabled in production by default. Enable only if WEPO_STAGING_TOGGLE=true
+    import os
+    if os.environ.get('WEPO_STAGING_TOGGLE', 'false').lower() != 'true':
+        raise HTTPException(status_code=403, detail="Staging toggle disabled")
     force = request.get("force")
     if isinstance(force, bool):
         wallet_mining._force_genesis_active = force
