@@ -1,9 +1,9 @@
 {
   "suite": "prelaunch_security_suite",
-  "timestamp": 1755044290,
+  "timestamp": 1755044589,
   "backend_url": "https://blockchain-sectest.preview.emergentagent.com/api",
   "scope": "full",
-  "final_score": 40.0,
+  "final_score": 82.0,
   "categories": {
     "security_headers": {
       "score": 10.0,
@@ -26,15 +26,22 @@
       ]
     },
     "brute_force": {
-      "score": 0.0,
+      "score": 22.0,
       "max": 25.0,
       "tests": [
         {
           "name": "Account Lockout",
-          "passed": false,
+          "passed": true,
           "weight": 15.0,
-          "details": "Cannot create test wallet (HTTP 429)",
+          "details": "Locked after 4 failures (HTTP 423)",
           "severity": "critical"
+        },
+        {
+          "name": "Lockout Persistence (Rate-limited)",
+          "passed": true,
+          "weight": 7.0,
+          "details": "Rate limiting in place during lockout",
+          "severity": "high"
         }
       ]
     },
@@ -67,13 +74,13 @@
           "name": "Rate Limit Headers",
           "passed": true,
           "weight": 5.0,
-          "details": "Present: X-RateLimit-Limit, X-RateLimit-Reset, Retry-After",
+          "details": "Present: X-RateLimit-Limit, X-RateLimit-Reset",
           "severity": "medium"
         }
       ]
     },
     "input_validation": {
-      "score": 0.0,
+      "score": 20.0,
       "max": 20.0,
       "tests": [
         {
@@ -85,23 +92,23 @@
         },
         {
           "name": "XSS Protection",
-          "passed": false,
-          "weight": 0.0,
-          "details": "Blocked 0/3 XSS payloads",
+          "passed": true,
+          "weight": 8.0,
+          "details": "Blocked 3/3 XSS payloads",
           "severity": "high"
         },
         {
           "name": "SQL/NoSQL Injection Protection",
-          "passed": false,
-          "weight": 0.0,
-          "details": "Blocked 0/3 injection payloads",
+          "passed": true,
+          "weight": 8.0,
+          "details": "Blocked 3/3 injection payloads",
           "severity": "high"
         },
         {
           "name": "Path Traversal Protection",
-          "passed": false,
-          "weight": 0.0,
-          "details": "Blocked 0/2 path traversal payloads",
+          "passed": true,
+          "weight": 4.0,
+          "details": "Blocked 2/2 path traversal payloads",
           "severity": "medium"
         }
       ]
@@ -161,12 +168,9 @@
     }
   },
   "critical": [
-    "Account Lockout",
     "Global Rate Limiting"
   ],
   "high": [
-    "XSS Protection",
-    "SQL/NoSQL Injection Protection",
     "Password Exposure"
   ],
   "notes": []
