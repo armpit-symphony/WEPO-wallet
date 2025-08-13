@@ -1,9 +1,9 @@
 {
   "suite": "prelaunch_security_suite",
-  "timestamp": 1755043609,
+  "timestamp": 1755043698,
   "backend_url": "https://blockchain-sectest.preview.emergentagent.com/api",
   "scope": "full",
-  "final_score": 40.0,
+  "final_score": 25.0,
   "categories": {
     "security_headers": {
       "score": 10.0,
@@ -39,14 +39,14 @@
       ]
     },
     "rate_limiting": {
-      "score": 25.0,
+      "score": 10.0,
       "max": 25.0,
       "tests": [
         {
           "name": "Global Rate Limiting",
-          "passed": true,
-          "weight": 10.0,
-          "details": "HTTP 429 after ~10 requests",
+          "passed": false,
+          "weight": 0.0,
+          "details": "No 429 after 65 requests",
           "severity": "critical"
         },
         {
@@ -65,9 +65,9 @@
         },
         {
           "name": "Rate Limit Headers",
-          "passed": true,
+          "passed": false,
           "weight": 5.0,
-          "details": "Present: X-RateLimit-Limit, X-RateLimit-Reset, Retry-After",
+          "details": "Missing in response",
           "severity": "medium"
         }
       ]
@@ -127,21 +127,21 @@
           "name": "Quantum Status",
           "passed": false,
           "weight": 0.0,
-          "details": "HTTP 429",
+          "details": "HTTP 500",
           "severity": "high"
         },
         {
           "name": "Collateral Schedule",
           "passed": false,
           "weight": 0.0,
-          "details": "HTTP 429",
+          "details": "HTTP 500",
           "severity": "high"
         },
         {
           "name": "Swap Rate",
           "passed": false,
           "weight": 0.0,
-          "details": "HTTP 429",
+          "details": "HTTP 500",
           "severity": "high"
         }
       ]
@@ -161,7 +161,8 @@
     }
   },
   "critical": [
-    "Account Lockout"
+    "Account Lockout",
+    "Global Rate Limiting"
   ],
   "high": [
     "XSS Protection",
