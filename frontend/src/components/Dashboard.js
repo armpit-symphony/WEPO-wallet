@@ -163,7 +163,30 @@ const Dashboard = ({ onLogout }) => {
         </button>
         <button onClick={() => setActiveTab('mining')} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
           <Pickaxe className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
-          <span className="text-white font-medium">Community Mining</span>
+          <span className="text-white font-medium">Community Mining (PoW)</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <button onClick={() => setActiveTab('messaging')} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
+          <span className="text-white font-medium">Quantum Messages</span>
+        </button>
+        <button onClick={() => setActiveTab('settings')} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
+          <SettingsIcon className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Settings</span>
+        </button>
+        <button onClick={() => { logout(); onLogout && onLogout(); }} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
+          <LogOut className="h-6 w-6 text-red-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Logout</span>
+        </button>
+      </div>
+
+      {/* PoS Button (informational pre-activation) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button onClick={() => setActiveTab('staking')} className="bg-gray-800/50 hover:bg-gray-700/50 border border-blue-500/30 rounded-xl p-4 text-center transition-all">
+          <Coins className="h-6 w-6 text-blue-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Proof of Stake (PoS)</span>
+          <div className="text-xs text-gray-400 mt-1">Activates at Block 131,400</div>
         </button>
       </div>
 
