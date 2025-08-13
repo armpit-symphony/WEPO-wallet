@@ -1582,6 +1582,121 @@ async def get_mining_leaderboard():
     miners.sort(key=lambda x: x["hashrate"], reverse=True)
     return {"miners": miners[:20]}
 
+# ===== BTC RELAY VIA MASTERNODES =====
+
+# Lightweight relay manager for broadcasting BTC transactions via masternodes
+class BtcRelayManager:
+    def __init__(self):
+        self.last_attempt: Optional[dict] = None
+        self.total_attempts: int = 0
+        self.total_relays: int = 0
+        self.total_fallbacks: int = 0
+        self.last_error: Optional[str] = None
+        # Lazy-init masternode network manager
+        self._mn_manager = None
+
+    def _get_manager(self):
+        if self._mn_manager is not None:
+            return self._mn_manager
+        try:
+            from wepo_masternode_networking import MasternodeNetworkManager, MasternodeNetworkInfo
+            # Minimal no-bind manager; we won't start the network here to avoid port binding
+            mn_info = MasternodeNetworkInfo(
+                masternode_id="wallet_btc_relay",
+                operator_address="wepo1walletrelay0000000000000000000000000",
+                collateral_txid="",
+                collateral_vout=0,
+                ip_address="127.0.0.1",
+                port=22999
+            )
+            class _MockChain:
+                def get_active_masternodes(self):
+                    return []
+            self._mn_manager = MasternodeNetworkManager(mn_info, _MockChain())
+            return self._mn_manager
+        except Exception as e:
+            logger.error(f"BTC relay manager init failed: {e}")
+            self.last_error = str(e)
+            return None
+
+    def relay(self, rawtx_hex: str) -> Tuple[bool, int]:
+        import binascii
+        self.total_attempts += 1
+        self.last_error = None
+        manager = self._get_manager()
+        peers = 0
+        relayed = False
+        try:
+            tx_bytes = binascii.unhexlify(rawtx_hex.strip())
+            # Build relay message with prefix so masternode software can route it
+            msg = b'BTCR' + tx_bytes
+            if manager is not None:
+                peers = len(getattr(manager, 'connections', {}))
+                manager.broadcast_to_masternodes(msg)
+                relayed = peers > 0
+        except Exception as e:
+            logger.error(f"BTC relay error: {e}")
+            self.last_error = str(e)
+            relayed = False
+        if relayed:
+            self.total_relays += 1
+        return relayed, peers
+
+    def relay_status(self):
+        return {
+            "total_attempts": self.total_attempts,
+            "total_relays": self.total_relays,
+            "total_fallbacks": self.total_fallbacks,
+            "last_error": self.last_error
+        }
+
+btc_relay_manager = BtcRelayManager()
+
+@api_router.post("/bitcoin/relay/broadcast")
+async def relay_btc_transaction(request: dict):
+    """Relay raw BTC transaction via masternode network. Self-custody preserved (client signs)."""
+    import hashlib, binascii
+    rawtx = request.get("rawtx")
+    relay_only = bool(request.get("relay_only", True))
+    if not rawtx or not isinstance(rawtx, str):
+        raise HTTPException(status_code=400, detail="rawtx hex required")
+    try:
+        tx_bytes = binascii.unhexlify(rawtx.strip())
+        # Compute Bitcoin txid (double-SHA256, little-endian)
+        txid = hashlib.sha256(hashlib.sha256(tx_bytes).digest()).digest()[::-1].hex()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid rawtx hex")
+
+    relayed, peers = btc_relay_manager.relay(rawtx)
+    result = {
+        "success": True,
+        "path": "masternode_relay" if relayed else ("relay_attempt_no_peers" if peers == 0 else "relay_attempt_failed"),
+        "peers": peers,
+        "txid": txid,
+        "relayed": relayed,
+        "relay_only": relay_only
+    }
+
+    # Optional fallback (disabled by default)
+    if not relayed and not relay_only:
+        try:
+            import requests
+            # Blockstream Esplora broadcast endpoint (mainnet)
+            resp = requests.post("https://blockstream.info/api/tx", data=tx_bytes, timeout=10)
+            if resp.status_code in (200, 201):
+                btc_relay_manager.total_fallbacks += 1
+                result.update({"path": "fallback_esplora", "relayed": True})
+            else:
+                result.update({"fallback_error": f"HTTP {resp.status_code}"})
+        except Exception as e:
+            result.update({"fallback_error": str(e)})
+
+    return result
+
+@api_router.get("/bitcoin/relay/status")
+async def relay_status():
+    return {"success": True, "data": btc_relay_manager.relay_status()}
+
 # ===== HELPER FUNCTIONS =====
 
 async def get_current_block_height():
