@@ -68,6 +68,8 @@ const Dashboard = ({ onLogout }) => {
   const formatBalance = (amt) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 }).format(amt || 0);
   const short = (s) => (s && s.length > 10 ? `${s.substring(0, 10)}...${s.substring(s.length - 6)}` : s || 'N/A');
 
+  const [showBitcoinDetails, setShowBitcoinDetails] = useState(false);
+
   const Overview = () => (
     <div className="space-y-6">
       <div className="rounded-2xl p-6 text-white bg-gradient-to-r from-purple-600 to-blue-600">
@@ -87,6 +89,54 @@ const Dashboard = ({ onLogout }) => {
           </div>
         </div>
         <div className="text-sm text-purple-100">Address: {short(wallet?.address)}</div>
+      </div>
+
+      {/* BTC Wallet Section (compact) */}
+      <div className="mb-6">
+        <button onClick={() => setShowBitcoinDetails(!showBitcoinDetails)} className="w-full bg-gradient-to-r from-orange-900/30 to-yellow-900/30 border border-orange-500/30 rounded-xl p-4 hover:from-orange-900/40 hover:to-yellow-900/40 transition-all duration-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Bitcoin className="h-6 w-6 text-orange-400" />
+              <div className="text-left">
+                <h3 className="text-white font-semibold">BTC</h3>
+                <div className="text-sm text-gray-300">0.00000000 BTC</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-green-400 text-sm">{true ? '✅ Active' : '⏳ Initializing...'}</div>
+                <div className="text-xs text-gray-400">Self-Custodial</div>
+              </div>
+              <div className={`transform transition-transform duration-200 ${showBitcoinDetails ? 'rotate-180' : ''}`}>
+                <ChevronDown className="h-4 w-4 text-gray-400" />
+              </div>
+            </div>
+          </div>
+        </button>
+        {showBitcoinDetails && (
+          <div className="mt-3 bg-gradient-to-r from-orange-900/20 to-yellow-900/20 border border-orange-500/20 rounded-xl p-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm mb-4">
+              <div className="bg-black/30 rounded-lg p-3">
+                <div className="text-gray-400">BTC Balance</div>
+                <div className="text-orange-400 font-semibold">0.00000000 BTC</div>
+                <div className="text-green-400 text-xs mt-1">Mainnet</div>
+              </div>
+              <div className="bg-black/30 rounded-lg p-3">
+                <div className="text-gray-400">Mode</div>
+                <div className="text-white font-semibold">Public Mode</div>
+                <div className="text-blue-400 text-xs mt-1">Direct Bitcoin</div>
+              </div>
+              <div className="bg-black/30 rounded-lg p-3">
+                <div className="text-gray-400">Address Type</div>
+                <div className="text-white font-semibold">P2PKH (Legacy)</div>
+              </div>
+              <div className="bg-black/30 rounded-lg p-3">
+                <div className="text-gray-400">Derivation</div>
+                <div className="text-white font-mono">m/44'/0'/0'/0/x</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
