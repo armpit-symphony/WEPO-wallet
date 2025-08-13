@@ -104,8 +104,8 @@ def log(cat: str, name: str, passed: bool, weight: float, details: str, results:
 
 # ----------------------------- API Helpers -----------------------------
 
-def api_create_wallet(api_base: str, username: str, password: str) -> requests.Response:
-    headers = {"X-Real-IP": "10.0.0.99"}
+def api_create_wallet(api_base: str, username: str, password: str, client_ip: str = "10.0.0.99") -> requests.Response:
+    headers = {"X-Real-IP": client_ip}
     return requests.post(f"{api_base}/wallet/create", json={"username": username, "password": password}, headers=headers, timeout=10)
 
 
