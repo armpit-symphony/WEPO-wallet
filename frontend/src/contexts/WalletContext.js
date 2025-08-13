@@ -602,14 +602,20 @@ export const WalletProvider = ({ children }) => {
 
   const getNewBitcoinAddress = () => {
     try {
-      console.log('📍 Generating placeholder Bitcoin address...');
-      
-      // Return placeholder address
-      const placeholderAddress = '1PLACEHOLDER' + Math.random().toString(36).substring(2, 15);
-      return placeholderAddress;
-      
+      if (!btcWallet || !btcWallet.accountXPrv) throw new Error('BTC wallet not initialized');
+      const bip32 = BIP32Factory(ecc);
+      const account = bip32.fromBase58(btcWallet.accountXPrv);
+      const i = btcWallet.nextReceive || 0;
+      const node = account.derivePath(`0/${i}`);
+      const { payments } = bitcoin;
+      const p2wpkh = payments.p2wpkh({ pubkey: node.publicKey, network: bitcoin.networks.bitcoin });
+      const addr = p2wpkh.address;
+      const updated = [...btcAddresses, addr];
+      setBtcAddresses(updated);
+      setBtcWallet({ ...btcWallet, nextReceive: i + 1 });
+      return addr;
     } catch (error) {
-      console.error('❌ Failed to generate Bitcoin address:', error);
+      console.error('❌ Failed to derive Bitcoin address:', error);
       return null;
     }
   };
