@@ -167,11 +167,12 @@ frontend:
 
 ## test_plan:
 ##   current_focus:
-##     - "Backend Smoke Tests Completed"
-##     - "Final Launch Readiness Assessment"
+##     - "Dashboard Integration Testing"
+##     - "Security Integration Testing"
+##     - "Staking Interface PoS visibility"
 ##   stuck_tasks: []
 ##   test_all: false
-##   test_priority: "critical_first"
+##   test_priority: "high_first"
 
 # Protocol Guidelines for Main agent
 #
