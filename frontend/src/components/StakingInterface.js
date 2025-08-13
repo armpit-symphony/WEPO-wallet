@@ -75,6 +75,7 @@ const StakingInterface = ({ onClose }) => {
             <Lock className="h-6 w-6 text-gray-500" />
             <h2 className="text-xl font-semibold text-white">Proof of Stake</h2>
           </div>
+          <div className="text-xs text-gray-400 ml-10">Activates at Block 131,400</div>
         </div>
 
         <div className="text-center py-12">
