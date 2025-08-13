@@ -92,6 +92,12 @@ const Dashboard = ({ onLogout }) => {
           </div>
         </div>
         <div className="text-sm text-purple-100">Address: {short(wallet?.address)}</div>
+        {!isPreGenesis && (
+          <div className="text-xs text-green-200 mt-2">Network: PoW active</div>
+        )}
+        {isPreGenesis && (
+          <div className="text-xs text-yellow-200 mt-2">Network: Pre-Genesis • Countdown to Genesis: {genesisLaunchTime ? Math.max(0, Math.floor((genesisLaunchTime*1000 - Date.now())/1000)) + 's' : 'TBA'}</div>
+        )}
       </div>
 
       {/* BTC Wallet Section (compact) */}
