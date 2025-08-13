@@ -290,10 +290,11 @@ def test_rate_limiting(api_base: str, results: Dict[str, Any]):
     try:
         saw_429 = False
         total = 0
+        headers = {"X-Real-IP": "10.0.0.99"}
         for i in range(65):
             total += 1
             try:
-                r = requests.get(f"{api_base}/", timeout=3)
+                r = requests.get(f"{api_base}/", headers=headers, timeout=3)
                 if r.status_code == 429:
                     saw_429 = True
                     break
