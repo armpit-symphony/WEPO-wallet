@@ -7,6 +7,7 @@ import QuantumVault from './QuantumVault';
 import CommunityMining from './CommunityMining';
 import SettingsPanel from './SettingsPanel';
 import QuantumMessaging from './QuantumMessaging';
+import StakingInterface from './StakingInterface';
 
 const Dashboard = ({ onLogout }) => {
   const {
