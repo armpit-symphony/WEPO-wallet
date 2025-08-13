@@ -1,9 +1,9 @@
 {
   "suite": "prelaunch_security_suite",
-  "timestamp": 1755043698,
+  "timestamp": 1755043929,
   "backend_url": "https://blockchain-sectest.preview.emergentagent.com/api",
   "scope": "full",
-  "final_score": 25.0,
+  "final_score": 40.0,
   "categories": {
     "security_headers": {
       "score": 10.0,
@@ -39,7 +39,7 @@
       ]
     },
     "rate_limiting": {
-      "score": 10.0,
+      "score": 15.0,
       "max": 25.0,
       "tests": [
         {
@@ -65,9 +65,9 @@
         },
         {
           "name": "Rate Limit Headers",
-          "passed": false,
+          "passed": true,
           "weight": 5.0,
-          "details": "Missing in response",
+          "details": "Present: X-RateLimit-Limit, X-RateLimit-Reset, Retry-After",
           "severity": "medium"
         }
       ]
@@ -120,29 +120,29 @@
       ]
     },
     "blockchain_sanity": {
-      "score": 0.0,
+      "score": 10.0,
       "max": 10.0,
       "tests": [
         {
           "name": "Quantum Status",
-          "passed": false,
-          "weight": 0.0,
-          "details": "HTTP 500",
-          "severity": "high"
+          "passed": true,
+          "weight": 3.3333333333333335,
+          "details": "HTTP 200",
+          "severity": "medium"
         },
         {
           "name": "Collateral Schedule",
-          "passed": false,
-          "weight": 0.0,
-          "details": "HTTP 500",
-          "severity": "high"
+          "passed": true,
+          "weight": 3.3333333333333335,
+          "details": "HTTP 200",
+          "severity": "medium"
         },
         {
           "name": "Swap Rate",
-          "passed": false,
-          "weight": 0.0,
-          "details": "HTTP 500",
-          "severity": "high"
+          "passed": true,
+          "weight": 3.3333333333333335,
+          "details": "HTTP 200",
+          "severity": "medium"
         }
       ]
     },
@@ -167,10 +167,7 @@
   "high": [
     "XSS Protection",
     "SQL/NoSQL Injection Protection",
-    "Password Exposure",
-    "Quantum Status",
-    "Collateral Schedule",
-    "Swap Rate"
+    "Password Exposure"
   ],
   "notes": []
 }
