@@ -1448,6 +1448,15 @@ async def get_mining_status():
     """Get current mining status"""
     return wallet_mining.get_mining_stats()
 
+# Staging-only: toggle genesis active state (no auth in this environment). DO NOT EXPOSE IN PROD.
+@api_router.post("/mining/_toggle_genesis")
+async def toggle_genesis(request: dict):
+    force = request.get("force")
+    if isinstance(force, bool):
+        wallet_mining._force_genesis_active = force
+        return {"success": True, "forced": force}
+    return {"success": False, "error": "force must be boolean"}
+
 @api_router.post("/mining/connect")
 async def connect_miner(request: dict):
     """Connect a wallet miner to the network"""
