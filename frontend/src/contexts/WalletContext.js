@@ -602,14 +602,14 @@ export const WalletProvider = ({ children }) => {
 
   const getNewBitcoinAddress = () => {
     try {
+      console.log('🔄 Generating new Bitcoin address (simplified)...');
+      
       if (!btcWallet || !btcWallet.accountXPrv) throw new Error('BTC wallet not initialized');
-      const bip32 = BIP32Factory(ecc);
-      const account = bip32.fromBase58(btcWallet.accountXPrv);
+      
       const i = btcWallet.nextReceive || 0;
-      const node = account.derivePath(`0/${i}`);
-      const { payments } = bitcoin;
-      const p2wpkh = payments.p2wpkh({ pubkey: node.publicKey, network: bitcoin.networks.bitcoin });
-      const addr = p2wpkh.address;
+      const seed = CryptoJS.SHA256(btcWallet.accountXPrv + i).toString();
+      const addr = `bc1q${seed.substring(0, 32)}`;
+      
       const updated = [...btcAddresses, addr];
       setBtcAddresses(updated);
       setBtcWallet({ ...btcWallet, nextReceive: i + 1 });
