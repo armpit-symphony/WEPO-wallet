@@ -1,167 +1,141 @@
-/* eslint-disable */
-import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Send, Download, ArrowRightLeft, Bitcoin, Coins, TrendingUp, Clock, Copy, QrCode, RefreshCw, Package, Pickaxe, MessageCircle, Settings, Users, Zap, Lock, Shield, AlertCircle, LogOut, Server, ToggleRight, ToggleLeft, ChevronDown } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Eye, EyeOff, Send, Download, Settings as SettingsIcon, Pickaxe, Shield, LogOut } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import SendWepo from './SendWepo';
 import ReceiveWepo from './ReceiveWepo';
 import QuantumVault from './QuantumVault';
-import BtcDexSwap from './BtcDexSwap';
-import QuantumMessaging from './QuantumMessaging';
-import RWADashboard from './RWADashboard';
 import CommunityMining from './CommunityMining';
-import UnifiedExchange from './UnifiedExchange';
-import StakingInterface from './StakingInterface';
-import MasternodeInterface from './MasternodeInterface';
 import SettingsPanel from './SettingsPanel';
-import GovernanceDashboard from './GovernanceDashboard';
-import PreGenesisBanner from './PreGenesisBanner';
+import QuantumMessaging from './QuantumMessaging';
 
 const Dashboard = ({ onLogout }) => {
-  const { wallet, balance, btcBalance, transactions, btcTransactions, posEnabled, masternodesEnabled, loadWalletData, setBalance, setTransactions, logout, setWallet, btcWallet, btcAddresses, btcUtxos, isBtcLoading, sendBitcoin, getNewBitcoinAddress, getBitcoinBalance, exportBitcoinWalletInfo } = useWallet();
-  const currentWallet = wallet;
-  const currentBalance = balance;
-  const currentTransactions = transactions;
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const {
+    wallet,
+    balance,
+    transactions,
+    loadWalletData,
+    setWallet,
+    setBalance,
+    setTransactions,
+    logout
+  } = useWallet();
+
+  const [activeTab, setActiveTab] = useState('overview');
   const [showBalance, setShowBalance] = useState(true);
-  const [miningMode, setMiningMode] = useState('genesis');
-  const [showQuantumVault, setShowQuantumVault] = useState(false);
-  const [isQuantumMode, setIsQuantumMode] = useState(true);
-  const [quantumStatus, setQuantumStatus] = useState(null);
-  const [showBitcoinDetails, setShowBitcoinDetails] = useState(false);
-  const [posCollateralInfo, setPosCollateralInfo] = useState(null);
-  const [posCollateralLoading, setPosCollateralLoading] = useState(true);
-
   const [isPreGenesis, setIsPreGenesis] = useState(true);
-
-  const fetchQuantumStatus = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/quantum/status`);
-      if (response.ok) {
-        const data = await response.json();
-        const adaptedStatus = {
-          quantum_resistant: data.quantum_ready || true,
-          algorithm: data.signature_algorithm || 'Dilithium2',
-          variant: 'NIST ML-DSA',
-          implementation: data.implementation || 'WEPO Quantum-Resistant v1.0',
-          security_level: 128,
-          nist_approved: true,
-          post_quantum: data.quantum_ready || true,
-          current_height: data.current_height || 0
-        };
-        setQuantumStatus(adaptedStatus);
-        setIsQuantumMode(adaptedStatus.quantum_resistant);
-      }
-    } catch (error) {
-      // ignore
-    }
-  };
-
-  const fetchPosCollateralInfo = async () => {
-    try {
-      setPosCollateralLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/collateral/requirements`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          setPosCollateralInfo(data.data);
-        }
-      }
-    } catch (error) {
-      // ignore
-    } finally {
-      setPosCollateralLoading(false);
-    }
-  };
+  const [showVaultModal, setShowVaultModal] = useState(false);
 
   useEffect(() => {
-    fetchQuantumStatus();
-    fetchPosCollateralInfo();
-  }, []);
-
-  useEffect(() => {
-    const loadData = async () => {
-      if (!wallet) {
-        const sessionWallet = sessionStorage.getItem('wepo_current_wallet');
-        if (sessionWallet) {
-          try {
-            const walletData = JSON.parse(sessionWallet);
-            setWallet(walletData);
-            await loadWalletData(walletData.address);
-          } catch (error) {
-            setBalance(0);
-            setTransactions([]);
+    // Restore session wallet and data
+    const init = async () => {
+      try {
+        if (!wallet) {
+          const sw = sessionStorage.getItem('wepo_current_wallet');
+          if (sw) {
+            const w = JSON.parse(sw);
+            setWallet(w);
+            await loadWalletData(w.address);
           }
         }
+      } catch (e) {
+        setBalance(0);
+        setTransactions([]);
       }
     };
+    init();
+  }, [wallet, setWallet, setBalance, setTransactions, loadWalletData]);
 
-    const checkMiningMode = async () => {
+  useEffect(() => {
+    // Determine pre-genesis from backend status
+    const check = async () => {
       try {
-        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-        const response = await fetch(`${backendUrl}/api/mining/status`);
-        if (response.ok) {
-          const data = await response.json();
-          const powNow = (data.genesis_status === 'found') || (data.mining_mode === 'pow');
-          setMiningMode(powNow ? 'pow' : 'genesis');
-          setIsPreGenesis(!powNow);
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+        const r = await fetch(`${backendUrl}/api/mining/status`);
+        if (r.ok) {
+          const d = await r.json();
+          const pow = d.genesis_status === 'found' || d.mining_mode === 'pow';
+          setIsPreGenesis(!pow);
         } else {
-          setMiningMode('genesis');
           setIsPreGenesis(true);
         }
-      } catch (error) {
-        setMiningMode('genesis');
+      } catch {
         setIsPreGenesis(true);
       }
     };
+    check();
+  }, []);
 
-    loadData();
-    checkMiningMode();
-  }, [wallet, setWallet, setBalance, setTransactions, loadWalletData]);
+  const formatBalance = (amt) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 }).format(amt || 0);
+  const short = (s) => (s && s.length > 10 ? `${s.substring(0, 10)}...${s.substring(s.length - 6)}` : s || 'N/A');
 
-  const renderTabContent = () => {
-    switch(activeTab) {
-      case 'send':
-        return <SendWepo onClose={() => setActiveTab('dashboard')} isPreGenesis={isPreGenesis} />;
-      case 'receive':
-        return <ReceiveWepo onClose={() => setActiveTab('dashboard')} />;
-      case 'btc-dex':
-        return <UnifiedExchange onBack={() => setActiveTab('dashboard')} />;
-      case 'staking':
-        return <StakingInterface onBack={() => setActiveTab('dashboard')} />;
-      case 'masternode':
-        return <MasternodeInterface onBack={() => setActiveTab('dashboard')} />;
-      case 'governance':
-        return <GovernanceDashboard onBack={() => setActiveTab('dashboard')} />;
-      case 'settings':
-        return <SettingsPanel onClose={() => setActiveTab('dashboard')} />;
-      case 'messaging':
-        return <QuantumMessaging onBack={() => setActiveTab('dashboard')} />;
-      case 'rwa':
-        return <RWADashboard onBack={() => setActiveTab('dashboard')} />;
-      case 'mining':
-        return <CommunityMining onBack={() => setActiveTab('dashboard')} miningMode={miningMode} isPreGenesis={isPreGenesis} />;
-      default:
-        return renderDashboard();
-    }
-  };
-
-  const renderDashboard = () => (
+  const Overview = () => (
     <div className="space-y-6">
-      {isPreGenesis && (
-        <PreGenesisBanner message="The WEPO network is in Pre-Genesis. Actions like sending, mining and vault operations are disabled until launch." />
-      )}
-      {/* rest of original dashboard content remains unchanged */}
+      <div className="rounded-2xl p-6 text-white bg-gradient-to-r from-purple-600 to-blue-600">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-purple-100 text-sm font-medium mb-2">Total Balance</div>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-3xl font-bold">{showBalance ? formatBalance(balance) : '••••••••'}</span>
+              <span className="text-xl text-purple-200">WEPO</span>
+              <button onClick={() => setShowBalance(!showBalance)} className="text-purple-200 hover:text-white transition-colors">
+                {showBalance ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+          <div className="text-right">
+            <Shield className="h-12 w-12 text-purple-200 mb-2" />
+          </div>
+        </div>
+        <div className="text-sm text-purple-100">Address: {short(wallet?.address)}</div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <button onClick={() => setActiveTab('send')} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
+          <Send className="h-6 w-6 text-purple-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Send WEPO</span>
+        </button>
+        <button onClick={() => setActiveTab('receive')} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
+          <Download className="h-6 w-6 text-blue-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Receive WEPO</span>
+        </button>
+        <button onClick={() => setShowVaultModal(true)} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
+          <Shield className="h-6 w-6 text-purple-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Quantum Vault</span>
+        </button>
+        <button onClick={() => setActiveTab('mining')} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
+          <Pickaxe className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Community Mining</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <button onClick={() => setActiveTab('messaging')} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
+          <span className="text-white font-medium">Quantum Messages</span>
+        </button>
+        <button onClick={() => setActiveTab('settings')} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
+          <SettingsIcon className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Settings</span>
+        </button>
+        <button onClick={() => { logout(); onLogout && onLogout(); }} className="bg-gray-800/50 hover:bg-gray-700/50 border border-purple-500/30 rounded-xl p-4 text-center transition-all">
+          <LogOut className="h-6 w-6 text-red-400 mx-auto mb-2" />
+          <span className="text-white font-medium">Logout</span>
+        </button>
+      </div>
     </div>
   );
 
-  // Original Dashboard JSX follows; we keep the rest of the file intact.
   return (
     <div className="space-y-6">
-      {/* Top-level banner on main dashboard */}
-      {activeTab === 'dashboard' && isPreGenesis && (
-        <PreGenesisBanner />
+      {activeTab === 'overview' && <Overview />}
+      {activeTab === 'send' && <SendWepo onClose={() => setActiveTab('overview')} isPreGenesis={isPreGenesis} />}
+      {activeTab === 'receive' && <ReceiveWepo onClose={() => setActiveTab('overview')} />}
+      {activeTab === 'mining' && <CommunityMining onBack={() => setActiveTab('overview')} isPreGenesis={isPreGenesis} />}
+      {activeTab === 'settings' && <SettingsPanel onClose={() => setActiveTab('overview')} />}
+      {activeTab === 'messaging' && <QuantumMessaging onBack={() => setActiveTab('overview')} />}
+
+      {showVaultModal && (
+        <QuantumVault onClose={() => setShowVaultModal(false)} isPreGenesis={isPreGenesis} />
       )}
-      {renderTabContent()}
     </div>
   );
 };
