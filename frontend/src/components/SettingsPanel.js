@@ -200,6 +200,47 @@ const SettingsPanel = ({ onClose }) => {
     </div>
   );
 
+  const [networkInfo, setNetworkInfo] = useState({
+    mode: 'pre-genesis',
+    mode_display: 'Pre-Genesis (Not connected)',
+    block_height: 0,
+    total_hashrate: 0,
+    active_masternodes: 0,
+    total_staked: 0
+  });
+
+  useEffect(() => {
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+    const fetchStatus = async () => {
+      try {
+        const resp = await fetch(`${backendUrl}/api/mining/status`);
+        if (resp.ok) {
+          const data = await resp.json();
+          setNetworkInfo({
+            mode: data.mining_mode || 'pre-genesis',
+            mode_display: data.mode_display || 'Pre-Genesis (Not connected)',
+            block_height: data.block_height || 0,
+            total_hashrate: data.total_hashrate || 0,
+            active_masternodes: data.active_masternodes || 0,
+            total_staked: data.total_staked || 0
+          });
+        }
+      } catch (e) {
+        // keep defaults
+      }
+    };
+    fetchStatus();
+  }, []);
+
+  const formatHashrate = (h) => {
+    if (!h) return '0 H/s';
+    if (h >= 1e12) return `${(h/1e12).toFixed(2)} TH/s`;
+    if (h >= 1e9) return `${(h/1e9).toFixed(2)} GH/s`;
+    if (h >= 1e6) return `${(h/1e6).toFixed(2)} MH/s`;
+    if (h >= 1e3) return `${(h/1e3).toFixed(2)} kH/s`;
+    return `${h} H/s`;
+  };
+
   const renderWalletInfo = () => (
     <div className="space-y-6">
       <div className="bg-gray-700/50 rounded-lg p-4">
@@ -211,11 +252,13 @@ const SettingsPanel = ({ onClose }) => {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Network:</span>
-            <span className="text-green-400">WEPO Mainnet</span>
+            <span className={networkInfo.mode === 'pre-genesis' ? 'text-yellow-400' : 'text-green-400'}>
+              {networkInfo.mode === 'pre-genesis' ? 'Pre-Genesis' : 'WEPO Mainnet'}
+            </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">Privacy Level:</span>
-            <span className="text-purple-400">Maximum (zk-STARKs)</span>
+            <span className="text-gray-400">Status:</span>
+            <span className="text-purple-400">{networkInfo.mode_display}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Consensus:</span>
@@ -229,19 +272,19 @@ const SettingsPanel = ({ onClose }) => {
         <div className="space-y-3 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Block Height:</span>
-            <span className="text-white">1,234,567</span>
+            <span className="text-white">{networkInfo.block_height || 'N/A'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Network Hash Rate:</span>
-            <span className="text-white">123.45 TH/s</span>
+            <span className="text-white">{formatHashrate(networkInfo.total_hashrate)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Active Masternodes:</span>
-            <span className="text-white">5,432</span>
+            <span className="text-white">{networkInfo.active_masternodes || 0}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Total Staked:</span>
-            <span className="text-white">12.5M WEPO</span>
+            <span className="text-white">{networkInfo.total_staked ? `${networkInfo.total_staked} WEPO` : '0 WEPO'}</span>
           </div>
         </div>
       </div>
