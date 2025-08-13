@@ -1,9 +1,9 @@
 {
   "suite": "prelaunch_security_suite",
-  "timestamp": 1754777575,
+  "timestamp": 1755043296,
   "backend_url": "https://blockchain-sectest.preview.emergentagent.com/api",
-  "scope": "api",
-  "final_score": 35.0,
+  "scope": "full",
+  "final_score": 40.0,
   "categories": {
     "security_headers": {
       "score": 10.0,
@@ -122,12 +122,42 @@
     "blockchain_sanity": {
       "score": 0.0,
       "max": 10.0,
-      "tests": []
+      "tests": [
+        {
+          "name": "Quantum Status",
+          "passed": false,
+          "weight": 0.0,
+          "details": "HTTP 429",
+          "severity": "high"
+        },
+        {
+          "name": "Collateral Schedule",
+          "passed": false,
+          "weight": 0.0,
+          "details": "HTTP 429",
+          "severity": "high"
+        },
+        {
+          "name": "Swap Rate",
+          "passed": false,
+          "weight": 0.0,
+          "details": "HTTP 429",
+          "severity": "high"
+        }
+      ]
     },
     "messaging_e2e": {
-      "score": 0.0,
+      "score": 5.0,
       "max": 5.0,
-      "tests": []
+      "tests": [
+        {
+          "name": "TRUE E2E Messaging",
+          "passed": true,
+          "weight": 5.0,
+          "details": "Recipient-only decryption; server cannot decrypt (local)",
+          "severity": "medium"
+        }
+      ]
     }
   },
   "critical": [
@@ -136,7 +166,10 @@
   "high": [
     "XSS Protection",
     "SQL/NoSQL Injection Protection",
-    "Password Exposure"
+    "Password Exposure",
+    "Quantum Status",
+    "Collateral Schedule",
+    "Swap Rate"
   ],
   "notes": []
 }
