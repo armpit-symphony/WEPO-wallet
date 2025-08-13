@@ -64,7 +64,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
             # Apply global API rate limiting (60/min default)
             if not skip_global and SecurityManager.is_rate_limited(client_id, "global_api"):
-                retry_after = 60
+                retry_after = SecurityManager.get_rate_limit_reset_seconds(client_id, "global_api")
                 reset_ts = int(time.time()) + retry_after
                 return JSONResponse(
                     status_code=429,
