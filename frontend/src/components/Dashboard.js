@@ -57,6 +57,7 @@ const Dashboard = ({ onLogout }) => {
           const d = await r.json();
           const pow = d.genesis_status === 'found' || d.mining_mode === 'pow';
           setIsPreGenesis(!pow);
+          if (d.genesis_launch_time) setGenesisLaunchTime(d.genesis_launch_time);
         } else {
           setIsPreGenesis(true);
         }
