@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, EyeOff, Send, Download, Settings as SettingsIcon, Pickaxe, Shield, LogOut, Bitcoin, ChevronDown } from 'lucide-react';
+import { Eye, EyeOff, Send, Download, Settings as SettingsIcon, Pickaxe, Shield, LogOut, Bitcoin, ChevronDown, Coins } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import SendWepo from './SendWepo';
 import ReceiveWepo from './ReceiveWepo';
