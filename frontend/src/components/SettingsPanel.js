@@ -264,6 +264,10 @@ const SettingsPanel = ({ onClose }) => {
             <span className="text-gray-400">Consensus:</span>
             <span className="text-blue-400">Hybrid PoW/PoS</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Last Block:</span>
+            <span className="text-white">{networkInfo.block_height?.toLocaleString() || 'N/A'}</span>
+          </div>
         </div>
       </div>
 
