@@ -9,7 +9,7 @@ import logging
 import math
 from pathlib import Path
 from pydantic import BaseModel, Field, validator
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 import uuid
 import hashlib
 import time
