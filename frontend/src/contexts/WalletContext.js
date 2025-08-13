@@ -48,6 +48,53 @@ export const WalletProvider = ({ children }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    // Load any persisted session data if available
+    const storedWallet = sessionManager.get('wepo_current_wallet');
+    const storedBalance = sessionManager.get('wepo_balance');
+    const storedTransactions = sessionManager.get('wepo_transactions');
+
+    if (storedWallet) setWallet(storedWallet);
+    if (storedBalance) setBalance(parseFloat(storedBalance));
+    if (storedTransactions) setTransactions(storedTransactions);
+  }, []);
+
+  // Inactivity auto-lock (Sensitive-only, mining-aware)
+  useEffect(() => {
+    const timeoutMs = 15 * 60 * 1000; // 15 minutes
+    let lastActivity = Date.now();
+    let timer;
+
+    const bump = () => { lastActivity = Date.now(); };
+
+    const monitor = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const now = Date.now();
+        const inactive = now - lastActivity > timeoutMs;
+        // Mining-aware: do not lock if miner connected or mining tab reports connected
+        const minerConnected = sessionStorage.getItem('wepo_miner_connected') === 'true';
+        if (inactive && !minerConnected) {
+          // Lock: clear only sensitive-capability session pieces
+          sessionManager.set('wepo_locked', true);
+        }
+        monitor();
+      }, 60 * 1000);
+    };
+
+    window.addEventListener('mousemove', bump);
+    window.addEventListener('keydown', bump);
+    document.addEventListener('visibilitychange', bump);
+    monitor();
+
+    return () => {
+      window.removeEventListener('mousemove', bump);
+      window.removeEventListener('keydown', bump);
+      document.removeEventListener('visibilitychange', bump);
+      clearTimeout(timer);
+    };
+  }, []);
+
   const generateMnemonic = () => {
     try {
       // PROPER BIP-39 IMPLEMENTATION - CRYPTOGRAPHICALLY SECURE
