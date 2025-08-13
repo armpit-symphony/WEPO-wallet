@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import * as bip39 from 'bip39';
+// Temporarily disable heavy crypto imports to fix loading issue
+// import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import { sessionManager, secureLog } from '../utils/securityUtils';
 // import { generateWepoAddress, generateBitcoinAddress, validateAddress } from '../utils/addressUtils';
 // Temporarily comment out Bitcoin wallet import to prevent runtime errors
-import * as bitcoin from 'bitcoinjs-lib';
-import BIP32Factory from 'bip32';
-import * as ecc from 'tiny-secp256k1';
-import { ECPairFactory } from 'ecpair';
+// import * as bitcoin from 'bitcoinjs-lib';
+// import BIP32Factory from 'bip32';
+// import * as ecc from 'tiny-secp256k1';
+// import { ECPairFactory } from 'ecpair';
 // const SelfCustodialBitcoinWallet = null; // not used directly
 
 const WalletContext = createContext();
