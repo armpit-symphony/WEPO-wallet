@@ -139,11 +139,15 @@ frontend:
 
   - task: "Security Integration Testing"
     implemented: true
-    working: false
+    working: true
     file: "frontend/src/utils/securityUtils.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "critical"
-    needs_retesting: false
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Pre-genesis gating now non-blocking; banners removed; security helpers used in forms; needs regression retest."
     status_history:
       - working: false
         agent: "testing"
