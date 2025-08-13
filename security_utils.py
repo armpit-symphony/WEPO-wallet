@@ -207,6 +207,31 @@ class SecurityManager:
             return False  # Fail open for availability
     
     @staticmethod
+    def get_rate_limit_reset_seconds(client_id: str, endpoint: str) -> int:
+        """Best-effort seconds until rate limit resets for this client/endpoint."""
+        key = f"rate_limit:{client_id}:{endpoint}"
+        try:
+            if redis_client:
+                ttl = redis_client.ttl(key)
+                if ttl is None or ttl < 0:
+                    return SecurityManager.RATE_LIMIT_WINDOW
+                return int(ttl)
+            else:
+                now = time.time()
+                window = SecurityManager.RATE_LIMIT_WINDOW
+                timestamps = rate_limit_storage.get(key, [])
+                # If empty, full window
+                if not timestamps:
+                    return window
+                # Oldest request in window
+                oldest = min(timestamps)
+                elapsed = now - oldest
+                remaining = max(0, int(window - elapsed))
+                return remaining if remaining > 0 else window
+        except Exception:
+            return SecurityManager.RATE_LIMIT_WINDOW
+    
+    @staticmethod
     def record_failed_login(username: str) -> Dict[str, Any]:
         """Record failed login attempt and check for lockout"""
         current_time = time.time()
