@@ -168,21 +168,24 @@ class BitcoinNetworkService {
       const url = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_BACKEND_URL)
         ? `${process.env.REACT_APP_BACKEND_URL}/api/bitcoin/relay/broadcast`
         : '/api/bitcoin/relay/broadcast';
+      const relayOnlyPref = (sessionStorage.getItem('btc_relay_only') ?? 'true') === 'true';
       const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rawtx: hexTx, relay_only: relayOnly })
+        body: JSON.stringify({ rawtx: hexTx, relay_only: relayOnlyPref })
       });
-      if (!resp.ok) throw new Error(`Relay HTTP ${resp.status}`);
       const data = await resp.json();
+      if (!resp.ok || !data.success || !data.relayed) {
+        if (relayOnlyPref && (data.path === 'relay_attempt_no_peers' || data.path === 'relay_attempt_failed')) {
+          throw new Error('No masternode peers available. Tip: In Settings, uncheck "Relay BTC via Masternodes only" to enable fallback broadcast.');
+        }
+        throw new Error(data.error || `Relay failed (HTTP ${resp.status})`);
+      }
 
       // Persist last relay status for UI diagnostics
       try { sessionStorage.setItem('btc_last_relay_status', JSON.stringify({ ...data, ts: Date.now() })); } catch {}
 
-      if (data.success && data.relayed) {
-        return { success: true, txid: data.txid, path: data.path, peers: data.peers, message: 'Relayed via WEPO masternodes' };
-      }
-      return { success: false, error: data.fallback_error || 'Relay unsuccessful', path: data.path, peers: data.peers };
+      return { success: true, txid: data.txid, path: data.path, peers: data.peers, message: 'Relayed via WEPO masternodes' };
     } catch (error) {
       console.error('Failed to relay transaction:', error);
       return { success: false, error: error.message };
