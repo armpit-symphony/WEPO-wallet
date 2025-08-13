@@ -1238,6 +1238,9 @@ class WalletMiner:
     
     def is_genesis_active(self):
         """Check if genesis mining is still active"""
+        # Staging override takes precedence if set
+        if self._force_genesis_active is not None:
+            return self._force_genesis_active
         current_time = time.time()
         return current_time < self.genesis_launch_time or self.mining_stats["blocks_found"] == 0
     
