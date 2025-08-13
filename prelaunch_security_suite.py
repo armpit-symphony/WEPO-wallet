@@ -237,14 +237,17 @@ def test_input_validation(api_base: str, results: Dict[str, Any]):
     try:
         pt_payloads = ["../../../etc/passwd", "..\\..\\..\\windows\\system32\\config\\sam"]
         blocked = 0
+        base_ip = 160
         for pl in pt_payloads:
-            r = api_create_wallet(api_base, pl, "ValidPass123!")
+            client_ip = f"10.0.0.{base_ip}"
+            base_ip += 1
+            r = api_create_wallet(api_base, pl, "ValidPass123!", client_ip=client_ip)
             if r.status_code == 400:
                 blocked += 1
             elif r.status_code == 429:
                 retry_after = int(r.headers.get('Retry-After', '1'))
                 time.sleep(retry_after + 0.2)
-                r2 = api_create_wallet(api_base, pl + "_b", "ValidPass123!")
+                r2 = api_create_wallet(api_base, pl + "_b", "ValidPass123!", client_ip=client_ip)
                 if r2.status_code == 400:
                     blocked += 1
                 continue
