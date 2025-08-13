@@ -86,6 +86,18 @@ frontend:
         agent: "testing"
         comment: "🎉 BTC MASTERNODE RELAY CONTROLS TESTING COMPLETED - EXCELLENT RESULTS! Conducted comprehensive testing of new BTC relay controls as specifically requested in the Christmas Day 2025 launch review. TESTING SCOPE COVERED: 1) **Settings > Network Status Controls** - Relay BTC via Masternodes checkbox (default checked), Show Last BTC Relay button functionality, Genesis simulation buttons presence and visibility 2) **Broadcast Flow Simulation** - SessionStorage btc_last_relay_status persistence, Show Last BTC Relay button with stored data 3) **Regression Spot Checks** - Dashboard 8-tile layout verification, Send WEPO pre-genesis gating, Mining Connect functionality and sessionStorage validation. CRITICAL SUCCESS - ALL TESTS PASSED: ✅ **Settings > Network Status Controls (100% SUCCESS)** - Relay BTC via Masternodes checkbox: WORKING (visible, default checked as specified), Show Last BTC Relay button: WORKING (visible, functional, shows 'No relay yet' initially), Simulate PoW button: WORKING (visible and accessible), Simulate Pre-Genesis button: WORKING (visible and accessible), checkbox functionality: WORKING (toggles properly between checked/unchecked states). ✅ **Broadcast Flow Simulation (100% SUCCESS)** - SessionStorage persistence: WORKING (btc_last_relay_status properly stored after simulated broadcast), Show Last BTC Relay with data: WORKING (displays stored relay information when available), BTC relay status tracking: WORKING (proper JSON structure with txid, path, peers, timestamp). ✅ **Regression Spot Checks (100% SUCCESS)** - Dashboard 8-tile layout: WORKING (exactly 8 tiles in correct order: Send WEPO, Receive WEPO, Community Mining, PoS, Quantum Vault, Quantum Messages, Settings, Logout), Send WEPO pre-genesis gating: WORKING (proper 'Pre-Genesis: Sending WEPO is disabled' notice, button shows 'Disabled until Genesis'), Mining Connect functionality: WORKING (Connect Miner button functional, sets wepo_miner_connected=true in sessionStorage, button changes to 'Connected' state). TECHNICAL VERIFICATION: All BTC relay controls implemented correctly in SettingsPanel.js lines 290-301, SelfCustodialBitcoinWallet.js broadcastTransaction method properly uses sessionStorage for btc_last_relay_status persistence, relay preference correctly defaults to masternode-only (relayOnly=true), Settings UI properly displays all required controls in Network Status section. CHRISTMAS DAY 2025 LAUNCH ASSESSMENT: 🎉 **BTC RELAY CONTROLS: READY FOR LAUNCH** - All new BTC relay functionality working perfectly, no regression issues detected, dashboard layout maintained correctly, pre-genesis gating operational, mining connect functionality preserved. CONCLUSION: The BTC Masternode Relay Controls are FULLY OPERATIONAL and ready for Christmas Day 2025 launch. All requested functionality (relay checkbox, show last relay button, genesis simulation buttons) is working correctly without breaking existing functionality."
 
+  - task: "BTC Self-Custodial Integration (Receive/Send via Esplora + Relay)"
+    implemented: true
+    working: true
+    file: "backend/server.py, frontend/src/contexts/WalletContext.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented client-side BIP84 derivation (bitcoinjs-lib), Esplora proxy endpoints, PSBT signing + masternode relay broadcast. UI simplified. Needs UI verification for receive address display and send error handling when no UTXOs."
+
   - task: "Wallet Creation Flow Testing"
     implemented: true
     working: true
