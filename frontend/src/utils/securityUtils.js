@@ -319,6 +319,31 @@ export const sessionManager = {
   isSessionValid: (password) => {
     const session = sessionManager.getSecureSession(password);
     return session !== null;
+  },
+  
+  // Basic session storage methods
+  get: (key) => {
+    try {
+      const value = sessionStorage.getItem(key);
+      return value ? JSON.parse(value) : null;
+    } catch (error) {
+      console.error('Session get failed:', error);
+      return null;
+    }
+  },
+  
+  set: (key, value) => {
+    try {
+      sessionStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (error) {
+      console.error('Session set failed:', error);
+      return false;
+    }
+  },
+  
+  remove: (key) => {
+    sessionStorage.removeItem(key);
   }
 };
 
