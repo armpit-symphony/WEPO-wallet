@@ -71,6 +71,18 @@
 ##     -message: "🎉 STEP 2 POST-FIX API-ONLY SECURITY SUITE RE-RUN COMPLETED - EXCELLENT RESULTS! Re-executed the prelaunch security suite with --scope api as specifically requested, focusing on Step 2 post-fix validation. TESTING METHODOLOGY: Used comprehensive testing approach with rate limiting awareness, testing individual payloads with 45-second delays to avoid interference. TESTING RESULTS: **STEP 2 POST-FIX SECURITY SCORE: EXCELLENT (100% INPUT VALIDATION SUCCESS)**. DETAILED FINDINGS: ✅ **WEAK PASSWORD REJECTION AT /api/wallet/create: PERFECT** - 2/2 weak passwords properly rejected with detailed validation errors: '123456' rejected (12+ chars, uppercase, lowercase, special char required), 'password' rejected (12+ chars, uppercase, number, special char required), comprehensive password strength scoring system working (strength_score: 20 for weak passwords) ✅ **XSS PROTECTION: EXCELLENT** - 2/2 XSS payloads properly handled: '<script>alert('xss')</script>' sanitized (generic error indicating input cleaning), 'javascript:alert('xss')' blocked with proper validation error ('Username can only contain letters, numbers, and underscores') ✅ **SQL/NoSQL INJECTION PROTECTION: PERFECT** - 2/2 injection payloads blocked: '; DROP TABLE users; --' blocked with validation error, ' OR '1'='1' blocked with validation error, robust input validation preventing all injection attempts ✅ **PATH TRAVERSAL PROTECTION: PERFECT** - 1/1 path traversal payload blocked: '../../../etc/passwd' blocked with validation error, comprehensive path traversal prevention working ✅ **RATE LIMITING BEHAVIOR: OPTIMAL** - Global rate limiting active (HTTP 429 after ~11 requests), proper rate limiting headers present (X-RateLimit-Limit, X-RateLimit-Reset, Retry-After), rate limiting providing excellent protection without completely blocking legitimate use. CATEGORY SCORES: Security Headers: 10/10 (100%), Password Strength Validation: 2/2 (100%), XSS Protection: 2/2 (100%), Injection Protection: 2/2 (100%), Path Traversal Protection: 1/1 (100%), Rate Limiting: Excellent (proper interference management). CHRISTMAS DAY 2025 LAUNCH ASSESSMENT: ✅ **STEP 2 POST-FIX: READY FOR LAUNCH** - All input validation working excellently, comprehensive password strength validation operational, robust protection against XSS, injection, and path traversal attacks, rate limiting providing optimal security without blocking functionality. RECOMMENDATION: Step 2 post-fix has achieved EXCELLENT security posture. The previous testing issues were due to rate limiting interference masking the underlying security controls, which are now confirmed to be working perfectly. System demonstrates enterprise-grade input validation suitable for cryptocurrency operations."
 
 frontend:
+  - task: "BTC Masternode Relay Controls"
+    implemented: true
+    working: true
+    file: "frontend/src/components/SettingsPanel.js, frontend/src/utils/SelfCustodialBitcoinWallet.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added relay-only checkbox in Settings, default ON. Implemented 'Show Last BTC Relay' diagnostics. Wallet broadcast uses /api/bitcoin/relay/broadcast and persists last status in sessionStorage."
+
   - task: "Wallet Creation Flow Testing"
     implemented: true
     working: true
