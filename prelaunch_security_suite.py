@@ -475,10 +475,15 @@ def main():
     # Authentication exposure
     print("\n🔑 Authentication Security")
     try:
+        # Reserve create budget: wait if necessary so we can create exactly one wallet for this test
         u, p = gen_user()
-        cr = api_create_wallet(api_base, u, p)
+        cr = api_create_wallet(api_base, u, p, client_ip="10.0.0.200")
+        if cr.status_code == 429:
+            retry_after = int(cr.headers.get('Retry-After', '2'))
+            time.sleep(retry_after + 0.5)
+            cr = api_create_wallet(api_base, u + "a", p, client_ip="10.0.0.200")
         if cr.status_code == 200:
-            lr = api_login(api_base, u, p)
+            lr = api_login(api_base, u if cr.status_code == 200 else u + "a", p, client_ip="10.0.0.200")
             if lr.status_code == 200:
                 resp = lr.json()
                 expose = json.dumps(resp).lower()
