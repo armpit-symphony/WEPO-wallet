@@ -273,6 +273,20 @@ const SettingsPanel = ({ onClose }) => {
 
       <div className="bg-gray-700/50 rounded-lg p-4">
         <h3 className="text-white font-medium mb-4">Network Status</h3>
+        <div className="mb-3">
+          <button onClick={async () => {
+            try {
+              const url = process.env.REACT_APP_BACKEND_URL || '';
+              await fetch(`${url}/api/mining/_toggle_genesis`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: false }) });
+            } catch {}
+          }} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded mr-2">Simulate PoW</button>
+          <button onClick={async () => {
+            try {
+              const url = process.env.REACT_APP_BACKEND_URL || '';
+              await fetch(`${url}/api/mining/_toggle_genesis`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: true }) });
+            } catch {}
+          }} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded">Simulate Pre-Genesis</button>
+        </div>
         <div className="space-y-3 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Block Height:</span>
