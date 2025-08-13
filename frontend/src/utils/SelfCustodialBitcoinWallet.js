@@ -154,7 +154,15 @@ class BitcoinNetworkService {
     }
   }
 
-  async broadcastTransaction(hexTx, relayOnly = true) {
+  async broadcastTransaction(hexTx, relayOnly) {
+    // Determine relay preference: default to 'relay-only', overridable via Settings
+    try {
+      if (typeof relayOnly === 'undefined') {
+        const pref = sessionStorage.getItem('btc_relay_only');
+        relayOnly = (pref === null) ? true : (pref === 'true');
+      }
+    } catch {}
+
     // Route through WEPO masternode relay to preserve network privacy
     try {
       const url = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_BACKEND_URL)
@@ -167,6 +175,10 @@ class BitcoinNetworkService {
       });
       if (!resp.ok) throw new Error(`Relay HTTP ${resp.status}`);
       const data = await resp.json();
+
+      // Persist last relay status for UI diagnostics
+      try { sessionStorage.setItem('btc_last_relay_status', JSON.stringify({ ...data, ts: Date.now() })); } catch {}
+
       if (data.success && data.relayed) {
         return { success: true, txid: data.txid, path: data.path, peers: data.peers, message: 'Relayed via WEPO masternodes' };
       }
